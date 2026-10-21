@@ -167,7 +167,10 @@ def login_files(cfg):
         nginx_map = "  default 1;"
         if os.path.exists(edge):
             os.remove(edge)
-    nginx = open(os.path.join(WEB, "nginx.sablona.conf"), encoding="utf-8").read().replace("{{ODPOVED}}", nginx_map)
+    nginx = open(os.path.join(WEB, "nginx.sablona.conf"), encoding="utf-8").read()
+    if not answer:   # šablona už má „default 0;“ – druhý default nginx odmítne
+        nginx = nginx.replace("  default 0;\n", "")
+    nginx = nginx.replace("{{ODPOVED}}", nginx_map)
     write(os.path.join(WEB, "nginx.conf"), nginx)
     return bool(answer)
 
