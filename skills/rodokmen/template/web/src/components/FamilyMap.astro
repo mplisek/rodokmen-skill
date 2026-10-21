@@ -23,6 +23,8 @@ const payload = JSON.stringify({ places: site.places, lines, names, compact });
 
 <script>
   import L from 'leaflet';
+  // jména pocházejí z dat (i z importovaného GEDCOM) – do HTML popupu jen jako text
+  const esc = (v: unknown) => String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
   for (const el of document.querySelectorAll<HTMLElement>('.fmap')) {
     const { places, lines, names, compact } = JSON.parse(el.dataset.map!);
@@ -69,12 +71,12 @@ const payload = JSON.stringify({ places: site.places, lines, names, compact });
           dashArray: pl.hypothesis ? '3 3' : undefined,
         });
         const who = ln.people
-          .map((s) => `<a href="${names[s][2]}">${names[s][0]}</a>${names[s][1] ? ` <span class="y">${names[s][1]}</span>` : ''}`)
+          .map((s) => `<a href="${esc(names[s][2])}">${esc(names[s][0])}</a>${names[s][1] ? ` <span class="y">${esc(names[s][1])}</span>` : ''}`)
           .join('<br>');
-        const head = line.slug ? `<a href="/rod/${line.slug}/">${line.name}</a>` : line.name;
+        const head = line.slug ? `<a href="/rod/${esc(line.slug)}/">${esc(line.name)}</a>` : esc(line.name);
         marker.bindPopup(
-          `<strong>${pl.name}</strong>${pl.years ? ` <span class="y">${pl.years[0]}–${pl.years[1]}</span>` : ''}<br>` +
-            `<span class="pl" style="--c:${line.color}">${head}</span><br>` +
+          `<strong>${esc(pl.name)}</strong>${pl.years ? ` <span class="y">${pl.years[0]}–${pl.years[1]}</span>` : ''}<br>` +
+            `<span class="pl" style="--c:${esc(line.color)}">${head}</span><br>` +
             (pl.hypothesis ? 'hypotéza – vazba zatím neprokázaná' : who),
           { maxHeight: 260 }
         );

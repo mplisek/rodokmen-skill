@@ -135,7 +135,10 @@ skills/rodokmen/
 
 ## Soukromí
 Projekt obsahuje osobní údaje vaší rodiny. Zůstává na vašem počítači. Web je chráněný rodinnou otázkou
-a není indexovaný vyhledávači. Žijící lidé jsou na něm jen se jménem a rokem narození.
+a není indexovaný vyhledávači; bez nastavené otázky ho nástroj nenasadí. Je to lehká ochrana proti náhodným
+návštěvníkům, ne trezor: kdo zná odpověď, vidí všechno, co na web dáte. Claude má pokyn psát o žijících lidech
+jen jméno a rok narození a před zveřejněním s vámi projít, co o nich web říká – kód to ale nevynucuje,
+rozhodnutí je na vás.
 Pokud projekt chcete zálohovat na GitHub, použijte **soukromý** repozitář.
 
 ## Zpětná vazba a vaše zkušenosti
@@ -157,7 +160,8 @@ Skill je obyčejný text (návod pro Clauda) a pár skriptů v Pythonu. Všechno
 tady v repozitáři.
 - **Žádný automaticky spouštěný kód.** Plugin nemá hooky ani MCP servery. Skripty spouští jen Claude, když je
   při práci potřebuje, a Claude Code se vás na ně zeptá.
-- **Kam skripty sahají:** jen do složky projektu rodokmenu. Na disku nic nemažou ani nepřepisují mimo ni.
+- **Kam skripty sahají:** zapisují do složky projektu rodokmenu (stažené snímky, mezivýsledky, web).
+  Výjimkou jsou jen dočasné soubory systému a npm při instalaci webu. Mimo projekt nic nemažou ani nepřepisují.
 - **Na které servery chodí:** archivní portály (ARON SOA Zámrsk, SOA Třeboň, SOA Plzeň – Porta fontium, SOA Praha –
   eBadatelna, AHMP, Národní archiv, SOA Litoměřice, Matricula), noviny (ANNO, Kramerius), OpenStreetMap (mapa
   a souřadnice obcí) a při instalaci webu registr npm.

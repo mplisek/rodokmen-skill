@@ -140,7 +140,8 @@ def write(path, text):
 
 
 def login_files(cfg):
-    """Přihlašovací brána: otázka na webu, odpověď jen na serveru (nginx) / jako hash (Netlify)."""
+    """Přihlašovací brána: otázka na webu, na serveru (nginx i Netlify) jen otisk odpovědi (SHA-256).
+    Stejný otisk spočítá přihlašovací stránka a uloží ho do cookie – samotná odpověď se nikam neukládá."""
     login = cfg.get("prihlaseni") or {}
     answer = norm_answer(login.get("odpoved", ""))
     tpl = open(os.path.join(WEB, "prihlaseni.sablona.html"), encoding="utf-8").read()
@@ -157,8 +158,8 @@ def login_files(cfg):
 
     edge = os.path.join(WEB, "netlify", "edge-functions", "brana.js")
     if answer:
-        nginx_map = f'  "{answer}" 1;'
-        digest = hashlib.sha256(answer.encode()).hexdigest()
+        digest = hashlib.sha256(("rodokmen:" + answer).encode()).hexdigest()
+        nginx_map = f'  "{digest}" 1;'
         write(edge, open(os.path.join(WEB, "netlify", "brana.sablona.js"), encoding="utf-8").read().replace("{{HASH}}", digest))
     else:   # bez přihlášení – web je otevřený
         nginx_map = "  default 1;"
@@ -176,6 +177,10 @@ def main():
         sys.exit("V data/osoby.py chybí výchozí osoba (číslo 1).")
     SAME = ns["SAME"]                       # alias Kekulé → kanonické Kekulé (předek v rodokmenu vícekrát)
     cfg = jload("web.json", {})
+    login = cfg.get("prihlaseni") or {}
+    if "--nasazeni" in sys.argv and not norm_answer(login.get("odpoved", "")) and not login.get("otevreny"):
+        sys.exit("CHYBA: v data/web.json není odpověď na přihlašovací otázku – web by byl otevřený komukoli.\n"
+                 "Nastavte prihlaseni.odpoved, nebo (jen když to opravdu chcete) prihlaseni.otevreny: true.")
     docs_cfg = jload("dokumenty.json", [])
     recs = {r["key"]: r for r in record_rows()}
 

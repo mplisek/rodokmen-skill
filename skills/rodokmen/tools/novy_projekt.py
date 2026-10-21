@@ -12,6 +12,12 @@ import os, shutil, sys
 SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
+def copy(src, out):
+    if os.path.islink(out):   # nepsat přes symlink mimo projekt
+        os.remove(out)
+    shutil.copy2(src, out)
+
+
 def copy_tree(src, dst):
     for base, dirs, files in os.walk(src):
         dirs[:] = [d for d in dirs if d not in ("node_modules", "dist", ".astro", "__pycache__")]
@@ -19,8 +25,8 @@ def copy_tree(src, dst):
         os.makedirs(os.path.join(dst, rel), exist_ok=True)
         for f in files:
             out = os.path.join(dst, rel, f)
-            if not os.path.exists(out):
-                shutil.copy2(os.path.join(base, f), out)
+            if not os.path.lexists(out):
+                copy(os.path.join(base, f), out)
 
 
 def main():
@@ -40,13 +46,13 @@ def main():
     os.makedirs(tools, exist_ok=True)
     for f in os.listdir(os.path.join(SKILL, "tools")):
         if f.endswith((".py", ".sh")) and f != "novy_projekt.py":
-            shutil.copy2(os.path.join(SKILL, "tools", f), os.path.join(tools, f))   # nástroje vždy aktualizovat
+            copy(os.path.join(SKILL, "tools", f), os.path.join(tools, f))   # nástroje vždy aktualizovat
     for d in ("vyrezy", "zdroje", "dokumenty", "pracovni"):
         os.makedirs(os.path.join(dst, d), exist_ok=True)
     for name in ("CLAUDE.md", ".gitignore", "poznamky_pro_skill.md"):
         out = os.path.join(dst, name)
-        if not os.path.exists(out):
-            shutil.copy2(os.path.join(SKILL, "template", name), out)
+        if not os.path.lexists(out):
+            copy(os.path.join(SKILL, "template", name), out)
     print("Projekt připraven:", dst)
 
 

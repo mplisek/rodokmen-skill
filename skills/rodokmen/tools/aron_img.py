@@ -9,14 +9,15 @@ Použití:
   aron_img.py <apu_id> link <n>      -> trvalý odkaz na snímek n v prohlížeči ARON (pole "odkaz" v zaznamy.json)
   aron_img.py <apu_id> svazek        -> zapíše svazek do data/svazky.json (klíč = prvních 8 znaků apu_id)
 
-Popis svazků se ukládá do ~/.cache/aron/<apu_id>.json.
+Popis svazků se ukládá do pracovni/.cache_aron/<apu_id>.json (ve složce projektu).
 """
 import json, math, os, shutil, subprocess, sys, tempfile, time, urllib.request
 import concurrent.futures as cf
 import xml.etree.ElementTree as ET
 
 API = "https://aron.vychodoceskearchivy.cz/api/aron"
-CACHE = os.path.expanduser("~/.cache/aron")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CACHE = os.path.join(ROOT, "pracovni", ".cache_aron")
 
 
 def get(url, binary=False, tries=4):

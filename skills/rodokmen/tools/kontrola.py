@@ -91,8 +91,8 @@ def main():
             err.append(f"místo {name}: špatný výraz '{e.get('re')}': {ex}")
 
     cfg = jload("web.json", {})
-    if not (cfg.get("prihlaseni") or {}).get("odpoved"):
-        warn.append("web.json: není nastavená odpověď na přihlašovací otázku – web by byl otevřený komukoli")
+    if not (cfg.get("prihlaseni") or {}).get("odpoved") and not (cfg.get("prihlaseni") or {}).get("otevreny"):
+        warn.append("web.json: není nastavená odpověď na přihlašovací otázku – nasazení webu skončí chybou")
 
     if re.search(r"Novák|Petrovi", json.dumps(cfg, ensure_ascii=False)) and "Novák" not in P.get(1, {}).get("n", ""):
         warn.append("web.json: jsou v něm ještě ukázkové texty (Novákovi) – nastav název, příběh a kontakt")

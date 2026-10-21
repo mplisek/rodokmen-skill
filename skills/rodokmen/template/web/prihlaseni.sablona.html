@@ -45,15 +45,23 @@
       e.preventDefault();
       var v = document.getElementById('a').value.normalize('NFD').replace(/[̀-ͯ]/g, '')
         .toLowerCase().replace(/[^a-z0-9]/g, '');
-      var secure = location.protocol === 'https:' ? '; Secure' : '';
-      document.cookie = 'rodokmen=' + v + '; Max-Age=31536000; Path=/; SameSite=Lax' + secure;
-      var back = location.pathname === '/prihlaseni.html' ? '/' : location.pathname + location.search;
-      fetch(back, { credentials: 'same-origin', cache: 'no-store' }).then(function (r) {
-        if (r.status === 401) {
-          document.getElementById('err').textContent = 'To není ono – zkuste to znovu.';
-        } else {
-          location.replace(back);
-        }
+      if (!window.crypto || !crypto.subtle) {   // jen přes https (nebo localhost)
+        document.getElementById('err').textContent = 'Přihlášení funguje jen přes zabezpečené spojení (https).';
+        return;
+      }
+      // Do cookie jde jen otisk odpovědi (SHA-256), ne odpověď samotná – stejný otisk má server.
+      crypto.subtle.digest('SHA-256', new TextEncoder().encode('rodokmen:' + v)).then(function (buf) {
+        var hash = Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+        var secure = location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = 'rodokmen=' + hash + '; Max-Age=31536000; Path=/; SameSite=Lax' + secure;
+        var back = location.pathname === '/prihlaseni.html' ? '/' : location.pathname + location.search;
+        return fetch(back, { credentials: 'same-origin', cache: 'no-store' }).then(function (r) {
+          if (r.status === 401) {
+            document.getElementById('err').textContent = 'To není ono – zkuste to znovu.';
+          } else {
+            location.replace(back);
+          }
+        });
       });
     });
   </script>
