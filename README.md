@@ -70,7 +70,8 @@ V Claude Code napište:
 /plugin marketplace add sarsonj/rodokmen-skill
 /plugin install rodokmen@rodokmen-skill
 ```
-Aktualizace později: `/plugin marketplace update rodokmen-skill`.
+Aktualizace později: `/plugin marketplace update rodokmen-skill`. Rozpracovaný projekt pak Claude při další práci
+sám nabídne aktualizovat na novou verzi (vaše data zůstanou, změněné soubory webu zazálohuje do `pracovni/`).
 
 ### Varianta B – ručně
 Stáhněte repozitář (zelené tlačítko **Code → Download ZIP** na GitHubu, nebo `git clone`) a zkopírujte složku

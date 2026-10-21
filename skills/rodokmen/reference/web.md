@@ -69,6 +69,8 @@ a po úpravě zkontroluj web na mobilu i počítači.
 ## Vějíř jako plakát
 `python3 -I tools/fan_chart.py vystupy/` → SVG a HTML (a PNG, je-li nainstalovaný Google Chrome, na Windows i Microsoft Edge) k tisku.
 
-## Starší projekt na Windows
-`novy_projekt.py` existující soubory webu nepřepisuje: starší projekt dostane `web/scripts/data.mjs`, ale v `web/package.json`
-mu zůstane `"data": "python3 -I ../tools/export_web.py"`, což na Windows nefunguje. Změň ho na `"data": "node scripts/data.mjs"`.
+## Aktualizace staršího projektu
+Znovu spusť `python3 -I SKILL_DIR/tools/novy_projekt.py <složka projektu>`. Data (`data/`, výřezy) zůstanou, `tools/` se přepíše
+a soubory ve `web/`, které se liší od nové šablony, taky – staré verze uloží do `pracovni/zaloha_web_<datum>/` a vypíše jejich seznam.
+Upravoval-li jsi s uživatelem vzhled (styly, stránky), převezmi úpravy ze zálohy (porovnej soubory) a ověř web. Pak ve `web/`
+`npm install` a `npm run data`. Starou šablonu přihlášení `export_web.py` odmítne s výzvou k aktualizaci.
