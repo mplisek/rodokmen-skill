@@ -191,7 +191,7 @@ for idx, (k, nm) in enumerate(items):
     col, row = idx // 4, idx % 4
     x, y = lx + col * 1950, ly + row * 78
     legend.append(f'<rect x="{x}" y="{y - 40}" width="52" height="52" rx="8" fill="{BASE[k]}"/>'
-                  f'<text x="{x + 76}" y="{y}" font-size="40"><tspan font-weight="700" fill="#3B2E22">{nm}</tspan>'
+                  f'<text x="{x + 76}" y="{y}" font-size="40"><tspan font-weight="700" fill="#3B2E22">{html.escape(nm)}</tspan>'
                   f'<tspan fill="#5E5245"> – {html.escape(desc[k])}</tspan></text>')
 sy = ly + 4 * 78 + 50
 legend.append(f'<rect x="{lx}" y="{sy - 34}" width="44" height="44" rx="6" fill="{mix(BASE[8], 0.2)}"/>'

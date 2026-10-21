@@ -23,7 +23,7 @@ const payload = JSON.stringify({ places: site.places, lines, names, compact });
 
 <script>
   import L from 'leaflet';
-  // jména pocházejí z dat (i z importovaného GEDCOM) – do HTML popupu jen jako text
+  // jména pocházejí z dat (i z importovaného GEDCOM) – do HTML popupu a tooltipu jen jako text
   const esc = (v: unknown) => String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
   for (const el of document.querySelectorAll<HTMLElement>('.fmap')) {
@@ -80,7 +80,7 @@ const payload = JSON.stringify({ places: site.places, lines, names, compact });
             (pl.hypothesis ? 'hypotéza – vazba zatím neprokázaná' : who),
           { maxHeight: 260 }
         );
-        marker.bindTooltip(`${pl.name} · ${line.name}${count ? ` (${count})` : ''}`);
+        marker.bindTooltip(`${esc(pl.name)} · ${esc(line.name)}${count ? ` (${count})` : ''}`);
         (groups[ln.k] ??= L.layerGroup().addTo(map)).addLayer(marker);
         bounds.push(pos);
       });

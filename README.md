@@ -161,7 +161,8 @@ tady v repozitáři.
 - **Žádný automaticky spouštěný kód.** Plugin nemá hooky ani MCP servery. Skripty spouští jen Claude, když je
   při práci potřebuje, a Claude Code se vás na ně zeptá.
 - **Kam skripty sahají:** zapisují do složky projektu rodokmenu (stažené snímky, mezivýsledky, web).
-  Výjimkou jsou jen dočasné soubory systému a npm při instalaci webu. Mimo projekt nic nemažou ani nepřepisují.
+  Výjimkou jsou dočasné soubory systému, npm při instalaci webu a přihlášení nástroje pro nasazení (Netlify,
+  CapRover), pokud web zveřejňujete. Mimo projekt nic nemažou ani nepřepisují.
 - **Na které servery chodí:** archivní portály (ARON SOA Zámrsk, SOA Třeboň, SOA Plzeň – Porta fontium, SOA Praha –
   eBadatelna, AHMP, Národní archiv, SOA Litoměřice, Matricula), noviny (ANNO, Kramerius), OpenStreetMap (mapa
   a souřadnice obcí) a při instalaci webu registr npm.
