@@ -277,9 +277,9 @@ LINES = {
 }
 
 SIDE = [
- dict(k=8, n="Marie Nováková (1892–1970)", t="Sestra Jana, provdaná do Ostřetína.", r=[]),
- dict(k=8, n="Václav Novák (1896–1916)", t="Bratr Jana, padl v 1. světové válce u Doberdò.", r=[]),
- dict(k=26, n="Antonín Kučera (1869–1941)", t="Bratr Josefa, převzal mlýn v Třemošnici.", r=[]),
+ dict(k=8, n="Marie Nováková", v="sestra", y="1892–1970", t="Sestra Jana, provdaná do Ostřetína.", r=[]),
+ dict(k=8, n="Václav Novák", v="bratr", y="1896–1916", t="Bratr Jana, padl v 1. světové válce u Doberdò.", r=[]),
+ dict(k=26, n="Antonín Kučera", v="bratr", y="1869–1941", t="Bratr Josefa, převzal mlýn v Třemošnici.", r=[]),
 ]
 
 ISSUES = [

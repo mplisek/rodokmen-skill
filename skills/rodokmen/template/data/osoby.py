@@ -14,6 +14,7 @@
 #   r    klíče zápisů z data/zaznamy.json, které osobu dokládají
 #   note poznámka: proč je údaj nejistý, rozpory, odkud se vzal
 #   sex  jen u osoby 1: "M" nebo "F" (u ostatních plyne z čísla)
+#   sour stav hledání sourozenců (stromový graf): "hotovo" = všichni dohledáni, "částečně"; chybí = zatím nehledáno
 # Žijící lidé: jen jméno a rok narození (soukromí), note="Žijící – údaje jen základní."
 # Neznámý otec nemanželského dítěte: dict(n="otec neuveden", st="unk", f=[], note="…")
 
@@ -26,7 +27,9 @@ LINES = {
 }
 
 # Příbuzní mimo přímou linii (sourozenci, strýcové…): k = číslo předka, ke kterému patří.
-# dict(k=16, n="Josef Novák (1865–1920)", t="Bratr Jana. Kovář v …", r=["klic_zapisu"])
+# dict(k=16, n="Josef Novák", v="bratr", y="1865–1920", t="Bratr Jana. Kovář v …", r=["klic_zapisu"])
+#   v  vztah k předkovi: "bratr", "sestra", "manžel", "manželka", "syn", "dcera", jinak volně ("příbuzný")
+#   y  roky jako u předků ("* 1949", "1893–1960"); obojí volitelné
 SIDE = [
 ]
 

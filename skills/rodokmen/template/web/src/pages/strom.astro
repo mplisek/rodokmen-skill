@@ -1,0 +1,242 @@
+---
+// Interactive ancestor tree: parents above the child, each branch collapsible, relatives from SIDE beside the ancestor.
+// Rooted at Kekulé number from the hash (#k=4) so a person page can open the tree from that person.
+import Base from '../layouts/Base.astro';
+import { byK, lineByK, records, href } from '../lib/data.js';
+const nodes = Object.fromEntries(Object.entries(byK).map(([k, p]) => {
+  const alias = p.k !== Number(k);
+  return [k, {
+    s: href.person(p.slug), n: p.name, y: p.years, c: p.line ? lineByK[p.line]?.color : null, a: alias ? 1 : 0,
+    fu: p.fatherUnknown ? 1 : 0, b: p.sibStatus ?? 'none',
+    sd: alias ? [] : p.side.map((e) => ({ n: e.name, r: e.rel ?? 'příbuzný', y: e.years ?? '', kind: e.kind ?? 'other', t: e.text,
+      z: e.records.filter((r) => records[r]).map((r) => [href.record(r), records[r].date]) })),
+  }];
+}));
+const json = JSON.stringify(nodes).replace(/</g, '\\u003c');
+---
+<Base title="Stromový graf" full>
+  <div class="fan-bar">
+    <strong>Stromový graf</strong>
+    <span class="fan-btns">
+      <button type="button" data-act="open">Rozbalit vše</button>
+      <button type="button" data-act="close">Sbalit vše</button>
+      <button type="button" data-act="fit">Celý</button>
+      <button type="button" data-act="root" hidden>Od začátku</button>
+    </span>
+    <span class="small muted fan-hint">Tlačítkem nad osobou rozbalíte/sbalíte její předky, pod jménem její sourozence. Kolečkem přibližujte, tažením posouvejte.</span>
+  </div>
+  <div class="tree-stage">
+    <div class="tree-canvas"><svg class="tree-lines"></svg></div>
+    <div class="tree-info" hidden></div>
+  </div>
+  <script type="application/json" id="tree-data" set:html={json} />
+
+  <script>
+    const N: Record<string, any> = JSON.parse(document.getElementById('tree-data')!.textContent!);
+    const stage = document.querySelector<HTMLElement>('.tree-stage')!;
+    const canvas = stage.querySelector<HTMLElement>('.tree-canvas')!;
+    const lines = canvas.querySelector('svg')!;
+    const info = stage.querySelector<HTMLElement>('.tree-info')!;
+    const CW = 168, CH = 62, SW = 150, GAP = 22, ROW = 130, SIDE_GAP = 14;
+    const gen = (k: number) => Math.floor(Math.log2(k));
+    const esc = (t: string) => t.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+
+    // state: root, expanded ancestors, opened relative groups – kept in the hash so the view can be shared
+    const ids = (v: string | null) => new Set((v ?? '').split('.').filter(Boolean).map(Number));
+    const hasPar = (k: number) => !!N[k] && !N[k].a && !!(N[2 * k] || N[2 * k + 1]);
+    const known = (k: number): number => (N[k] && !N[k].a ? 1 + known(2 * k) + known(2 * k + 1) : N[k] ? 1 : 0);
+    const all = (k: number, out: number[] = []): number[] => { if (hasPar(k)) { out.push(k); all(2 * k, out); all(2 * k + 1, out); } return out; };
+    let root = 1, open = new Set<number>(), sib = new Set<number>();
+    const readHash = () => {
+      const hp = new URLSearchParams(location.hash.slice(1));
+      const k = hp.get('k') ?? '';
+      root = /^\d+$/.test(k) && Object.hasOwn(N, k) ? Number(k) : 1;
+      open = hp.has('o') ? ids(hp.get('o')) : new Set(all(root).filter((k) => gen(k) - gen(root) < 3));
+      sib = ids(hp.get('s'));
+    };
+    const save = () => history.replaceState(null, '', `#k=${root}&o=${[...open].join('.')}&s=${[...sib].join('.')}`);
+
+    // layout: extents left/right of each card centre, couples placed so their subtrees do not overlap
+    // relatives go to the outer side of a couple: father's to the left, mother's to the right
+    const rightSide = (k: number) => k !== root && k % 2 === 1;
+    const sideW = (k: number) => (sib.has(k) && N[k]?.sd.length ? N[k].sd.length * (SW + 8) + 8 : 0);
+    const ext: Record<number, { L: number; R: number; D: number }> = {};
+    const measure = (k: number): { L: number; R: number } => {
+      const sw = sideW(k);
+      const extra = sw ? sw + SIDE_GAP : 0;
+      let L = CW / 2 + (rightSide(k) ? 0 : extra), R = CW / 2 + (rightSide(k) ? extra : 0), D = 0;
+      if (open.has(k) && hasPar(k)) {
+        const f = N[2 * k] ? measure(2 * k) : { L: CW / 2, R: CW / 2 };
+        const m = N[2 * k + 1] ? measure(2 * k + 1) : { L: CW / 2, R: CW / 2 };
+        D = f.R + GAP + m.L;
+        L = Math.max(L, D / 2 + f.L);
+        R = Math.max(R, D / 2 + m.R);
+      }
+      ext[k] = { L, R, D };
+      return { L, R };
+    };
+    const pos: Record<number, { x: number; y: number }> = {};
+    const place = (k: number, x: number, y: number) => {
+      pos[k] = { x, y };
+      const { D } = ext[k] ?? { D: 0 };
+      if (D) { place(2 * k, x - D / 2, y - ROW); place(2 * k + 1, x + D / 2, y - ROW); }
+    };
+
+    const sibLabel = (k: number) => {
+      const p = N[k], n = p.sd.length;
+      if (n) {
+        const word = p.sd.every((e: any) => e.kind === 'sib') ? 'sourozenci' : 'příbuzní';
+        return `<button type="button" class="tc-sib${p.b === 'done' ? '' : ' todo'}" data-sib="${k}" title="${p.b === 'done' ? 'Sourozenci dohledáni' : 'Sourozenci možná nejsou všichni'}">${sib.has(k) ? '▾' : '▸'} ${word} (${n})</button>`;
+      }
+      return `<span class="tc-sib none">${p.b === 'done' ? 'bez sourozenců' : p.b === 'partial' ? 'sourozenci: hledáno částečně' : 'sourozenci nehledáni'}</span>`;
+    };
+
+    let view = { s: 1, tx: 0, ty: 0 };
+    const applyView = () => (canvas.style.transform = `translate(${view.tx}px,${view.ty}px) scale(${view.s})`);
+    let off = { x: 0, y: 0 }, size = { w: 0, h: 0 };
+
+    const render = () => {
+      for (const k in ext) delete ext[k];
+      for (const k in pos) delete pos[k];
+      measure(root);
+      place(root, 0, 0);
+      const ks = Object.keys(pos).map(Number);
+      const minX = Math.min(...ks.map((k) => pos[k].x - (ext[k]?.L ?? CW / 2)));
+      const maxX = Math.max(...ks.map((k) => pos[k].x + (ext[k]?.R ?? CW / 2)));
+      const minY = Math.min(...ks.map((k) => pos[k].y)) - 20;
+      off = { x: 20 - minX, y: 20 - minY };
+      size = { w: maxX - minX + 40, h: -minY + CH + 40 };
+      const X = (x: number) => x + off.x, Y = (y: number) => y + off.y;
+
+      let html = '', svg = '';
+      for (const k of ks) {
+        const p = N[k], { x, y } = pos[k];
+        const left = X(x - CW / 2), top = Y(y);
+        if (!p) {
+          const label = k % 2 === 0 && N[k >> 1]?.fu ? 'otec neuveden' : 'zatím neznámý';
+          html += `<div class="tc-card tc-unk" style="left:${left}px;top:${top}px">?<span class="tc-y">${label}</span></div>`;
+          continue;
+        }
+        const tog = hasPar(k)
+          ? `<button type="button" class="tc-tog" data-tog="${k}" aria-expanded="${open.has(k)}" title="${open.has(k) ? 'Sbalit předky' : 'Rozbalit předky'}">${open.has(k) ? '−' : '+' + (known(k) - 1)}</button>`
+          : '';
+        html += `<div class="tc-card${k === root ? ' tc-root' : ''}${p.a ? ' tc-alias' : ''}" style="left:${left}px;top:${top}px${p.c ? `;border-left-color:${p.c}` : ''}">
+          ${tog}<a href="${esc(p.s)}" draggable="false">${esc(p.n)}</a><span class="tc-y">${p.a ? 'předek vícekrát – viz výše' : esc(p.y || ' ')}</span>
+          ${k === 1 || p.a ? '' : sibLabel(k)}</div>`;
+        const sw = sideW(k);
+        if (sw) {
+          const sx = rightSide(k) ? X(x + CW / 2 + SIDE_GAP) : X(x - CW / 2 - SIDE_GAP - sw);
+          html += `<div class="tc-sides" style="left:${sx}px;top:${top}px;width:${sw}px">${p.sd.map((e: any, i: number) =>
+            `<button type="button" class="tc-side" data-side="${k}:${i}"><strong>${esc(e.n)}</strong><span>${esc(e.r)}${e.y ? ' · ' + esc(e.y) : ''}</span></button>`).join('')}</div>`;
+          const [x1, x2] = rightSide(k) ? [left + CW, sx] : [sx + sw, left];
+          svg += `<line class="dash" x1="${x1}" y1="${top + CH / 2}" x2="${x2}" y2="${top + CH / 2}"/>`;
+        }
+        const D = ext[k]?.D;
+        if (D) {
+          const py = Y(y - ROW) + CH / 2;
+          svg += `<path d="M${X(x - D / 2 + CW / 2)} ${py}H${X(x + D / 2 - CW / 2)}M${X(x)} ${py}V${top}"/>`;
+        }
+      }
+      canvas.querySelectorAll('.tc-card,.tc-sides').forEach((e) => e.remove());
+      canvas.insertAdjacentHTML('beforeend', html);
+      lines.setAttribute('width', String(size.w));
+      lines.setAttribute('height', String(size.h));
+      lines.innerHTML = svg;
+      canvas.style.width = size.w + 'px';
+      canvas.style.height = size.h + 'px';
+      document.querySelector<HTMLElement>('[data-act=root]')!.hidden = root === 1;
+      save();
+    };
+
+    const fit = () => {
+      const r = stage.getBoundingClientRect();
+      const s = Math.min(1, (r.width - 20) / size.w, (r.height - 20) / size.h);
+      const z = Math.max(s, 0.08);
+      view = { s: z, tx: (r.width - size.w * z) / 2, ty: Math.max(10, (r.height - size.h * z) / 2) };
+      applyView();
+    };
+    // first view: whole tree, or on small screens the root person readable at the bottom
+    const start = () => {
+      fit();
+      if (view.s >= 0.5) return;
+      const r = stage.getBoundingClientRect(), z = 0.7;
+      view = { s: z, tx: r.width / 2 - (pos[root].x + off.x) * z, ty: r.height - 30 - (pos[root].y + off.y + CH) * z };
+      applyView();
+    };
+    // re-render while keeping card k at the same place on screen
+    const rerender = (k: number) => {
+      const before = pos[k] && { x: (pos[k].x + off.x) * view.s, y: (pos[k].y + off.y) * view.s };
+      render();
+      if (before && pos[k]) { view.tx += before.x - (pos[k].x + off.x) * view.s; view.ty += before.y - (pos[k].y + off.y) * view.s; }
+      applyView();
+    };
+
+    const zoomAt = (f: number, cx: number, cy: number) => {
+      const r = stage.getBoundingClientRect();
+      const s = Math.min(2.5, Math.max(0.08, view.s * f)), px = cx - r.left, py = cy - r.top;
+      view = { s, tx: px - (px - view.tx) * (s / view.s), ty: py - (py - view.ty) * (s / view.s) };
+      applyView();
+    };
+    stage.addEventListener('wheel', (e) => { if (info.contains(e.target as Node)) return; e.preventDefault(); zoomAt(e.deltaY < 0 ? 1.15 : 0.87, e.clientX, e.clientY); }, { passive: false });
+
+    // drag to pan (mouse + one finger), pinch to zoom (two fingers)
+    const pts = new Map<number, { x: number; y: number }>();
+    let moved = 0, pinch = 0;
+    stage.addEventListener('pointerdown', (e) => { moved = 0; if (info.contains(e.target as Node)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); });
+    stage.addEventListener('pointermove', (e) => {
+      const prev = pts.get(e.pointerId);
+      if (!prev) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pts.size === 2) {
+        const [a, b] = [...pts.values()];
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (pinch) zoomAt(d / pinch, (a.x + b.x) / 2, (a.y + b.y) / 2);
+        pinch = d; moved += 10;
+        return;
+      }
+      const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+      moved += Math.abs(dx) + Math.abs(dy);
+      if (moved > 4) { stage.setPointerCapture(e.pointerId); view.tx += dx; view.ty += dy; applyView(); }
+    });
+    const up = (e: PointerEvent) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; };
+    stage.addEventListener('pointerup', up);
+    stage.addEventListener('pointercancel', up);
+
+    stage.addEventListener('click', (e) => {
+      if (moved > 4 && e.detail > 0) { e.preventDefault(); e.stopPropagation(); return; }
+      const t = (e.target as HTMLElement).closest<HTMLElement>('[data-tog],[data-sib],[data-side],[data-close]');
+      if (!t) return;
+      if (t.dataset.tog) {
+        const k = Number(t.dataset.tog);
+        open.has(k) ? open.delete(k) : open.add(k);
+        rerender(k);
+      } else if (t.dataset.sib) {
+        const k = Number(t.dataset.sib);
+        sib.has(k) ? sib.delete(k) : sib.add(k);
+        rerender(k);
+      } else if (t.dataset.side) {
+        const [k, i] = t.dataset.side.split(':').map(Number);
+        const e2 = N[k].sd[i];
+        info.innerHTML = `<button type="button" class="tree-info-x" data-close aria-label="Zavřít">×</button>
+          <strong>${esc(e2.n)}</strong> <span class="muted">${esc(e2.r)}${e2.y ? ' · ' + esc(e2.y) : ''} – ${esc(N[k].n)}</span>
+          <p>${esc(e2.t)}</p>${e2.z.length ? `<p class="small">Zápisy: ${e2.z.map(([u, d]: string[]) => `<a href="${esc(u)}">${esc(d)}</a>`).join(' · ')}</p>` : ''}`;
+        info.hidden = false;
+      } else {
+        info.hidden = true;
+      }
+    }, true);
+
+    document.querySelectorAll<HTMLButtonElement>('.fan-btns button').forEach((b) => b.addEventListener('click', () => {
+      const act = b.dataset.act;
+      if (act === 'open') { open = new Set(all(root)); render(); fit(); }
+      else if (act === 'close') { open = new Set([root]); render(); fit(); }
+      else if (act === 'root') { root = 1; open = new Set(all(1).filter((k) => gen(k) < 3)); sib = new Set(); render(); fit(); }
+      else fit();
+    }));
+
+    window.addEventListener('hashchange', () => { readHash(); render(); start(); });
+    readHash();
+    render();
+    start();
+  </script>
+</Base>
