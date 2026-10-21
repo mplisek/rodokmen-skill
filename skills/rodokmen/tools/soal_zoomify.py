@@ -54,9 +54,10 @@ def main():
             f = os.path.join(d, f"{y:03d}_{xx:03d}.jpg")
             open(f, "wb").write(get(f"{base}/TileGroup{g}/{L}-{xx}-{y}.jpg"))
             files.append(f)
-    tmp = out + ".tmp.jpg"
-    subprocess.run(["magick", "montage", *files, "-tile", f"{nx}x{ny}", "-geometry", "+0+0",
-                    "-gravity", "NorthWest", "-background", "white", tmp], check=True)
+    tmp = os.path.abspath(out) + ".tmp.jpg"
+    # krátká jména dlaždic (cwd=d): plné cesty by na Windows přesáhly limit délky příkazové řádky
+    subprocess.run(["magick", "montage", *[os.path.basename(f) for f in files], "-tile", f"{nx}x{ny}", "-geometry", "+0+0",
+                    "-gravity", "NorthWest", "-background", "white", tmp], check=True, cwd=d)
     subprocess.run(["magick", tmp, "-crop", f"{w}x{h}+0+0", "+repage", "-quality", "88", out], check=True)
     os.remove(tmp)
     for f in files:

@@ -24,6 +24,7 @@ Mladší knihy jsou na matričním úřadě obce s rozšířenou působností / 
 3. **Index, pak kniha.** Index řazený po písmenech a letech dá stránku/folio; snímek odhadni (snímek ≈ folio × 1 až 2) a dolaď.
 4. **Bez indexu: listuj chronologicky.** Odhadni pozici podle let na prvních a posledních snímcích svazku (půlení intervalu).
 5. **Přečti celý zápis**, pak se podívej i na okolí (dvojčata, další děti stejných rodičů).
+6. **Sňatek se obvykle konal ve farnosti nevěsty** (v jejím bydlišti) – hledej ho nejdřív tam, pak ve faře ženicha.
 
 ## Čtení písma
 - Do ~1780 latina nebo čeština, pak hodně němčina (kurent), od ~1860 často čeština, ve 20. století čeština.
@@ -91,4 +92,17 @@ Mladší knihy jsou na matričním úřadě obce s rozšířenou působností / 
   zmenšené na 1900 px (dvoustrana je jinak nečitelná).
 - Výřez pro web (`vyrez.py`) dělej jen na **čtený zápis** (případně s hlavičkou sloupců), ne na celou dvoustranu –
   na webu by byl nečitelně malý. Celá stránka je v `zdroje/` a na portálu přes odkaz.
+
+## Technické pasti (Windows) – napiš je i pomocníkům do zadání
+(Nahrazují první dva body macOS sekce; body o `overit.py` a výřezu platí i tady.)
+- Python: `python -I -X utf8 tools/<nástroj>.py` (ne `python3` – bývá to nefunkční alias z Microsoft Store). Bez `-X utf8`
+  je výstup do roury v cp1250: čeština se rozbije a `napady.py` či `ged_import.py` spadnou na „≈“ a „→“. Totéž platí při
+  přesměrování do souboru (soubor z `… --osoby > x.py` by jinak vznikl v cp1250; ve Windows PowerShellu 5.1 `>` dokonce
+  zapisuje UTF-16 – přesměrovávej v Git Bash). Proměnná `PYTHONUTF8` s `-I` nefunguje.
+- ImageMagick je `magick`, nikdy `convert` (`convert` je ve Windows systémový nástroj na převod disku z FAT na NTFS).
+  Po instalaci přes winget je `magick` v PATH až po restartu Claude Code. Písmo pro `-annotate`: `-font C:/Windows/Fonts/arial.ttf`.
+- Limit délky příkazové řádky je 32 767 znaků – stovky souborů (dlaždic) v jednom příkazu `magick` neprojdou
+  (WinError 206); skládej po řádcích.
+- Skripty `.sh` přes Git Bash (`bash tools/…`).
+- Datové soubory zapisuj v UTF-8 **bez BOM** (Windows PowerShell 5.1 s `-Encoding UTF8` přidá BOM a `osoby.py` pak nejde načíst).
 

@@ -2,6 +2,8 @@
 pracovni/
 __pycache__/
 .DS_Store
+Thumbs.db
+desktop.ini
 *.tar.gz
 # web – závislosti, build a vše, co generuje `npm run data`
 web/node_modules/

@@ -161,8 +161,8 @@ def main():
         dd = next((year(d) for t, d, p, x in ev if t == "DEAT"), None)
         y = f"{b}–{dd}" if b and dd else (f"* {b}" if b else (f"† {dd}" if dd else ""))
         if as_py:
-            note = " ".join(notes).replace('"', "'")
-            print(f' {k}: dict(n="{name(ind)}", y="{y}", st="fam", f={facts!r}, r=[]' + (f', note="{note[:300]}"' if note else "") + "),")
+            note = " ".join(notes)   # !r = platný Python i pro uvozovky a „\“ ve jménech a poznámkách (osoby.py se spouští přes exec)
+            print(f' {k}: dict(n={name(ind)!r}, y={y!r}, st="fam", f={facts!r}, r=[]' + (f', note={note[:300]!r}' if note else "") + "),")
         else:
             print(f"\n{k} | {name(ind)} | {y}")
             for f in facts:

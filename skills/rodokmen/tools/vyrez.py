@@ -22,13 +22,13 @@ def main():
     small = os.path.join(ROOT, "vyrezy", key + ".jpg")
     os.makedirs(os.path.dirname(full), exist_ok=True)
     os.makedirs(os.path.dirname(small), exist_ok=True)
-    cmd = ["magick", src]
+    cmd = ["magick", src, "-auto-orient"]   # fotky z mobilu: otočit podle EXIF (EXIF i s GPS pak smaže +profile, barevný profil ICC zůstane)
     if len(sys.argv) > 3:
         x0, y0, x1, y1 = (float(v) for v in sys.argv[3].split(","))
-        w, h = (int(v) for v in subprocess.run(["magick", "identify", "-format", "%w %h", src + "[0]"],
+        w, h = (int(v) for v in subprocess.run(["magick", src + "[0]", "-auto-orient", "-format", "%w %h", "info:"],
                                                 capture_output=True, text=True, check=True).stdout.split())
         cmd += ["-crop", f"{round((x1 - x0) * w)}x{round((y1 - y0) * h)}+{round(x0 * w)}+{round(y0 * h)}", "+repage"]
-    subprocess.run(cmd + ["-quality", "90", full], check=True)
+    subprocess.run(cmd + ["+profile", "!icc,*", "+set", "comment", "-quality", "90", full], check=True)
     subprocess.run(["magick", full, "-resize", "1800x1800>", "-quality", "85", small], check=True)
     print("uloženo:", full, "a", small)
 

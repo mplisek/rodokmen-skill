@@ -37,10 +37,10 @@ def volume(apu_id):
     if not os.path.exists(path):
         data = get(f"{API}/apu/{apu_id}")
         tmp = f"{path}.{os.getpid()}.tmp"
-        with open(tmp, "w") as f:
+        with open(tmp, "w", encoding="utf-8") as f:
             f.write(data)
         os.replace(tmp, path)  # atomic, safe when several processes fetch the same volume
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -72,33 +72,36 @@ def fetch_image(dzi_url, level_offset=1, out="page.jpg", crop=None):
         r0, r1 = int(y0 * h // ts), min(rows - 1, int(y1 * h // ts))
     base = dzi_url[: -len(".dzi")] + "_files"
     tmp = tempfile.mkdtemp(prefix="aron_")
-    jobs = []
-    for r in range(r0, r1 + 1):
-        for c in range(c0, c1 + 1):
-            jobs.append((c, r, f"{base}/{level}/{c}_{r}.jpg", os.path.join(tmp, f"{c}_{r}.jpg")))
+    try:
+        jobs = []
+        for r in range(r0, r1 + 1):
+            for c in range(c0, c1 + 1):
+                jobs.append((c, r, f"{base}/{level}/{c}_{r}.jpg", os.path.join(tmp, f"{c}_{r}.jpg")))
 
-    def dl(job):
-        c, r, url, p = job
-        with open(p, "wb") as f:
-            f.write(get(url, binary=True))
-        return job
+        def dl(job):
+            c, r, url, p = job
+            with open(p, "wb") as f:
+                f.write(get(url, binary=True))
+            return job
 
-    with cf.ThreadPoolExecutor(8) as ex:
-        list(ex.map(dl, jobs))
-    # a tile with c > 0 (r > 0) carries `ov` extra pixels on its left (top) edge;
-    # crop every tile to its own ts x ts cell, then append rows and columns
-    args = ["magick"]
-    for r in range(r0, r1 + 1):
-        args.append("(")
-        for c in range(c0, c1 + 1):
-            p = os.path.join(tmp, f"{c}_{r}.jpg")
-            cw, ch = min(ts, w - c * ts), min(ts, h - r * ts)
-            ox, oy = (ov if c > 0 else 0), (ov if r > 0 else 0)
-            args += ["(", p, "-crop", f"{cw}x{ch}+{ox}+{oy}", "+repage", ")"]
-        args += ["+append", ")"]
-    args += ["-append", "-quality", "88", out]
-    subprocess.run(args, check=True)
-    shutil.rmtree(tmp, ignore_errors=True)
+        with cf.ThreadPoolExecutor(8) as ex:
+            list(ex.map(dl, jobs))
+        # a tile with c > 0 (r > 0) carries `ov` extra pixels on its left (top) edge;
+        # crop every tile to its own ts x ts cell, then append rows and columns
+        # po řádcích: jeden příkaz na celou stránku by na Windows přesáhl limit délky příkazové řádky (32 767 znaků)
+        row_files = []
+        for r in range(r0, r1 + 1):
+            args = ["magick"]
+            for c in range(c0, c1 + 1):
+                p = os.path.join(tmp, f"{c}_{r}.jpg")
+                cw, ch = min(ts, w - c * ts), min(ts, h - r * ts)
+                ox, oy = (ov if c > 0 else 0), (ov if r > 0 else 0)
+                args += ["(", p, "-crop", f"{cw}x{ch}+{ox}+{oy}", "+repage", ")"]
+            row_files.append(os.path.join(tmp, f"row_{r}.miff"))   # MIFF zachová vlastnosti JPEG (podvzorkování barev)
+            subprocess.run(args + ["+append", row_files[-1]], check=True)
+        subprocess.run(["magick", *row_files, "-append", "-quality", "88", out], check=True)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)   # uklidit i při chybě stahování nebo magick
     return out, (W, H)
 
 

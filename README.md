@@ -19,9 +19,10 @@ s přepisem a překladem, „Co hledáme“ a deník hledání. **[Podívejte se
   dlouhá práce – počítejte s několika večery a s tím, že spotřebuje dost kreditů. Nejlevnější tarif **Pro bude
   nejspíš málo** (stačí na vyzkoušení), na celý rodokmen počítejte aspoň s nejnižším tarifem **Max**.
   Po dokončení můžete předplatné zase snížit nebo zrušit, web i data vám zůstanou.
-- **Počítač s macOS** (vyzkoušeno). Windows a Linux by měly fungovat, ale vyzkoušené nejsou.
+- **Počítač s macOS nebo Windows** (obojí vyzkoušeno; Windows 11 s Pythonem z python.org a Git Bashem).
+  Linux by měl fungovat, ale vyzkoušený není.
 - Programy **Python 3, Node.js, ImageMagick a git**. Nemusíte je instalovat předem – Claude zkontroluje, co chybí,
-  a pomůže s instalací (na Macu přes [Homebrew](https://brew.sh)).
+  a pomůže s instalací (na Macu přes [Homebrew](https://brew.sh), na Windows přes winget).
 - Volitelně účet na [Netlify](https://www.netlify.com) (zdarma), pokud chcete web zveřejnit pro rodinu.
 
 ## Instalace
@@ -81,12 +82,14 @@ skills/rodokmen/
 
 ## Co umí a co ne
 - **Hotové nástroje** (bez prohlížeče) mají: východní Čechy (SOA Zámrsk, ARON), jižní Čechy (SOA Třeboň,
-  včetně dobrovolnických rejstříků) a Prahu (AHMP a policejní přihlášky 1850–1914). Pro severní Čechy (SOA Litoměřice)
+  včetně dobrovolnických rejstříků), západní Čechy (SOA Plzeň, Porta fontium), střední Čechy (SOA Praha, eBadatelna –
+  i urbáře a gruntovní knihy) a Prahu (AHMP a policejní přihlášky 1850–1914). Pro severní Čechy (SOA Litoměřice)
   stahuje snímky nástrojem, knihu ale najde přes prohlížeč. Pro Rakousko je postup přes Matriculu.
-- Ostatní archivy (Plzeň, Brno, Opava) Claude obsluhuje obecným postupem přes prohlížeč.
+- Ostatní archivy (Brno, Opava) Claude obsluhuje obecným postupem přes prohlížeč.
   Funguje to, ale je to pomalejší.
 - U úředníků, vojáků a lékařů hledá i v **dobových novinách** (ANNO, Kramerius) – kariéra, vyznamenání, parte.
-- Umí načíst **rodinný strom z MyHeritage** a dalších služeb (export GEDCOM) a udělat z něj plán hledání.
+- Umí načíst **rodinný strom z MyHeritage** a dalších služeb (export GEDCOM, z MyHeritage i zálohu stromu z programu
+  Family Tree Builder) a udělat z něj plán hledání.
 - Průběžně sbírá **zajímavosti** (svatby na poslední chvíli, rod sto let v jednom domě…) a s vámi napíše
   **Příběh vašeho rodu** – hlavní článek webu.
 - Claude čte staré písmo dobře, ale ne bezchybně. Proto ke každému zápisu ukládá výřez s vyznačeným místem,
@@ -113,8 +116,9 @@ tady v repozitáři.
 - **Žádný automaticky spouštěný kód.** Plugin nemá hooky ani MCP servery. Skripty spouští jen Claude, když je
   při práci potřebuje, a Claude Code se vás na ně zeptá.
 - **Kam skripty sahají:** jen do složky projektu rodokmenu. Na disku nic nemažou ani nepřepisují mimo ni.
-- **Na které servery chodí:** archivní portály (ARON SOA Zámrsk, SOA Třeboň, AHMP, Národní archiv, SOA Litoměřice,
-  Matricula), noviny (ANNO, Kramerius), OpenStreetMap (mapa a souřadnice obcí) a při instalaci webu registr npm.
+- **Na které servery chodí:** archivní portály (ARON SOA Zámrsk, SOA Třeboň, SOA Plzeň – Porta fontium, SOA Praha –
+  eBadatelna, AHMP, Národní archiv, SOA Litoměřice, Matricula), noviny (ANNO, Kramerius), OpenStreetMap (mapa
+  a souřadnice obcí) a při instalaci webu registr npm.
   Na Netlify jen tehdy, když web sami zveřejníte. Nikam jinam nic neposílají, ani vaše data, ani poznámky.
 - **Doporučení:** nechte v Claude Code zapnuté schvalování příkazů, aspoň dokud si nezvyknete, co Claude dělá.
   Obecně instalujte skilly a pluginy jen od lidí, kterým věříte. Skill nikdo předem nekontroluje a Claude se

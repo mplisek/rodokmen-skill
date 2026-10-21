@@ -8,7 +8,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else os.path.join(ROOT, "vystupy")
 WEB = "--web" in sys.argv
 HREFS = {int(k): v for k, v in json.load(open(sys.argv[sys.argv.index("--web") + 1])).items()} if WEB else {}
-CHROME = next((c for c in ("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", "google-chrome", "chromium", "chromium-browser")
+CHROME = next((c for c in ("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+                           "C:/Program Files/Google/Chrome/Application/chrome.exe",
+                           "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+                           "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+                           "google-chrome", "chromium", "chromium-browser")
                if os.path.exists(c) or __import__("shutil").which(c)), None)
 
 ns = {}
@@ -92,7 +96,8 @@ def fit(text, avail, fmax, fmin):
 
 
 paths, defs, texts, links = [], [], [], []
-slots = sorted(set(P) | {c for k in P for c in (2 * k, 2 * k + 1) if gen(c) <= 10 and k in P})
+slots = sorted({k for k in P if gen(k) < len(RINGS)} |   # vějíř má 11 prstenců (generace 0–10); starší předky vynech
+               {c for k in P for c in (2 * k, 2 * k + 1) if gen(c) <= 10 and k in P})
 for k in slots:
     g = gen(k)
     r0, r1 = RINGS[g]
@@ -222,7 +227,7 @@ prof = tempfile.mkdtemp(prefix="fanchart-")
 before = os.path.getmtime(png_path) if os.path.exists(png_path) else 0
 subprocess.run([CHROME, "--headless=new", "--disable-gpu", "--hide-scrollbars", f"--user-data-dir={prof}",
                 "--force-device-scale-factor=1", f"--window-size={W},{H}", f"--screenshot={png_path}",
-                "file://" + html_path], check=True, capture_output=True, timeout=120)
+                __import__("pathlib").Path(html_path).as_uri()], check=True, capture_output=True, timeout=120)
 shutil.rmtree(prof, ignore_errors=True)
 if not os.path.exists(png_path) or os.path.getmtime(png_path) <= before:
     sys.exit("PNG se nevygeneroval (Chrome)")

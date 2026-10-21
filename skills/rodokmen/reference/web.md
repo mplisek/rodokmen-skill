@@ -9,7 +9,7 @@ a překladem), stránka osoby, rodiny, „Co hledáme“, výzkumný deník, hle
 | příkaz | co dělá |
 |---|---|
 | `npm install` | jednou na začátku (stáhne knihovny, ~1 minuta) |
-| `npm run data` | převede data do webu (vždy po změně dat) |
+| `npm run data` | převede data do webu (vždy po změně dat; funkční Python 3 vyhledá `scripts/data.mjs`) |
 | `npm run build` | sestaví web do `dist/` |
 | `npm run nahled` | data + build + náhled na http://localhost:4321 (Ctrl+C ukončí) |
 | `npm run dev` | vývojový režim při úpravách vzhledu |
@@ -46,6 +46,8 @@ Náhled spouštěj na pozadí a uživateli pošli odkaz. Vzhled si ověř sám (
 3. Založení webu a propojení složky (interaktivní, jednou) – dej uživateli:
    `! cd web && npx -y netlify-cli@latest sites:create` (zvolí tým a název → adresa `https://<název>.netlify.app`),
    případně `npx netlify-cli link`, pokud web už existuje.
+   **Windows:** když `!` běží ve Windows PowerShellu 5.1 (`&&` tam nefunguje a `npx` blokuje Execution Policy), ať uživatel
+   otevře PowerShell 7 nebo Příkazový řádek, přejde do složky `web` a spustí `npx -y netlify-cli@latest login` (a `sites:create`).
 4. Nasazení: `cd web && npm run nasadit` (můžeš spustit sám; vypíše adresu webu).
 5. Ověř: otevři adresu → musí se ukázat přihlašovací otázka; po správné odpovědi web.
    Přihlášení zajišťuje Netlify Edge Function `web/netlify/edge-functions/brana.js` (generuje ji export).
@@ -63,4 +65,8 @@ Barvy rodů jsou v `tools/export_web.py` (`LINE_COLORS`) a `tools/fan_chart.py` 
 a po úpravě zkontroluj web na mobilu i počítači.
 
 ## Vějíř jako plakát
-`python3 -I tools/fan_chart.py vystupy/` → SVG a HTML (a PNG, je-li nainstalovaný Google Chrome) k tisku.
+`python3 -I tools/fan_chart.py vystupy/` → SVG a HTML (a PNG, je-li nainstalovaný Google Chrome, na Windows i Microsoft Edge) k tisku.
+
+## Starší projekt na Windows
+`novy_projekt.py` existující soubory webu nepřepisuje: starší projekt dostane `web/scripts/data.mjs`, ale v `web/package.json`
+mu zůstane `"data": "python3 -I ../tools/export_web.py"`, což na Windows nefunguje. Změň ho na `"data": "node scripts/data.mjs"`.

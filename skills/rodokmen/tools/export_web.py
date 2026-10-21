@@ -6,7 +6,7 @@ data/mista.json, data/web.json, data/dokumenty.json a markdownové poznámky. Za
 web/src/data/site.json, web/src/generated/*, web/public/{img,zdroje}, web/public/prihlaseni.html,
 web/nginx.conf a web/netlify/edge-functions/brana.js.
 
-Spouští se z web/ příkazem `npm run data` (nebo přímo `python3 -I tools/export_web.py`).
+Spouští se z web/ příkazem `npm run data` (nebo přímo `python3 -I tools/export_web.py`, na Windows `python -I -X utf8 …`).
 """
 import hashlib, html, json, os, re, shutil, subprocess, sys, unicodedata
 
@@ -328,7 +328,7 @@ def main():
 
     hrefs = os.path.join(gen_dir, "fan_hrefs.json")
     json.dump({k: f"/osoba/{s}/" for k, s in slugs.items()}, open(hrefs, "w"))
-    subprocess.run([sys.executable, "-I", os.path.join(TOOLS, "fan_chart.py"),
+    subprocess.run([sys.executable, "-I", "-X", "utf8", os.path.join(TOOLS, "fan_chart.py"),
                     os.path.join(gen_dir, "fan.svg"), "--web", hrefs], check=True, capture_output=True)
 
     gated = login_files(cfg)
