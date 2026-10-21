@@ -96,6 +96,8 @@ def load(path):
     D["fam"] = defaultdict(lambda: {"h": None, "w": None, "c": []})
     for fid, iid, role in q("""select family_id, individual_id, individual_role_type from family_individual_connection
             where delete_flag = 0 order by family_id, child_order_in_family"""):
+        if iid not in D["ind"]:   # osoba smazaná jen v hlavní tabulce – žádné odkazy do prázdna (Gramps, MyHeritage)
+            continue
         f = D["fam"][fid]
         if role == 2:
             f["h"] = iid
