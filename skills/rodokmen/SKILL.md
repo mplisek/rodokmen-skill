@@ -100,9 +100,9 @@ Základní smyčka pro každou osobu:
    5. přepis originálu a český překlad do `data/prepisy.json` (nejistá místa „(?)“, nečitelná „[…]“),
    6. osobu/osoby do `data/osoby.py` (`f` fakta, `r` klíč zápisu, `st="doc"`), sourozence a kmotry-příbuzné do `SIDE`.
 6. **Zapiš hledání do deníku** `data/research_log.md` – i neúspěšné, s rozsahem (které roky / snímky jsi prošel).
-   **Vedlejší nálezy nezahazuj**: každý výskyt sledovaného příjmení, čísla domu nebo možného příbuzného, na který
-   při procházení narazíš (i bez jasné vazby), zapiš do `data/vedlejsi_nalezy.md` se svazkem a snímkem. Než začneš
-   nové hledání, projdi ho – nejasné výskyty se později často spojí (sourozenec, kmotr, druhý sňatek, jiná větev).
+   Narazíš-li po cestě na **zjevně související výskyt** (vzácné příjmení rodu, stejný dům, jméno z rodinného
+   vyprávění), zapiš ho do výsledku v deníku se snímkem – je to jen stopa, ne doklad. Když se hledání zasekne,
+   projdi deník právě kvůli takovým stopám.
 7. Spusť `python3 -I tools/kontrola.py` a oprav chyby.
 
 Pravidla, která chrání kvalitu (naučená na skutečném projektu):
@@ -127,8 +127,7 @@ Pravidla, která chrání kvalitu (naučená na skutečném projektu):
 Na velké kolo (např. „projdi 5 svazků a najdi všechny Nováky“) můžeš pustit 2–4 pomocníky paralelně.
 Každému dej přesné zadání (svazek, snímky, koho hledat, formát výsledku: klíč, snímek, souřadnice zápisu, přepis)
 a pravidla výše. Pomocník píše jen do `pracovni/pom_<větev>/`, **do `data/` nikdy**. Zapisuješ ty.
-Přikaž mu hlásit **všechny výskyty sledovaných příjmení** (se snímkem), nejen hledanou osobu – ty pak zapiš
-do `data/vedlejsi_nalezy.md`. Výstupy pomocníků v `pracovni/` nemaž, dokud nejsou vytěžené.
+Ať zmíní i zjevně související výskyty (viz krok 6 výše). Výstupy pomocníků v `pracovni/` nemaž, dokud nejsou vytěžené.
 **Jejich čtení vždy ověř sám na snímku** (`python3 -I tools/overit.py <snímek> x0,y0,x1,y1 pracovni/over` rozdělí zápis
 na dvě čitelné poloviny), než ho zapíšeš jako `doc`. Uživateli to vysvětli správně: pomocníci nečtou hůř, je to stejný
 model. Jde o princip čtyř očí a pomocník nemá kontext (dvě rodiny stejného jména ve vsi, dva Janové na statku).
@@ -200,7 +199,6 @@ Nedělej to pořád. Postup:
 | `data/zaznamy.json`, `data/svazky.json` | zápisy z matrik a svazky, ze kterých jsou |
 | `data/prepisy.json`, `data/zvyrazneni.json` | přepisy s překlady, rámečky čteného místa |
 | `data/research_log.md` | deník všech hledání |
-| `data/vedlejsi_nalezy.md` | výskyty rodových příjmení a domů bez jasné vazby – nic se nemaže, později se spojují |
 | `data/udaje_od_rodiny.md`, `data/archivni_dotazy.md` | co víme od rodiny; co jen v archivu |
 | `data/zajimavosti.md`, `data/pribeh.md`, `data/web.json`, `data/dokumenty.json`, `data/mista.json` | texty a nastavení webu, rodinné fotky, místa na mapě |
 | `vyrezy/`, `zdroje/` | výřezy zápisů a dokumentů (web / plné rozlišení), název = klíč + `.jpg` |
