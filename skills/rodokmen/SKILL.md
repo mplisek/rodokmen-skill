@@ -19,6 +19,8 @@ Najdeš v ní `tools/` (nástroje), `template/` (šablona projektu a webu) a `re
 - Radost z objevu je důležitá: když najdeš něco zajímavého (řemeslo, nemanželské dítě, epidemie, svatba
   „na poslední chvíli“, předek z 17. století), řekni to jako příběh, ne jako tabulku.
 - Buď poctivý: „nenašel jsem“ a „nejsem si jistý“ jsou plnohodnotné výsledky.
+- **Pozor na formulace u smrti a hrobů** – mluvíš s lidmi o jejich mrtvých. Ne „otvírám hrob“, „vykopal jsem“,
+  „exhumuji“, ale „otevírám záznam o hrobu“, „našel jsem zápis o úmrtí“. Žádné vtipy na úmrtí a nemoci předků.
 - Po každém kole krátce: kolik je osob a zápisů, co běží, a 2–4 větve, kde to vypadá zajímavě (s důvodem).
 - Dnešní datum (do deníku, STAV.md) ber z příkazu `date`, ne z hlavy.
 
@@ -53,14 +55,10 @@ Najdeš v ní `tools/` (nástroje), `template/` (šablona projektu a webu) a `re
 ## Fáze 1 – Rozhovor s rodinou (nejcennější hodina celého projektu)
 Cíl: znát co nejvíc o 3–4 generacích nazpět, než sáhneš do matrik.
 - Ptej se postupně (ne dotazníkem naráz): výchozí osoba (pro koho rodokmen je – on sám, partner, dítě?), rodiče,
-  prarodiče, pradědečci: **jména, rodná příjmení žen, roky a místa narození, sňatky, úmrtí, řemesla, domy (čísla popisná!)**.
-- Požádej o dokumenty: rodné a oddací listy, domovské listy, parte, fotky, rodinné kroniky, paměti, staré dopisy,
+  prarodiče, pradědečci: **jména, rodná příjmení žen, roky a místa narození, sňatky, úmrtí (a kde jsou pohřbeni), řemesla, domy (čísla popisná!)**.
+- Požádej o dokumenty: rodné a oddací listy, domovské listy, parte, fotky (i náhrobků), rodinné kroniky, paměti, staré dopisy,
   výpisy z MyHeritage/Geni od příbuzných. Ať je dá do `dokumenty/`. Přečti je celé (PDF/fotky) a vytěž.
 - Doporuč zeptat se nejstarších žijících příbuzných – teď, dokud to jde. Nabídni seznam otázek.
-- **Mezi prvními otázkami: kde jsou předci pohřbeni** (které hřbitovy, rodinné hroby, kdo se o hrob stará).
-  Náhrobky dají jména, data narození a úmrtí i rodná příjmení žen – často pro lidi, jejichž matriky ještě nejsou
-  přístupné. Požádej o fotky náhrobků (nebo ať je při návštěvě vyfotí) a zkus evidenci hrobových míst (správa hřbitova,
-  mnoho měst má online vyhledávání hrobů; BillionGraves, Find a Grave – viz `reference/portaly.md`).
 - Vše zapiš: `data/udaje_od_rodiny.md` (kdo co řekl), osoby do `data/osoby.py` se stavem `fam`
   (formát v hlavičce souboru a v `reference/data.md`). Žijící lidé jen jméno a rok narození.
 - **Rodinný strom jako soubor GEDCOM** (`.ged`, export z MyHeritage/Geni/FamilySearch): `python3 -I tools/ged_import.py
@@ -192,8 +190,6 @@ Nedělej to pořád. Postup:
   automatické procházení stovek záznamů vede k **zablokování účtu**. Čti jen to, co uživatel otevře, nebo co potřebuješ jednotlivě.
 - Nezadávej za uživatele hesla, platební údaje, neřeš CAPTCHA, nekupuj předplatné.
 - Nedávej na web podrobnosti o žijících lidech bez jejich souhlasu.
-- Nenavrhuj otevírání hrobů ani exhumaci (např. kvůli DNA z ostatků) – ani jako jednu z možností. Pro rodinu je to
-  necitlivé. Hroby slouží jen jako pramen nápisů a evidence hrobových míst; DNA jen od žijících, kteří o to sami stojí.
 - Nepřepisuj data bez zálohy v gitu; po větším kroku navrhni uložení (`git add -A && git commit -m "…"`).
 
 ## Mapa souborů projektu

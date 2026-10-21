@@ -116,11 +116,10 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
   na desítky minut – stahuj jen konkrétní snímky, nanejvýš pár za sekundu, hromadné procházení knih nedělej.
 
 ## Hroby a hřbitovy
-- Ptej se rodiny hned na začátku, kde jsou předci pohřbeni; fotky náhrobků (jména, data, rodná příjmení) jsou cenný
-  pramen hlavně pro 20. století, kde matriky ještě nejsou přístupné.
+- Kde jsou předci pohřbeni, víš z rozhovoru s rodinou (Fáze 1). Fotky náhrobků (jména, data, rodná příjmení) jsou
+  cenný pramen hlavně pro 20. století, kde matriky ještě nejsou přístupné.
 - Evidence hrobových míst: správa hřbitova (kdo je v hrobě uložen, kdo platí nájem – často žijící potomek);
   řada měst má online vyhledávání hrobů. Mezinárodně BillionGraves a Find a Grave.
-- Jen nápisy a evidence – exhumaci ani otevírání hrobů nikdy nenavrhuj.
 
 ## Noviny a ročenky – `tools/anno.py`, `tools/anno_snap.py`, `tools/kramerius.py`
 **Kdy se vyplatí:** státní a vrchnostenští úředníci, soudci, učitelé, faráři, důstojníci, vojenští lékaři, notáři,
