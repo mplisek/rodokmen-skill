@@ -57,6 +57,10 @@ Cíl: znát co nejvíc o 3–4 generacích nazpět, než sáhneš do matrik.
 - Požádej o dokumenty: rodné a oddací listy, domovské listy, parte, fotky, rodinné kroniky, paměti, staré dopisy,
   výpisy z MyHeritage/Geni od příbuzných. Ať je dá do `dokumenty/`. Přečti je celé (PDF/fotky) a vytěž.
 - Doporuč zeptat se nejstarších žijících příbuzných – teď, dokud to jde. Nabídni seznam otázek.
+- **Mezi prvními otázkami: kde jsou předci pohřbeni** (které hřbitovy, rodinné hroby, kdo se o hrob stará).
+  Náhrobky dají jména, data narození a úmrtí i rodná příjmení žen – často pro lidi, jejichž matriky ještě nejsou
+  přístupné. Požádej o fotky náhrobků (nebo ať je při návštěvě vyfotí) a zkus evidenci hrobových míst (správa hřbitova,
+  mnoho měst má online vyhledávání hrobů; BillionGraves, Find a Grave – viz `reference/portaly.md`).
 - Vše zapiš: `data/udaje_od_rodiny.md` (kdo co řekl), osoby do `data/osoby.py` se stavem `fam`
   (formát v hlavičce souboru a v `reference/data.md`). Žijící lidé jen jméno a rok narození.
 - **Rodinný strom jako soubor GEDCOM** (`.ged`, export z MyHeritage/Geni/FamilySearch): `python3 -I tools/ged_import.py
@@ -98,6 +102,9 @@ Základní smyčka pro každou osobu:
    5. přepis originálu a český překlad do `data/prepisy.json` (nejistá místa „(?)“, nečitelná „[…]“),
    6. osobu/osoby do `data/osoby.py` (`f` fakta, `r` klíč zápisu, `st="doc"`), sourozence a kmotry-příbuzné do `SIDE`.
 6. **Zapiš hledání do deníku** `data/research_log.md` – i neúspěšné, s rozsahem (které roky / snímky jsi prošel).
+   **Vedlejší nálezy nezahazuj**: každý výskyt sledovaného příjmení, čísla domu nebo možného příbuzného, na který
+   při procházení narazíš (i bez jasné vazby), zapiš do `data/vedlejsi_nalezy.md` se svazkem a snímkem. Než začneš
+   nové hledání, projdi ho – nejasné výskyty se později často spojí (sourozenec, kmotr, druhý sňatek, jiná větev).
 7. Spusť `python3 -I tools/kontrola.py` a oprav chyby.
 
 Pravidla, která chrání kvalitu (naučená na skutečném projektu):
@@ -122,6 +129,8 @@ Pravidla, která chrání kvalitu (naučená na skutečném projektu):
 Na velké kolo (např. „projdi 5 svazků a najdi všechny Nováky“) můžeš pustit 2–4 pomocníky paralelně.
 Každému dej přesné zadání (svazek, snímky, koho hledat, formát výsledku: klíč, snímek, souřadnice zápisu, přepis)
 a pravidla výše. Pomocník píše jen do `pracovni/pom_<větev>/`, **do `data/` nikdy**. Zapisuješ ty.
+Přikaž mu hlásit **všechny výskyty sledovaných příjmení** (se snímkem), nejen hledanou osobu – ty pak zapiš
+do `data/vedlejsi_nalezy.md`. Výstupy pomocníků v `pracovni/` nemaž, dokud nejsou vytěžené.
 **Jejich čtení vždy ověř sám na snímku** (`python3 -I tools/overit.py <snímek> x0,y0,x1,y1 pracovni/over` rozdělí zápis
 na dvě čitelné poloviny), než ho zapíšeš jako `doc`. Uživateli to vysvětli správně: pomocníci nečtou hůř, je to stejný
 model. Jde o princip čtyř očí a pomocník nemá kontext (dvě rodiny stejného jména ve vsi, dva Janové na statku).
@@ -183,6 +192,8 @@ Nedělej to pořád. Postup:
   automatické procházení stovek záznamů vede k **zablokování účtu**. Čti jen to, co uživatel otevře, nebo co potřebuješ jednotlivě.
 - Nezadávej za uživatele hesla, platební údaje, neřeš CAPTCHA, nekupuj předplatné.
 - Nedávej na web podrobnosti o žijících lidech bez jejich souhlasu.
+- Nenavrhuj otevírání hrobů ani exhumaci (např. kvůli DNA z ostatků) – ani jako jednu z možností. Pro rodinu je to
+  necitlivé. Hroby slouží jen jako pramen nápisů a evidence hrobových míst; DNA jen od žijících, kteří o to sami stojí.
 - Nepřepisuj data bez zálohy v gitu; po větším kroku navrhni uložení (`git add -A && git commit -m "…"`).
 
 ## Mapa souborů projektu
@@ -193,6 +204,7 @@ Nedělej to pořád. Postup:
 | `data/zaznamy.json`, `data/svazky.json` | zápisy z matrik a svazky, ze kterých jsou |
 | `data/prepisy.json`, `data/zvyrazneni.json` | přepisy s překlady, rámečky čteného místa |
 | `data/research_log.md` | deník všech hledání |
+| `data/vedlejsi_nalezy.md` | výskyty rodových příjmení a domů bez jasné vazby – nic se nemaže, později se spojují |
 | `data/udaje_od_rodiny.md`, `data/archivni_dotazy.md` | co víme od rodiny; co jen v archivu |
 | `data/zajimavosti.md`, `data/pribeh.md`, `data/web.json`, `data/dokumenty.json`, `data/mista.json` | texty a nastavení webu, rodinné fotky, místa na mapě |
 | `vyrezy/`, `zdroje/` | výřezy zápisů a dokumentů (web / plné rozlišení), název = klíč + `.jpg` |

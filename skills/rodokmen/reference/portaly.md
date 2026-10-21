@@ -110,6 +110,17 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
 - Užitečné na indexy matrik a hroby (BillionGraves, Find a Grave). Výsledek je vodítko – ověř v matrice.
 - Neměň uživateli otevřené karty (po hledání vrať původní adresu). Stránky za Cloudflare neobcházej – ať je uživatel
   otevře sám a pošle snímek obrazovky.
+- Snímky filmu (DGS): seznam přes `POST /search/filmdatainfo/image-data` s `{"type":"film-data","args":{"dgsNum":"00…","state":{"i":"0"},"locale":"cs"}}`
+  (`images[]` = ARK). Snímek: `https://www.familysearch.org/service/records/storage/deepzoomcloud/dz/v1/<ARK 3:1:…>/$dist`
+  (plné rozlišení), malé náhledy `…/image_files/8/0_0.jpg`. **Po ~1000 rychlých požadavcích přijde HTTP 429** a blokace
+  na desítky minut – stahuj jen konkrétní snímky, nanejvýš pár za sekundu, hromadné procházení knih nedělej.
+
+## Hroby a hřbitovy
+- Ptej se rodiny hned na začátku, kde jsou předci pohřbeni; fotky náhrobků (jména, data, rodná příjmení) jsou cenný
+  pramen hlavně pro 20. století, kde matriky ještě nejsou přístupné.
+- Evidence hrobových míst: správa hřbitova (kdo je v hrobě uložen, kdo platí nájem – často žijící potomek);
+  řada měst má online vyhledávání hrobů. Mezinárodně BillionGraves a Find a Grave.
+- Jen nápisy a evidence – exhumaci ani otevírání hrobů nikdy nenavrhuj.
 
 ## Noviny a ročenky – `tools/anno.py`, `tools/anno_snap.py`, `tools/kramerius.py`
 **Kdy se vyplatí:** státní a vrchnostenští úředníci, soudci, učitelé, faráři, důstojníci, vojenští lékaři, notáři,
