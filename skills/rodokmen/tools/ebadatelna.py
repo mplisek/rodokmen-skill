@@ -32,6 +32,7 @@ _cj = http.cookiejar.CookieJar()
 _op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_cj))
 _op.addheaders = [("User-Agent", "Mozilla/5.0 (rodokmen)"), ("Accept-Language", "cs")]
 NEEXISTUJE = "neexistující stránku"
+PAUZA = 0.5   # s před každým požadavkem – ohled na server i při volání ve smyčce
 
 
 class Chyba(Exception):
@@ -45,9 +46,12 @@ def udrzba():
 
 
 def get(path, referer=None, binary=False, data=None, ajax_base=None):
-    """GET/POST s opakováním (2, 4, 8 s). Vrací (obsah, konečná adresa)."""
+    """GET/POST s opakováním (2, 4, 8 s; při HTTP 429 déle). Vrací (obsah, konečná adresa)."""
     url = path if path.startswith("http") else BASE + path
+    wait = 0
     for attempt in range(4):
+        time.sleep(wait or PAUZA)
+        wait = 2 ** (attempt + 1)
         req = urllib.request.Request(url, data=data)
         if referer:
             req.add_header("Referer", referer)
@@ -62,12 +66,14 @@ def get(path, referer=None, binary=False, data=None, ajax_base=None):
                 d = r.read()
                 return (d if binary else d.decode("utf-8", "replace")), r.geturl()
         except urllib.error.HTTPError as e:
-            if e.code < 500 or attempt == 3:
+            if e.code == 429 and attempt < 3:   # moc požadavků – počkat (podle Retry-After) a zkusit znovu
+                ra = e.headers.get("Retry-After", "")
+                wait = min(int(ra), 120) if ra.isdigit() else 30 * (attempt + 1)
+            elif e.code < 500 or attempt == 3:
                 raise Chyba(f"portál vrátil chybu HTTP {e.code} ({url}).{udrzba()}")
         except (OSError, http.client.HTTPException) as e:   # i useknutý přenos (IncompleteRead)
             if attempt == 3:
                 raise Chyba(f"portál neodpovídá ({e}).{udrzba() or ' Zkus to za chvíli znovu.'}")
-        time.sleep(2 ** (attempt + 1))
 
 
 def text(s):

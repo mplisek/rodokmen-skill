@@ -23,14 +23,16 @@ ARCHIV = "soap-pn"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, "pracovni", ".cache_pf")
 UA = {"User-Agent": "Mozilla/5.0 (rodokmen)"}   # bez prohlížečového User-Agentu portál vrací 403
+PAUZA = 0.5   # s před každým požadavkem – ohled na server i při volání ve smyčce
 
 
 def get(url, binary=False):
     url = url if url.startswith("http") else BASE + url
     err = None
+    wait = 0
     for attempt in range(4):
-        if attempt:
-            time.sleep(2 * attempt)
+        time.sleep(wait or PAUZA)
+        wait = 2 * (attempt + 1)
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=120) as r:
                 data = r.read()
@@ -38,6 +40,11 @@ def get(url, binary=False):
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 sys.exit(f"Porta fontium: stránka nenalezena (404): {url}")
+            if e.code == 429:   # moc požadavků – počkat (podle Retry-After) a zkusit znovu
+                ra = e.headers.get("Retry-After", "")
+                wait = min(int(ra), 120) if ra.isdigit() else 30 * (attempt + 1)
+                err = e
+                continue
             if e.code < 500:   # 4xx se opakováním nespraví
                 sys.exit(f"Porta fontium odmítl požadavek ({e.code}): {url}")
             err = e
@@ -71,7 +78,11 @@ def info(kniha):
         if val and lab not in fields:
             fields[lab] = val
     scans = re.findall(r'data-iip-path="([^"]+)"', page)
-    links = re.findall(r'href="(/iipimage/\d+/[^"]+)"', page)
+    # odkaz patří ke snímku, jehož náhled obaluje (<a href="/iipimage/…"><img data-iip-path="…">) – ne podle pořadí,
+    # jinak by jiný odkaz na stránce posunul párování a citace by vedla na vedlejší snímek
+    pary = dict((s, a) for a, s in re.findall(
+        r'<a\s[^>]*?href="(/iipimage/\d+/[^"]+)"[^>]*>\s*<img\s[^>]*?data-iip-path="([^"]+)"', page))
+    links = [pary.get(s, "") for s in scans]
     return kniha, fields, scans, links
 
 
@@ -82,7 +93,12 @@ def scan(kniha, n):
     n = int(n)
     if not 1 <= n <= len(scans):
         sys.exit(f"{kniha}: snímek {n} neexistuje (kniha má {len(scans)} snímků)")
-    return kniha, fields, scans[n - 1], (links[n - 1] if n - 1 < len(links) else "")
+    path, link = scans[n - 1], links[n - 1]
+    stem = os.path.splitext(os.path.basename(path))[0]
+    if not link or link.rsplit("/", 1)[-1] != stem:   # odkaz musí nést stejné jméno souboru jako snímek
+        sys.exit(f"{kniha}: k snímku {n} ({stem}) se nepodařilo najít jeho odkaz – portál asi změnil stránku. "
+                 "Odkaz neuváděj, nahlas to (poznamky_pro_skill.md).")
+    return kniha, fields, path, link
 
 
 def snimek(kniha, n, out, nahled=False, crop=None):
@@ -157,10 +173,15 @@ if __name__ == "__main__":
         print("snímků:", len(s))
     elif a[0] == "snimek" and len(a) > 3:
         rest = a[4:]
-        try:
-            crop = next((tuple(float(v) for v in x.split(",")) for x in rest if x.count(",") == 3), None)
-        except ValueError:
-            sys.exit("výřez zadej jako čtyři čísla x0,y0,x1,y1 (zlomky 0–1)")
+        crop = None
+        for x in rest:
+            if "," in x:
+                try:
+                    crop = tuple(float(v) for v in x.split(","))
+                except ValueError:
+                    crop = ()
+                if len(crop) != 4:   # špatný výřez nesmí potichu stáhnout celou stránku
+                    sys.exit(f"výřez „{x}“ zadej jako čtyři čísla x0,y0,x1,y1 (zlomky 0–1)")
         snimek(a[1], a[2], a[3], "nahled" in rest, crop)
     elif a[0] == "link" and len(a) > 2:
         print(BASE + scan(a[1], a[2])[3])
