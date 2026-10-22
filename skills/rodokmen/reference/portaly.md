@@ -11,7 +11,7 @@ Matriky jsou online u osmi státních archivů – podle toho, **kde předci ži
 | SOA Litoměřice | severní Čechy | Digitální badatelna – digi.soalitomerice.cz | **částečně – `soal_zoomify.py`** (knihu najdi v prohlížeči) |
 | AHMP | hl. m. Praha | katalog.ahmp.cz (Pragapublica) | **ano – `ahmp_search.sh`, `ahmp_scan.py`** |
 | MZA Brno | jižní Morava, Vysočina z části | Acta Publica – actapublica.eu | ne |
-| ZA Opava | severní Morava a Slezsko | matriky.archives.cz (Digitální badatelna) | ne |
+| ZA Opava | severní Morava a Slezsko, Olomoucko a Litovelsko | Digitální badatelna – digi.archives.cz | **částečně – `soal_zoomify.py`** (knihu najdi v prohlížeči) |
 | Národní archiv | židovské matriky (HBMa), soupisy; pražské policejní přihlášky 1850–1914 | badatelna.eu; digi.nacr.cz/prihlasky2 | přihlášky **ano – `policie_prihlasky.py`** |
 
 Adresy u nevyzkoušených portálů ověř při prvním použití (portály se mění). Pro pohraničí a mimo ČR viz `playbook.md` §2
@@ -27,6 +27,10 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
 - **Odkaz na snímek** (pole `odkaz` v `zaznamy.json`): `python3 -I tools/aron_img.py <apu_id> link <snímek>`.
 - **Svazek do dat:** `python3 -I tools/aron_img.py <apu_id> svazek` (klíč = prvních 8 znaků apu_id → pole `svazek` v zápisu).
 - V ARON jsou i další fondy (sčítání lidu, některé gruntovní knihy, kroniky) – `aron_search.py "Obec" "název fondu"`.
+- Stejnojmenných obcí bývá víc (Vinice u Hořic × Vinice u Velké Jesenice). Výsledky jsou seřazené podle farnosti;
+  zúžit jde víc slovy oddělenými čárkou, která musí být v popisu všechna: `aron_search.py "Vinice,Hořice"`
+  (nebo hledej sousední obec či farní obec).
+- U starých far hledej nejdřív **souhrnné indexy** (popis „index NAROZENÝCH…“ přes mnoho let), často sahají do 17. století.
 - Obec nenalezena? Zkus název **bez přívlastku** („Lhota“ místo „Horní Lhota“) a starý název. Starší matriky
   (před ~1784) bývají ve faře sousedního města; indexy fary mají oddíly po vesnicích
   („Copulati Gross Lhota“).
@@ -86,6 +90,22 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
   Obrázkový server neomezuje a cookies nepotřebuje.
 - **POZOR: po zhruba 100 rychlých požadavcích na stránky aplikace (prohlížení snímků, detail výsledku) archiv zablokuje
   přístup na 30 minut.** V prohlížeči proto jen najdi knihu a cestu k obrázkům, pak už jen nástroj. Pomocníkům to napiš do zadání.
+
+## ZA Opava (severní Morava, Slezsko, Olomoucko, Litovelsko) – `tools/soal_zoomify.py`
+- Pozor na hranici: obce na Litovelsku a Olomoucku patří pod **ZA Opava**, ne pod MZA Brno.
+- Digitální badatelna digi.archives.cz má na vstupu automatické ověření – stačí počkat. Pak hledej obec a vyfiltruj
+  Matriky (ikona, potom znovu lupa). Knihy bývají řazené po obcích a na konci mají rejstřík.
+- Snímky jsou Zoomify na volně přístupném serveru (bez cookies):
+  `https://images.archives.cz/ximage/matriky/zoomify/cz/archives/CZ-217000010/NAD-165/dao/images/<složka>/<uuid>.jpg`.
+  Svazky jsou v různých složkách (0288, 0289, 0387…), proto nástroji dej **celou adresu**:
+  `python3 -I tools/soal_zoomify.py "<adresa>" 0 pracovni/x.jpg`.
+- Pořadí snímků svazku bez přenačítání stránky: hodnoty největšího `<select>` v prohlížeči snímků mají tvar
+  `<číslo> <hash32>`; `fetch('/da/showZoomify/<id svazku z URL>/<hash>')` vrátí HTML, ve kterém je `images/<složka>/<uuid>`.
+  Před sběrem adres z načtených souborů zavolej `performance.setResourceTimingBufferSize(5000)` (jinak limit 250).
+  Změna snímku přes `select.value=…; dispatchEvent('change')` funguje jen jednou po načtení stránky.
+- **POZOR: zhruba 75 rychlých dotazů po sobě → hláška „operace vyhodnoceny jako nestandardní“ a blokace na 30 minut.**
+  Ber jen potřebný úsek (10–30 snímků), mezi dotazy pauza aspoň 2 s. Delší smyčku pusť v prohlížeči na pozadí
+  a výsledek si přečti z `window` (nástroj pro JavaScript má limit asi 45 s). Pomocníkům to napiš do zadání.
 
 ## Pražské policejní přihlášky 1850–1914 (Národní archiv) – `tools/policie_prihlasky.py`
 - Karty pražských rodin: hlava rodiny, manželka s rokem a místem narození, děti s roky, adresy, někdy místo sňatku.

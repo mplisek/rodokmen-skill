@@ -8,19 +8,29 @@ Použití:
       jestli rámeček opravdu obepíná celý čtený zápis (jméno, data, rodiče, poznámky na okraji).
   ramecek.py <klic> --nahled      jen znovu vytvoří kontrolní obrázek
 """
-import json, os, subprocess, sys
+import glob, json, os, shutil, subprocess, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PATH = os.path.join(ROOT, "data", "zvyrazneni.json")
 
 
+def magick():
+    """Cesta k ImageMagicku; když chybí, skončí hned (před stahováním) srozumitelnou hláškou."""
+    m = shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+    if not m:
+        sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, "
+                 "Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")
+    return m
+
+
 def preview(key, boxes):
+    MAGICK = magick()
     src = os.path.join(ROOT, "vyrezy", key + ".jpg")
     out = os.path.join(ROOT, "pracovni", f"ramecek_{key}.jpg")
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    w, h = (int(v) for v in subprocess.run(["magick", "identify", "-format", "%w %h", src + "[0]"],
+    w, h = (int(v) for v in subprocess.run([MAGICK, "identify", "-format", "%w %h", src + "[0]"],
                                             capture_output=True, text=True, check=True).stdout.split())
-    cmd = ["magick", src, "-fill", "none", "-stroke", "#d7302a", "-strokewidth", str(max(3, w // 400))]
+    cmd = [MAGICK, src, "-fill", "none", "-stroke", "#d7302a", "-strokewidth", str(max(3, w // 400))]
     for x0, y0, x1, y1 in boxes:
         cmd += ["-draw", f"rectangle {x0 * w:.0f},{y0 * h:.0f},{x1 * w:.0f},{y1 * h:.0f}"]
     subprocess.run(cmd + [out], check=True)

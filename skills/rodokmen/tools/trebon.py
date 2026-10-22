@@ -13,10 +13,19 @@ Použití (z kořene projektu):
 Trvalý odkaz na snímek: https://digi.ceskearchivy.cz/<id_knihy>/<snímek>
 Ber ohled na server: stahuj jen snímky, které čteš.
 """
-import html, json, os, re, subprocess, sys, tempfile, urllib.parse, urllib.request, http.cookiejar
+import glob, html, json, os, re, shutil, subprocess, sys, tempfile, urllib.parse, urllib.request, http.cookiejar
 
 BASE = "https://digi.ceskearchivy.cz"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def magick():
+    """Cesta k ImageMagicku; když chybí, skončí hned (před stahováním) srozumitelnou hláškou."""
+    m = shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+    if not m:
+        sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, "
+                 "Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")
+    return m
 _cj = http.cookiejar.CookieJar()
 _op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_cj))
 _op.addheaders = [("User-Agent", "Mozilla/5.0 (rodokmen)")]
@@ -77,6 +86,7 @@ def rejstrik(bid, pis):
 
 
 def snimek(bid, n, out, nahled=False):
+    MAGICK = magick()
     ref = f"{BASE}/{bid}/{n}"
     get(ref)
     page, _ = get(f"/view.php?menu=3&id={bid}&page={n}&r=0", referer=ref)
@@ -108,14 +118,14 @@ def snimek(bid, n, out, nahled=False):
         if not row:
             break
         rp = os.path.join(tmp, f"row_{y}.png")
-        subprocess.run(["magick", *row, "-crop", "768x769+0+0", "+repage", "+append", rp], check=True)
+        subprocess.run([MAGICK, *row, "-crop", "768x769+0+0", "+repage", "+append", rp], check=True)
         rows.append(rp)
         y += 1
-    subprocess.run(["magick", *rows, "-crop", "100%x768+0+0", "+repage", "-append", out], check=True)
+    subprocess.run([MAGICK, *rows, "-crop", "100%x768+0+0", "+repage", "-append", out], check=True)
     for f in os.listdir(tmp):
         os.remove(os.path.join(tmp, f))
     os.rmdir(tmp)
-    r = subprocess.run(["magick", "identify", "-format", "%wx%h", out], capture_output=True, text=True)
+    r = subprocess.run([MAGICK, "identify", "-format", "%wx%h", out], capture_output=True, text=True)
     print(out, r.stdout, "odkaz:", ref)
 
 

@@ -23,6 +23,9 @@ Mladší knihy jsou na matričním úřadě obce s rozšířenou působností / 
 2. **Svazek podle roku a druhu.** Pozor na překryvy: jedna kniha pro více obcí, „duplikáty“, zvláštní knihy pro jednotlivé obce.
 3. **Index, pak kniha.** Index řazený po písmenech a letech dá stránku/folio; snímek odhadni (snímek ≈ folio × 1 až 2) a dolaď.
    Starší rejstříky (18. stol.) občas ukazují o 1–4 strany vedle – když zápis na udané straně není, listuj kolem.
+   U starých far se vyplatí nejdřív najít **souhrnný index** přes víc desetiletí (např. N/O/Z 1636–1746) – dovede
+   rychle až do 17. století. Rejstříky bývají podle **německého pravopisu**: česká jména na O a V hledej i pod W
+   (Otava = Wotawa, Vávra = Wawra). Knihy pro více obcí bývají řazené po obcích, rejstřík na konci.
 4. **Bez indexu: listuj chronologicky.** Odhadni pozici podle let na prvních a posledních snímcích svazku (půlení intervalu).
 5. **Přečti celý zápis**, pak se podívej i na okolí (dvojčata, další děti stejných rodičů).
 6. **Sňatek se obvykle konal ve farnosti nevěsty** (v jejím bydlišti) – hledej ho nejdřív tam, pak ve faře ženicha.
@@ -37,6 +40,7 @@ Mladší knihy jsou na matričním úřadě obce s rozšířenou působností / 
   Ludmilla = Lidmila, Dorothea = Dorota, Apollonia = Apolena, Georg/Georgius = Jiří, Matthias = Matěj, Adalbert = Vojtěch.
 - Příjmení se píše foneticky a mění se (Šaršon/Scharschon/Šaršoun, Kroupa/Kraupa). Hledej všechny varianty.
 - Ženská příjmení v němčině bez „-ová“ (Maria Novak = Marie Nováková).
+- Názvy obcí mívají staré tvary, třeba s předsunutým „V“ („Volešnice“ = Olešnice); při hledání obce zkus i ty.
 - Kurent: dlouhé „ſ“ vypadá jako „f“, „e“ jako „n“, „h“ s kličkou dolů. Při nejistotě porovnej se stejným písmenem
   jinde na stránce stejné ruky.
 - Daty bývají svátky (*Dominica*, *festum S. Joannis*) – v nejasných případech dopočítej.
