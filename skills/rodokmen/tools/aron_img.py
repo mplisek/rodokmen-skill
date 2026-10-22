@@ -14,6 +14,9 @@ Popis svazků se ukládá do pracovni/.cache_aron/<apu_id>.json (ve složce proj
 import glob, json, math, os, shutil, subprocess, sys, tempfile, time, urllib.request
 import concurrent.futures as cf
 import xml.etree.ElementTree as ET
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 API = "https://aron.vychodoceskearchivy.cz/api/aron"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

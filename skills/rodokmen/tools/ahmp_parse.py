@@ -1,5 +1,8 @@
 """Pomocník pro ahmp_search.sh: z HTML stránky výsledků katalogu AHMP vypíše svazky (popis | farnost | XID, počet snímků)."""
 import re,sys,html
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 t=open(sys.argv[1],encoding='utf-8').read()
 for blk in t.split('class="navigatorLine listArticle')[1:]:
     crumbs=re.findall(r'class="crumb">\s*<a[^>]*>([^<]*)</a>',blk)

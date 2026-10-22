@@ -15,6 +15,9 @@ přístup na 30 minut. Prohlížečem jen najdi knihu a cestu k obrázkům, sní
 neomezuje).
 """
 import glob, math, os, re, shutil, subprocess, sys, tempfile, time, urllib.parse, urllib.request
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 BASE = "https://images.soalitomerice.cz/ximage/matriky/zoomify/cz/archives/CZ-214000010/matriky/"
 HOSTS = ("images.soalitomerice.cz", "images.archives.cz")   # jen obrázkové servery archivů (snímky zpracovává ImageMagick)

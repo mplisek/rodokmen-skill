@@ -26,6 +26,8 @@ Mladší knihy jsou na matričním úřadě obce s rozšířenou působností / 
    U starých far se vyplatí nejdřív najít **souhrnný index** přes víc desetiletí (např. N/O/Z 1636–1746) – dovede
    rychle až do 17. století. Rejstříky bývají podle **německého pravopisu**: česká jména na O a V hledej i pod W
    (Otava = Wotawa, Vávra = Wawra). Knihy pro více obcí bývají řazené po obcích, rejstřík na konci.
+   **Když matrika chybí** (není online nebo se nedochovala), zkus rejstřík – bývá vedený zvlášť a přežil i tam, kde kniha
+   ne. Zápis v rejstříku dokládá datum, místo a otce; zapiš ho jako `prob` (opis, ne originál) a matriku zkus později.
 4. **Bez indexu: listuj chronologicky.** Odhadni pozici podle let na prvních a posledních snímcích svazku (půlení intervalu).
 5. **Přečti celý zápis**, pak se podívej i na okolí (dvojčata, další děti stejných rodičů).
 6. **Sňatek se obvykle konal ve farnosti nevěsty** (v jejím bydlišti) – hledej ho nejdřív tam, pak ve faře ženicha.
@@ -35,6 +37,9 @@ Mladší knihy jsou na matričním úřadě obce s rozšířenou působností / 
    Ve 20. století (1920–1945) zkus i **civilní matriky** lidí bez vyznání u okresních úřadů (vyzkoušeno v SOA Třeboň, viz `portaly.md`).
 
 ## Čtení písma
+- Kurentový rejstřík: stáhni plné rozlišení a rozřež stránku na čtvrtiny (sloupec jmen + data),
+  `magick f.jpg -crop 1250x1650+X+Y +repage ctvrt.jpg`. **Dopisované řádky** se snadno přečtou špatně (Franziska × Heinrich,
+  strana 131 × 151) – údaj z rejstříku vždy ověř v matrice.
 - Do ~1780 latina nebo čeština, pak hodně němčina (kurent), od ~1860 často čeština, ve 20. století čeština.
 - Česká jména v němčině/latině: Johann/Joannes = Jan, Wenzel/Wenceslaus = Václav, Joseph = Josef, Franz/Franciscus = František,
   Maria = Marie, Anna, Katharina = Kateřina, Barbara = Barbora, Magdalena = Majdalena/Magdaléna, Theresia = Terezie,
@@ -105,7 +110,8 @@ Mladší knihy jsou na matričním úřadě obce s rozšířenou působností / 
 ## Technické pasti (Windows) – napiš je i pomocníkům do zadání
 (Nahrazují první dva body macOS sekce; body o `overit.py` a výřezu platí i tady.)
 - Python: `python -I -X utf8 tools/<nástroj>.py` (ne `python3` – bývá to nefunkční alias z Microsoft Store). Bez `-X utf8`
-  je výstup do roury v cp1250: čeština se rozbije a `napady.py` či `ged_import.py` spadnou na „≈“ a „→“. Totéž platí při
+  je výstup do roury v cp1250: čeština se rozbije a skripty spadnou na „≈“ a „→“ (nástroje skillu si výstup přepnou
+  do UTF-8 samy, vlastní jednorázové skripty ne – `-X utf8` proto používej vždy). Totéž platí při
   přesměrování do souboru (soubor z `… --osoby > x.py` by jinak vznikl v cp1250; ve Windows PowerShellu 5.1 `>` dokonce
   zapisuje UTF-16 – přesměrovávej v Git Bash). Proměnná `PYTHONUTF8` s `-I` nefunguje.
 - ImageMagick je `magick`, nikdy `convert` (`convert` je ve Windows systémový nástroj na převod disku z FAT na NTFS).

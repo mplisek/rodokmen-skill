@@ -11,6 +11,9 @@ Aktualizace staršího projektu (znovu spustit na stejnou složku): tools/ se p�
 které se liší od nové šablony, taky – jejich staré verze se nejdřív uloží do pracovni/zaloha_web_<datum>/.
 """
 import filecmp, os, shutil, sys, time
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

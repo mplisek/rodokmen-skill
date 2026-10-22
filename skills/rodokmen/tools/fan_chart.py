@@ -3,6 +3,9 @@
 Použití: fan_chart.py <out_dir>                         (plakát: SVG + HTML s nadpisem a legendou, PNG přes Chrome, je-li k dispozici)
          fan_chart.py <out_file.svg> --web <hrefs.json>  (holé klikací SVG pro web – volá ho export_web.py)"""
 import html, json, math, os, re, subprocess, sys
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else os.path.join(ROOT, "vystupy")

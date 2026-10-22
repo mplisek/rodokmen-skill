@@ -5,6 +5,9 @@ Použití: aron_search.py "<text v popisu, např. obec>" [filtr názvu fondu] [m
   (stejnojmenných obcí bývá víc – výsledky jsou proto seřazené podle farnosti / první obce v popisu).
 Vypíše: apu_id | signatura, druh a roky | popis (obce, které svazek pokrývá)."""
 import json, re, sys, urllib.request
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 API = "https://aron.vychodoceskearchivy.cz/api/aron"
 

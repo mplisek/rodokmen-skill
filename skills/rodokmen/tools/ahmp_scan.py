@@ -3,6 +3,9 @@
 # Použití: ahmp_scan.py XID SCAN OUT.jpg [down] [x0,y0,x1,y1]   (down=0 plné rozlišení, 1 = poloviční…; oblast ve zlomcích)
 # XID svazku vypíše ahmp_search.sh. Trvalý odkaz: https://katalog.ahmp.cz/pragapublica/permalink?xid=<XID>&scan=<N>
 import glob,shutil,sys,re,math,subprocess,urllib.request,os,tempfile
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 def magick():  # když ImageMagick chybí, skončí hned (před stahováním) srozumitelnou hláškou
     m=shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))),None)
     if not m: sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")

@@ -36,13 +36,20 @@ Najdeš v ní `tools/` (nástroje), `template/` (šablona projektu a webu) a `re
 ## Fáze 0 – Příprava (jednou)
 1. Zkontroluj nástroje: `python3 --version` (≥ 3.9), `node --version` (≥ 20), `magick -version` (ImageMagick 7), `git --version`.
    Co chybí, pomoz nainstalovat (macOS: Homebrew `brew install python node imagemagick git`; Windows: winget / instalátory
-   z python.org, nodejs.org, imagemagick.org). Instalace systémových věcí nech uživatele potvrdit;
+   z python.org, nodejs.org, imagemagick.org). **winget na Windows vždy s plnými přepínači**, jinak spadne na otázce
+   ke zdroji msstore („Error reading input in prompt“): `winget install --id <balík> --source winget
+   --accept-source-agreements --accept-package-agreements` (balíky `Python.Python.3.12` + `--scope user`,
+   `OpenJS.NodeJS.LTS`, `ImageMagick.ImageMagick`, `Git.Git`). Instalace systémových věcí nech uživatele potvrdit;
    interaktivní příkazy mu dej s předponou `!`, ať je spustí sám.
    **Windows:** `python3` tam bývá jen nefunkční alias z Microsoft Store („Python nebyl nalezen“) – zkontroluj
    `python --version` (případně `py -3 --version`) a ve všech příkazech tohoto skillu místo `python3 -I` používej
-   `python -I -X utf8` (funguje-li jen launcher, tak `py -3 -I -X utf8`). `-I` ignoruje proměnnou `PYTHONUTF8`;
+   `python -I -X utf8` (funguje-li jen launcher, tak `py -3 -I -X utf8`). Zkontroluj **který** Python to je
+   (`which -a python`) – může být přibalený k jinému programu (Inkscape, GIMP…) a nemít certifikáty. Ověř https:
+   `python -I -c "import urllib.request; urllib.request.urlopen('https://aron.vychodoceskearchivy.cz')"`. Když spadne
+   na `CERTIFICATE_VERIFY_FAILED`, nainstaluj běžný Python (winget výše) a volej ho plnou cestou
+   `"$LOCALAPPDATA/Programs/Python/Python312/python.exe"` (do PATH se dostane až po restartu Claude Code). `-I` ignoruje proměnnou `PYTHONUTF8`;
    bez `-X utf8` je výstup do roury nebo souboru v kódování Windows (cp1250) – čeština se rozbije a některé nástroje
-   spadnou na znacích jako „→“. ImageMagick: `winget install ImageMagick.ImageMagick`; do PATH se dostane až po
+   spadnou na znacích jako „→“. ImageMagick: `winget install --id ImageMagick.ImageMagick --source winget --accept-source-agreements --accept-package-agreements`; do PATH se dostane až po
    restartu Claude Code (do té doby před příkazy `export PATH="/c/Program Files/ImageMagick-7…:$PATH"` s přesnou složkou
    z `C:\Program Files`). **Nikdy `convert`** (to je systémový nástroj Windows), vždy `magick`. Skripty `.sh` spouštěj
    přes Git Bash (`bash tools/…`). Delší jednorázové skripty v Pythonu nepiš jako heredoc (`python - <<EOF`), v Git Bash
@@ -70,6 +77,9 @@ Cíl: znát co nejvíc o 3–4 generacích nazpět, než sáhneš do matrik.
   dokumenty/strom.ged "Jméno Příjmení"` vypíše předky s čísly, všechny události a poznámky a **frontu zápisů**
   (nejmladší známá událost u každého předka, a jestli už je v archivu). `--osoby` dá kostru pro `osoby.py`.
   Poznámky ve stromu bývají plné rodinných historek. Přečti je a vytěž do `udaje_od_rodiny.md`.
+  Starší strom z **Brother's Keeper** (kódování ANSI a česká data „SRPEN 1945“ nástroj převede sám): místa tam bývají
+  v 6. pádě („Táboře“) – do `osoby.py` je přepiš do 1. pádu. Kořenem takového stromu často nejsou uživatel, ale jeho děti
+  (oba rody) – výchozí osobu proto vyber jménem.
 - **Záloha stromu z MyHeritage** (ZIP se souborem `<strom>.ftb` a složkou `Photos/` – to není GEDCOM, ale databáze):
   rozbal do vlastní složky v `dokumenty/` (bývá velká – dej ji do `.gitignore`), pak
   `python3 -I tools/ftb_export.py <strom.ftb> dokumenty/strom.ged "Jméno Příjmení" <rok narození> pracovni/prima_linie.md <složka Photos>`.
@@ -143,6 +153,9 @@ kreditů. Ověření na snímku a zápis do dat dělá hlavní model (ty). Uživ
 Osvědčilo se 3–4 pomocníci na různé větve a archivy současně, jedno kolo ≈ 15–25 nových předků.
 Pomocníci stojí hodně kreditů – před velkým kolem řekni uživateli, co plánuješ a proč, a nech si to schválit.
 Do zadání jim napiš technické pasti z `reference/matriky.md` (macOS: zsh; Windows: `python -I -X utf8`, `magick`).
+**V zadání chtěj u každého prošlého snímku, co na něm skutečně přečetl** (rok, první jméno), ne jen „prošel jsem
+sn. 20–40“ – pomocník jinak přehlédne, že se mu část snímků nenačetla. Na špatně čitelné knihy (kurent 1. poloviny
+19. století, vybledlé snímky) pomocníky nepouštěj, nebo jim dej přesný snímek; ARON a Porta fontium zvládají dobře.
 
 ### Kdy přestat
 Linie končí, když matriky mlčí (nemanželské dítě bez otce, shořelé knihy, chybějící svazky) nebo když jsi

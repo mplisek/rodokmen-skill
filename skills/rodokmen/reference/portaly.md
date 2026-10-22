@@ -40,6 +40,8 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
 - `trebon.py misto "Obec"` → id místa. Diakritiku a mezery nástroj odstraní sám (portál zná jen „RatiborskeHory“).
   Portál vrátí vždy jen jedno místo – **zkontroluj vypsaný název a okres**: u stejnojmenných obcí jinou (Buk → Bukovka),
   u měst i okres nebo synagogu (Jindřichův Hradec → okres 1949–1960). Správné id pak najdi na portálu a pracuj s ním.
+  Malé osady portál jako místo nezná vůbec (Malá Chyška) – hledej farní nebo sousední obec (Chyšky) a osadu v popisu knih.
+  Občasná chyba 500 bývá výpadek portálu – nástroj zkouší znovu; když trvá, zkus to později.
 - `trebon.py svazky <id|"Obec">` → knihy místa (id knihy, druh, roky, obce).
 - `trebon.py rejstrik <id_knihy> <písmeno>` → **dobrovolnický jmenný rejstřík** knihy se snímkem, obrovská úspora.
   Ne každá kniha ho má; prázdný výsledek = rejstřík chybí, ne „osoba tam není“.
@@ -55,7 +57,9 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
   `<fara>` je název římskokatolické fary („Dolní Bělá“, „Mýto“ – diakritiku nástroj odstraní) nebo přímo část
   její adresy (`dolni-bela` =
   `…/contents/register/soap-pn/cirkev-rimskokatolicka/dolni-bela`). Obec → faru nástroj nehledá: faru zjisti ve vyhledávání
-  matrik na portálu (pole Místo, v prohlížeči) nebo v popisech knih okolních far.
+  matrik na portálu (pole Místo, v prohlížeči) nebo v popisech knih okolních far. Bez prohlížeče: stránka
+  `https://www.portafontium.eu/searching/register?search_api_views_fulltext_1=<obec>` vypíše odkazy
+  `/register/soap-pn/<kniha>` – `<kniha>` (např. `kdyne-29`) rovnou použij v `portafontium.py info`.
 - `portafontium.py info <kniha>` (`dolni-bela-17`) → signatura, druh, text desky a **obsah** – u knih psaných po vesnicích
   vypíše, na kterých foliích je která obec („Ves X z let 1862–1901 = fol. 121–200“).
 - `portafontium.py snimek <kniha> <snímek> pracovni/x.jpg [nahled] [x0,y0,x1,y1]` → celá stránka v plném rozlišení jedním
@@ -129,6 +133,14 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
   otevři knihu, klikni na stránku (`.docview-pagelink`), URL obrázku vezmi z `performance.getEntriesByType('resource')`
   a stáhni `bash tools/matricula_dl.sh "<url>" pracovni/x.jpg`. Víc stránek: soubor řádků „<snímek> <url>“ → `matricula_batch.sh`.
 - Vojenské matriky (např. Štýrský Hradec) tam nejsou – jsou v Kriegsarchivu ve Vídni (offline).
+
+## Polsko – Geneteka (geneteka.genealodzy.pl)
+- Zdarma dobrovolnické indexy křtů, sňatků a úmrtí po farnostech; hledej ve webovém rozhraní (vojvodství → farnost →
+  příjmení). Index je vodítko – skeny často online nejsou (farní nebo diecézní archiv), pak zápis žádej tam.
+- **Farní příslušnost se měnila**: obec mohla patřit k sousední faře (Lipowa → Radziechowy do 1896) – hledej i tam.
+- Nestahuj hromadně: PTG uvádí „linkujemy, nie pobieramy danych“ (odkazujeme, nestahujeme) a po desítkách rychlých dotazů
+  server vrací nefiltrovaná data. Dotazy dávkuj, s pauzami, a výsledky si ověř.
+- Skeny některých polských far jsou i na Matricule (výše) nebo FamilySearch (níže).
 
 ## FamilySearch (přes uživatelův přihlášený prohlížeč)
 - Jen když ho má uživatel otevřený a sám nabídne. Z kontextu stránky lze volat JSON API

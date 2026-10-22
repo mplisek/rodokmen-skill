@@ -15,6 +15,9 @@ Trvalý odkaz na snímek: https://digi.ceskearchivy.cz/<id_knihy>/<snímek>
 Ber ohled na server: stahuj jen snímky, které čteš.
 """
 import glob, html, json, os, re, shutil, subprocess, sys, tempfile, unicodedata, urllib.parse, urllib.request, http.cookiejar
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 BASE = "https://digi.ceskearchivy.cz"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -57,7 +60,8 @@ def misto(nazev):
     _, url = get("/" + urllib.parse.quote(holy))
     m = re.search(r"[?&]id=(\d+)", url) or re.search(r"/(\d+)-", url)
     if not m:
-        sys.exit(f"místo „{nazev}“ nenalezeno")
+        sys.exit(f"místo „{nazev}“ nenalezeno – portál ho jako místo nezná (malé osady chybějí). Zkus farní nebo sousední obec\n"
+                 f"(Malá Chyška → Chyšky) a v popisu jejích knih najdi tuto osadu; id knihy jinak najdi na portálu v prohlížeči.")
     pid = m.group(1)
     page, _ = get(f"/pages/klicova/rejinfo.php?typ=&id={pid}&l=&bookid=")
     t = re.search(r"document\.title=\"([^\"]*)\"", page)

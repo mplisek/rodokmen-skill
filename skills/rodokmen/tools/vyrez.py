@@ -10,6 +10,9 @@ Výřez dělejte velkoryse: celý zápis včetně hlavičky sloupců, okrajovýc
 Potřebuje ImageMagick (příkaz `magick`).
 """
 import glob, os, shutil, subprocess, sys
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
