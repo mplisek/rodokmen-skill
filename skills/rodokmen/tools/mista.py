@@ -4,7 +4,8 @@
 Použití:
   mista.py pridej "Název" ["regulární výraz"] ["dotaz pro vyhledání"]
       přidá obec; výraz se hledá v údajích osob (výchozí = prvních 5 písmen názvu, aby sedělo i skloňování),
-      dotaz pro OpenStreetMap (výchozí = "Název, Česko")
+      dotaz pro OpenStreetMap (výchozí = "Název, Česko"); u víceznačných názvů (Podolí, Dub) přidej sousední obec:
+      "Podolí, Odlochovice" – a ve výpisu vždy zkontroluj okres
   mista.py
       dohledá souřadnice u míst, která je ještě nemají (OpenStreetMap Nominatim, 1 dotaz za sekundu),
       a vypíše seznam. Když bod nesedí, opravte lat/lon v data/mista.json ručně.

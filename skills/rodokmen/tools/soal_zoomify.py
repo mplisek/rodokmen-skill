@@ -14,9 +14,10 @@ POZOR: aplikace digi.soalitomerice.cz po ~100 rychlých požadavcích (digi.arch
 přístup na 30 minut. Prohlížečem jen najdi knihu a cestu k obrázkům, snímky pak stahuj tímto nástrojem (obrázkový server
 neomezuje).
 """
-import glob, math, os, re, shutil, subprocess, sys, tempfile, time, urllib.request
+import glob, math, os, re, shutil, subprocess, sys, tempfile, time, urllib.parse, urllib.request
 
 BASE = "https://images.soalitomerice.cz/ximage/matriky/zoomify/cz/archives/CZ-214000010/matriky/"
+HOSTS = ("images.soalitomerice.cz", "images.archives.cz")   # jen obrázkové servery archivů (snímky zpracovává ImageMagick)
 
 
 def magick():
@@ -44,6 +45,8 @@ def main():
         sys.exit(__doc__)
     arg = sys.argv[1].strip().removesuffix("/ImageProperties.xml").strip("/")
     base = arg if arg.startswith("http") else BASE + arg
+    if urllib.parse.urlsplit(base).scheme != "https" or urllib.parse.urlsplit(base).hostname not in HOSTS:
+        sys.exit(f"Adresa musí být https:// na serveru archivu ({', '.join(HOSTS)}), ne {base[:80]}")
     red, out = int(sys.argv[2]), sys.argv[3]
     MAGICK = magick()
     x = get(base + "/ImageProperties.xml").decode()

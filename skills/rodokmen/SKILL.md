@@ -45,7 +45,8 @@ Najdeš v ní `tools/` (nástroje), `template/` (šablona projektu a webu) a `re
    spadnou na znacích jako „→“. ImageMagick: `winget install ImageMagick.ImageMagick`; do PATH se dostane až po
    restartu Claude Code (do té doby před příkazy `export PATH="/c/Program Files/ImageMagick-7…:$PATH"` s přesnou složkou
    z `C:\Program Files`). **Nikdy `convert`** (to je systémový nástroj Windows), vždy `magick`. Skripty `.sh` spouštěj
-   přes Git Bash (`bash tools/…`). Tato pravidla zapiš hned po založení projektu do jeho `CLAUDE.md`, ať platí i příště
+   přes Git Bash (`bash tools/…`). Delší jednorázové skripty v Pythonu nepiš jako heredoc (`python - <<EOF`), v Git Bash
+   občas spadnou na „unexpected EOF“ – zapiš je do souboru v `pracovni/` a spusť. Tato pravidla zapiš hned po založení projektu do jeho `CLAUDE.md`, ať platí i příště
    (a dej je do zadání i pomocníkům, viz `reference/matriky.md`).
 2. Zeptej se, kde má projekt být (navrhni `~/Rodokmen`), a založ ho:
    `python3 -I SKILL_DIR/tools/novy_projekt.py <složka>`

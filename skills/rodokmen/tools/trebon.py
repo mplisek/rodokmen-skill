@@ -2,8 +2,9 @@
 """Matriky SOA Třeboň (digi.ceskearchivy.cz) bez prohlížeče.
 
 Použití (z kořene projektu):
-  trebon.py misto "Obec"                 -> id místa a jeho název (portál vybere jedno místo; při více stejných
-                                            jménech zkontroluj okres v názvu, případně použij id přímo)
+  trebon.py misto "Obec"                 -> id místa a jeho název (diakritiku a mezery nástroj odstraní sám; portál vybere
+                                            jedno místo – VŽDY zkontroluj vypsaný název a okres, u stejnojmenných obcí
+                                            a měst vrací i okres nebo synagogu; pak použij id přímo)
   trebon.py svazky <id_mista|"Obec">     -> seznam matrik: id_knihy | kniha | druh | roky | obce
   trebon.py rejstrik <id_knihy> <písmeno> -> jmenný rejstřík (dobrovolnický): příjmení | jméno | místo | rok | snímek
                                             (ne každá kniha ho má; prázdný výsledek = rejstřík chybí, ne „osoba tam není“)
@@ -13,7 +14,7 @@ Použití (z kořene projektu):
 Trvalý odkaz na snímek: https://digi.ceskearchivy.cz/<id_knihy>/<snímek>
 Ber ohled na server: stahuj jen snímky, které čteš.
 """
-import glob, html, json, os, re, shutil, subprocess, sys, tempfile, urllib.parse, urllib.request, http.cookiejar
+import glob, html, json, os, re, shutil, subprocess, sys, tempfile, unicodedata, urllib.parse, urllib.request, http.cookiejar
 
 BASE = "https://digi.ceskearchivy.cz"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -51,7 +52,9 @@ def text(s):
 
 
 def misto(nazev):
-    _, url = get("/" + urllib.parse.quote(nazev))
+    # portál zná jen tvar bez diakritiky a mezer (Ratibořské Hory → RatiborskeHory), jinak vrací 404
+    holy = "".join(c for c in unicodedata.normalize("NFKD", nazev) if not unicodedata.combining(c)).replace(" ", "")
+    _, url = get("/" + urllib.parse.quote(holy))
     m = re.search(r"[?&]id=(\d+)", url) or re.search(r"/(\d+)-", url)
     if not m:
         sys.exit(f"místo „{nazev}“ nenalezeno")

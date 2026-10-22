@@ -37,14 +37,18 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
 - Ber ohled na server: stahuj jen to, co čteš; žádné hromadné stahování celých svazků.
 
 ## SOA Třeboň (digi.ceskearchivy.cz) – `tools/trebon.py`, bez prohlížeče
-- `trebon.py misto "Obec"` → id místa. Název **bez diakritiky** si nástroj řeší sám; u stejnojmenných obcí portál vrátí
-  jen jednu (Buk → Bukovka) – zkontroluj okres v názvu, případně najdi id jinak a dál pracuj s ním.
+- `trebon.py misto "Obec"` → id místa. Diakritiku a mezery nástroj odstraní sám (portál zná jen „RatiborskeHory“).
+  Portál vrátí vždy jen jedno místo – **zkontroluj vypsaný název a okres**: u stejnojmenných obcí jinou (Buk → Bukovka),
+  u měst i okres nebo synagogu (Jindřichův Hradec → okres 1949–1960). Správné id pak najdi na portálu a pracuj s ním.
 - `trebon.py svazky <id|"Obec">` → knihy místa (id knihy, druh, roky, obce).
 - `trebon.py rejstrik <id_knihy> <písmeno>` → **dobrovolnický jmenný rejstřík** knihy se snímkem, obrovská úspora.
   Ne každá kniha ho má; prázdný výsledek = rejstřík chybí, ne „osoba tam není“.
 - `trebon.py snimek <id_knihy> <snímek> pracovni/x.jpg [nahled]`, `trebon.py svazek <id_knihy>` (do `svazky.json`).
 - Trvalý odkaz: `https://digi.ceskearchivy.cz/<id_knihy>/<snímek>`.
 - Některé fary mají knihy po vesnicích, které nejsou v seznamu svazků místa (Vacov → Žár) – hledej podle titulků knih fary.
+- **Civilní matriky (1920–1945) lidí bez vyznání** jsou v knihách okresních úřadů (např. Tábor, kniha 12304) a mají
+  dobrovolnický rejstřík (`trebon.py rejstrik 12304 N`). Dobrá cesta, když farní matrika mlčí. V `svazky "Obec"`
+  se neukážou (patří okresu, ne obci) – id knihy najdi na portálu.
 
 ## SOA Plzeň (Porta fontium, portafontium.eu) – `tools/portafontium.py`, bez prohlížeče
 - `portafontium.py fara <fara>` → knihy fary: kniha | obce | roky a druhy (`*` N, `oo` O, `+` Z, `i` index) | popis.
@@ -66,7 +70,10 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
   → matrikaId | kniha | druh | roky | fara | počet snímků. U stejnojmenných obcí vypíše možnosti.
 - `ebadatelna.py info <matrikaId>` → obsah knihy včetně **rozvržení stran po vesnicích** (např. „1–48 Ves A, 49–82 Ves B,
   1–30 Ves C …“ – každá ves může mít vlastní stránkování) – u takových knih neodhaduj snímek podle roku, ale podle stran
-  dané vsi (číslo strany je nahoře na snímku).
+  dané vsi (číslo strany je nahoře na snímku). Takové knihy bývají řazené po vsích, ne chronologicky – je-li rejstřík,
+  začni jím.
+- Posun „číslo snímku – číslo strany“ se v knize mění (např. +2, dál −1: vložené listy, chybějící strany). Stáhni náhled,
+  přečti číslo strany a snímek dopočítej; neodhaduj celou knihu podle jednoho posunu.
 - `ebadatelna.py snimek <matrikaId> <snímek> pracovni/x.jpg [nahled] [x0,y0,x1,y1]`; `link`, `svazek` (klíč `ebad_<id>`).
 - **Archiválie** (urbáře, gruntovní a pozemkové knihy velkostatků – most přes 17. století): `a-info <archivalieId>`,
   `a-snimek`, `a-link`, `a-svazek` (klíč `ebad_a_<id>`). Archiválii nástroj nehledá – najdi ji na portálu v prohlížeči;

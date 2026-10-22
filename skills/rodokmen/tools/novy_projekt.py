@@ -5,7 +5,8 @@ Použití: python3 <skill>/tools/novy_projekt.py <cílová složka> [--ukazka]
   --ukazka   nakopíruje i vymyšlená ukázková data (rodina Novákových), aby šel web hned vyzkoušet
 
 Vytvoří: data/ (prázdné kostry nebo ukázka), web/ (Astro web), tools/ (kopie nástrojů),
-vyrezy/, zdroje/, dokumenty/, pracovni/, CLAUDE.md a .gitignore. Existující data nepřepisuje.
+vyrezy/, zdroje/, dokumenty/, pracovni/, CLAUDE.md, .gitignore a .claude/launch.json (náhled v Claude desktop).
+Existující data nepřepisuje.
 Aktualizace staršího projektu (znovu spustit na stejnou složku): tools/ se přepíše vždy a soubory webu,
 které se liší od nové šablony, taky – jejich staré verze se nejdřív uloží do pracovni/zaloha_web_<datum>/.
 """
@@ -63,7 +64,8 @@ def main():
             copy(os.path.join(SKILL, "tools", f), os.path.join(tools, f))   # nástroje vždy aktualizovat
     for d in ("vyrezy", "zdroje", "dokumenty", "pracovni"):
         os.makedirs(os.path.join(dst, d), exist_ok=True)
-    for name in ("CLAUDE.md", ".gitignore", "poznamky_pro_skill.md"):
+    os.makedirs(os.path.join(dst, ".claude"), exist_ok=True)
+    for name in ("CLAUDE.md", ".gitignore", "poznamky_pro_skill.md", os.path.join(".claude", "launch.json")):
         out = os.path.join(dst, name)
         if not os.path.lexists(out):
             copy(os.path.join(SKILL, "template", name), out)

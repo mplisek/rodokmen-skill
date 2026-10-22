@@ -47,15 +47,25 @@ Náhled spouštěj na pozadí a uživateli pošli odkaz. Vzhled si ověř sám (
 2. Přihlášení CLI (otevře prohlížeč) – dej uživateli: `! cd web && npx -y netlify-cli@latest login`
 3. Založení webu a propojení složky (interaktivní, jednou) – dej uživateli:
    `! cd web && npx -y netlify-cli@latest sites:create` (zvolí tým a název → adresa `https://<název>.netlify.app`),
-   případně `npx netlify-cli link`, pokud web už existuje.
+   případně `npx netlify-cli link`, pokud web už existuje. Je-li uživatel už přihlášený, jde web založit i bez dotazů
+   (můžeš spustit sám): `cd web && npx -y netlify-cli@latest sites:create --name <název> --account-slug <tým>`.
    **Windows:** když `!` běží ve Windows PowerShellu 5.1 (`&&` tam nefunguje a `npx` blokuje Execution Policy), ať uživatel
    otevře PowerShell 7 nebo Příkazový řádek, přejde do složky `web` a spustí `npx -y netlify-cli@latest login` (a `sites:create`).
 4. Nasazení: `cd web && npm run nasadit` (můžeš spustit sám; vypíše adresu webu).
-5. Ověř: otevři adresu → musí se ukázat přihlašovací otázka; po správné odpovědi web.
+5. Ověř: otevři adresu **v anonymním okně** → musí se ukázat rodinná přihlašovací otázka; po správné odpovědi web.
+   Ukáže-li se místo ní přihlášení k Netlify (401, „Login Redirect“), zdědil web ochranu týmu („Team protection“).
+   Uživatel ji vypne v administraci webu: Project configuration → Access & security → Visitor access. Web pak chrání
+   rodinná otázka – proto znovu ověř v anonymním okně, že se ukáže.
    Přihlášení zajišťuje Netlify Edge Function `web/netlify/edge-functions/brana.js` (generuje ji export).
 Další aktualizace = jen `npm run nasadit`. Vlastní doménu lze nastavit v administraci Netlify.
 
 **Pozor:** „Netlify Drop“ (přetažení složky v prohlížeči) neumí Edge Functions → web by byl bez přihlášení. Nepoužívat.
+
+## Náhled v Claude desktop
+Projekt má `.claude/launch.json` – náhled webu v Claude desktop spustí `npm --prefix web run dev` (port 4321). Data se
+předtím musí vyexportovat (`cd web && npm run data`). Když náhled nenaběhne (třeba na Windows, kde je `npm` jako `npm.cmd`),
+zkus v `launch.json` `"runtimeExecutable": "node"` a `"runtimeArgs": ["web/node_modules/astro/bin/astro.mjs", "dev", "--root", "web"]`
+(Astro 7 má spouštěč `astro.mjs`, ne `astro.js`). Server běží jen na tomto počítači – nepřidávej `--host`.
 
 ## Vlastní server (pokročilé)
 - Docker: `web/Dockerfile` (build Astro → nginx s `nginx.conf` z `nginx.sablona.conf`). Před buildem image vždy `npm run data`.
