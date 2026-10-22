@@ -83,14 +83,18 @@ def years(y):
     if not ys:
         return ""
     approx = "≈" if re.match(r"^(asi|≈)", y) else ""
-    if y.startswith(("?", "†")):   # neznámé narození: ukázat jen úmrtí („? – před 1743“ → „† před 1743“)
+    head, dash, tail = y.partition("–")
+    if y.startswith(("?", "†")) or (dash and not re.search(r"\d", head)) or re.match(r"po\b", y):
+        # neznámé narození: ukázat jen úmrtí („? – před 1743“ → „† před 1743“, „– po 1921“ → „žil 1921“)
+        if re.search(r"\bpo\b", tail or y):
+            return "žil " + ys[-1]
         return "† " + ("před " if "před" in y else "") + ys[-1]
     if y.startswith("*"):
         return "* " + ys[0]
     if len(ys) == 1:
         return approx + ys[0]
-    tail = y.split("–")[-1]
-    second = "?" if "před" in tail else ("≈" if re.search(r"(asi|≈)", tail) else "") + ys[-1]
+    second = "?" if "před" in tail else ("po " if re.search(r"\bpo\b", tail) else "") + \
+        ("≈" if re.search(r"(asi|≈)", tail) else "") + ys[-1]
     return f"{approx}{ys[0]}–{second}"
 
 

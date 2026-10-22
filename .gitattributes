@@ -1,0 +1,11 @@
+# konce řádků LF i při klonování na Windows (core.autocrlf=true) – nástroje .sh se kopírují do projektů a v Git Bash
+# by s CRLF nešly spustit
+*.sh   text eol=lf
+*.py   text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.mjs  text eol=lf
+*.astro text eol=lf
+*.jpg  binary
+*.png  binary
+*.pdf  binary
