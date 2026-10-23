@@ -167,6 +167,7 @@ main.full { max-width: none; padding: 0; }
 .tc-hit { box-shadow: 0 0 0 3px #efb45f; }
 .tc-tog { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); min-width: 24px; height: 22px; padding: 0 6px; font: 600 0.75rem var(--sans); border: 1px solid #cfc5b6; border-radius: 11px; background: #fff; color: var(--accent); cursor: pointer; }
 .tc-tog[aria-expanded='false'] { background: #fff4e3; border-color: #efb45f; }
+.tc-tog:disabled { color: #b9ab98; border-color: var(--line); cursor: default; }
 .tc-foot { display: flex; gap: 0.45rem; margin-top: 0.15rem; white-space: nowrap; overflow: hidden; }
 .tc-foot button { padding: 0; border: 0; background: none; font: 0.72rem var(--sans); color: var(--accent); cursor: pointer; }
 .tc-foot button[aria-expanded='true'] { font-weight: 700; }

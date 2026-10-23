@@ -99,7 +99,10 @@ const names = [...new Set(Object.values(nodes).map((p) => p.n))].sort((a, b) => 
 
     // state: which cards have parents (u), siblings (s) or partners+children (d) open; defaults = direct line open
     let allOpen = false, flip = new Set<string>();
-    const isOpen = (t: string, id: string) => (allOpen || (t === 'u' && kek(id) > 0) || (t === 's' && id === 'k1')) !== flip.has(`${t}:${id}`);
+    // parents are shared by siblings, so "u" belongs to the birth family: open by default for families of the direct line
+    const flipKey = (t: string, id: string) => (t === 'u' ? `u:${birth[id]}` : `${t}:${id}`);
+    const isOpen = (t: string, id: string) =>
+      (allOpen || (t === 'u' && !!fam.get(birth[id])?.ch.some((c) => kek(c) > 0)) || (t === 's' && id === 'k1')) !== flip.has(flipKey(t, id));
     const readHash = () => {
       const hp = new Map(decodeURIComponent(location.hash.slice(1)).split('&').map((kv) => kv.split('=') as [string, string]));
       allOpen = hp.get('a') === '1';
@@ -223,11 +226,13 @@ const names = [...new Set(Object.values(nodes).map((p) => p.n))].sort((a, b) => 
       let html = '', svg = '';
       for (const id of V) {
         const p = N[id], { x, y } = pos(id);
-        const hasPar = isOpen('u', id) ? parentsOf(id).length > 0 : parentsOf(id).some((x) => !vis.has(x));
+        const hasPar = parentsOf(id).length > 0;
         const hidden = (list: string[]) => list.filter((s) => !vis.has(s)).length;
         const sibs = siblingsOf(id).filter(real), down = downOf(id);
-        const up = hasPar
-          ? `<button type="button" class="tc-tog" data-t="u" data-id="${esc(id)}" aria-expanded="${isOpen('u', id)}" title="${isOpen('u', id) ? 'Skrýt rodiče' : 'Ukázat rodiče'}">${isOpen('u', id) ? '−' : '▲ ' + ancestors(id).size}</button>` : '';
+        const shownElsewhere = !isOpen('u', id) && parentsOf(id).every((x) => vis.has(x));   // reached from the parents' side
+        const up = !hasPar ? '' : shownElsewhere
+          ? `<button type="button" class="tc-tog" disabled title="Rodiče jsou vidět přes jinou větev">−</button>`
+          : `<button type="button" class="tc-tog" data-t="u" data-id="${esc(id)}" aria-expanded="${isOpen('u', id)}" title="${isOpen('u', id) ? 'Skrýt rodiče' : 'Ukázat rodiče'}">${isOpen('u', id) ? '−' : '▲ ' + ancestors(id).size}</button>`;
         const status = !sibs.length && kek(id) > 1 ? `<span class="none">${p.b === 'done' ? 'bez sourozenců' : p.b === 'partial' ? 'sourozenci: částečně' : 'sourozenci nehledáni'}</span>` : '';
         const foot = [btn('s', id, 'sourozenci', hidden(sibs), p.b !== 'done'), status, btn('d', id, 'potomci', hidden(down)),
           p.nt?.length ? `<button type="button" data-note="${esc(id)}">pozn. ${p.nt.length}</button>` : ''].join('');
@@ -336,7 +341,7 @@ const names = [...new Set(Object.values(nodes).map((p) => p.n))].sort((a, b) => 
       const t = (e.target as HTMLElement).closest<HTMLElement>('[data-t],[data-info],[data-note],[data-close]');
       if (!t) return;
       if (t.dataset.t) {
-        const key = `${t.dataset.t}:${t.dataset.id}`;
+        const key = flipKey(t.dataset.t, t.dataset.id!);
         flip.has(key) ? flip.delete(key) : flip.add(key);
         rerender(t.dataset.id!);
       } else if (t.dataset.info) {
