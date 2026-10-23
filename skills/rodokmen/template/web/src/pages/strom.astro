@@ -101,7 +101,7 @@ const names = [...new Set(Object.values(nodes).map((p) => p.n))].sort((a, b) => 
     let allOpen = false, flip = new Set<string>();
     // parents are shared by siblings, so "u" belongs to the birth family: open by default for families of the direct line
     const flipKey = (t: string, id: string) => (t === 'u' ? `u:${birth[id]}` : `${t}:${id}`);
-    const isOpen = (t: string, id: string) =>
+    const isOpen = (t: string, id: string) => (t === 'u' && gen[id] === 0) ||   // bottom row: parents always shown
       (allOpen || (t === 'u' && !!fam.get(birth[id])?.ch.some((c) => kek(c) > 0)) || (t === 's' && id === 'k1')) !== flip.has(flipKey(t, id));
     const readHash = () => {
       const hp = new Map(decodeURIComponent(location.hash.slice(1)).split('&').map((kv) => kv.split('=') as [string, string]));
@@ -226,7 +226,7 @@ const names = [...new Set(Object.values(nodes).map((p) => p.n))].sort((a, b) => 
       let html = '', svg = '';
       for (const id of V) {
         const p = N[id], { x, y } = pos(id);
-        const hasPar = parentsOf(id).length > 0;
+        const hasPar = gen[id] > 0 && parentsOf(id).length > 0;
         const hidden = (list: string[]) => list.filter((s) => !vis.has(s)).length;
         const sibs = siblingsOf(id).filter(real), down = downOf(id);
         const shownElsewhere = !isOpen('u', id) && parentsOf(id).every((x) => vis.has(x));   // reached from the parents' side
