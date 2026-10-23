@@ -11,7 +11,7 @@ Matriky jsou online u osmi státních archivů – podle toho, **kde předci ži
 | SOA Litoměřice | severní Čechy | Digitální badatelna – digi.soalitomerice.cz | **částečně – `soal_zoomify.py`** (knihu najdi v prohlížeči) |
 | AHMP | hl. m. Praha | katalog.ahmp.cz (Pragapublica) | **ano – `ahmp_search.sh`, `ahmp_scan.py`** |
 | MZA Brno | jižní Morava, Vysočina z části | Acta Publica – actapublica.eu | ne |
-| ZA Opava | severní Morava a Slezsko | matriky.archives.cz (Digitální badatelna) | ne |
+| ZA Opava | severní Morava a Slezsko, Olomoucko a Litovelsko | Digitální badatelna – digi.archives.cz | **částečně – `soal_zoomify.py`** (knihu najdi v prohlížeči) |
 | Národní archiv | židovské matriky (HBMa), soupisy; pražské policejní přihlášky 1850–1914 | badatelna.eu; digi.nacr.cz/prihlasky2 | přihlášky **ano – `policie_prihlasky.py`** |
 
 Adresy u nevyzkoušených portálů ověř při prvním použití (portály se mění). Pro pohraničí a mimo ČR viz `playbook.md` §2
@@ -27,27 +27,39 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
 - **Odkaz na snímek** (pole `odkaz` v `zaznamy.json`): `python3 -I tools/aron_img.py <apu_id> link <snímek>`.
 - **Svazek do dat:** `python3 -I tools/aron_img.py <apu_id> svazek` (klíč = prvních 8 znaků apu_id → pole `svazek` v zápisu).
 - V ARON jsou i další fondy (sčítání lidu, některé gruntovní knihy, kroniky) – `aron_search.py "Obec" "název fondu"`.
+- Stejnojmenných obcí bývá víc (Vinice u Hořic × Vinice u Velké Jesenice). Výsledky jsou seřazené podle farnosti;
+  zúžit jde víc slovy oddělenými čárkou, která musí být v popisu všechna: `aron_search.py "Vinice,Hořice"`
+  (nebo hledej sousední obec či farní obec).
+- U starých far hledej nejdřív **souhrnné indexy** (popis „index NAROZENÝCH…“ přes mnoho let), často sahají do 17. století.
 - Obec nenalezena? Zkus název **bez přívlastku** („Lhota“ místo „Horní Lhota“) a starý název. Starší matriky
   (před ~1784) bývají ve faře sousedního města; indexy fary mají oddíly po vesnicích
   („Copulati Gross Lhota“).
 - Ber ohled na server: stahuj jen to, co čteš; žádné hromadné stahování celých svazků.
 
 ## SOA Třeboň (digi.ceskearchivy.cz) – `tools/trebon.py`, bez prohlížeče
-- `trebon.py misto "Obec"` → id místa. Název **bez diakritiky** si nástroj řeší sám; u stejnojmenných obcí portál vrátí
-  jen jednu (Buk → Bukovka) – zkontroluj okres v názvu, případně najdi id jinak a dál pracuj s ním.
+- `trebon.py misto "Obec"` → id místa. Diakritiku a mezery nástroj odstraní sám (portál zná jen „RatiborskeHory“).
+  Portál vrátí vždy jen jedno místo – **zkontroluj vypsaný název a okres**: u stejnojmenných obcí jinou (Buk → Bukovka),
+  u měst i okres nebo synagogu (Jindřichův Hradec → okres 1949–1960). Správné id pak najdi na portálu a pracuj s ním.
+  Malé osady portál jako místo nezná vůbec (Malá Chyška) – hledej farní nebo sousední obec (Chyšky) a osadu v popisu knih.
+  Občasná chyba 500 bývá výpadek portálu – nástroj zkouší znovu; když trvá, zkus to později.
 - `trebon.py svazky <id|"Obec">` → knihy místa (id knihy, druh, roky, obce).
 - `trebon.py rejstrik <id_knihy> <písmeno>` → **dobrovolnický jmenný rejstřík** knihy se snímkem, obrovská úspora.
   Ne každá kniha ho má; prázdný výsledek = rejstřík chybí, ne „osoba tam není“.
 - `trebon.py snimek <id_knihy> <snímek> pracovni/x.jpg [nahled]`, `trebon.py svazek <id_knihy>` (do `svazky.json`).
 - Trvalý odkaz: `https://digi.ceskearchivy.cz/<id_knihy>/<snímek>`.
 - Některé fary mají knihy po vesnicích, které nejsou v seznamu svazků místa (Vacov → Žár) – hledej podle titulků knih fary.
+- **Civilní matriky (1920–1945) lidí bez vyznání** jsou v knihách okresních úřadů (např. Tábor, kniha 12304) a mají
+  dobrovolnický rejstřík (`trebon.py rejstrik 12304 N`). Dobrá cesta, když farní matrika mlčí. V `svazky "Obec"`
+  se neukážou (patří okresu, ne obci) – id knihy najdi na portálu.
 
 ## SOA Plzeň (Porta fontium, portafontium.eu) – `tools/portafontium.py`, bez prohlížeče
 - `portafontium.py fara <fara>` → knihy fary: kniha | obce | roky a druhy (`*` N, `oo` O, `+` Z, `i` index) | popis.
   `<fara>` je název římskokatolické fary („Dolní Bělá“, „Mýto“ – diakritiku nástroj odstraní) nebo přímo část
   její adresy (`dolni-bela` =
   `…/contents/register/soap-pn/cirkev-rimskokatolicka/dolni-bela`). Obec → faru nástroj nehledá: faru zjisti ve vyhledávání
-  matrik na portálu (pole Místo, v prohlížeči) nebo v popisech knih okolních far.
+  matrik na portálu (pole Místo, v prohlížeči) nebo v popisech knih okolních far. Bez prohlížeče: stránka
+  `https://www.portafontium.eu/searching/register?search_api_views_fulltext_1=<obec>` vypíše odkazy
+  `/register/soap-pn/<kniha>` – `<kniha>` (např. `kdyne-29`) rovnou použij v `portafontium.py info`.
 - `portafontium.py info <kniha>` (`dolni-bela-17`) → signatura, druh, text desky a **obsah** – u knih psaných po vesnicích
   vypíše, na kterých foliích je která obec („Ves X z let 1862–1901 = fol. 121–200“).
 - `portafontium.py snimek <kniha> <snímek> pracovni/x.jpg [nahled] [x0,y0,x1,y1]` → celá stránka v plném rozlišení jedním
@@ -62,7 +74,8 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
   → matrikaId | kniha | druh | roky | fara | počet snímků. U stejnojmenných obcí vypíše možnosti.
 - `ebadatelna.py info <matrikaId>` → obsah knihy včetně **rozvržení stran po vesnicích** (např. „1–48 Ves A, 49–82 Ves B,
   1–30 Ves C …“ – každá ves může mít vlastní stránkování) – u takových knih neodhaduj snímek podle roku, ale podle stran
-  dané vsi (číslo strany je nahoře na snímku).
+  dané vsi (číslo strany je nahoře na snímku). Takové knihy bývají řazené po vsích, ne chronologicky – je-li rejstřík,
+  začni jím.
 - `ebadatelna.py snimek <matrikaId> <snímek> pracovni/x.jpg [nahled] [x0,y0,x1,y1]`; `link`, `svazek` (klíč `ebad_<id>`).
 - **Archiválie** (urbáře, gruntovní a pozemkové knihy velkostatků – most přes 17. století): `a-info <archivalieId>`,
   `a-snimek`, `a-link`, `a-svazek` (klíč `ebad_a_<id>`). Archiválii nástroj nehledá – najdi ji na portálu v prohlížeči;
@@ -87,12 +100,29 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
 - **POZOR: po zhruba 100 rychlých požadavcích na stránky aplikace (prohlížení snímků, detail výsledku) archiv zablokuje
   přístup na 30 minut.** V prohlížeči proto jen najdi knihu a cestu k obrázkům, pak už jen nástroj. Pomocníkům to napiš do zadání.
 
+## ZA Opava (severní Morava, Slezsko, Olomoucko, Litovelsko) – `tools/soal_zoomify.py`
+- Pozor na hranici: obce na Litovelsku a Olomoucku patří pod **ZA Opava**, ne pod MZA Brno.
+- Digitální badatelna digi.archives.cz má na vstupu automatické ověření – stačí počkat. Pak hledej obec a vyfiltruj
+  Matriky (ikona, potom znovu lupa). Knihy bývají řazené po obcích a na konci mají rejstřík.
+- Snímky jsou Zoomify na volně přístupném serveru (bez cookies):
+  `https://images.archives.cz/ximage/matriky/zoomify/cz/archives/CZ-217000010/NAD-165/dao/images/<složka>/<uuid>.jpg`.
+  Svazky jsou v různých složkách (0288, 0289, 0387…), proto nástroji dej **celou adresu**:
+  `python3 -I tools/soal_zoomify.py "<adresa>" 0 pracovni/x.jpg`.
+- Pořadí snímků svazku bez přenačítání stránky: hodnoty největšího `<select>` v prohlížeči snímků mají tvar
+  `<číslo> <hash32>`; `fetch('/da/showZoomify/<id svazku z URL>/<hash>')` vrátí HTML, ve kterém je `images/<složka>/<uuid>`.
+  Před sběrem adres z načtených souborů zavolej `performance.setResourceTimingBufferSize(5000)` (jinak limit 250).
+  Změna snímku přes `select.value=…; dispatchEvent('change')` funguje jen jednou po načtení stránky.
+- **POZOR: zhruba 75 rychlých dotazů po sobě → hláška „operace vyhodnoceny jako nestandardní“ a blokace na 30 minut.**
+  Ber jen potřebný úsek (10–30 snímků), mezi dotazy pauza aspoň 2 s. Delší smyčku pusť v prohlížeči na pozadí
+  a výsledek si přečti z `window` (nástroj pro JavaScript má limit asi 45 s). Pomocníkům to napiš do zadání.
+
 ## Pražské policejní přihlášky 1850–1914 (Národní archiv) – `tools/policie_prihlasky.py`
 - Karty pražských rodin: hlava rodiny, manželka s rokem a místem narození, děti s roky, adresy, někdy místo sňatku.
   Výborné, když rodina žila v Praze a nevíš farnost (pražské matriky nemají rejstříky).
 - `python3 -I tools/policie_prihlasky.py Kolar [Jan] [1850] [1870]` – příjmení bez diakritiky (začátek jména), jméno a roky
   narození volitelně. Bez prohlížeče vrátí jen prvních 20 výsledků, proto hledej co nejúžeji.
-  Kartu otevři v prohlížeči na digi.nacr.cz/prihlasky2 (trvalý odkaz `index.php?action=link&ref=czarch:CZ-100000010:874&karton=K&folium=F`).
+  Kartu stáhni `policie_prihlasky.py karta <pořadí> pracovni/karta.jpg Kolar [Jan] [1850] [1870]` (stejné hledání; jde i pořadí
+  nad 20) – vypíše citaci a trvalý odkaz (`index.php?action=link&ref=czarch:CZ-100000010:874&karton=K&folium=F`).
 - **Nepokrývá Smíchov, Vinohrady, Žižkov, Karlín a další předměstí před 1922** (byla to samostatná města). Náboženství karty neuvádějí.
 
 ## Matricula (Rakousko, Bavorsko, Polsko…; data.matricula-online.eu) – `tools/matricula_*.sh`
@@ -102,6 +132,14 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
   otevři knihu, klikni na stránku (`.docview-pagelink`), URL obrázku vezmi z `performance.getEntriesByType('resource')`
   a stáhni `bash tools/matricula_dl.sh "<url>" pracovni/x.jpg`. Víc stránek: soubor řádků „<snímek> <url>“ → `matricula_batch.sh`.
 - Vojenské matriky (např. Štýrský Hradec) tam nejsou – jsou v Kriegsarchivu ve Vídni (offline).
+
+## Polsko – Geneteka (geneteka.genealodzy.pl)
+- Zdarma dobrovolnické indexy křtů, sňatků a úmrtí po farnostech; hledej ve webovém rozhraní (vojvodství → farnost →
+  příjmení). Index je vodítko – skeny často online nejsou (farní nebo diecézní archiv), pak zápis žádej tam.
+- **Farní příslušnost se měnila**: obec mohla patřit k sousední faře (Lipowa → Radziechowy do 1896) – hledej i tam.
+- Nestahuj hromadně: PTG uvádí „linkujemy, nie pobieramy danych“ (odkazujeme, nestahujeme) a po desítkách rychlých dotazů
+  server vrací nefiltrovaná data. Dotazy dávkuj, s pauzami, a výsledky si ověř.
+- Skeny některých polských far jsou i na Matricule (výše) nebo FamilySearch (níže).
 
 ## FamilySearch (přes uživatelův přihlášený prohlížeč)
 - Jen když ho má uživatel otevřený a sám nabídne. Z kontextu stránky lze volat JSON API

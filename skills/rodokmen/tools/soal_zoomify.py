@@ -1,19 +1,35 @@
 #!/usr/bin/env python3
-"""Snímek matriky SOA Litoměřice (Zoomify) v plném rozlišení – bez prohlížeče a bez cookies.
+"""Snímek matriky ve formátu Zoomify (SOA Litoměřice, ZA Opava) v plném rozlišení – bez prohlížeče a bez cookies.
 
 Použití (z kořene projektu):
-  soal_zoomify.py <cesta> <zmenseni> <vystup.jpg>
-    cesta     = část adresy obrázku za „…/CZ-214000010/matriky/“ (konec typicky „….jpg“), vezmi ji jednou z prohlížeče:
-                v digitální badatelně otevři snímek a v síťovém provozu najdi požadavek na
+  soal_zoomify.py <cesta nebo adresa> <zmenseni> <vystup.jpg>
+    cesta     = SOA Litoměřice: část adresy obrázku za „…/CZ-214000010/matriky/“ (konec typicky „….jpg“), vezmi ji jednou
+                z prohlížeče: v digitální badatelně otevři snímek a v síťovém provozu najdi požadavek na
                 https://images.soalitomerice.cz/ximage/matriky/zoomify/cz/archives/CZ-214000010/matriky/<cesta>/ImageProperties.xml
                 (další snímky téže knihy mají stejnou cestu, liší se jen číslem obrázku)
+    adresa    = celá adresa obrázku začínající https:// (s „/ImageProperties.xml“ na konci i bez), např. ZA Opava:
+                https://images.archives.cz/ximage/matriky/zoomify/cz/archives/CZ-217000010/NAD-165/dao/images/<složka>/<uuid>.jpg
     zmenseni  = 0 plné rozlišení (na čtení a výřez), 1 poloviční (na orientaci), 2 čtvrtinové
-POZOR: aplikace digi.soalitomerice.cz po ~100 rychlých požadavcích zablokuje přístup na 30 minut. Prohlížečem jen najdi
-knihu a cestu k obrázkům, snímky pak stahuj tímto nástrojem (obrázkový server neomezuje).
+POZOR: aplikace digi.soalitomerice.cz po ~100 rychlých požadavcích (digi.archives.cz v Opavě už po ~75) zablokuje
+přístup na 30 minut. Prohlížečem jen najdi knihu a cestu k obrázkům, snímky pak stahuj tímto nástrojem (obrázkový server
+neomezuje).
 """
-import math, os, re, subprocess, sys, tempfile, time, urllib.request
+import glob, math, os, re, shutil, subprocess, sys, tempfile, time, urllib.parse, urllib.request
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 BASE = "https://images.soalitomerice.cz/ximage/matriky/zoomify/cz/archives/CZ-214000010/matriky/"
+HOSTS = ("images.soalitomerice.cz", "images.archives.cz")   # jen obrázkové servery archivů (snímky zpracovává ImageMagick)
+
+
+def magick():
+    """Cesta k ImageMagicku; když chybí, skončí hned (před stahováním) srozumitelnou hláškou."""
+    m = shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+    if not m:
+        sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, "
+                 "Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")
+    return m
 
 
 def get(url):
@@ -30,8 +46,12 @@ def get(url):
 def main():
     if len(sys.argv) != 4:
         sys.exit(__doc__)
-    base = BASE + sys.argv[1].strip("/")
+    arg = sys.argv[1].strip().removesuffix("/ImageProperties.xml").strip("/")
+    base = arg if arg.startswith("http") else BASE + arg
+    if urllib.parse.urlsplit(base).scheme != "https" or urllib.parse.urlsplit(base).hostname not in HOSTS:
+        sys.exit(f"Adresa musí být https:// na serveru archivu ({', '.join(HOSTS)}), ne {base[:80]}")
     red, out = int(sys.argv[2]), sys.argv[3]
+    MAGICK = magick()
     x = get(base + "/ImageProperties.xml").decode()
     W, H, T = (int(re.search(fr'{k}="(\d+)"', x).group(1)) for k in ("WIDTH", "HEIGHT", "TILESIZE"))
     dims, w, h = [], W, H   # úrovně Zoomify od nejmenší po plné rozlišení
@@ -56,9 +76,9 @@ def main():
             files.append(f)
     tmp = os.path.abspath(out) + ".tmp.jpg"
     # krátká jména dlaždic (cwd=d): plné cesty by na Windows přesáhly limit délky příkazové řádky
-    subprocess.run(["magick", "montage", *[os.path.basename(f) for f in files], "-tile", f"{nx}x{ny}", "-geometry", "+0+0",
+    subprocess.run([MAGICK, "montage", *[os.path.basename(f) for f in files], "-tile", f"{nx}x{ny}", "-geometry", "+0+0",
                     "-gravity", "NorthWest", "-background", "white", tmp], check=True, cwd=d)
-    subprocess.run(["magick", tmp, "-crop", f"{w}x{h}+0+0", "+repage", "-quality", "88", out], check=True)
+    subprocess.run([MAGICK, tmp, "-crop", f"{w}x{h}+0+0", "+repage", "-quality", "88", out], check=True)
     os.remove(tmp)
     for f in files:
         os.remove(f)

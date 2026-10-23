@@ -11,13 +11,25 @@ Použití:
 
 Popis svazků se ukládá do pracovni/.cache_aron/<apu_id>.json (ve složce projektu).
 """
-import json, math, os, shutil, subprocess, sys, tempfile, time, urllib.request
+import glob, json, math, os, shutil, subprocess, sys, tempfile, time, urllib.request
 import concurrent.futures as cf
 import xml.etree.ElementTree as ET
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 API = "https://aron.vychodoceskearchivy.cz/api/aron"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, "pracovni", ".cache_aron")
+
+
+def magick():
+    """Cesta k ImageMagicku; když chybí, skončí hned (před stahováním) srozumitelnou hláškou."""
+    m = shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+    if not m:
+        sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, "
+                 "Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")
+    return m
 
 
 def get(url, binary=False, tries=4):
@@ -55,6 +67,7 @@ def tiles_by_order(vol):
 
 
 def fetch_image(dzi_url, level_offset=1, out="page.jpg", crop=None):
+    MAGICK = magick()
     dzi = ET.fromstring(get(dzi_url))
     ns = {"d": "http://schemas.microsoft.com/deepzoom/2009"}
     ts = int(dzi.get("TileSize"))
@@ -92,7 +105,7 @@ def fetch_image(dzi_url, level_offset=1, out="page.jpg", crop=None):
         # po řádcích: jeden příkaz na celou stránku by na Windows přesáhl limit délky příkazové řádky (32 767 znaků)
         row_files = []
         for r in range(r0, r1 + 1):
-            args = ["magick"]
+            args = [MAGICK]
             for c in range(c0, c1 + 1):
                 p = os.path.join(tmp, f"{c}_{r}.jpg")
                 cw, ch = min(ts, w - c * ts), min(ts, h - r * ts)
@@ -100,7 +113,7 @@ def fetch_image(dzi_url, level_offset=1, out="page.jpg", crop=None):
                 args += ["(", p, "-crop", f"{cw}x{ch}+{ox}+{oy}", "+repage", ")"]
             row_files.append(os.path.join(tmp, f"row_{r}.miff"))   # MIFF zachová vlastnosti JPEG (podvzorkování barev)
             subprocess.run(args + ["+append", row_files[-1]], check=True)
-        subprocess.run(["magick", *row_files, "-append", "-quality", "88", out], check=True)
+        subprocess.run([MAGICK, *row_files, "-append", "-quality", "88", out], check=True)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)   # uklidit i při chybě stahování nebo magick
     return out, (W, H)

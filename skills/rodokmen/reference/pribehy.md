@@ -67,6 +67,8 @@ jde později doplnit. `kontrola.py` na to upozorní. Uživateli to nabídni, i k
 - Každá kapitola 1–3 krátké odstavce: kde žil, čím se živil, svatba, děti, něco lidského (zápis, svědek, nehoda, stěhování).
 - Konkrétně: data, místa, čísla domů, citace ze zápisu v uvozovkách. Odkazy na osoby `[Jméno](/osoba/<slug>/)`
   (slugy ve `web/src/data/site.json`).
+- Názvy obcí: archiv a OpenStreetMap píší třeba „Veliš“, rodina a dnešní úřední podoba „Velíš“. Zeptej se, jakou podobu
+  rodina používá, a drž ji v celém textu.
 - Poctivě: co nevíme, napiš jako otázku nebo domněnku („nejspíš“, „podle rodiny“). Nic nevymýšlej kvůli plynulosti.
 - Na konci kapitola o dnešku: jen jména a vztahy žijících, bez podrobností.
 - Ostatní rody dostanou svůj prostor na stránkách rodů (popis v `LINES`, `HYPOTEZY`) a v zajímavostech.

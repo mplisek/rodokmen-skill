@@ -3,6 +3,9 @@
 Použití: fan_chart.py <out_dir>                         (plakát: SVG + HTML s nadpisem a legendou, PNG přes Chrome, je-li k dispozici)
          fan_chart.py <out_file.svg> --web <hrefs.json>  (holé klikací SVG pro web – volá ho export_web.py)"""
 import html, json, math, os, re, subprocess, sys
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else os.path.join(ROOT, "vystupy")
@@ -44,14 +47,18 @@ def years(y):
     if not ys:
         return ""
     approx = "≈" if re.match(r"^(asi|≈)", y) else ""
-    if y.startswith(("?", "†")):   # neznámé narození: ukázat jen úmrtí („? – před 1743“ → „† před 1743“)
+    head, dash, tail = y.partition("–")
+    if y.startswith(("?", "†")) or (dash and not re.search(r"\d", head)) or re.match(r"po\b", y):
+        # neznámé narození: ukázat jen úmrtí („? – před 1743“ → „† před 1743“, „– po 1921“ → „žil 1921“)
+        if re.search(r"\bpo\b", tail or y):
+            return "žil " + ys[-1]
         return "† " + ("před " if "před" in y else "") + ys[-1]
     if y.startswith("*"):
         return "* " + ys[0]
     if len(ys) == 1:
-        return approx + ys[0] + ("–?" if "–" in y or " – " in y else "")
-    tail = y.split("–")[-1]
-    second = "?" if "před" in tail else ("≈" if re.search(r"(asi|≈)", tail) else "") + ys[-1]
+        return approx + ys[0] + ("–?" if dash else "")
+    second = "?" if "před" in tail else ("po " if re.search(r"\bpo\b", tail) else "") + \
+        ("≈" if re.search(r"(asi|≈)", tail) else "") + ys[-1]
     return f"{approx}{ys[0]}–{second}"
 
 

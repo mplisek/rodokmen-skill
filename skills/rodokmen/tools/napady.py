@@ -13,6 +13,9 @@ jako krátký příběh (viz reference/pribehy.md).
 """
 import datetime, os, re, sys
 from collections import defaultdict
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATE = r"(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})"

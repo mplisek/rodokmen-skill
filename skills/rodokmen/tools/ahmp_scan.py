@@ -2,7 +2,15 @@
 # Matriky AHMP (Praha) – stáhne snímek slepením dlaždic Zoomify.
 # Použití: ahmp_scan.py XID SCAN OUT.jpg [down] [x0,y0,x1,y1]   (down=0 plné rozlišení, 1 = poloviční…; oblast ve zlomcích)
 # XID svazku vypíše ahmp_search.sh. Trvalý odkaz: https://katalog.ahmp.cz/pragapublica/permalink?xid=<XID>&scan=<N>
-import sys,re,math,subprocess,urllib.request,os,tempfile
+import glob,shutil,sys,re,math,subprocess,urllib.request,os,tempfile
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
+def magick():  # když ImageMagick chybí, skončí hned (před stahováním) srozumitelnou hláškou
+    m=shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))),None)
+    if not m: sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")
+    return m
+MAGICK=magick()
 xid,scan,out=sys.argv[1],int(sys.argv[2]),sys.argv[3]
 down=int(sys.argv[4]) if len(sys.argv)>4 else 0
 reg=[float(v) for v in sys.argv[5].split(',')] if len(sys.argv)>5 else [0,0,1,1]  # x0,y0,x1,y1 zlomky
@@ -33,6 +41,6 @@ for y in ys:
 rowsf=[]
 nc=len(xs)
 for i,y in enumerate(ys):
-    rf=f'{d}/row{y:03d}.png'; subprocess.run(['magick',*files[i*nc:(i+1)*nc],'+append',rf],check=True); rowsf.append(rf)
-subprocess.run(['magick',*rowsf,'-append','-quality','90',out],check=True)
+    rf=f'{d}/row{y:03d}.png'; subprocess.run([MAGICK,*files[i*nc:(i+1)*nc],'+append',rf],check=True); rowsf.append(rf)
+subprocess.run([MAGICK,*rowsf,'-append','-quality','90',out],check=True)
 print(out,tiers[z],'src',path,'permalink',f'https://katalog.ahmp.cz/pragapublica/permalink?xid={xid}&scan={scan}')

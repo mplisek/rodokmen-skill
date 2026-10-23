@@ -36,16 +36,24 @@ Najdeš v ní `tools/` (nástroje), `template/` (šablona projektu a webu) a `re
 ## Fáze 0 – Příprava (jednou)
 1. Zkontroluj nástroje: `python3 --version` (≥ 3.9), `node --version` (≥ 20), `magick -version` (ImageMagick 7), `git --version`.
    Co chybí, pomoz nainstalovat (macOS: Homebrew `brew install python node imagemagick git`; Windows: winget / instalátory
-   z python.org, nodejs.org, imagemagick.org). Instalace systémových věcí nech uživatele potvrdit;
+   z python.org, nodejs.org, imagemagick.org). **winget na Windows vždy s plnými přepínači**, jinak spadne na otázce
+   ke zdroji msstore („Error reading input in prompt“): `winget install --id <balík> --source winget
+   --accept-source-agreements --accept-package-agreements` (balíky `Python.Python.3.12` + `--scope user`,
+   `OpenJS.NodeJS.LTS`, `ImageMagick.ImageMagick`, `Git.Git`). Instalace systémových věcí nech uživatele potvrdit;
    interaktivní příkazy mu dej s předponou `!`, ať je spustí sám.
    **Windows:** `python3` tam bývá jen nefunkční alias z Microsoft Store („Python nebyl nalezen“) – zkontroluj
    `python --version` (případně `py -3 --version`) a ve všech příkazech tohoto skillu místo `python3 -I` používej
-   `python -I -X utf8` (funguje-li jen launcher, tak `py -3 -I -X utf8`). `-I` ignoruje proměnnou `PYTHONUTF8`;
+   `python -I -X utf8` (funguje-li jen launcher, tak `py -3 -I -X utf8`). Zkontroluj **který** Python to je
+   (`which -a python`) – může být přibalený k jinému programu (Inkscape, GIMP…) a nemít certifikáty. Ověř https:
+   `python -I -c "import urllib.request; urllib.request.urlopen('https://aron.vychodoceskearchivy.cz')"`. Když spadne
+   na `CERTIFICATE_VERIFY_FAILED`, nainstaluj běžný Python (winget výše) a volej ho plnou cestou
+   `"$LOCALAPPDATA/Programs/Python/Python312/python.exe"` (do PATH se dostane až po restartu Claude Code). `-I` ignoruje proměnnou `PYTHONUTF8`;
    bez `-X utf8` je výstup do roury nebo souboru v kódování Windows (cp1250) – čeština se rozbije a některé nástroje
-   spadnou na znacích jako „→“. ImageMagick: `winget install ImageMagick.ImageMagick`; do PATH se dostane až po
+   spadnou na znacích jako „→“. ImageMagick: `winget install --id ImageMagick.ImageMagick --source winget --accept-source-agreements --accept-package-agreements`; do PATH se dostane až po
    restartu Claude Code (do té doby před příkazy `export PATH="/c/Program Files/ImageMagick-7…:$PATH"` s přesnou složkou
    z `C:\Program Files`). **Nikdy `convert`** (to je systémový nástroj Windows), vždy `magick`. Skripty `.sh` spouštěj
-   přes Git Bash (`bash tools/…`). Tato pravidla zapiš hned po založení projektu do jeho `CLAUDE.md`, ať platí i příště
+   přes Git Bash (`bash tools/…`). Delší jednorázové skripty v Pythonu nepiš jako heredoc (`python - <<EOF`), v Git Bash
+   občas spadnou na „unexpected EOF“ – zapiš je do souboru v `pracovni/` a spusť. Tato pravidla zapiš hned po založení projektu do jeho `CLAUDE.md`, ať platí i příště
    (a dej je do zadání i pomocníkům, viz `reference/matriky.md`).
 2. Zeptej se, kde má projekt být (navrhni `~/Rodokmen`), a založ ho:
    `python3 -I SKILL_DIR/tools/novy_projekt.py <složka>`
@@ -63,12 +71,17 @@ Cíl: znát co nejvíc o 3–4 generacích nazpět, než sáhneš do matrik.
 - Požádej o dokumenty: rodné a oddací listy, domovské listy, parte, fotky (i náhrobků), rodinné kroniky, paměti, staré dopisy,
   výpisy z MyHeritage/Geni od příbuzných. Ať je dá do `dokumenty/`. Přečti je celé (PDF/fotky) a vytěž.
 - Doporuč zeptat se nejstarších žijících příbuzných – teď, dokud to jde. Nabídni seznam otázek.
+- **Příbuzenství ber doslova, jak ho rodina řekla** („pradědeček babičky“ ≠ „otec babičky“) – nikdy ho neopravuj podle
+  toho, co se ti hodí do dat. Při nejasnosti se zeptej. Ztotožnění jen podle křestního jména veď jako `prob` s poznámkou.
 - Vše zapiš: `data/udaje_od_rodiny.md` (kdo co řekl), osoby do `data/osoby.py` se stavem `fam`
   (formát v hlavičce souboru a v `reference/data.md`). Žijící lidé jen jméno a rok narození.
 - **Rodinný strom jako soubor GEDCOM** (`.ged`, export z MyHeritage/Geni/FamilySearch): `python3 -I tools/ged_import.py
   dokumenty/strom.ged "Jméno Příjmení"` vypíše předky s čísly, všechny události a poznámky a **frontu zápisů**
   (nejmladší známá událost u každého předka, a jestli už je v archivu). `--osoby` dá kostru pro `osoby.py`.
   Poznámky ve stromu bývají plné rodinných historek. Přečti je a vytěž do `udaje_od_rodiny.md`.
+  Starší strom z **Brother's Keeper** (kódování ANSI a česká data „SRPEN 1945“ nástroj převede sám): místa tam bývají
+  v 6. pádě („Táboře“) – do `osoby.py` je přepiš do 1. pádu. Kořenem takového stromu často nejsou uživatel, ale jeho děti
+  (oba rody) – výchozí osobu proto vyber jménem.
 - **Záloha stromu z MyHeritage** (ZIP se souborem `<strom>.ftb` a složkou `Photos/` – to není GEDCOM, ale databáze):
   rozbal do vlastní složky v `dokumenty/` (bývá velká – dej ji do `.gitignore`), pak
   `python3 -I tools/ftb_export.py <strom.ftb> dokumenty/strom.ged "Jméno Příjmení" <rok narození> pracovni/prima_linie.md <složka Photos>`.
@@ -142,6 +155,9 @@ kreditů. Ověření na snímku a zápis do dat dělá hlavní model (ty). Uživ
 Osvědčilo se 3–4 pomocníci na různé větve a archivy současně, jedno kolo ≈ 15–25 nových předků.
 Pomocníci stojí hodně kreditů – před velkým kolem řekni uživateli, co plánuješ a proč, a nech si to schválit.
 Do zadání jim napiš technické pasti z `reference/matriky.md` (macOS: zsh; Windows: `python -I -X utf8`, `magick`).
+**V zadání chtěj u každého prošlého snímku, co na něm skutečně přečetl** (rok, první jméno), ne jen „prošel jsem
+sn. 20–40“ – pomocník jinak přehlédne, že se mu část snímků nenačetla. Na špatně čitelné knihy (kurent 1. poloviny
+19. století, vybledlé snímky) pomocníky nepouštěj, nebo jim dej přesný snímek; ARON a Porta fontium zvládají dobře.
 
 ### Kdy přestat
 Linie končí, když matriky mlčí (nemanželské dítě bez otce, shořelé knihy, chybějící svazky) nebo když jsi
@@ -161,7 +177,10 @@ Podrobně `reference/pribehy.md`. Tohle je to, co rodina na webu čte nejradši,
 Podrobně `reference/web.md`. Ve zkratce:
 1. `cd web && npm install` (jednou), pak `npm run nahled` → http://localhost:4321 – ukaž uživateli.
 2. Nastav `data/web.json`: název, úvod, kontakt a **přihlašovací otázku a odpověď** (web je jen pro rodinu).
-3. Po každé změně dat: `npm run data && npm run build` (nebo znovu `npm run nahled`).
+3. Po každé změně dat: `npm run data && npm run build` (nebo znovu `npm run nahled`). Hlášky `POZOR: nefunkční odkaz`
+   oprav hned (adresa osoby se mění, když se jí doplní rok narození).
+   Po každém větším kole hledání zkontroluj i texty úvodu ve `web.json` (`uvod`, `zajimavosti_na_uvodu`) –
+   zastarávají („nejstarší předek je…“, počty generací).
 4. Před zveřejněním si vezmi `reference/soukromi.md` a projdi s uživatelem, co na webu bude (žijící lidé!).
    Na web jde i „Co hledáme“ (`ISSUES`), poznámky osob a deník. Hlášky `CITLIVÉ` z `kontrola.py` vyřeš s uživatelem.
 
@@ -215,14 +234,14 @@ Nedělej to pořád. Postup:
 ## Nástroje (`tools/`, spouštět z kořene projektu `python3 -I tools/<nástroj>`)
 | Nástroj | Co dělá |
 |---|---|
-| `aron_search.py "Obec"` | najde svazky matrik na ARON (SOA Zámrsk) |
+| `aron_search.py "Obec"` | najde svazky matrik na ARON (SOA Zámrsk); `"Obec,Fara"` zúží stejnojmenné obce |
 | `aron_img.py <apu> info / <snímek> 1 pracovni/x.jpg / link <n> / svazek` | stáhne snímek, dá odkaz, zapíše svazek |
 | `trebon.py misto / svazky / rejstrik / snimek / svazek` | matriky SOA Třeboň (jižní Čechy) bez prohlížeče, i rejstříky |
 | `portafontium.py fara / info / snimek / link / svazek` | matriky SOA Plzeň (západní Čechy, Porta fontium) bez prohlížeče (faru zjisti na portálu) |
 | `ebadatelna.py hledat / matriky / info / snimek / link / svazek`, `a-…` | matriky a archiválie (urbáře, gruntovní knihy) SOA Praha (střední Čechy) |
 | `ahmp_search.sh "dotaz"`, `ahmp_scan.py XID snímek out.jpg` | matriky Prahy (AHMP) |
-| `policie_prihlasky.py Příjmení [Jméno] [od] [do]` | pražské policejní přihlášky 1850–1914 (rodiny s dětmi a adresami) |
-| `soal_zoomify.py <cesta> 0 out.jpg` | snímek SOA Litoměřice (knihu najdi v prohlížeči; pozor na blokování) |
+| `policie_prihlasky.py Příjmení [Jméno] [od] [do]`, `karta <pořadí> out.jpg …` | pražské policejní přihlášky 1850–1914 (rodiny s dětmi a adresami), stažení karty |
+| `soal_zoomify.py <cesta nebo adresa> 0 out.jpg` | snímek SOA Litoměřice nebo ZA Opava (knihu najdi v prohlížeči; pozor na blokování) |
 | `matricula_dl.sh`, `matricula_batch.sh` | snímky z Matriculy (Rakousko…), URL se bere z prohlížeče |
 | `anno.py`, `anno_snap.py`, `kramerius.py` | noviny: ANNO (rakouské), Kramerius (české) |
 | `ged_import.py strom.ged "Jméno"` | předci z rodinného stromu (GEDCOM) + fronta zápisů |

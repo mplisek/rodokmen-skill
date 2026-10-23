@@ -2,8 +2,9 @@
 """Matriky SOA Třeboň (digi.ceskearchivy.cz) bez prohlížeče.
 
 Použití (z kořene projektu):
-  trebon.py misto "Obec"                 -> id místa a jeho název (portál vybere jedno místo; při více stejných
-                                            jménech zkontroluj okres v názvu, případně použij id přímo)
+  trebon.py misto "Obec"                 -> id místa a jeho název (diakritiku a mezery nástroj odstraní sám; portál vybere
+                                            jedno místo – VŽDY zkontroluj vypsaný název a okres, u stejnojmenných obcí
+                                            a měst vrací i okres nebo synagogu; pak použij id přímo)
   trebon.py svazky <id_mista|"Obec">     -> seznam matrik: id_knihy | kniha | druh | roky | obce
   trebon.py rejstrik <id_knihy> <písmeno> -> jmenný rejstřík (dobrovolnický): příjmení | jméno | místo | rok | snímek
                                             (ne každá kniha ho má; prázdný výsledek = rejstřík chybí, ne „osoba tam není“)
@@ -13,10 +14,22 @@ Použití (z kořene projektu):
 Trvalý odkaz na snímek: https://digi.ceskearchivy.cz/<id_knihy>/<snímek>
 Ber ohled na server: stahuj jen snímky, které čteš.
 """
-import html, json, os, re, subprocess, sys, tempfile, urllib.parse, urllib.request, http.cookiejar
+import glob, html, json, os, re, shutil, subprocess, sys, tempfile, unicodedata, urllib.parse, urllib.request, http.cookiejar
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 BASE = "https://digi.ceskearchivy.cz"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def magick():
+    """Cesta k ImageMagicku; když chybí, skončí hned (před stahováním) srozumitelnou hláškou."""
+    m = shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+    if not m:
+        sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, "
+                 "Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")
+    return m
 _cj = http.cookiejar.CookieJar()
 _op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_cj))
 _op.addheaders = [("User-Agent", "Mozilla/5.0 (rodokmen)")]
@@ -42,10 +55,13 @@ def text(s):
 
 
 def misto(nazev):
-    _, url = get("/" + urllib.parse.quote(nazev))
+    # portál zná jen tvar bez diakritiky a mezer (Ratibořské Hory → RatiborskeHory), jinak vrací 404
+    holy = "".join(c for c in unicodedata.normalize("NFKD", nazev) if not unicodedata.combining(c)).replace(" ", "")
+    _, url = get("/" + urllib.parse.quote(holy))
     m = re.search(r"[?&]id=(\d+)", url) or re.search(r"/(\d+)-", url)
     if not m:
-        sys.exit(f"místo „{nazev}“ nenalezeno")
+        sys.exit(f"místo „{nazev}“ nenalezeno – portál ho jako místo nezná (malé osady chybějí). Zkus farní nebo sousední obec\n"
+                 f"(Malá Chyška → Chyšky) a v popisu jejích knih najdi tuto osadu; id knihy jinak najdi na portálu v prohlížeči.")
     pid = m.group(1)
     page, _ = get(f"/pages/klicova/rejinfo.php?typ=&id={pid}&l=&bookid=")
     t = re.search(r"document\.title=\"([^\"]*)\"", page)
@@ -77,6 +93,7 @@ def rejstrik(bid, pis):
 
 
 def snimek(bid, n, out, nahled=False):
+    MAGICK = magick()
     ref = f"{BASE}/{bid}/{n}"
     get(ref)
     page, _ = get(f"/view.php?menu=3&id={bid}&page={n}&r=0", referer=ref)
@@ -108,14 +125,14 @@ def snimek(bid, n, out, nahled=False):
         if not row:
             break
         rp = os.path.join(tmp, f"row_{y}.png")
-        subprocess.run(["magick", *row, "-crop", "768x769+0+0", "+repage", "+append", rp], check=True)
+        subprocess.run([MAGICK, *row, "-crop", "768x769+0+0", "+repage", "+append", rp], check=True)
         rows.append(rp)
         y += 1
-    subprocess.run(["magick", *rows, "-crop", "100%x768+0+0", "+repage", "-append", out], check=True)
+    subprocess.run([MAGICK, *rows, "-crop", "100%x768+0+0", "+repage", "-append", out], check=True)
     for f in os.listdir(tmp):
         os.remove(os.path.join(tmp, f))
     os.rmdir(tmp)
-    r = subprocess.run(["magick", "identify", "-format", "%wx%h", out], capture_output=True, text=True)
+    r = subprocess.run([MAGICK, "identify", "-format", "%wx%h", out], capture_output=True, text=True)
     print(out, r.stdout, "odkaz:", ref)
 
 

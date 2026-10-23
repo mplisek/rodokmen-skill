@@ -25,6 +25,9 @@ Portál má denní údržbu kolem 4:44 (asi 2 minuty). Ber ohled na server: stah
 """
 import glob, html, http.client, http.cookiejar, json, os, re, shutil, subprocess, sys, tempfile, time, unicodedata
 import urllib.error, urllib.parse, urllib.request
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 BASE = "https://ebadatelna.soapraha.cz"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -430,10 +433,6 @@ PRIKAZY = {"hledat": 2, "matriky": 2, "info": 2, "snimek": 4, "link": 3, "svazek
            "a-info": 2, "a-snimek": 4, "a-link": 3, "a-svazek": 2}
 
 if __name__ == "__main__":
-    try:
-        sys.stdout.reconfigure(errors="replace")
-    except AttributeError:
-        pass
     try:
         main(sys.argv[1:])
     except Chyba as e:

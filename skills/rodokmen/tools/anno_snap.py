@@ -3,6 +3,9 @@
 Usage: anno_snap.py DOCID "QUERY" OUTFILE [page] [mode=full|ctx] [width]
 mode ctx = hit area expanded (+/-600px vertically, whole column width)"""
 import sys,json,re,urllib.request,urllib.parse
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 doc,q,out=sys.argv[1:4]; page=sys.argv[4] if len(sys.argv)>4 else None
 mode=sys.argv[5] if len(sys.argv)>5 else 'ctx'; w=sys.argv[6] if len(sys.argv)>6 else '1400'
 u='https://anno.onb.ac.at/anno-suche/rest/search/snippet?'+urllib.parse.urlencode({'documentId':doc,'query':q})

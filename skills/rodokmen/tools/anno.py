@@ -6,6 +6,9 @@ API: GET https://anno.onb.ac.at/anno-suche/rest/search/complex?text=..&dateFrom=
      GET https://anno.onb.ac.at/anno-suche/rest/search/snippet?documentId=<docId>&query=<textQuery>
 """
 import html, os, re, sys, json, time, urllib.parse, urllib.request
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 B='https://anno.onb.ac.at/anno-suche/rest/search/'
 def get(path, params):
     u=B+path+'?'+urllib.parse.urlencode(params)

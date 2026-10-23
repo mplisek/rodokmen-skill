@@ -11,16 +11,40 @@ Použití (z kořene projektu):
 Fronta zápisů: u každého předka nejmladší známá událost s místem (úmrtí, pak sňatek, pak narození) –
 úmrtní a oddací zápisy uvádějí datum a místo narození i rodiče, proto se hledá od nejmladšího zápisu.
 E-maily a adresy ze stromu se nevypisují.
+Kódování: UTF-8; starší soubory s hlavičkou „1 CHAR ANSI“ (Brother's Keeper) se čtou jako Windows-1250 a česká data
+(„SRPEN 1945“, „PODZIM 1951“, „1926 NEBO 1927“, „11.11.1934“) se převedou na tvar „8. 1945“, „podzim 1951“…
 """
 import datetime, re, sys
 from collections import defaultdict
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 EVENTS = {"BIRT": "*", "CHR": "* (křest)", "DEAT": "†", "BURI": "† (pohřeb)", "MARR": "×"}
 MONTHS = {m: i for i, m in enumerate("JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC".split(), 1)}
+# česká data z Brother's Keeperu („SRPEN 1945“, „PODZIM 1951“, „1926 NEBO 1927“, „ASI 1930“, „11.11.1934“)
+CZ_MONTHS = {m: i for i, m in enumerate("LEDEN ÚNOR BŘEZEN DUBEN KVĚTEN ČERVEN ČERVENEC SRPEN ZÁŘÍ ŘÍJEN LISTOPAD PROSINEC".split(), 1)}
+CZ_WORDS = {"JARO": "jaro", "LÉTO": "léto", "PODZIM": "podzim", "ZIMA": "zima", "NEBO": "nebo", "ASI": "asi",
+            "OKOLO": "asi", "PŘED": "před", "PO": "po", "MEZI": "mezi", "A": "a"}
+
+
+def decode(data):
+    """UTF-8, a když soubor UTF-8 není a hlavička říká „1 CHAR ANSI“ (Brother's Keeper aj.), pak Windows-1250."""
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        pass
+    m = re.search(rb"^\s*1\s+CHAR\s+(\S+)", data[:5000], re.M)
+    char = m.group(1).decode("ascii", "replace").upper() if m else ""
+    if char in ("ANSI", "WINDOWS-1250", "CP1250"):
+        return data.decode("cp1250", "replace")
+    if char == "ANSEL":
+        print("POZOR: strom je v kódování ANSEL – čeština může být rozbitá; vyexportuj ho znovu v UTF-8.", file=sys.stderr)
+    return data.decode("utf-8", "replace")   # MyHeritage občas rozsekne znak na hranici CONC
 
 
 def read(path):
-    raw = open(path, "rb").read().decode("utf-8", "replace").lstrip("﻿")   # MyHeritage občas rozsekne znak na hranici CONC
+    raw = decode(open(path, "rb").read()).lstrip("﻿")
     recs, cur, stack = {}, None, []
     for line in raw.splitlines():
         m = re.match(r"\s*(\d+)\s+(@[^@]+@\s+)?(\S+)\s?(.*)$", line)
@@ -68,6 +92,9 @@ def cz_date(d):
         day, mon, yr = m.group(1), m.group(2), m.group(3)
         return f"{day + '. ' if day else ''}{str(MONTHS[mon]) + '. ' if mon else ''}{yr}"
     d = re.sub(r"(?:(\d{1,2}) )?(?:(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC) )?(\d{3,4})", one, d)
+    if re.search(r"[A-ZÁ-Ž]{2,}|\d\.\d", d) and not re.search(r"[a-z]", d.replace("asi ", "")):   # jen česká data, ne anglický GEDCOM
+        d = re.sub(r"\b(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})\b", lambda m: f"{int(m[1])}. {int(m[2])}. {m[3]}", d)
+        d = re.sub(r"[A-ZÁ-Ž]+", lambda m: f"{CZ_MONTHS[m[0]]}." if m[0] in CZ_MONTHS else CZ_WORDS.get(m[0], m[0]), d)
     return pre + d
 
 

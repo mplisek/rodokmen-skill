@@ -9,6 +9,9 @@ web/nginx.conf a web/netlify/edge-functions/brana.js.
 Spouští se z web/ příkazem `npm run data` (nebo přímo `python3 -I tools/export_web.py`, na Windows `python -I -X utf8 …`).
 """
 import hashlib, html, json, os, re, shutil, subprocess, sys, unicodedata
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(TOOLS)
@@ -82,14 +85,18 @@ def years(y):
     if not ys:
         return ""
     approx = "≈" if re.match(r"^(asi|≈)", y) else ""
-    if y.startswith(("?", "†")):   # neznámé narození: ukázat jen úmrtí („? – před 1743“ → „† před 1743“)
+    head, dash, tail = y.partition("–")
+    if y.startswith(("?", "†")) or (dash and not re.search(r"\d", head)) or re.match(r"po\b", y):
+        # neznámé narození: ukázat jen úmrtí („? – před 1743“ → „† před 1743“, „– po 1921“ → „žil 1921“)
+        if re.search(r"\bpo\b", tail or y):
+            return "žil " + ys[-1]
         return "† " + ("před " if "před" in y else "") + ys[-1]
     if y.startswith("*"):
         return "* " + ys[0]
     if len(ys) == 1:
         return approx + ys[0]
-    tail = y.split("–")[-1]
-    second = "?" if "před" in tail else ("≈" if re.search(r"(asi|≈)", tail) else "") + ys[-1]
+    second = "?" if "před" in tail else ("po " if re.search(r"\bpo\b", tail) else "") + \
+        ("≈" if re.search(r"(asi|≈)", tail) else "") + ys[-1]
     return f"{approx}{ys[0]}–{second}"
 
 
@@ -370,6 +377,16 @@ def main():
             copied += 1
     print(f"{len(people)} osob, {len(families)} rodin, {len(records)} zápisů, {len(lines)} rodů, {len(places)} míst; "
           f"zkopírováno {copied} obrázků; přihlášení {'zapnuté' if gated else 'VYPNUTÉ (web je otevřený)'}")
+
+    # odkazy v textech, které nikam nevedou (adresa osoby se změní třeba doplněním roku narození: jan-novak → jan-novak-1798)
+    targets = dict(osoba=people, zdroj=recs, rod=lines, rodina=families)
+    texts = {f: open(os.path.join(gen_dir, f), encoding="utf-8").read() for f in ("pribeh.md", "zajimavosti.md")}
+    texts["web.json"] = json.dumps(cfg, ensure_ascii=False)
+    texts["osoby.py (hypotézy)"] = json.dumps(hypotheses, ensure_ascii=False)
+    broken = [(f, m.group(0)) for f, t in texts.items()
+              for m in re.finditer(r"/(osoba|zdroj|rod|rodina)/([^/\s)\"'#?<>\]]+)", t) if m.group(2) not in targets[m.group(1)]]
+    for f, link in dict.fromkeys(broken):
+        print(f"POZOR: nefunkční odkaz {link}/ v {f} – oprav ho (adresy stránek jsou ve web/src/data/site.json)")
 
 
 if __name__ == "__main__":

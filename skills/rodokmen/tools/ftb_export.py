@@ -13,6 +13,9 @@ ZIP rozbal do vlastní složky v dokumenty/. Na Windows spouštěj `python -I -X
 """
 import html, os, pathlib, re, sqlite3, sys
 from collections import defaultdict
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 SKIP_TAGS = {"ADDR", "EMAIL", "PHON", "WWW", "FAX", "IDNO", "SSN"}   # kontakty a čísla dokladů do exportu nepatří
 TAG_MAP = {"BAPM": "CHR"}                                          # křest – ged_import zná jen CHR

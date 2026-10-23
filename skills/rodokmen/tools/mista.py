@@ -4,7 +4,8 @@
 Použití:
   mista.py pridej "Název" ["regulární výraz"] ["dotaz pro vyhledání"]
       přidá obec; výraz se hledá v údajích osob (výchozí = prvních 5 písmen názvu, aby sedělo i skloňování),
-      dotaz pro OpenStreetMap (výchozí = "Název, Česko")
+      dotaz pro OpenStreetMap (výchozí = "Název, Česko"); u víceznačných názvů (Podolí, Dub) přidej sousední obec:
+      "Podolí, Odlochovice" – a ve výpisu vždy zkontroluj okres
   mista.py
       dohledá souřadnice u míst, která je ještě nemají (OpenStreetMap Nominatim, 1 dotaz za sekundu),
       a vypíše seznam. Když bod nesedí, opravte lat/lon v data/mista.json ručně.
@@ -12,6 +13,9 @@ Použití:
 Položka může mít "hypoteza": true a "rod": <Kekulé 8–15> – pak se na mapě ukáže jako hypotéza bez osob.
 """
 import json, os, re, sys, time, urllib.parse, urllib.request
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "data", "mista.json")

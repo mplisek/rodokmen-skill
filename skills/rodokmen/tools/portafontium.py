@@ -16,7 +16,10 @@ Použití (z kořene projektu `python3 -I tools/portafontium.py …`, na Windows
 Snímek = pořadové číslo náhledu v prohlížeči portálu (1, 2, 3…). Stránky knih se ukládají do pracovni/.cache_pf/.
 Ber ohled na server: stahuj jen snímky, které čteš.
 """
-import html, http.client, json, os, re, sys, time, unicodedata, urllib.error, urllib.parse, urllib.request
+import html, http.client, json, os, re, ssl, sys, time, unicodedata, urllib.error, urllib.parse, urllib.request
+for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
+    if hasattr(_s, "reconfigure"):
+        _s.reconfigure(encoding="utf-8", errors="replace")
 
 BASE = "https://www.portafontium.eu"
 ARCHIV = "soap-pn"
@@ -24,6 +27,51 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, "pracovni", ".cache_pf")
 UA = {"User-Agent": "Mozilla/5.0 (rodokmen)"}   # bez prohlížečového User-Agentu portál vrací 403
 PAUZA = 0.5   # s před každým požadavkem – ohled na server i při volání ve smyčce
+
+# Server portálu posílá jen svůj certifikát bez mezilehlého (prohlížeče a curl si ho dohledají, Python ne →
+# CERTIFICATE_VERIFY_FAILED). Mezilehlý certifikát GEANT TLS RSA 1 (vydal HARICA TLS RSA Root CA 2021, platí do 2039,
+# SHA-256 5B:67:8D:C4:…:A5:FB:8C:79, z http://crt.harica.gr/HARICA-GEANT-TLS-R1.cer) přidáme jen jako článek řetězce:
+# bez PARTIAL_CHAIN se z něj kotva důvěry nestane, ověření pořád musí skončit u systémového kořenového certifikátu.
+GEANT_TLS_RSA_1 = """
+-----BEGIN CERTIFICATE-----
+MIIGBTCCA+2gAwIBAgIQFNV782kiKCGaVWf6kWUbIjANBgkqhkiG9w0BAQsFADBs
+MQswCQYDVQQGEwJHUjE3MDUGA1UECgwuSGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJl
+c2VhcmNoIEluc3RpdHV0aW9ucyBDQTEkMCIGA1UEAwwbSEFSSUNBIFRMUyBSU0Eg
+Um9vdCBDQSAyMDIxMB4XDTI1MDEwMzExMTUwMFoXDTM5MTIzMTExMTQ1OVowYDEL
+MAkGA1UEBhMCR1IxNzA1BgNVBAoMLkhlbGxlbmljIEFjYWRlbWljIGFuZCBSZXNl
+YXJjaCBJbnN0aXR1dGlvbnMgQ0ExGDAWBgNVBAMMD0dFQU5UIFRMUyBSU0EgMTCC
+AaIwDQYJKoZIhvcNAQEBBQADggGPADCCAYoCggGBAKEEaZSzEzznAPk8IEa17GSG
+yJzPTj4cwRY7/vcq2BPT5+IRGxQtaCdgLXIEl2cdPdIkj2eyakFmgMjAtyeju8V8
+dRayQCD/bWjJ7thDlowgLljQaXirxnYbT8bzRHAhCZqBakYgi5KWw9dANLyDHGpX
+UdY259ab0lWEaFE5Uu6IzQSMJOAy4l/Twym8GUiy0qMDEBFSlm31C9BXpdHKKAlh
+vIjMiKoDeTWl5vZaLB2MMRGY1yW2ftPgIP0/MkX1uFITlvHmmMTngxplH1nybEIJ
+FiwHg1KiLk1TprcZgeO2gxE5Lz3wTFWrsUlAzrh5xWmscWkjNi/4BpeuiT5+NExF
+czboLnXOfjuci/7bsnPi1/aZN/iKNbJRnngFoLaKVMmqCS7Xo34f+BITatryQZFE
+u2oDKExQGlxDBCfYMLgLucX/onpLzUSgeQITNLx6i5tGGbUYH+9Dy3GI66L/5tPj
+qzlOsydki8ZYGE5SBJeWCZ2IrhUe0WzZ2b6Zhk6JAQIDAQABo4IBLTCCASkwEgYD
+VR0TAQH/BAgwBgEB/wIBADAfBgNVHSMEGDAWgBQKSCOmYKSSCjPqk1vFV+olTb0S
+7jBNBggrBgEFBQcBAQRBMD8wPQYIKwYBBQUHMAKGMWh0dHA6Ly9jcnQuaGFyaWNh
+LmdyL0hBUklDQS1UTFMtUm9vdC0yMDIxLVJTQS5jZXIwEQYDVR0gBAowCDAGBgRV
+HSAAMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDATBCBgNVHR8EOzA5MDeg
+NaAzhjFodHRwOi8vY3JsLmhhcmljYS5nci9IQVJJQ0EtVExTLVJvb3QtMjAyMS1S
+U0EuY3JsMB0GA1UdDgQWBBSGAXI/jKlw4jEGUxbOAV9becg8OzAOBgNVHQ8BAf8E
+BAMCAYYwDQYJKoZIhvcNAQELBQADggIBABkssjQzYrOo4GMsKegaChP16yNe6Sck
+cWBymM455R2rMeuQ3zlxUNOEt+KUfgueOA2urp4j6TlPbs/XxpwuN3I1f09Luk5b
++ZgRXM7obE6ZLTerVQWKoTShyl34R2XlK8pEy7+67Ht4lcJzt+K6K5gEuoPSGQDP
+ef+fUfmXrFcgBMcMbtfDb9dubFKNZZxo5nAXiqhFMOIyByag3H+tOTuH8zuId9pH
+RDsUpAIHJ9/W2WBfLcKav7IKRlNBRD/sPBy903J9WHPKwl8kQSDA+aa7XCYk7bJt
+Eyf+7GM9F5cZ7+YyknXqnv/rtQEkTKZdQo5Us18VFe9qqj94tXbLdk7PejJYNB4O
+Zlli44Ld7rtqfFlUych7gIxFOmiyxMQQYrYmUi+74lEZvfoNhuref0CupuKpz6O3
+dLv6kO9T10uNdDBoBQTkge3UzHafTIe3R2o3ujXKUGPwyc9m7/FETyKLUCwSU/5O
+AVOeBCU8QtkKKjM8AmbpKpe3pHWcyq3R7B3LmIALkMPTydyDfxen65IDqREbVq8N
+xjhkJThUz40JqOlN6uqKqeDISj/IoucYwsqW24AlO7ZzNmohQmMi8ep23H4hBSh0
+GBTe2XvkuzaNf92syK8l2HzO+13GLCjzYLTPvXTO9UpK8DGyfGZOuamuwbAnbNpE
+3RfjV9IaUQGJ
+-----END CERTIFICATE-----
+"""
+SSL_CTX = ssl.create_default_context()
+SSL_CTX.verify_flags &= ~getattr(ssl, "VERIFY_X509_PARTIAL_CHAIN", 0)
+SSL_CTX.load_verify_locations(cadata=GEANT_TLS_RSA_1)
 
 
 def get(url, binary=False):
@@ -34,7 +82,7 @@ def get(url, binary=False):
         time.sleep(wait or PAUZA)
         wait = 2 * (attempt + 1)
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=120) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=120, context=SSL_CTX) as r:
                 data = r.read()
             return data if binary else data.decode("utf-8", "replace")
         except urllib.error.HTTPError as e:
