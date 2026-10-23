@@ -40,7 +40,7 @@ def jload(name, default):
 def load_people():
     ns = {}
     exec(open(os.path.join(DATA, "osoby.py"), encoding="utf-8").read(), ns)
-    for name, default in (("P", {}), ("SIDE", []), ("LINES", {}), ("ISSUES", []), ("HYPOTEZY", []), ("SAME", {})):
+    for name, default in (("P", {}), ("SIDE", []), ("LINES", {}), ("ISSUES", []), ("HYPOTEZY", []), ("SAME", {}), ("RODINA", {})):
         ns.setdefault(name, default)
     return ns
 
@@ -248,6 +248,40 @@ def main():
                 people[slugs[k]]["records"] = list(dict.fromkeys(people[slugs[k]]["records"] + [r for r in P[a].get("r", []) if r in recs]))
             people[slugs[k]]["facts"] = [f for f in people[slugs[k]]["facts"] if not f.startswith("TÁŽ OSOBA")]
 
+    # RODINA: osoby mimo přímou linii pro stromový graf. Odkazy: "k12" = přímý předek, "o:zkratka" = osoba z RODINA,
+    # "?12" = neznámý předek na místě 12 (sourozenci se tak poznají i bez známých rodičů).
+    R = ns["RODINA"]
+
+    def ref(v):
+        if isinstance(v, int):
+            v = SAME.get(v, v)
+            return f"k{v}" if v in slugs else f"?{v}"
+        return f"o:{v}" if isinstance(v, str) and v in R else None
+
+    others = []
+    for oid, o in R.items():
+        others.append(dict(id=f"o:{oid}", name=o["n"], y=o.get("y", ""), years=years(o.get("y")), sex=o.get("sex", ""),
+                           st=o.get("st", ""), status=STATUS.get(o.get("st"), ""), father=ref(o.get("otec")),
+                           mother=ref(o.get("matka")), partners=[x for x in map(ref, o.get("partner", [])) if x],
+                           facts=o.get("f", []), note=o.get("note", ""), records=[r for r in o.get("r", []) if r in recs]))
+    # na stránce osoby a rodiny je ukázat jako příbuzné (dřív byli jen v SIDE)
+    for pp in people.values():
+        me, k = f"k{pp['k']}", pp["k"]
+        birth = (ref(2 * k), ref(2 * k + 1))
+        for o in others:
+            if (o["father"], o["mother"]) == birth:
+                rel = "bratr" if o["sex"] == "M" else "sestra"
+            elif o["father"] == me or o["mother"] == me:
+                rel = "syn" if o["sex"] == "M" else "dcera"
+            elif me in o["partners"] or any(me in (c["father"], c["mother"]) and o["id"] in (c["father"], c["mother"]) for c in others):
+                rel = "manžel" if o["sex"] == "M" else "manželka"
+            elif birth[0] in (o["father"], o["mother"]) and not birth[0].startswith("?") or                     birth[1] in (o["father"], o["mother"]) and not birth[1].startswith("?"):
+                rel = "nevlastní bratr" if o["sex"] == "M" else "nevlastní sestra"
+            else:
+                continue
+            pp["side"].append(dict(name=o["name"], text=o["note"] or "; ".join(o["facts"]), records=o["records"], rel=rel,
+                                   years=o["years"], kind=SIDE_KIND.get(rel, "other"), id=o["id"]))
+
     families = {}
     for k in sorted(P):
         f, m = 2 * k, 2 * k + 1
@@ -333,7 +367,7 @@ def main():
     public_cfg = {k: v for k, v in cfg.items() if k != "prihlaseni"}
     public_cfg["maPribeh"] = has_story
     site = dict(config=public_cfg, places=places, root=slugs[1], aliases={a: slugs[a] for a in SAME}, people=people,
-                families=families, records=records, lines=lines,
+                families=families, others=others, records=records, lines=lines,
                 issues=[dict(title=i, text="") if isinstance(i, str) else dict(title=i[0], text=i[1]) for i in ISSUES], stats=stats, hypotheses=hypotheses,
                 docs=[dict(img=d["img"], caption=d["popis"], people=[slugs[k] for k in d.get("osoby", []) if k in slugs])
                       for d in docs_cfg if os.path.exists(os.path.join(VYREZY, d["img"] + ".jpg"))])

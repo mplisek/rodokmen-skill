@@ -26,7 +26,16 @@ P = {
 LINES = {
 }
 
-# Příbuzní mimo přímou linii (sourozenci, strýcové…): k = číslo předka, ke kterému patří.
+# Osoby mimo přímou linii pro stromový graf: sourozenci předků, jejich partneři a děti, předci partnerů…
+# "zkratka": dict(n="Marie Nováková", y="1892–1970", sex="F", otec=16, matka=17, st="doc", f=[...], r=[...], note="…")
+#   otec, matka  číslo přímého předka (16) nebo zkratka jiné osoby z RODINA ("karel-hruby"); chybí = neznámý.
+#                Sourozenec předka 8 má otec=16, matka=17 – i když 16/17 ještě neznáme (poznají se jako sourozenci).
+#   partner      seznam partnerů bez společného dítěte v rodokmenu, např. partner=[44] (první manželka předka 44)
+#   sex          "M" nebo "F" (povinné); n, y, st, f, r, note jako u předků. Žijící: jen jméno a rok narození.
+RODINA = {
+}
+
+# Poznámky o příbuzných, které nejdou zapsat do RODINA (nejistý vztah, celá větev jednou větou): k = číslo předka.
 # dict(k=16, n="Josef Novák", v="bratr", y="1865–1920", t="Bratr Jana. Kovář v …", r=["klic_zapisu"])
 #   v  vztah k předkovi: "bratr", "sestra", "manžel", "manželka", "syn", "dcera", jinak volně ("příbuzný")
 #   y  roky jako u předků ("* 1949", "1893–1960"); obojí volitelné

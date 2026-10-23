@@ -65,7 +65,7 @@ const path = [...p.path].reverse().filter(Boolean);
   )}
 
   <h2>Předci</h2>
-  <p class="small"><a href={`/strom/#k=${p.k}`}>Stromový graf od této osoby →</a></p>
+  <p class="small"><a href={`/strom/#f=k${p.k}`}>Stromový graf od této osoby →</a></p>
   <div class="only-desktop"><Pedigree k={p.k} /></div>
   <div class="only-mobile"><MobileTree k={p.k} /></div>
 
