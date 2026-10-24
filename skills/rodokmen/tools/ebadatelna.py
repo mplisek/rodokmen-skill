@@ -268,7 +268,8 @@ def radek_matriky(mid, c):
 # ---------- snímky ----------
 
 def magick():
-    m = shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+    m = (shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+         or (os.name != "nt" and shutil.which("convert")))   # ImageMagick 6 bez magick; na Windows je convert.exe jiný program
     if not m:
         raise Chyba("chybí ImageMagick (magick) – je potřeba na náhled, výřez a zjištění rozměrů.")
     return m
@@ -279,7 +280,7 @@ def rozmer(path):
         m = magick()
     except Chyba:   # bez ImageMagicku se celý snímek uloží, jen rozměr nevypíšeme
         return "?"
-    r = subprocess.run([m, "identify", "-format", "%wx%h", path + "[0]"], capture_output=True, text=True)
+    r = subprocess.run([m, path + "[0]", "-format", "%wx%h", "info:"], capture_output=True, text=True)
     return r.stdout.strip() or "?"
 
 
@@ -348,7 +349,7 @@ def zapis_svazek(klic, zaznam):
         with open(path, encoding="utf-8") as f:
             d = json.load(f)
     d[klic] = zaznam
-    with open(path, "w", encoding="utf-8") as f:
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(d, f, ensure_ascii=False, indent=1)
     print(f"{klic} -> {zaznam['svazek']}")
 

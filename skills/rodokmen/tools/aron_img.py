@@ -25,7 +25,8 @@ CACHE = os.path.join(ROOT, "pracovni", ".cache_aron")
 
 def magick():
     """Cesta k ImageMagicku; když chybí, skončí hned (před stahováním) srozumitelnou hláškou."""
-    m = shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+    m = (shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+         or (os.name != "nt" and shutil.which("convert")))   # ImageMagick 6 bez magick; na Windows je convert.exe jiný program
     if not m:
         sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, "
                  "Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")
@@ -50,7 +51,7 @@ def volume(apu_id):
     if not os.path.exists(path):
         data = get(f"{API}/apu/{apu_id}")
         tmp = f"{path}.{os.getpid()}.tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
+        with open(tmp, "w", encoding="utf-8", newline="\n") as f:
             f.write(data)
         os.replace(tmp, path)  # atomic, safe when several processes fetch the same volume
     with open(path, encoding="utf-8") as f:
@@ -135,7 +136,7 @@ if __name__ == "__main__":
         sv[apu[:8]] = dict(archiv=fond if rest else "", portal="ARON", svazek=rest or vol["name"],
                            popis=(vol.get("description") or "")[:300], snimku=len(tiles),
                            url=f"https://aron.vychodoceskearchivy.cz/apu/{vol['id']}")
-        with open(path, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
             json.dump(sv, f, ensure_ascii=False, indent=1)
         print(apu[:8], "->", sv[apu[:8]]["svazek"])
         sys.exit(0)

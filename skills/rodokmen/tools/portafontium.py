@@ -113,7 +113,7 @@ def kniha_page(kniha):
         return kniha, open(path, encoding="utf-8").read()
     page = get(f"/register/{ARCHIV}/{kniha}")
     if "data-iip-path" in page:   # kešuj jen opravdovou stránku knihy se snímky
-        with open(path, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
             f.write(page)
     return kniha, page
 
@@ -199,7 +199,7 @@ def svazek(kniha):
     d[f"pf_{kniha}"] = {"archiv": "SOA Plzeň – Sbírka matrik západních Čech", "portal": "Porta fontium",
                         "svazek": f"{sig}, {fields.get('Typ', '')}".strip(", "), "popis": popis[:300],
                         "snimku": len(scans), "url": f"{BASE}/register/{ARCHIV}/{kniha}"}
-    with open(path, "w", encoding="utf-8") as f:
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(d, f, ensure_ascii=False, indent=1)
     print(f"pf_{kniha} ->", d[f"pf_{kniha}"]["svazek"])
 

@@ -25,7 +25,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def magick():
     """Cesta k ImageMagicku; když chybí, skončí hned (před stahováním) srozumitelnou hláškou."""
-    m = shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+    m = (shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+         or (os.name != "nt" and shutil.which("convert")))   # ImageMagick 6 bez magick; na Windows je convert.exe jiný program
     if not m:
         sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, "
                  "Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")
@@ -132,7 +133,7 @@ def snimek(bid, n, out, nahled=False):
     for f in os.listdir(tmp):
         os.remove(os.path.join(tmp, f))
     os.rmdir(tmp)
-    r = subprocess.run([MAGICK, "identify", "-format", "%wx%h", out], capture_output=True, text=True)
+    r = subprocess.run([MAGICK, out + "[0]", "-format", "%wx%h", "info:"], capture_output=True, text=True)
     print(out, r.stdout, "odkaz:", ref)
 
 
@@ -146,7 +147,7 @@ def svazek(bid):
     d = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else {}
     d[f"trebon_{bid}"] = {"archiv": "SOA Třeboň – Sbírka matrik", "portal": "digi.ceskearchivy.cz",
                           "svazek": nazev, "popis": "", "url": f"{BASE}/{bid}"}
-    json.dump(d, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    json.dump(d, open(path, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
     print(f"trebon_{bid} -> {nazev}")
 
 

@@ -5,7 +5,7 @@ Použití: kontrola.py
 Vypíše CHYBY (rozbijí web nebo jsou věcně špatně) a UPOZORNĚNÍ (něco chybí, doplnit).
 Návratový kód 1, pokud jsou chyby.
 """
-import json, os, re, sys
+import datetime, json, os, re, sys
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -104,22 +104,38 @@ def main():
     citlive = re.compile(r"sebevra|vzal[a]? si život|oběsil|zastřelil[a]? se|utopil[a]? se|alkohol|vězen|kriminál|"
                          r"rozvod|rozvedl|psychiatr|léčebn|duševn|rakovin|nemanželsk|cizoložst|dluh|exekuc|interrupc|potrat", re.I)
 
-    def recent(text):   # 20. století a později – staré matriční údaje (nemanželské dítě v 18. stol.) nevadí
-        return any(int(y) >= 1900 for y in re.findall(r"\b(19\d\d|20\d\d)\b", text))
+    hranice = datetime.date.today().year - 100   # posledních ~100 let; staré matriční údaje (nemanželské dítě v 18. stol.) nevadí
+
+    def recent(text):
+        return any(int(y) >= hranice for y in re.findall(r"\b(19\d\d|20\d\d)\b", text))
+    schvaleno = [s for s in (cfg.get("citlive_schvaleno") if isinstance(cfg.get("citlive_schvaleno"), list) else [])
+                 if isinstance(s, str) and len(s.strip()) >= 3]
+
+    def schvalene(text, m):   # uživatel to na web pustil: v web.json „citlive_schvaleno“ je úryvek textu s tímto slovem
+        for s in schvaleno:
+            i = text.find(s)
+            while i >= 0:
+                if i <= m.start() and m.end() <= i + len(s):
+                    return True
+                i = text.find(s, i + 1)
+        return False
     texty = [("ISSUES", i if isinstance(i, str) else " ".join(i)) for i in ns.get("ISSUES", [])]
     for k, p in P.items():
         text = " ".join(p.get("f", [])) + " " + p.get("note", "")
         roky = [int(y) for y in re.findall(r"\b1[5-9]\d\d|20\d\d\b", p.get("y", "") + " " + text)]
-        texty.append((f"osoba {k}", text + (" 1900" if roky and min(roky) >= 1870 or k < 8 else "")))
+        texty.append((f"osoba {k}", text + (f" {hranice}" if roky and min(roky) >= 1870 or k < 8 else "")))
     texty += [(f"boční příbuzný {s.get('n')}", s.get("n", "") + " " + s.get("t", "")) for s in SIDE]
     for f in ("zajimavosti.md", "pribeh.md"):
         if os.path.exists(os.path.join(DATA, f)):
             texty += [(f, odst) for odst in open(os.path.join(DATA, f), encoding="utf-8").read().split("\n\n")]
     for kde, text in texty:
-        m = citlive.search(text)
-        if m and recent(text):
+        if not recent(text):
+            continue
+        m = next((m for m in citlive.finditer(text) if not schvalene(text, m)), None)
+        if m:
             warn.append(f"CITLIVÉ ({kde}): „…{text[max(0, m.start() - 40):m.end() + 40].strip()}…“ – jde na web; "
-                        f"zeptej se uživatele, jestli to tam smí být (reference/soukromi.md)")
+                        f"zeptej se uživatele, jestli to tam smí být (reference/soukromi.md); když ano, "
+                        f"přidej úryvek textu s tím slovem do web.json „citlive_schvaleno“")
 
     if not os.path.exists(os.path.join(DATA, "pribeh.md")) and LINES:
         hlavni = min(LINES)

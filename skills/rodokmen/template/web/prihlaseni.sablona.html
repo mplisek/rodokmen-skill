@@ -54,7 +54,9 @@
         var hash = Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
         var secure = location.protocol === 'https:' ? '; Secure' : '';
         document.cookie = 'rodokmen=' + hash + '; Max-Age=31536000; Path=/; SameSite=Lax' + secure;
-        var back = location.pathname === '/prihlaseni.html' ? '/' : location.pathname + location.search;
+        // úvodní lomítka sloučit: z adresy „https://web//cizi.web“ by jinak „//cizi.web“ přesměrovalo na cizí web
+        var path = location.pathname.replace(/^[\/\\]+/, '/');
+        var back = path === '/prihlaseni.html' ? '/' : path + location.search;
         return fetch(back, { credentials: 'same-origin', cache: 'no-store' }).then(function (r) {
           if (r.status === 401) {
             document.getElementById('err').textContent = 'To není ono – zkuste to znovu.';

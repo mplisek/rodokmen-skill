@@ -3,19 +3,26 @@
 Použití: aron_search.py "<text v popisu, např. obec>" [filtr názvu fondu] [max]
   Víc slov oddělených čárkou musí být v popisu všechna: "Vinice,Hořice" = Vinice ve farnosti Hořice
   (stejnojmenných obcí bývá víc – výsledky jsou proto seřazené podle farnosti / první obce v popisu).
-Vypíše: apu_id | signatura, druh a roky | popis (obce, které svazek pokrývá)."""
-import json, re, sys, urllib.request
+Vypíše: apu_id | signatura, druh a roky | popis (obce, které svazek pokrývá).
+Vypisuje i svazky bez snímků (hlavně 20. století) – jestli je svazek online, ukáže `aron_img.py <apu_id> info` (scans: 0 = není)."""
+import json, re, sys, time, urllib.request
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
 
 API = "https://aron.vychodoceskearchivy.cz/api/aron"
 
-def post(path, body):
+def post(path, body, tries=3):
     req = urllib.request.Request(API + path, data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=90) as r:
-        return json.load(r)
+    for attempt in range(tries):   # ARON občas neodpoví (timeout) – zkusit znovu s pauzou
+        try:
+            with urllib.request.urlopen(req, timeout=90) as r:
+                return json.load(r)
+        except OSError:
+            if attempt == tries - 1:
+                raise
+            time.sleep(5 * (attempt + 1))
 
 def search(desc, name="Sbírka matrik Východočeského kraje", maxn=500):
     out, offset = [], 0

@@ -19,7 +19,8 @@ PATH = os.path.join(ROOT, "data", "zvyrazneni.json")
 
 def magick():
     """Cesta k ImageMagicku; když chybí, skončí hned (před stahováním) srozumitelnou hláškou."""
-    m = shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+    m = (shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
+         or (os.name != "nt" and shutil.which("convert")))   # ImageMagick 6 bez magick; na Windows je convert.exe jiný program
     if not m:
         sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, "
                  "Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")
@@ -31,7 +32,7 @@ def preview(key, boxes):
     src = os.path.join(ROOT, "vyrezy", key + ".jpg")
     out = os.path.join(ROOT, "pracovni", f"ramecek_{key}.jpg")
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    w, h = (int(v) for v in subprocess.run([MAGICK, "identify", "-format", "%w %h", src + "[0]"],
+    w, h = (int(v) for v in subprocess.run([MAGICK, src + "[0]", "-format", "%w %h", "info:"],
                                             capture_output=True, text=True, check=True).stdout.split())
     cmd = [MAGICK, src, "-fill", "none", "-stroke", "#d7302a", "-strokewidth", str(max(3, w // 400))]
     for x0, y0, x1, y1 in boxes:
@@ -59,7 +60,7 @@ def main():
         if len(b) != 4 or not (0 <= b[0] < b[2] <= 1 and 0 <= b[1] < b[3] <= 1):
             sys.exit(f"Špatný rámeček {b}: musí být x0,y0,x1,y1 v rozsahu 0..1 a x0<x1, y0<y1")
     data[key] = dict(boxes=boxes, status="ok", note=note)
-    json.dump(data, open(PATH, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    json.dump(data, open(PATH, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
     print("zapsáno; zkontrolujte:", preview(key, boxes))
 
 

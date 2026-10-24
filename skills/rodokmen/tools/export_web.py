@@ -118,8 +118,12 @@ def placeholder(p):
     return p["n"].startswith(("otec neuveden", "matka neuvedena")) or p["n"] in ("", "?")
 
 
+def magick_bin():   # ImageMagick 7 (magick), jinak 6 (convert) – ten ale ne na Windows, tam je convert.exe jiný program
+    return shutil.which("magick") or (os.name != "nt" and shutil.which("convert")) or None
+
+
 def size(path):
-    w, h = subprocess.run(["magick", "identify", "-format", "%w %h", path + "[0]"],
+    w, h = subprocess.run([magick_bin(), path + "[0]", "-format", "%w %h", "info:"],
                           capture_output=True, text=True, check=True).stdout.split()
     return int(w), int(h)
 
@@ -127,13 +131,13 @@ def size(path):
 def draw_boxes(src, dst, boxes, small):
     """Kopie výřezu v plném rozlišení s nakreslenými rámečky (pokud má stejný poměr stran jako webový výřez,
     na kterém se rámečky měřily). Vrací False, pak se kopíruje bez rámečků."""
-    if not os.path.exists(small) or not shutil.which("magick"):
+    if not os.path.exists(small) or not magick_bin():
         return False
     (W, H), (w, h) = size(src), size(small)
     if abs(W / H - w / h) > 0.015 * (w / h):
         return False
     sw = max(4, round(W / 450))
-    cmd = ["magick", src, "-fill", "none", "-stroke", "#d7302a", "-strokewidth", str(sw)]
+    cmd = [magick_bin(), src, "-fill", "none", "-stroke", "#d7302a", "-strokewidth", str(sw)]
     for x0, y0, x1, y1 in boxes:
         cmd += ["-draw", f"rectangle {x0 * W:.0f},{y0 * H:.0f},{x1 * W:.0f},{y1 * H:.0f}"]
     subprocess.run(cmd + ["-quality", "90", dst], check=True)
@@ -142,7 +146,7 @@ def draw_boxes(src, dst, boxes, small):
 
 def write(path, text):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write(text)
 
 
@@ -341,7 +345,7 @@ def main():
     write(os.path.join(gen_dir, "pribeh.md"), strip_comments(open(story, encoding="utf-8").read()) if has_story else "---\ntitle: Příběh\nlead: ''\n---\n")
 
     hrefs = os.path.join(gen_dir, "fan_hrefs.json")
-    json.dump({k: f"/osoba/{s}/" for k, s in slugs.items()}, open(hrefs, "w"))
+    json.dump({k: f"/osoba/{s}/" for k, s in slugs.items()}, open(hrefs, "w", encoding="utf-8", newline="\n"))
     subprocess.run([sys.executable, "-I", "-X", "utf8", os.path.join(TOOLS, "fan_chart.py"),
                     os.path.join(gen_dir, "fan.svg"), "--web", hrefs], check=True, capture_output=True)
 

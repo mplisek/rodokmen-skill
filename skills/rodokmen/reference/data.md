@@ -2,6 +2,7 @@
 
 Všechna data jsou v `data/`. Web se z nich generuje (`npm run data`), nikdy needituj `web/src/data/site.json` ručně.
 Po změnách spusť `python3 -I tools/kontrola.py`. Ukázku vyplněných dat má `SKILL_DIR/template/ukazka/`.
+Položky do JSON souborů přidávej a měň přes `python3 -I tools/zapis.py` (zachová formát souboru, viz SKILL.md).
 
 ## `osoby.py` – předci
 Kekulého čísla: 1 = výchozí osoba, otec osoby n = 2n, matka = 2n+1.

@@ -4,7 +4,8 @@
 Použití:
   mista.py pridej "Název" ["regulární výraz"] ["dotaz pro vyhledání"]
       přidá obec; výraz se hledá v údajích osob (výchozí = prvních 5 písmen názvu, aby sedělo i skloňování),
-      dotaz pro OpenStreetMap (výchozí = "Název, Česko"); u víceznačných názvů (Podolí, Dub) přidej sousední obec:
+      dotaz pro OpenStreetMap (výchozí = "Název, Česko", když nic nenajde, zkusí Slovensko a další sousední země);
+      historickou část obce, kterou mapa nezná, zadej jako celou obec; u víceznačných názvů (Podolí, Dub) přidej sousední obec:
       "Podolí, Odlochovice" – a ve výpisu vždy zkontroluj okres
   mista.py
       dohledá souřadnice u míst, která je ještě nemají (OpenStreetMap Nominatim, 1 dotaz za sekundu),
@@ -21,8 +22,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "data", "mista.json")
 
 
-def geocode(q):
-    url = "https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode({"q": q, "format": "json", "limit": 1})
+def geocode(q, zeme=None):
+    par = {"q": q, "format": "json", "limit": 1} | ({"countrycodes": zeme} if zeme else {})
+    url = "https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode(par)
     req = urllib.request.Request(url, headers={"User-Agent": "rodokmen-skill/1.0 (family genealogy map, occasional geocoding)"})
     with urllib.request.urlopen(req, timeout=30) as r:
         res = json.load(r)
@@ -40,11 +42,15 @@ def main():
     for name, e in cache.items():
         if "lat" not in e:
             g = geocode(e.get("dotaz") or f"{name}, Česko")
+            if not g and e.get("dotaz", f"{name}, Česko") == f"{name}, Česko":   # výchozí dotaz: zkus sousední země
+                g = geocode(name, "sk,pl,at,de,hu")
+                if g:
+                    print("MIMO ČESKO:", name, "→", g[2][:80], "– zkontroluj, že je to ono")
             if g:
                 e["lat"], e["lon"], e["osm"] = g
             else:
                 print("NENALEZENO:", name, "– upravte 'dotaz' nebo doplňte lat/lon ručně")
-    json.dump(cache, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    json.dump(cache, open(OUT, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
     for n, e in cache.items():
         print(f"{n:28} {e.get('lat', '?'):>8} {e.get('lon', '?'):>8}  hledá „{e.get('re')}“  {e.get('osm', '')[:60]}")
 

@@ -215,7 +215,7 @@ svg = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBo
        f'<rect width="{W}" height="{H}" fill="#FBF8F2"/><defs>{"".join(defs)}</defs>'
        f'{title}{"".join(paths)}{"".join(texts)}{"".join(legend)}{footer}</svg>')
 if WEB:
-    open(OUT, "w", encoding="utf-8").write(
+    open(OUT, "w", encoding="utf-8", newline="\n").write(
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" font-family="{FONT}" class="fan">'
         f'<defs>{"".join(defs)}</defs>{"".join(paths)}{"".join(texts)}<g class="fan-links">{"".join(links)}</g></svg>')
     print(OUT, len(links), "odkazů")
@@ -224,8 +224,8 @@ os.makedirs(OUT, exist_ok=True)
 svg_path = os.path.join(OUT, "rodokmen_vejir.svg")
 html_path = os.path.join(OUT, "rodokmen_vejir.html")
 png_path = os.path.join(OUT, "rodokmen_vejir.png")
-open(svg_path, "w", encoding="utf-8").write(svg)
-open(html_path, "w", encoding="utf-8").write(f'<!doctype html><meta charset="utf-8"><style>html,body{{margin:0;background:#FBF8F2}}</style>{svg}')
+open(svg_path, "w", encoding="utf-8", newline="\n").write(svg)
+open(html_path, "w", encoding="utf-8", newline="\n").write(f'<!doctype html><meta charset="utf-8"><style>html,body{{margin:0;background:#FBF8F2}}</style>{svg}')
 import shutil, tempfile
 if not CHROME:
     print(svg_path, "(PNG nevytvořen – chybí Google Chrome; HTML otevřete v prohlížeči a vytiskněte do PDF)")
