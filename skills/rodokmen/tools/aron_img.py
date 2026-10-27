@@ -143,8 +143,9 @@ if __name__ == "__main__":
     if sys.argv[2] == "link":
         n = int(sys.argv[3])
         dao = vol["digitalObjects"][0]
-        pub = [f for f in dao["files"] if f["type"] == "PUBLISHED" and f["order"] == n][0]
-        print(f"https://aron.vychodoceskearchivy.cz/apu/{apu}/dao/{dao['id']}/file/{pub['id']}")
+        # prohlížeč ARON pozná snímek podle id souboru TILE; s id souboru PUBLISHED otevře knihu vždy na prvním snímku
+        tile = [f for f in dao["files"] if f["type"] == "TILE" and f["order"] == n][0]
+        print(f"https://aron.vychodoceskearchivy.cz/apu/{apu}/dao/{dao['id']}/file/{tile['id']}")
         sys.exit(0)
     n = int(sys.argv[2])
     lo = int(sys.argv[3]) if len(sys.argv) > 3 else 1
