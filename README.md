@@ -126,7 +126,7 @@ skills/rodokmen/
 ## Co umí a co ne
 - **Hotové nástroje** (bez prohlížeče) mají: východní Čechy (SOA Zámrsk, ARON), jižní Čechy (SOA Třeboň,
   včetně dobrovolnických rejstříků), západní Čechy (SOA Plzeň, Porta fontium), střední Čechy (SOA Praha, eBadatelna –
-  i urbáře a gruntovní knihy), Prahu (AHMP a policejní přihlášky 1850–1914) a jižní Moravu (MZA Brno, Acta Publica). Pro severní Čechy (SOA Litoměřice)
+  i urbáře a gruntovní knihy), Prahu (AHMP a policejní přihlášky 1850–1914) jižní Moravu (MZA Brno, Acta Publica) a židovské matriky z Národního archivu (VadeMeCum). K tomu databázi obětí perzekuce (holocaust.cz). Pro severní Čechy (SOA Litoměřice)
   stahuje snímky nástrojem, knihu ale najde přes prohlížeč. Pro Rakousko je postup přes Matriculu.
 - Ostatní archivy (ZA Opava pro severní Moravu a Slezsko) Claude obsluhuje obecným postupem přes prohlížeč.
   Opavský portál má ochranu proti robotům a CAPTCHU řeší uživatel, takže je to pomalejší; snímky se stahují nástrojem.
@@ -175,7 +175,7 @@ tady v repozitáři.
   Výjimkou jsou dočasné soubory systému, npm při instalaci webu a přihlášení nástroje pro nasazení (Netlify,
   CapRover), pokud web zveřejňujete. Mimo projekt nic nemažou ani nepřepisují.
 - **Na které servery chodí:** archivní portály (ARON SOA Zámrsk, SOA Třeboň, SOA Plzeň – Porta fontium, SOA Praha –
-  eBadatelna, MZA Brno – Acta Publica, AHMP, Národní archiv, SOA Litoměřice, Matricula), noviny (ANNO, Kramerius), OpenStreetMap (mapa
+  eBadatelna, MZA Brno – Acta Publica, AHMP, Národní archiv včetně VadeMeCum, holocaust.cz, SOA Litoměřice, Matricula), noviny (ANNO, Kramerius), OpenStreetMap (mapa
   a souřadnice obcí) a při instalaci webu registr npm.
   Na Netlify jen tehdy, když web sami zveřejníte. Nikam jinam nic neposílají, ani vaše data, ani poznámky.
 - **Doporučení:** nechte v Claude Code zapnuté schvalování příkazů, aspoň dokud si nezvyknete, co Claude dělá.
