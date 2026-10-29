@@ -54,7 +54,7 @@ def hledat(dotaz, maxn, jazyk):
     celkem = post("GetCount", {"uniqueId": uid, "lang": jazyk, "searchType": "person", "useFilter": False})
     rows = post("GetPersonList", {"uniqueId": uid, "lang": jazyk, "rowNum": 0, "orderBy": "LastName", "orderType": "asc"})
     for r in rows[:maxn]:
-        print(" | ".join([str(r["ObjId"]), r["LastName"], r["FirstName"], r.get("MaidenName") or "-", datum(r.get("Dob")) or "-",
+        print(" | ".join([str(r["ObjId"]), r.get("LastName") or "-", r.get("FirstName") or "-", r.get("MaidenName") or "-", datum(r.get("Dob")) or "-",
                           r.get("PlaceBirth") or "-", r.get("PrisonerNumber") or "-", r.get("Nationality") or "-",
                           (r.get("Signature") or "")[:70], f"{WEB}{jazyk}/document/{r['ObjId']}"]))
     if not rows:

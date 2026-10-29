@@ -13,7 +13,7 @@ Použití (z kořene projektu):
                                          číslo řádku = číslo snímku v prohlížeči; trvalý odkaz je …/<kniha>/?pg=<číslo>
 Ber ohled na server: stahuj jen to, co čteš.
 """
-import html, re, sys, time, urllib.parse, urllib.request
+import html, json, re, sys, time, urllib.parse, urllib.request
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -84,8 +84,12 @@ def snimky(cesta):
     m = re.search(r'"labels":\s*\[(.*?)\]', page, re.S)
     if not m:
         sys.exit("Stránka nemá seznam snímků (je to cesta knihy, např. oesterreich/wien/01-am-hof/01-01?).")
-    for i, lab in enumerate(re.findall(r'"([^"]+)"', m.group(1)), 1):
-        print(f"{i} | {lab}")
+    try:
+        labely = json.loads("[" + m.group(1) + "]")   # prázdné popisky zůstanou na svém místě, escape sekvence se dekódují
+    except ValueError:
+        sys.exit("Seznam snímků se nepodařilo přečíst (portál změnil stránku?). Otevři knihu v prohlížeči.")
+    for i, lab in enumerate(labely, 1):
+        print(f"{i} | {lab or '(bez popisku)'}")
 
 
 if __name__ == "__main__":

@@ -60,7 +60,7 @@ def hledat(pole, stran):
         if j.get("err"):
             sys.exit("Portál vrátil chybu: " + text(str(j["err"]))[:200])
         res = j["results"]
-        celkem = celkem or re.search(r"Záznamů:\s*(\d+)", res)
+        celkem = celkem or re.search(r"Záznamů:\s*([\d\s\xa0]+)", res)
         radky = re.findall(r'<div id="i\d+" class="tr trd">(.*?)</a></div>\s*</div>', res, re.S)
         for r in radky:
             bunky = {c: text(v) for c, v in re.findall(r'<div class="td (\w+)">(.*?)</div>', r, re.S)}
@@ -74,8 +74,8 @@ def hledat(pole, stran):
         time.sleep(0.7)
     if n == 0:
         print("Nic nenalezeno (zkus příjmení bez diakritiky, jen příjmení, nebo kratší začátek).", file=sys.stderr)
-    elif celkem and n < int(celkem.group(1)):
-        print(f"… celkem {celkem.group(1)} záznamů, zobrazeno {n}; zúžit jde jménem a rokem, víc dá --stran", file=sys.stderr)
+    elif celkem and n < int(re.sub(r"\D", "", celkem.group(1)) or 0):
+        print(f"… celkem {celkem.group(1).strip()} záznamů, zobrazeno {n}; zúžit jde jménem a rokem, víc dá --stran", file=sys.stderr)
 
 
 def detail(arg):

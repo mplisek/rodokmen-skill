@@ -17,7 +17,7 @@ Použití (z kořene projektu):
 Židovské matriky nejsou po jménech indexované – hledá se podle obce (kniha je po židovských obcích a letech).
 Pro studium matrik mladších než 100/75/30 let platí stejné lhůty jako u církevních matrik.
 """
-import html, http.cookiejar, json, os, re, subprocess, sys, tempfile, time, urllib.parse, urllib.request
+import html, http.cookiejar, json, os, re, subprocess, sys, time, urllib.parse, urllib.request
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -142,33 +142,26 @@ def cislo(s):
     return int(s)
 
 
-def link(xid, n):
-    _, sken, _ = snimek_stranka(xid, n)
+def odkaz_snimku(xid, sken):
     return f"{BASE}/vademecum/permalink?xid={xid}" + (f"&scan={sken}&parentType=9019" if sken else "")
+
+
+def link(xid, n):
+    return odkaz_snimku(xid, snimek_stranka(xid, n)[1])
 
 
 def snimek(xid, n, out, nahled=False, orez=None):
     cesta, sken, _ = snimek_stranka(xid, n)
-    if "vademecum.nacr.cz" not in cesta:
+    if urllib.parse.urlsplit(cesta).hostname != "vademecum.nacr.cz":
         sys.exit(f"Neočekávaný server obrázků: {cesta[:80]}")
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
-    zoom = os.path.join(HERE, "soal_zoomify.py")
-    cil = out if not orez else os.path.join(tempfile.mkdtemp(prefix="nacvm_"), "cely.jpg")
-    r = subprocess.run([sys.executable, "-I", "-X", "utf8", zoom, cesta, "2" if nahled else "0", cil],
-                       capture_output=True, text=True)
+    zoom = [sys.executable, "-I", "-X", "utf8", os.path.join(HERE, "soal_zoomify.py"), cesta, "2" if nahled else "0", out]
+    if orez:
+        zoom.append(",".join(str(v) for v in orez))   # ořez udělá soal_zoomify (dočasné soubory uklidí i při chybě)
+    r = subprocess.run(zoom, capture_output=True, text=True)
     if r.returncode:
         sys.exit(r.stderr.strip() or r.stdout.strip())
-    if orez:
-        sys.path.insert(0, HERE)
-        magick = subprocess.run([sys.executable, "-I", "-c", "import sys;sys.path.insert(0,sys.argv[1]);import soal_zoomify as z;print(z.magick())",
-                                 HERE], capture_output=True, text=True).stdout.strip()
-        w, h = map(int, subprocess.run([magick, cil + "[0]", "-format", "%w %h", "info:"], capture_output=True, text=True).stdout.split())
-        x0, y0, x1, y1 = orez
-        geo = f"{int((x1 - x0) * w)}x{int((y1 - y0) * h)}+{int(x0 * w)}+{int(y0 * h)}"
-        subprocess.run([magick, cil, "-crop", geo, "+repage", "-quality", "88", out], check=True)
-        os.remove(cil)
-        os.rmdir(os.path.dirname(cil))
-    print(out, "odkaz:", link(xid, n))
+    print(out, "odkaz:", odkaz_snimku(xid, sken))
 
 
 def svazek(xid):

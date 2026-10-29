@@ -139,9 +139,9 @@ def holy(t):
 
 def shoda(r, w):
     """Čtyřmístné číslo = rok uvnitř některého z rozsahů N/O/Z; jinak slovo (bez diakritiky) v textu řádku."""
-    if re.fullmatch(r"\d{4}", w):
-        return any(int(a) <= int(w) <= int(b) for k in ("N", "O", "Z")
-                   for a, b in re.findall(r"(\d{4})\s*-\s*(\d{4})", r[k][0]))
+    if re.fullmatch(r"\d{4}", w):   # i jednoletý rozsah („1850“) a otevřený („1850 -“)
+        return any(int(a) <= int(w) <= int(b or a) for k in ("N", "O", "Z")
+                   for a, b in re.findall(r"(\d{4})(?:\s*-\s*(\d{4}))?", r[k][0]))
     hodnoty = [r["kniha"], r["puvodce"], r["typ"], r["poznamka"], r["obce_plne"]]
     return holy(w) in holy(" ".join(hodnoty))
 
@@ -175,6 +175,8 @@ def puvodce(nazev, typ):
 
 
 def kniha(bid):
+    if not (bid.isascii() and bid.isdigit()):
+        sys.exit("id knihy je číslo z prvního sloupce výpisu `hledat` (ne „číslo knihy“ / signatura).")
     page = get(f"{BASE}matrika/detail/{bid}")
     m = re.search(r"CreateSeadragon\(\s*(\[.*?\]),\s*(\[.*?\]),\s*(\[.*?\])", page, re.S)
     if not m:
@@ -234,6 +236,8 @@ def snimek(bid, n, out, nahled=False, orez=None):
     _, src, names, _ = kniha(bid)
     k = cislo_snimku(n, names)
     dzi = src[k - 1]
+    if not dzi.startswith("https://www.mza.cz/") or not dzi.endswith(".dzi"):
+        sys.exit(f"Neočekávaná adresa obrázku: {dzi[:80]}")
     base = dzi[:-len(".dzi")] + "_files"
     x = curl_get(dzi).decode()
     W, H, T = (int(re.search(fr'{a}="(\d+)"', x).group(1)) for a in ("Width", "Height", "TileSize"))

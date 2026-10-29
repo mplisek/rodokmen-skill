@@ -40,7 +40,7 @@ def hledat(dotaz, stran):
     n, videno, celkem = 0, set(), None
     for p in range(1, stran + 1):
         page = get(f"{BASE}?txtFullSearch={q}&L=0&id=5&page={p}&count=20")   # strany portálu jsou číslované od 1
-        celkem = re.search(r'(\d+) Personen', page)
+        celkem = re.search(r'([\d.\s\xa0]+) Personen', page)
         osoby = re.findall(r'<div class="entry">.*?<h1><a href="([^"]+)">(.*?)</a></h1>\s*(?:<p class="subtext">(.*?)</p>)?', page, re.S)
         osoby = [o for o in osoby if o[0] not in videno]
         videno |= {o[0] for o in osoby}
@@ -57,8 +57,8 @@ def hledat(dotaz, stran):
         time.sleep(0.7)
     if n == 0:
         print("Nic nenalezeno (zkus jiný pravopis nebo jen příjmení).", file=sys.stderr)
-    elif celkem and n < int(celkem.group(1)):
-        print(f"… celkem {celkem.group(1)} osob, zobrazeno {n}; zúžit jde křestním jménem nebo rokem, víc dá --stran", file=sys.stderr)
+    elif celkem and n < int(re.sub(r"\D", "", celkem.group(1)) or 0):
+        print(f"… celkem {celkem.group(1).strip()} osob, zobrazeno {n}; zúžit jde křestním jménem nebo rokem, víc dá --stran", file=sys.stderr)
 
 
 if __name__ == "__main__":

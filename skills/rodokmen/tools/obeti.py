@@ -54,7 +54,7 @@ def hledat(pole, stran):
                       "searchPlaceLast": pole.get("bydliste", ""), "searchPlaceBirth": pole.get("misto-narozeni", ""),
                       "searchDateBirthDay": "0", "searchDateBirthMonth": "0", "searchDateBirthYear": pole.get("rok", ""),
                       "searchTransport": "", "searchSubmit": "Vyhledat v databázi"})
-    celkem = re.search(r"Celkem nalezeno: (\d+)", page)
+    celkem = re.search(r"Celkem nalezeno: ([\d\s\xa0]+)", page)
     n = 0
     for p in range(1, stran + 1):
         for r in vypis(page):
@@ -69,21 +69,23 @@ def hledat(pole, stran):
         print("Portál nevrátil výsledky (změnil se formulář?). Hledej v prohlížeči.", file=sys.stderr)
     elif n == 0:
         print("Nic nenalezeno (zkus příjmení v ženském tvaru, bez křestního jména nebo s méně údaji).", file=sys.stderr)
-    elif n < int(celkem.group(1)):
-        print(f"… celkem nalezeno {celkem.group(1)}, zobrazeno {n}; zúžit jde jménem nebo rokem, víc stran dá --stran", file=sys.stderr)
+    elif n < int(re.sub(r"\D", "", celkem.group(1)) or 0):
+        print(f"… celkem nalezeno {celkem.group(1).strip()}, zobrazeno {n}; zúžit jde jménem nebo rokem, víc stran dá --stran", file=sys.stderr)
 
 
 def detail(arg):
+    if not arg.startswith("http") and not re.fullmatch(r"[0-9a-z-]+", arg):
+        sys.exit("Zadej odkaz na oběť (z výpisu `hledat`) nebo její číslo s jménem, např. 111149-anna-neumannova.")
     url = arg if arg.startswith("http") else f"{BASE}obet/{arg}/"
     if not url.startswith(BASE):
         sys.exit("Odkaz musí být z databáze obětí na holocaust.cz.")
     page = get(url)
     jm = re.search(r"<h1>(.*?)</h1>", page, re.S)
-    w = re.search(r'<div class="wrapper">(.*?)</div>', page, re.S)
+    w = re.search(r'<div class="wrapper">.*?<p>(.*?)</p>', page, re.S)
     if not jm or not w:
         sys.exit("Oběť nenalezena (zkontroluj odkaz).")
     print(text(jm.group(1)))
-    for r in re.split(r"<br\s*/?>", re.search(r"<p>(.*?)</p>", w.group(1), re.S).group(1)):
+    for r in re.split(r"<br\s*/?>", w.group(1)):
         if text(r):
             print("  " + text(r))
     for href, nazev in re.findall(r'<div class="victim-documents">\s*<a href="([^"]+)">.*?<span>(.*?)</span>', page, re.S):

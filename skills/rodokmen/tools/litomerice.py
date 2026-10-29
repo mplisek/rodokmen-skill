@@ -16,7 +16,7 @@ zapamatuje dotaz (pracovni/litomerice_dotazy.json); jinak ho zadej přepínačem
 POZOR: portál po zhruba 100 rychlých požadavcích na své stránky zablokuje přístup na 30 minut. Každé `snimek`/`info`/`link` je
 ~4 požadavky; nástroj dělá pauzy, ale nestahuj desítky snímků za sebou (obrázkový server limit nemá). Pomocníkům to napiš do zadání.
 """
-import html, http.cookiejar, json, os, re, subprocess, sys, tempfile, time, urllib.parse, urllib.request
+import html, http.cookiejar, json, os, re, subprocess, sys, time, urllib.parse, urllib.request
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -53,17 +53,23 @@ def text(s):
     return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", s)).replace("\xa0", " ")).strip()
 
 
-def hledej(dotaz, strana=1):
-    """Spustí hledání mezi matrikami (99 záznamů na stránku) a vrátí HTML stránky výsledků."""
+def hledej(dotaz):
+    """Spustí hledání mezi matrikami (99 záznamů na stránku) a vrátí HTML první stránky výsledků."""
     home = get(BASE + "/")
     f = re.search(r'<form id="searchForm".*?</form>', home, re.S)
     if not f:
         sys.exit("Portál změnil stránku (nenašel jsem hledací formulář). Hledej v prohlížeči.")
     data = re.findall(r'<input type="hidden" name="(_[^"]+)" value="([^"]*)"', f.group(0))
     data += [("patternTxt", dotaz), ("themasCheck", MATRIKY), ("wordOperator", "AND"), ("pageRecords", "99")]
-    page = get(BASE + "/vysledekList", data)
-    if strana > 1:
-        page = get(f"{BASE}/vysledekList?page={strana}&actualRow=&actualUuid=")
+    return kontrola(get(BASE + "/vysledekList", data))
+
+
+def dalsi_strana(strana):
+    """Další stránka výsledků téhož hledání (session drží dotaz)."""
+    return kontrola(get(f"{BASE}/vysledekList?page={strana}&actualRow=&actualUuid="))
+
+
+def kontrola(page):
     if "ProArch Server Exception" in page[:6000]:
         sys.exit("Portál vrátil chybu serveru (možná dočasná blokace po příliš mnoha požadavcích – počkej 30 minut).")
     return page
@@ -98,34 +104,42 @@ def hledat(args, stran):
         sys.exit(__doc__)
     cache = nacti_cache()
     videno = 0
+    page = hledej(args[0])
     for p in range(1, stran + 1):
-        page = hledej(args[0], p)
         rows = zaznamy(page)
         if not rows:
             break
         for id_, poradi, popis in rows:
-            cache[id_] = args[0]
+            cache[id_] = {"dotaz": args[0], "poradi": poradi}   # pořadí = parametr page u detailu
             if all(w.lower() in popis.lower() for w in args[1:]):
                 print(f"{id_} | {poradi} | {popis[:300]}")
         videno += len(rows)
-        if len(rows) < 99:
+        if len(rows) < 99 or p == stran:
             break
+        page = dalsi_strana(p + 1)
     uloz_cache(cache)
     celkem = re.search(r'Nalezeno \(Zobrazeno\)</span>\s*<span class="number">([\d\s\xa0]+)</span>', page)
     if videno == 0:
         print("Nic nenalezeno (zkus jiný tvar jména obce nebo bez přívlastku).", file=sys.stderr)
-    elif celkem and videno < int(re.sub(r"\D", "", celkem.group(1))):
+    elif celkem and videno < int(re.sub(r"\D", "", celkem.group(1)) or 0):
         print(f"… celkem {celkem.group(1).strip()} knih, načteno {videno}; víc dá --stran, užší výběr další slovo", file=sys.stderr)
 
 
 def detail(id_, dotaz=None):
-    """Najde záznam ve výsledcích hledání (pořadí = parametr page) a vrátí jeho detail a seznam snímků."""
-    dotaz = dotaz or nacti_cache().get(id_)
+    """Otevře záznam (pořadí ve výsledcích hledání = parametr page) a vrátí jeho detail, id entity a snímky."""
+    zapis = nacti_cache().get(id_) or {}
+    if isinstance(zapis, str):   # starší formát cache: jen dotaz
+        zapis = {"dotaz": zapis}
+    if dotaz:
+        zapis = {"dotaz": dotaz}   # --dotaz má přednost před pamatovaným dotazem
+    dotaz, poradi = zapis.get("dotaz"), zapis.get("poradi")
     if not dotaz:
-        sys.exit(f"Neznám dotaz, kterým se záznam najde. Spusť nejdřív `litomerice.py hledat \"Obec\"` nebo přidej --dotaz \"Obec\".")
-    poradi = next((pr for i, pr, _ in zaznamy(hledej(dotaz)) if i == id_), None)   # jedna stránka (99 knih) stačí
+        sys.exit("Neznám dotaz, kterým se záznam najde. Spusť nejdřív `litomerice.py hledat \"Obec\"` nebo přidej --dotaz \"Obec\".")
+    page = hledej(dotaz)   # session musí držet hledání, ze kterého pořadí pochází
     if not poradi:
-        sys.exit("Záznam není v prvních 99 výsledcích dotazu. Použij užší dotaz (--dotaz „Obec farnost“).")
+        poradi = next((pr for i, pr, _ in zaznamy(page) if i == id_), None)   # bez cache jen prvních 99 výsledků
+    if not poradi:
+        sys.exit("Záznam není v prvních 99 výsledcích dotazu. Spusť `hledat` (i s --stran) znovu, nebo použij užší --dotaz „Obec farnost“.")
     det = get(f"{BASE}/vysledekDetail/{id_}?page={poradi}")
     img = get(f"{BASE}/vysledekDetail?page={poradi}&actualDetailTab=attachmentsImg")
     ent = re.search(r'entityuuid="([^"]+)"', img)
@@ -159,20 +173,12 @@ def info(id_, dotaz):
 def snimek(id_, n, out, nahled, orez, dotaz):
     cesta, url = stranka_snimku(id_, n, dotaz)
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
-    cil = out if not orez else os.path.join(tempfile.mkdtemp(prefix="soal_"), "cely.jpg")
-    r = subprocess.run([sys.executable, "-I", "-X", "utf8", os.path.join(HERE, "soal_zoomify.py"), cesta, "2" if nahled else "0", cil],
-                       capture_output=True, text=True)
+    zoom = [sys.executable, "-I", "-X", "utf8", os.path.join(HERE, "soal_zoomify.py"), cesta, "2" if nahled else "0", out]
+    if orez:
+        zoom.append(",".join(str(v) for v in orez))   # ořez udělá soal_zoomify (dočasné soubory uklidí i při chybě)
+    r = subprocess.run(zoom, capture_output=True, text=True)
     if r.returncode:
         sys.exit(r.stderr.strip() or r.stdout.strip())
-    if orez:
-        magick = subprocess.run([sys.executable, "-I", "-c", "import sys;sys.path.insert(0,sys.argv[1]);import soal_zoomify as z;print(z.magick())",
-                                 HERE], capture_output=True, text=True).stdout.strip()
-        w, h = map(int, subprocess.run([magick, cil + "[0]", "-format", "%w %h", "info:"], capture_output=True, text=True).stdout.split())
-        x0, y0, x1, y1 = orez
-        subprocess.run([magick, cil, "-crop", f"{int((x1 - x0) * w)}x{int((y1 - y0) * h)}+{int(x0 * w)}+{int(y0 * h)}", "+repage",
-                        "-quality", "88", out], check=True)
-        os.remove(cil)
-        os.rmdir(os.path.dirname(cil))
     print(out, "odkaz:", url)
 
 
