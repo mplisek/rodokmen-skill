@@ -5,10 +5,15 @@ Dachau, Mauthausen, Osvětim (část), Buchenwald, Flossenbürg, Terezín, Gesta
 a další – přes 30 milionů záznamů o osobách (kartotéky táborů, seznamy transportů, korespondence ITS).
 
 Použití (z kořene projektu):
-  arolsen.py hledat "Příjmení Jméno [rok]" [--max N] [--jazyk en|de]
+  arolsen.py hledat "Příjmení Jméno [rok]" [filtry] [--max N] [--od N] [--podrobne] [--jazyk en|de]
         -> osoby: id | příjmení | jméno | rodné | narozen | místo narození | č. vězně | národnost | část archivu | odkaz
            Slova jsou spojená „a zároveň“ (každé musí být v záznamu); rok narození přidej jako další slovo („Novák Josef 1905“).
-           Hledá i hláskové varianty. Max. 1000 záznamů; výchozí výpis N = 40, řazeno podle příjmení.
+           Hledá i hláskové varianty. Řazeno podle příjmení; výchozí výpis N = 40, portál dává po 1000 záznamech (`--od 1000` = další tisícovka).
+        Filtry (zúží výsledek, volitelné, lze kombinovat):
+           --misto-narozeni Praha   (obsahuje)       --rodne Nováková   (rodné jméno obsahuje)
+           --cislo 103258           (číslo vězně)    --narodnost Czech  (jen přesný název z portálu, např. Czech, Czechoslovakian, Polish)
+           --vyznani Jewish         (jen přesný název z portálu)
+        --podrobne vypíše u každé osoby všechna vyplněná pole (otec, matka, vyznání, povolání, místo věznění, datum úmrtí, poslední bydliště…)
   arolsen.py karta <id> <vystup.jpg>
         -> stáhne obrázek kartotéční karty / dokumentu (víc obrázků dostane příponu _2, _3…) a vypíše odkaz do archivu
 Datum narození v databázi je v pořadí měsíc/den/rok – nástroj ho převádí na „den. měsíc. rok“.
@@ -48,19 +53,57 @@ def datum(s):
     return f"{int(m.group(2))}. {int(m.group(1))}. {m.group(3)}" if m else (s or "")
 
 
-def hledat(dotaz, maxn, jazyk):
+POLE_CS = {"Father": "otec", "Mother": "matka", "Religion": "vyznání", "Nationality": "národnost", "Occupaton": "povolání",
+           "Place_of_incarceration": "místo věznění", "Date_of_decease": "úmrtí", "Last_residence": "poslední bydliště",
+           "Last_residence_country": "země", "Last_residence_district": "okres", "Last_residence_province": "provincie",
+           "Last_residence_town": "obec", "Last_residence_part_of_town": "část obce", "Last_residence_street": "ulice",
+           "Last_residence_house_number": "číslo domu", "Signature": "část archivu"}
+
+
+def nacti_tag(uid, jazyk, typ, hodnota):
+    """Id položky filtru (národnost, vyznání) podle přesného názvu na portálu."""
+    tagy = post("GetTagList", {"uniqueId": uid, "lang": jazyk, "type": typ, "filter": {}, "top": "", "orderBy": "t1.value", "filterType": "person"})
+    shody = [t for t in tagy if (t.get("desc") or "").strip().lower() == hodnota.strip().lower()]
+    if not shody:
+        nabidka = ", ".join(f"{t['desc']} ({t['count']})" for t in tagy[:25])
+        sys.exit(f"Hodnota „{hodnota}“ není ve filtru. V tomto hledání jsou např.: {nabidka}")
+    return shody[0]["id"]
+
+
+def hledat(dotaz, maxn, jazyk, filtry=None, od=0, podrobne=False):
+    filtry = filtry or {}
     uid = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(20))
     post("BuildQueryGlobalForAngular", {"uniqueId": uid, "lang": jazyk, "archiveIds": [], "strSearch": dotaz, "synSearch": True})
-    celkem = post("GetCount", {"uniqueId": uid, "lang": jazyk, "searchType": "person", "useFilter": False})
-    rows = post("GetPersonList", {"uniqueId": uid, "lang": jazyk, "rowNum": 0, "orderBy": "LastName", "orderType": "asc"})
+    pouzit = False
+    grid = [{"Field": pole, "Operator": op, "Value": filtry[k]} for k, (pole, op) in
+            {"misto": ("PlaceBirth", "contains"), "rodne": ("MaidenName", "contains"), "cislo": ("PrisonerNumber", "eq")}.items() if k in filtry]
+    if grid:
+        post("BuildGridFilter", {"uniqueId": uid, "lang": jazyk, "type": "person", "filter": {"Operator": "and", "Field": "", "Filters": grid, "Value": ""}})
+        pouzit = True
+    cb = {}
+    for klic, typ in (("narodnost", "per_nationality"), ("vyznani", "per_religion")):
+        if klic in filtry:
+            cb[typ] = [nacti_tag(uid, jazyk, typ, filtry[klic])]
+    if cb:
+        post("BuildFilter", {"uniqueId": uid, "lang": jazyk, "searchType": "person", "filter": cb})
+        pouzit = True
+    celkem = post("GetCount", {"uniqueId": uid, "lang": jazyk, "searchType": "person", "useFilter": pouzit})
+    rows = post("GetPersonList", {"uniqueId": uid, "lang": jazyk, "rowNum": od, "orderBy": "LastName", "orderType": "asc"})
     for r in rows[:maxn]:
         print(" | ".join([str(r["ObjId"]), r.get("LastName") or "-", r.get("FirstName") or "-", r.get("MaidenName") or "-", datum(r.get("Dob")) or "-",
                           r.get("PlaceBirth") or "-", r.get("PrisonerNumber") or "-", r.get("Nationality") or "-",
                           (r.get("Signature") or "")[:70], f"{WEB}{jazyk}/document/{r['ObjId']}"]))
+        if podrobne:
+            extra = [f"{POLE_CS[k]}: {datum(v) if k == 'Date_of_decease' else v}" for k, v in r.items()
+                     if k in POLE_CS and v not in ("", None) and k not in ("Signature", "Nationality")]
+            if extra:
+                print("    " + "; ".join(extra))
     if not rows:
-        print("Nic nenalezeno (zkus jiný pravopis, jen příjmení, nebo bez roku).", file=sys.stderr)
-    elif int(celkem) > len(rows[:maxn]):
-        print(f"… celkem {celkem} záznamů, zobrazeno {len(rows[:maxn])}; přidej křestní jméno nebo rok narození",
+        print("Nic nenalezeno (zkus jiný pravopis, jen příjmení, nebo bez roku / filtrů)." if not od else "Za tímto posunem už nic není.", file=sys.stderr)
+    elif len(rows) > maxn:
+        print(f"… načteno {len(rows)} z {celkem} záznamů, zobrazeno {maxn}; víc ukáže --max {len(rows)}, užší výběr rok, křestní jméno nebo filtr", file=sys.stderr)
+    elif int(celkem) > od + len(rows):
+        print(f"… celkem {celkem} záznamů, zobrazeno {len(rows)} (od {od}); další tisícovka: --od {od + len(rows)}, užší výběr rok, křestní jméno nebo filtr",
               file=sys.stderr)
 
 
@@ -90,19 +133,30 @@ def karta(objid, out):
 
 if __name__ == "__main__":
     a = sys.argv[1:]
-    maxn, jazyk = 40, "en"
-    for volba in ("--max", "--jazyk"):
+    maxn, jazyk, od, podrobne, filtry = 40, "en", 0, False, {}
+    if "--podrobne" in a:
+        a.remove("--podrobne")
+        podrobne = True
+    FILTRY = {"--misto-narozeni": "misto", "--rodne": "rodne", "--cislo": "cislo", "--narodnost": "narodnost", "--vyznani": "vyznani"}
+    for volba in ("--max", "--od", "--jazyk", *FILTRY):
         if volba in a:
             i = a.index(volba)
-            if i + 1 >= len(a) or (volba == "--max" and not (a[i + 1].isdigit() and int(a[i + 1]) >= 1)) \
-                    or (volba == "--jazyk" and a[i + 1] not in ("en", "de")):
-                sys.exit(f"{volba}: neplatná hodnota (--max kladné číslo, --jazyk en|de).")
-            maxn, jazyk = (int(a[i + 1]), jazyk) if volba == "--max" else (maxn, a[i + 1])
+            if i + 1 >= len(a) or (volba in ("--max", "--od") and not a[i + 1].isdigit()) or (volba == "--max" and int(a[i + 1]) < 1) \
+                    or (volba == "--jazyk" and a[i + 1] not in ("en", "de")) or (volba == "--cislo" and not a[i + 1].isdigit()):
+                sys.exit(f"{volba}: neplatná hodnota (--max kladné číslo, --od číslo, --jazyk en|de, --cislo číslo).")
+            if volba == "--max":
+                maxn = int(a[i + 1])
+            elif volba == "--od":
+                od = int(a[i + 1])
+            elif volba == "--jazyk":
+                jazyk = a[i + 1]
+            else:
+                filtry[FILTRY[volba]] = a[i + 1]
             del a[i:i + 2]
     if not a:
         sys.exit(__doc__)
     if a[0] == "hledat" and len(a) == 2 and a[1].strip():
-        hledat(a[1], maxn, jazyk)
+        hledat(a[1], maxn, jazyk, filtry, od, podrobne)
     elif a[0] == "karta" and len(a) == 3:
         karta(a[1], a[2])
     else:
