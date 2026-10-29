@@ -7,7 +7,7 @@ a další – přes 30 milionů záznamů o osobách (kartotéky táborů, sezna
 Použití (z kořene projektu):
   arolsen.py hledat "Příjmení Jméno [rok]" [--max N] [--jazyk en|de]
         -> osoby: id | příjmení | jméno | rodné | narozen | místo narození | č. vězně | národnost | část archivu | odkaz
-           Slova jsou spojená „a zároveň“ (každé musí být v záznamu); rok narození přidej jako další slovo („Magyar Ferenc 1923“).
+           Slova jsou spojená „a zároveň“ (každé musí být v záznamu); rok narození přidej jako další slovo („Novák Josef 1905“).
            Hledá i hláskové varianty. Max. 1000 záznamů; výchozí výpis N = 40, řazeno podle příjmení.
   arolsen.py karta <id> <vystup.jpg>
         -> stáhne obrázek kartotéční karty / dokumentu (víc obrázků dostane příponu _2, _3…) a vypíše odkaz do archivu
