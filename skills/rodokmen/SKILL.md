@@ -111,7 +111,7 @@ Základní smyčka pro každou osobu:
 3. **Najdi svazek**: podle obce → farnost → archiv. ARON: `python3 -I tools/aron_search.py "Obec"`, SOA Třeboň:
    `tools/trebon.py`, SOA Plzeň: `tools/portafontium.py`, SOA Praha (střední Čechy): `tools/ebadatelna.py`,
    MZA Brno (jižní Morava): `tools/mza.py`, židovské matriky (Národní archiv): `tools/vademecum.py`,
-   SOA Litoměřice: `tools/litomerice.py`, Rakousko/Vídeň: `tools/matricula.py` (seznamy; obrázky v prohlížeči), vězni a oběti 2. sv. války: `tools/vezni.py`,
+   SOA Litoměřice: `tools/litomerice.py`, Brno – osobnosti, ulice, hroby: `tools/brno_encyklopedie.py`, Rakousko/Vídeň: `tools/matricula.py` (seznamy; obrázky v prohlížeči), vězni a oběti 2. sv. války: `tools/vezni.py`,
    `tools/arolsen.py`, `tools/mauthausen.py`, `tools/obeti.py`, Praha: `tools/ahmp_search.sh`; ostatní a Rakousko viz `reference/portaly.md`. Sňatek hledej nejdřív ve farnosti nevěsty.
    Je-li ke svazku index (rejstřík), začni jím. Starší matriky (před ~1784) bývají ve faře sousedního města.
    Nástroj najednou přestal fungovat? Portál se nejspíš změnil: `python3 -I tools/smoke_test.py <nástroj>` řekne, jestli je to výpadek

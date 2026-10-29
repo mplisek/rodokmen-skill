@@ -31,6 +31,7 @@ TESTY = [
     ("mza", ["mza.py", "hledat", "Hustopeče", "--stran", "1"], "Hustop", False),
     ("vademecum", ["vademecum.py", "hledat", "Hustopeče", "--stran", "1", "--jen-snimky"], "matrik", False),
     ("litomerice", ["litomerice.py", "hledat", "Lovosice", "--stran", "1"], "|", False),
+    ("brno", ["brno_encyklopedie.py", "hledat", "Bakala dirigent"], "Bakala", False),
     ("obeti", ["obeti.py", "hledat", "--prijmeni", "Neumannová", "--jmeno", "Anna", "--stran", "1"], "Neumann", False),
     ("vezni", ["vezni.py", "hledat", "--prijmeni", "Novák", "--jmeno", "Josef", "--stran", "1"], "Novak", False),
     ("arolsen", ["arolsen.py", "hledat", "Novák Josef 1905", "--max", "3"], "|", False),
