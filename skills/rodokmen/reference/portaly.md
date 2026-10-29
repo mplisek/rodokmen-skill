@@ -10,7 +10,7 @@ Matriky jsou online u osmi státních archivů – podle toho, **kde předci ži
 | SOA Třeboň | jižní Čechy | digi.ceskearchivy.cz | **ano – nástroj `trebon.py`** |
 | SOA Litoměřice | severní Čechy | Digitální badatelna – digi.soalitomerice.cz | **částečně – `soal_zoomify.py`** (knihu najdi v prohlížeči) |
 | AHMP | hl. m. Praha | katalog.ahmp.cz (Pragapublica) | **ano – `ahmp_search.sh`, `ahmp_scan.py`** |
-| MZA Brno | jižní Morava, Vysočina z části | Acta Publica – www.mza.cz/actapublica | částečně – v prohlížeči (postup níže) |
+| MZA Brno | jižní Morava, Vysočina z části | Acta Publica – www.mza.cz/actapublica | **ano – nástroj `mza.py`** (bez prohlížeče) |
 | ZA Opava | severní Morava a Slezsko, Olomoucko a Litovelsko | Digitální badatelna – digi.archives.cz/da/ | **částečně – `soal_zoomify.py`** (jen s prohlížečem, CAPTCHU řeší uživatel) |
 | Národní archiv | židovské matriky (HBMa), soupisy; pražské policejní přihlášky 1850–1914 | badatelna.eu; digi.nacr.cz/prihlasky2 | přihlášky **ano – `policie_prihlasky.py`** |
 
@@ -101,6 +101,8 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
   přístup na 30 minut.** V prohlížeči proto jen najdi knihu a cestu k obrázkům, pak už jen nástroj. Pomocníkům to napiš do zadání.
 
 ## ZA Opava (severní Morava, Slezsko, Olomoucko, Litovelsko) – `tools/soal_zoomify.py`
+- Ověřeno v říjnu 2026: `digi.archives.cz` vrací jen kontrolní stránku Radware („Radware Page“, cookies `__uzm*`) – bez JavaScriptu se
+  k hledání nedostaneš. **Ochranu neobcházej**; hotový nástroj pro hledání tu proto není (jen stahování snímků).
 - Pozor na hranici: obce na Litovelsku a Olomoucku patří pod **ZA Opava**, ne pod MZA Brno.
 - **Bez prohlížeče to nejde.** Badatelna `https://digi.archives.cz/da/` (stará adresa matriky.archives.cz jen přesměruje)
   má ochranu proti robotům – curl ani WebFetch se nedostanou ani na hledání. Potřebuješ připojený prohlížeč (Claude in
@@ -125,12 +127,46 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
   po hledání a stránky výsledků neprocházej za sebou. Delší smyčku pusť v prohlížeči na pozadí, výsledky ukládej do
   `window` nebo `localStorage` a vyzvedávej po částech (nástroj pro JavaScript má limit asi 45 s). Pomocníkům to napiš do zadání.
 
-## MZA Brno (jižní Morava, Acta Publica) – bez nástroje
-- Portál `https://www.mza.cz/actapublica/`, bez přihlášení. Adresa actapublica.eu bývá za Cloudflare zablokovaná
-  („Sorry, you have been blocked“ – podle IP, i v běžném prohlížeči); když blokuje i mza.cz, ať uživatel vypne VPN
-  nebo zkusí jinou síť.
-- Knihu najdi v prohlížeči podle obce nebo fary. Snímky jsou IIIF: adresu obrázku najdi v síťovém provozu a stáhni ji
-  přes `curl` (Python dostane HTTP 426). Dál podle „Ostatní portály“ níže.
+## MZA Brno (jižní Morava, Acta Publica) – `tools/mza.py`, bez prohlížeče
+- Portál `https://www.mza.cz/actapublica/` je veřejný, bez přihlášení a bez ochrany proti robotům. Adresa actapublica.eu
+  bývá za Cloudflare zablokovaná („Sorry, you have been blocked“ – podle IP, i v běžném prohlížeči); nástroj ji nepoužívá.
+  Když nejde ani mza.cz, ať uživatel vypne VPN nebo zkusí jinou síť.
+- `mza.py hledat "Obec" [slovo…]` → knihy: `id | č. knihy | původce (typ) | N | O | Z | obcí | snímků`. Hledá v českém, německém
+  i historickém jménu obce („Auspitz“ = Hustopeče). Další slovo výsledek zúží: čtyřmístné číslo = rok uvnitř rozsahu N/O/Z
+  (`hledat Hustopeče 1850`), jiné slovo = text v řádku (farnost, sousední obec). U častých jmen („Lhota“ přes 600 knih) vždy
+  přidej farnost nebo rok. `mza.py puvodce "Farnost" [typ]` hledá podle farnosti (typ = „římsko“, „evangel“, „civilní“…).
+- **První sloupec (`id`) je interní číslo knihy** z adresy `…/matrika/detail/<id>` – to se zadává dalším příkazům, ne „č. knihy“.
+- `mza.py info <id>` → rozsahy, **všechny obce farnosti s okresy** (stejnojmenné obce rozliší okres), jazyk, poznámky.
+  Starší knihy jsou latinsky (záhlaví sloupců) a **jména a kmotři často německy** (Hustopeče 1621) – jména čti v německém i českém tvaru.
+- `mza.py snimek <id> <snímek> pracovni/x.jpg [nahled] [x0,y0,x1,y1]` – snímek v plném rozlišení; číslo snímku je pořadí
+  v knize od 1. Výřez v relativních souřadnicích stáhne jen potřebné dlaždice. `link <id> <snímek>` dá trvalý odkaz
+  (`…/matrika/detail/<id>?image=<soubor>`), `svazek <id>` zapíše knihu do `svazky.json` (klíč `mza_<id>`).
+- Snímky jsou IIPImage/DeepZoom na `www.mza.cz/iipsrv/`. **Server přijímá jen HTTP/2** – Python ho neumí (HTTP 426), proto
+  nástroj stahuje dlaždice přes příkaz `curl` (macOS i Windows 10+ ho mají).
+- Rejstříky a „části matriky“ (záložka v prohlížeči) nástroj zatím nevypisuje; jsou-li u knihy, najdeš je na portálu
+  a číslo snímku použiješ v `snimek`. Knihy bývají po farnostech a letech, indexy jsou v poli rejstříku u N/O/Z.
+- Ber ohled na server: stahuj jen snímky, které čteš (podmínky užití na portálu).
+
+## Po válce přistěhovaní, reemigranti, přesídlení (osídlování pohraničí 1945–1950) – nevyzkoušeno
+Matriky tady nestačí: lidé, kteří přišli po 1945 do pohraničí (Volyňští Češi, reemigranti z Rumunska, Jugoslávie,
+Polska, Slováci a Češi z vnitrozemí), mají v matrikách jen narození a sňatky *před* příchodem v jiné farnosti, často v zahraničí.
+Skill pro ně zatím nemá hotový nástroj ani vyzkoušený portál. Postup, který je podle literatury rozumný, ale na skutečném případu
+ho nikdo neověřil – vždy ho zapiš do `STAV.md` a výsledek do `poznamky_pro_skill.md`:
+1. **Zeptej se rodiny**: odkud a kdy přišli, na jaké hospodářství/dům (číslo popisné!), jaké měli doklady (osídlenecký
+   dekret, přídělová listina, domovský list, repatriační průkaz).
+2. **Rodiště před příchodem** (matriky v cizině): Volyň – skeny jsou na Ukrajině a v Polsku, ne online; Rumunsko/Jugoslávie –
+   FamilySearch a farní matriky v místě; Polsko – Geneteka, Matricula (viz níže). Mladší než 100/75/30 let jen na matričním úřadě.
+3. **Úřední spisy o osídlení**: národní výbory (MNV, ONV), osídlenecké komise a Národní pozemkový fond; písemnosti IX. odboru
+   ministerstva zemědělství jsou podle literatury v archivu Ministerstva zemědělství ČR a nejsou uspořádané, přehled pramenů
+   k Volyňským Čechům v Národním archivu je v článku L. Kločkové (Sborník NM, 2015). Spisy konkrétního domu/hospodářství hledej
+   ve **státním okresním archivu** (SOkA) podle obce, fond „Místní národní výbor <obec>“ a „Okresní národní výbor“. Online to
+   většinou není – zapiš do `archivni_dotazy.md` (archiv, fond, obec, číslo domu, jméno) a pošli dotaz archivu.
+4. **Evidence obyvatel do 1953** (Praha): podle webů zastupitelských úřadů se o ni žádá přes Národní archiv (zvláštní formulář),
+   zatímco AHMP má pražské matriky. Pro 1850–1914 viz policejní přihlášky výše; ověř si aktuální postup u archivu.
+5. **Německé obyvatelstvo, které odešlo** (odsun) – jeho matriky jsou v archivech pohraničí normálně (Litoměřice, Plzeň,
+   Opava); osud po odsunu v Německu: Arolsen, Lastenausgleichsarchiv (Bayreuth) – nevyzkoušeno.
+Žádný z těchto kroků nenahrazuje hledání v matrikách; je to jen cesta, jak zjistit, **odkud rodina přišla**, aby se mělo
+kde matriky hledat.
 
 ## Pražské policejní přihlášky 1850–1914 (Národní archiv) – `tools/policie_prihlasky.py`
 - Karty pražských rodin: hlava rodiny, manželka s rokem a místem narození, děti s roky, adresy, někdy místo sňatku.
