@@ -145,6 +145,7 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
   nástroj stahuje dlaždice přes příkaz `curl` (macOS i Windows 10+ ho mají).
 - Rejstříky a „části matriky“ (záložka v prohlížeči) nástroj zatím nevypisuje; jsou-li u knihy, najdeš je na portálu
   a číslo snímku použiješ v `snimek`. Knihy bývají po farnostech a letech, indexy jsou v poli rejstříku u N/O/Z.
+- `snimek` potřebuje ImageMagick (`magick`) a `curl`; hledání, `info`, `link` a `svazek` ne. Pomocníkům to napiš do zadání.
 - Ber ohled na server: stahuj jen snímky, které čteš (podmínky užití na portálu).
 
 ## Po válce přistěhovaní, reemigranti, přesídlení (osídlování pohraničí 1945–1950) – nevyzkoušeno

@@ -65,11 +65,12 @@ def curl_get(url):
         sys.exit("Chybí příkaz curl (obrázky MZA vyžadují HTTP/2). Windows 10+ a macOS ho mají; jinak ho nainstaluj.")
     err = ""
     for attempt in range(4):
-        r = subprocess.run([c, "-sS", "--fail", "-m", "90", "-A", "Mozilla/5.0 (rodokmen)", url], capture_output=True)
-        if r.returncode == 0:
-            return r.stdout
-        err = r.stderr.decode("utf-8", "replace").strip()
-        if "404" in err or "403" in err:
+        r = subprocess.run([c, "-sS", "-m", "90", "-A", "Mozilla/5.0 (rodokmen)", "-w", "%{http_code}", url], capture_output=True)
+        kod = r.stdout[-3:].decode("ascii", "replace")   # stavový kód připsaný curl za tělo odpovědi
+        if r.returncode == 0 and kod == "200":
+            return r.stdout[:-3]
+        err = r.stderr.decode("utf-8", "replace").strip() or f"HTTP {kod}"
+        if kod in ("403", "404"):   # trvalá chyba, opakování nepomůže
             break
         time.sleep(2 * (attempt + 1))
     sys.exit(f"Stažení selhalo: {url}\n{err}")
@@ -83,10 +84,11 @@ def radky(page):
     """Řádky tabulky „Nalezené matriky“ -> slovníky."""
     out = []
     for tr in re.findall(r"<tr>\s*<td class=\"clickable\".*?</tr>", page, re.S):
-        bid = re.search(r"matrika/detail/(\d+)", tr).group(1)
+        m = re.search(r"matrika/detail/(\d+)", tr)
         tds = re.findall(r"<td[^>]*>(.*?)</td>", tr, re.S)
-        if len(tds) < 7:
+        if not m or len(tds) < 7:
             continue
+        bid = m.group(1)
         pv = re.sub(r"<a .*?</a>", "", tds[1], flags=re.S)   # tlačítko s poznámkou o původci
         parts = [text(x) for x in re.split(r"<br\s*/?>", pv)]
         poz = re.search(r'data-content="([^"]*)"', tds[1])
@@ -118,6 +120,8 @@ def vysledky(url, stran):
     for p in range(1, stran + 1):
         page = get(url + ("" if p == 1 else f"&page={p}"))
         rows = radky(page)
+        if p == 1 and not rows and "matrika/detail/" in page:
+            sys.exit("Výsledky se nepodařilo přečíst (portál změnil stránku?). Hledej na portálu v prohlížeči.")
         nove = [r for r in rows if r["id"] not in videno]
         if not nove:
             break
@@ -134,23 +138,24 @@ def holy(t):
 
 
 def shoda(r, w):
-    """Čtyřmístné číslo = rok uvnitř některého z rozsahů N/O/Z; jinak slovo (bez diakritiky) v řádku."""
+    """Čtyřmístné číslo = rok uvnitř některého z rozsahů N/O/Z; jinak slovo (bez diakritiky) v textu řádku."""
     if re.fullmatch(r"\d{4}", w):
-        for k in ("N", "O", "Z"):
-            m = re.match(r"(\d{4})\s*-\s*(\d{4})", r[k][0])
-            if m and int(m.group(1)) <= int(w) <= int(m.group(2)):
-                return True
-        return False
-    return holy(w) in holy(json.dumps(r, ensure_ascii=False))
+        return any(int(a) <= int(w) <= int(b) for k in ("N", "O", "Z")
+                   for a, b in re.findall(r"(\d{4})\s*-\s*(\d{4})", r[k][0]))
+    hodnoty = [r["kniha"], r["puvodce"], r["typ"], r["poznamka"], r["obce_plne"]]
+    return holy(w) in holy(" ".join(hodnoty))
 
 
 def hledat(args, stran):
     if not args:
         sys.exit(__doc__)
     nalez = vysledky(f"{BASE}matrika/hledani_obec?typ=obec&search_by_obec={urllib.parse.quote(args[0])}", stran)
-    for r in nalez:
-        if all(shoda(r, w) for w in args[1:]):
-            vypis(r)
+    shody = [r for r in nalez if all(shoda(r, w) for w in args[1:])]
+    for r in shody:
+        vypis(r)
+    if not shody:
+        print(f"Nic nenalezeno (prohlédnuto {len(nalez)} knih). Zkus jiný tvar jména (německý, bez přívlastku) nebo méně slov.",
+              file=sys.stderr)
     if len(nalez) >= 20 * stran:
         print(f"… možná je výsledků víc (načteno {stran} stran); zúžit jde dalším slovem (farnost, okres, rok) nebo --stran", file=sys.stderr)
 
@@ -177,22 +182,34 @@ def kniha(bid):
     return page, json.loads(m.group(1)), json.loads(m.group(2)), json.loads(m.group(3))
 
 
-def info(bid):
-    page, src, names, stat = kniha(bid)
+def hlavicka(page):
+    """Číslo knihy, původce, roky N/O/Z (první řádek buňky, bez rejstříku) a oddíly záložky „Podrobnosti o matrice“."""
     cislo = re.search(r"Číslo knihy</span>\s*<br><span[^>]*>(.*?)</span>", page, re.S)
     pv = re.search(r"Původce</span>\s*<br><span[^>]*>(.*?)</span>", page, re.S)
-    print(f"id {bid} | č. knihy {text(cislo.group(1)) if cislo else '?'} | původce {text(pv.group(1)) if pv else '?'} | {len(src)} snímků")
+    roky = {}
     for lab in ("Narození", "Oddaní", "Zemřelí"):
         m = re.search(lab + r":\s*<span[^>]*>\s*(.*?)\s*</span>", page, re.S)
         if m:
-            print(f"{lab}: {text(m.group(1))}")
+            roky[lab] = text(re.split(r"<br\s*/?>", m.group(1))[0]).replace(" - ", "–")
     i = page.find('id="pill_data_extra"')
-    extra = text(page[i:i + 9000]) if i >= 0 else ""
+    extra = text(page[i:]) if i >= 0 else ""   # celý zbytek stránky (seznam obcí bývá dlouhý)
+    oddily = {}
     for lab, stop in (("Obce a jiné lokality", "Technické informace"), ("Technické informace", "Poznámka o původci"),
                       ("Poznámka o původci", "Provozovatel")):
         m = re.search(lab + r"(.*?)" + stop, extra)
         if m:
-            print(f"{lab}: {m.group(1).strip()[:900]}")
+            oddily[lab] = m.group(1).strip()
+    return (text(cislo.group(1)) if cislo else "?", text(pv.group(1)) if pv else "?", roky, oddily)
+
+
+def info(bid):
+    page, src, names, stat = kniha(bid)
+    cislo, pv, roky, oddily = hlavicka(page)
+    print(f"id {bid} | č. knihy {cislo} | původce {pv} | {len(src)} snímků")
+    for lab, v in roky.items():
+        print(f"{lab}: {v}")
+    for lab, v in oddily.items():
+        print(f"{lab}: {v[:900]}")
     n = sum(1 for s in stat if s)
     if n:
         print(f"Snímků s příznakem stavu (pravděpodobně omezený nebo chybějící): {n}, "
@@ -200,33 +217,37 @@ def info(bid):
     print("Části matriky / rejstříky: na portálu v záložce „Části matriky“ (odkazují na snímky)")
 
 
-def cislo_snimku(bid, n, names):
-    if not n.isdigit() or not 1 <= int(n) <= len(names):
+def cislo_snimku(n, names):
+    if not (n.isascii() and n.isdigit()) or not 1 <= int(n) <= len(names):
         sys.exit(f"Snímek musí být číslo 1–{len(names)}.")
     return int(n)
 
 
 def link(bid, n):
     _, _, names, _ = kniha(bid)
-    k = cislo_snimku(bid, n, names)
+    k = cislo_snimku(n, names)
     return f"{BASE}matrika/detail/{bid}?image={names[k - 1]}"
 
 
 def snimek(bid, n, out, nahled=False, orez=None):
     MAGICK = magick()
     _, src, names, _ = kniha(bid)
-    k = cislo_snimku(bid, n, names)
+    k = cislo_snimku(n, names)
     dzi = src[k - 1]
     base = dzi[:-len(".dzi")] + "_files"
     x = curl_get(dzi).decode()
     W, H, T = (int(re.search(fr'{a}="(\d+)"', x).group(1)) for a in ("Width", "Height", "TileSize"))
+    pripona = (re.search(r'Format="(\w+)"', x) or [0, "jpg"])[1].lower()
+    if int((re.search(r'Overlap="(\d+)"', x) or [0, "0"])[1]) or pripona not in ("jpg", "jpeg"):
+        sys.exit(f"Snímek má dlaždice s překryvem nebo ve formátu {pripona} – nástroj je neumí slepit. Stáhni snímek v prohlížeči.")
     top = math.ceil(math.log2(max(W, H)))   # nejvyšší úroveň DeepZoom = plné rozlišení
     L = top - (2 if nahled else 0)
     w, h = (max(1, math.ceil(a / 2 ** (top - L))) for a in (W, H))
     x0, y0, x1, y1 = orez or (0, 0, 1, 1)
     px0, py0, px1, py1 = int(x0 * w), int(y0 * h), math.ceil(x1 * w), math.ceil(y1 * h)
     tx0, ty0, tx1, ty1 = px0 // T, py0 // T, (px1 - 1) // T, (py1 - 1) // T
-    d = tempfile.mkdtemp(dir=os.path.dirname(os.path.abspath(out)))
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+    d = tempfile.mkdtemp(prefix="mza_")   # systémová dočasná složka – v pracovni/ nezůstane nic, ani při přerušení
     try:
         def tile(yx):
             ty, tx = yx
@@ -248,21 +269,18 @@ def snimek(bid, n, out, nahled=False, orez=None):
 
 def svazek(bid):
     page, src, _, _ = kniha(bid)
-    cislo = re.search(r"Číslo knihy</span>\s*<br><span[^>]*>(.*?)</span>", page, re.S)
-    pv = re.search(r"Původce</span>\s*<br><span[^>]*>(.*?)</span>", page, re.S)
-    typ = re.search(r"Typ původce</[^>]*>.*?<[^>]*>\s*([^<]+?)\s*<", page, re.S)
-    rr = {lab: m.group(1) for lab in ("Narození", "Oddaní", "Zemřelí")
-          if (m := re.search(lab + r":\s*<span[^>]*>\s*(.*?)\s*</span>", page, re.S))}
-    roky = ", ".join(f"{k[0]} {text(v).replace(' - ', '–')}" for k, v in rr.items() if text(v).strip("- "))
-    nazev = f"{text(pv.group(1)) if pv else '?'}, č. knihy {text(cislo.group(1)) if cislo else '?'}" + (f" ({roky})" if roky else "")
-    i = page.find('id="pill_data_extra"')
-    om = re.search(r"Obce a jiné lokality(.*?)Technické informace", text(page[i:i + 9000]) if i >= 0 else "")
+    cislo, pv, rr, oddily = hlavicka(page)
+    roky = ", ".join(f"{lab[0]} {v}" for lab, v in rr.items() if v.strip("–- "))
+    nazev = f"{pv}, č. knihy {cislo}" + (f" ({roky})" if roky else "")
     path = os.path.join(ROOT, "data", "svazky.json")
     dat = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else {}
     dat[f"mza_{bid}"] = {"archiv": "Moravský zemský archiv v Brně – Acta Publica", "portal": "www.mza.cz/actapublica",
-                         "svazek": nazev, "popis": om.group(1).strip()[:400] if om else "",
+                         "svazek": nazev, "popis": oddily.get("Obce a jiné lokality", "")[:400],
                          "url": f"{BASE}matrika/detail/{bid}"}
-    json.dump(dat, open(path, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
+    tmp = path + ".tmp"   # zápis přes dočasný soubor: přerušení nesmí zkrátit svazky.json
+    with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(dat, fh, ensure_ascii=False, indent=1)
+    os.replace(tmp, path)
     print(f"mza_{bid} -> {nazev}")
 
 
@@ -280,8 +298,12 @@ if __name__ == "__main__":
     stran = 5
     if "--stran" in a:
         i = a.index("--stran")
+        if i + 1 >= len(a) or not a[i + 1].isdigit() or int(a[i + 1]) < 1:
+            sys.exit("--stran chce kladné číslo (kolik stran výsledků načíst).")
         stran = int(a[i + 1])
         del a[i:i + 2]
+    if not a:
+        sys.exit(__doc__)
     if a[0] == "hledat":
         hledat(a[1:], stran)
     elif a[0] == "puvodce" and len(a) >= 2:
