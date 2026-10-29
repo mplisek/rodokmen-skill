@@ -126,8 +126,13 @@ skills/rodokmen/
 ## Co umí a co ne
 - **Hotové nástroje** (bez prohlížeče) mají: východní Čechy (SOA Zámrsk, ARON), jižní Čechy (SOA Třeboň,
   včetně dobrovolnických rejstříků), západní Čechy (SOA Plzeň, Porta fontium), střední Čechy (SOA Praha, eBadatelna –
-  i urbáře a gruntovní knihy), Prahu (AHMP a policejní přihlášky 1850–1914) jižní Moravu (MZA Brno, Acta Publica) a židovské matriky z Národního archivu (VadeMeCum). K tomu databázi obětí perzekuce (holocaust.cz). Pro severní Čechy (SOA Litoměřice)
-  stahuje snímky nástrojem, knihu ale najde přes prohlížeč. Pro Rakousko je postup přes Matriculu.
+  i urbáře a gruntovní knihy), severní Čechy (SOA Litoměřice), jižní Moravu (MZA Brno, Acta Publica), Prahu
+  (AHMP a policejní přihlášky 1850–1914) a židovské matriky z Národního archivu (Archivní VadeMeCum).
+  Pro Rakousko (Vídeň) a Polsko je to Matricula (nástroj najde farnost a knihu, snímky se čtou v prohlížeči).
+  Slovensko, Maďarsko a Rumunsko skill zatím jen popisuje (FamilySearch, státní archivy).
+- **Vězni a oběti 2. světové války:** čeští vězni v koncentračních táborech (Památník Terezín), Arolsen Archives
+  (Dachau, Mauthausen, Buchenwald, část Osvětimi, nuceně nasazení, vysídlené osoby), zemřelí v Mauthausenu a oběti
+  holocaustu z českých zemí (holocaust.cz).
 - Ostatní archivy (ZA Opava pro severní Moravu a Slezsko) Claude obsluhuje obecným postupem přes prohlížeč.
   Opavský portál má ochranu proti robotům a CAPTCHU řeší uživatel, takže je to pomalejší; snímky se stahují nástrojem.
 - Poválečné přistěhovalce (osídlování pohraničí, reemigranti) skill zatím jen radí, kde hledat – hotový nástroj není.
@@ -175,7 +180,7 @@ tady v repozitáři.
   Výjimkou jsou dočasné soubory systému, npm při instalaci webu a přihlášení nástroje pro nasazení (Netlify,
   CapRover), pokud web zveřejňujete. Mimo projekt nic nemažou ani nepřepisují.
 - **Na které servery chodí:** archivní portály (ARON SOA Zámrsk, SOA Třeboň, SOA Plzeň – Porta fontium, SOA Praha –
-  eBadatelna, MZA Brno – Acta Publica, AHMP, Národní archiv včetně VadeMeCum, holocaust.cz, SOA Litoměřice, Matricula), noviny (ANNO, Kramerius), OpenStreetMap (mapa
+  eBadatelna, MZA Brno – Acta Publica, AHMP, Národní archiv včetně VadeMeCum, Památník Terezín, Arolsen Archives, Mauthausen Memorial, holocaust.cz, SOA Litoměřice, Matricula), noviny (ANNO, Kramerius), OpenStreetMap (mapa
   a souřadnice obcí) a při instalaci webu registr npm.
   Na Netlify jen tehdy, když web sami zveřejníte. Nikam jinam nic neposílají, ani vaše data, ani poznámky.
 - **Doporučení:** nechte v Claude Code zapnuté schvalování příkazů, aspoň dokud si nezvyknete, co Claude dělá.
