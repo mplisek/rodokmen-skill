@@ -100,11 +100,12 @@ def hledat(dotaz, maxn, jazyk, filtry=None, od=0, podrobne=False):
                 print("    " + "; ".join(extra))
     if not rows:
         print("Nic nenalezeno (zkus jiný pravopis, jen příjmení, nebo bez roku / filtrů)." if not od else "Za tímto posunem už nic není.", file=sys.stderr)
-    elif len(rows) > maxn:
-        print(f"… načteno {len(rows)} z {celkem} záznamů, zobrazeno {maxn}; víc ukáže --max {len(rows)}, užší výběr rok, křestní jméno nebo filtr", file=sys.stderr)
-    elif int(celkem) > od + len(rows):
-        print(f"… celkem {celkem} záznamů, zobrazeno {len(rows)} (od {od}); další tisícovka: --od {od + len(rows)}, užší výběr rok, křestní jméno nebo filtr",
-              file=sys.stderr)
+    else:
+        if len(rows) > maxn:
+            print(f"… načteno {len(rows)} z {celkem} záznamů, zobrazeno {maxn}; víc ukáže --max {len(rows)}, užší výběr rok, křestní jméno nebo filtr", file=sys.stderr)
+        if int(celkem) > od + len(rows):
+            print(f"… celkem {celkem} záznamů, načteno {len(rows)} (od {od}); další tisícovka: --od {od + len(rows)}, užší výběr rok, křestní jméno nebo filtr",
+                  file=sys.stderr)
 
 
 def karta(objid, out):
@@ -141,9 +142,10 @@ if __name__ == "__main__":
     for volba in ("--max", "--od", "--jazyk", *FILTRY):
         if volba in a:
             i = a.index(volba)
-            if i + 1 >= len(a) or (volba in ("--max", "--od") and not a[i + 1].isdigit()) or (volba == "--max" and int(a[i + 1]) < 1) \
-                    or (volba == "--jazyk" and a[i + 1] not in ("en", "de")) or (volba == "--cislo" and not a[i + 1].isdigit()):
-                sys.exit(f"{volba}: neplatná hodnota (--max kladné číslo, --od číslo, --jazyk en|de, --cislo číslo).")
+            if i + 1 >= len(a) or a[i + 1].startswith("--") or not a[i + 1].strip() \
+                    or (volba in ("--max", "--od") and not (a[i + 1].isascii() and a[i + 1].isdigit())) or (volba == "--max" and int(a[i + 1]) < 1) \
+                    or (volba == "--jazyk" and a[i + 1] not in ("en", "de")):
+                sys.exit(f"{volba}: chybí nebo neplatná hodnota (--max kladné číslo, --od číslo, --jazyk en|de, ostatní filtry text).")
             if volba == "--max":
                 maxn = int(a[i + 1])
             elif volba == "--od":

@@ -21,24 +21,30 @@ if "--server" in a:
     server = a[i + 1].rstrip("/")
     del a[i:i + 2]
 s = urllib.parse.urlsplit(server)
-if s.scheme != "https" or not re.fullmatch(r"[A-Za-z0-9.-]+", s.hostname or "") or s.query or s.fragment:
-    sys.exit("--server musí být adresa knihovny s https:// (např. https://kramerius5.nkp.cz).")
+if (s.scheme != "https" or s.username or s.password or s.port not in (None, 443) or s.query or s.fragment
+        or not re.fullmatch(r"[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+", s.hostname or "")   # jen jména s tečkou (ne localhost)
+        or re.fullmatch(r"[0-9.]+", s.hostname or "")):                               # ani IP adresy (interní sítě)
+    sys.exit("--server musí být adresa knihovny s https:// a doménovým jménem (např. https://kramerius5.nkp.cz).")
 if not a:
     sys.exit(__doc__)
 q = a[0]
 rows = a[1] if len(a) > 1 else "30"
-if not rows.isdigit():
-    sys.exit("Počet výsledků musí být číslo.")
-p = {"q": q + " AND fedora.model:page", "fl": "PID,root_title,root_pid,datum_str,details,dostupnost", "rows": rows, "wt": "json",
+if not (rows.isascii() and rows.isdigit()) or not 1 <= int(rows) <= 200:
+    sys.exit("Počet výsledků musí být číslo 1–200.")
+p = {"q": f"({q}) AND fedora.model:page",   # závorky: jinak by „A OR B“ vrátilo i jiné typy dokumentů než stránky
+      "fl": "PID,root_title,root_pid,datum_str,details,dostupnost", "rows": rows, "wt": "json",
      "hl": "true", "hl.fl": "text_ocr", "hl.fragsize": "250"}
 u = server + "/search/api/v5.0/search?" + urllib.parse.urlencode(p)
 try:
     d = json.load(urllib.request.urlopen(u, timeout=90))
 except (OSError, ValueError) as e:   # síť, HTTP chyba i odpověď, která není JSON (jiná verze rozhraní)
     sys.exit(f"Knihovna {s.hostname} neodpověděla jako Kramerius v5 ({type(e).__name__}: {str(e)[:100]}).")
-print("found", d["response"]["numFound"])
-hl = d.get("highlighting", {})
-for x in d["response"]["docs"]:
+try:
+    pocet, dokumenty, hl = d["response"]["numFound"], d["response"]["docs"], d.get("highlighting", {})
+except (KeyError, TypeError):
+    sys.exit(f"Knihovna {s.hostname} vrátila JSON v jiné podobě než Kramerius v5 (možná verze 7).")
+print("found", pocet)
+for x in dokumenty:
     h = " | ".join(hl.get(x["PID"], {}).get("text_ocr", []))[:400].replace("\n", " ")
     print("-", x.get("datum_str"), "|", str(x.get("root_title"))[:60], "|", x.get("details"), "|", x["PID"], "|", x.get("dostupnost"))
     if h:
