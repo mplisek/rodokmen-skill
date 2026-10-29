@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Snímek matriky ve formátu Zoomify (SOA Litoměřice, ZA Opava) v plném rozlišení – bez prohlížeče a bez cookies.
+"""Snímek matriky ve formátu Zoomify (SOA Litoměřice, ZA Opava, Národní archiv) v plném rozlišení – bez prohlížeče a bez cookies.
 
 Použití (z kořene projektu):
   soal_zoomify.py <cesta nebo adresa> <zmenseni> <vystup.jpg>
@@ -21,7 +21,7 @@ for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (
         _s.reconfigure(encoding="utf-8", errors="replace")
 
 BASE = "https://images.soalitomerice.cz/ximage/matriky/zoomify/cz/archives/CZ-214000010/matriky/"
-HOSTS = ("images.soalitomerice.cz", "images.archives.cz")   # jen obrázkové servery archivů (snímky zpracovává ImageMagick)
+HOSTS = ("images.soalitomerice.cz", "images.archives.cz", "vademecum.nacr.cz")   # jen obrázkové servery archivů (snímky zpracovává ImageMagick)
 
 
 def magick():
