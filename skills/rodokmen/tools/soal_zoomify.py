@@ -15,7 +15,7 @@ POZOR: aplikace digi.soalitomerice.cz po ~100 rychlých požadavcích (digi.arch
 přístup na 30 minut. Prohlížečem jen najdi knihu a cestu k obrázkům, snímky pak stahuj tímto nástrojem (obrázkový server
 neomezuje).
 """
-import glob, math, os, re, shutil, subprocess, sys, tempfile, time, urllib.parse, urllib.request
+import math, os, re, shutil, subprocess, sys, tempfile, time, urllib.parse, urllib.request
 import concurrent.futures as cf
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
@@ -25,14 +25,8 @@ BASE = "https://images.soalitomerice.cz/ximage/matriky/zoomify/cz/archives/CZ-21
 HOSTS = ("images.soalitomerice.cz", "images.archives.cz", "vademecum.nacr.cz")   # jen obrázkové servery archivů (snímky zpracovává ImageMagick)
 
 
-def magick():
-    """Cesta k ImageMagicku; když chybí, skončí hned (před stahováním) srozumitelnou hláškou."""
-    m = (shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
-         or (os.name != "nt" and shutil.which("convert")))   # ImageMagick 6 bez magick; na Windows je convert.exe jiný program
-    if not m:
-        sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, "
-                 "Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")
-    return m
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
+from obraz import magick   # společný hledač ImageMagicku (tools/obraz.py)
 
 
 def get(url):

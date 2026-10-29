@@ -114,6 +114,8 @@ Základní smyčka pro každou osobu:
    SOA Litoměřice: `tools/litomerice.py`, Rakousko/Vídeň: `tools/matricula.py` (seznamy; obrázky v prohlížeči), vězni a oběti 2. sv. války: `tools/vezni.py`,
    `tools/arolsen.py`, `tools/mauthausen.py`, `tools/obeti.py`, Praha: `tools/ahmp_search.sh`; ostatní a Rakousko viz `reference/portaly.md`. Sňatek hledej nejdřív ve farnosti nevěsty.
    Je-li ke svazku index (rejstřík), začni jím. Starší matriky (před ~1784) bývají ve faře sousedního města.
+   Nástroj najednou přestal fungovat? Portál se nejspíš změnil: `python3 -I tools/smoke_test.py <nástroj>` řekne, jestli je to výpadek
+   (NEDOSTUPNÉ), nebo změna stránky (CHYBA) – pak to zapiš do `poznamky_pro_skill.md` a řiď se obecným postupem v `portaly.md`.
 4. **Stáhni snímek** do `pracovni/<svazek>/` a nech ho tam – před dalším stažením se podívej, jestli ho už nemáš
    (šetří čas, archiv i CAPTCHY). Najdi zápis, **přečti ho sám ze snímku** (přiblíž si výřez v plném rozlišení).
 5. **Zapiš nález** (vždy všech 6 kroků, i když to zdržuje):

@@ -23,7 +23,7 @@ Trvalé odkazy: matrika https://ebadatelna.soapraha.cz/d/<matrikaId>/<snímek>,
 Snímky se číslují od 1 (jako v prohlížeči portálu). Na výřez a náhled je potřeba ImageMagick (magick).
 Portál má denní údržbu kolem 4:44 (asi 2 minuty). Ber ohled na server: stahuj jen snímky, které čteš.
 """
-import glob, html, http.client, http.cookiejar, json, os, re, shutil, subprocess, sys, tempfile, time, unicodedata
+import html, http.client, http.cookiejar, json, os, re, subprocess, sys, tempfile, time, unicodedata
 import urllib.error, urllib.parse, urllib.request
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
@@ -267,9 +267,12 @@ def radek_matriky(mid, c):
 
 # ---------- snímky ----------
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
+from obraz import najdi_magick   # společný hledač ImageMagicku (tools/obraz.py)
+
+
 def magick():
-    m = (shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
-         or (os.name != "nt" and shutil.which("convert")))   # ImageMagick 6 bez magick; na Windows je convert.exe jiný program
+    m = najdi_magick()
     if not m:
         raise Chyba("chybí ImageMagick (magick) – je potřeba na náhled, výřez a zjištění rozměrů.")
     return m

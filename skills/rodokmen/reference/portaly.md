@@ -21,7 +21,9 @@ Matriky jsou online u osmi státních archivů (a židovské ještě v Národní
 | Terezínská iniciativa | oběti nacistické perzekuce (Židé z českých zemí) | holocaust.cz/databaze-obeti | **ano – `obeti.py`** |
 | VHÚ / VÚA-VHA | vojáci 1. světové války (seznamy ztrát, vojenské matriky), válečné hroby | digitalnistudovna.mo.gov.cz, valecnehroby.army.cz | nevyzkoušeno (ze zkušebního prostředí nedostupné) |
 
-Adresy u nevyzkoušených portálů ověř při prvním použití (portály se mění). Pro pohraničí a mimo ČR viz `playbook.md` §2
+Adresy u nevyzkoušených portálů ověř při prvním použití (portály se mění). Když nástroj selže, spusť `python3 -I tools/smoke_test.py`
+(nebo jen `smoke_test.py <nástroj>`): jedním bezpečným dotazem ověří všechny síťové nástroje a řekne, jestli portál neodpovídá (NEDOSTUPNÉ),
+nebo se změnil (CHYBA) – pak je třeba opravit nástroj i tento návod. Pro pohraničí a mimo ČR viz `playbook.md` §2
 (Matricula pro Rakousko/Německo, Geneteka pro Polsko, FamilySearch pro Slovensko) a níže.
 
 ## ARON (SOA Zámrsk) – hotové nástroje

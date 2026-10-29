@@ -11,7 +11,7 @@ Použití:
 
 Popis svazků se ukládá do pracovni/.cache_aron/<apu_id>.json (ve složce projektu).
 """
-import glob, json, math, os, shutil, subprocess, sys, tempfile, time, urllib.request
+import json, math, os, shutil, subprocess, sys, tempfile, time, urllib.request
 import concurrent.futures as cf
 import xml.etree.ElementTree as ET
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
@@ -23,14 +23,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, "pracovni", ".cache_aron")
 
 
-def magick():
-    """Cesta k ImageMagicku; když chybí, skončí hned (před stahováním) srozumitelnou hláškou."""
-    m = (shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
-         or (os.name != "nt" and shutil.which("convert")))   # ImageMagick 6 bez magick; na Windows je convert.exe jiný program
-    if not m:
-        sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, "
-                 "Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")
-    return m
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
+from obraz import magick   # společný hledač ImageMagicku (tools/obraz.py)
 
 
 def get(url, binary=False, tries=4):
