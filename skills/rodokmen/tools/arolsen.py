@@ -35,12 +35,12 @@ def post(metoda, data):
                                          headers={"Content-Type": "application/json; charset=utf-8", "Origin": WEB.rstrip("/"), "Referer": WEB})
             with _op.open(req, timeout=90) as r:
                 return json.load(r)["d"]
-        except OSError as e:
+        except (OSError, ValueError, KeyError) as e:   # i neplatná odpověď (HTML chybová stránka, JSON bez „d“)
             err = e
             if getattr(e, "code", 0) in (400, 403, 404):
                 break
             time.sleep(3 * (attempt + 1))
-    raise err
+    sys.exit(f"Arolsen neodpověděl správně ({type(err).__name__}: {str(err)[:100]}). Zkus to později nebo hledej na collections.arolsen-archives.org.")
 
 
 def datum(s):
@@ -78,8 +78,12 @@ def karta(objid, out):
         cil = out if i == 1 else f"{base}_{i}{ext}"
         os.makedirs(os.path.dirname(os.path.abspath(cil)), exist_ok=True)
         req = urllib.request.Request(url, headers={"Referer": WEB, "User-Agent": "Mozilla/5.0 (rodokmen)"})
-        with _op.open(req, timeout=90) as r, open(cil, "wb") as fh:
-            fh.write(r.read())
+        with _op.open(req, timeout=90) as r:
+            if not (r.headers.get("Content-Type") or "").startswith("image/"):
+                sys.exit(f"Server nevrátil obrázek ({r.headers.get('Content-Type')}).")
+            data = r.read()
+        with open(cil, "wb") as fh:
+            fh.write(data)
         print(cil, "|", o.get("title", ""), "|", WEB + o.get("relatedLink", ""))
         time.sleep(0.5)
 

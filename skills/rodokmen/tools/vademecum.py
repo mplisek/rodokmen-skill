@@ -61,14 +61,16 @@ def hledat(dotaz, stran, jen_snimky):
     if not f:
         sys.exit("Portál změnil stránku (nenašel jsem hledací formulář). Hledej v prohlížeči.")
     data = dict(re.findall(r'name="(_sourcePage|__fp)" value="([^"]*)"', f.group(2)))
+    sf = re.search(r'name="searchFrom" type="hidden" value="([^"]*)"', f.group(2))
+    if not sf:
+        sys.exit("Portál změnil stránku (v hledacím formuláři chybí pole searchFrom). Hledej v prohlížeči.")
     data.update({"patternFulltext": dotaz, "wordPosition0": "ANYWHERE", "wordOperator0": "AND",
-                 "searchFrom": re.search(r'name="searchFrom" type="hidden" value="([^"]*)"', f.group(2)).group(1),
-                 "searchFulltext": "Search"})
+                 "searchFrom": sf.group(1), "searchFulltext": "Search"})
     page = get(BASE + html.unescape(f.group(1)), data)
     celkem = re.search(r"([\d\s\xa0]+)&nbsp;záznamů|([\d\s\xa0]+)\s*záznamů", page)
     out, videno = [], set()
     for p in range(stran):
-        for blok in re.findall(r"<aricle class=\"contentRecordList.*?</aricle>", page, re.S):
+        for blok in re.findall(r"<art?icle class=\"contentRecordList.*?</art?icle>", page, re.S):   # portál má v HTML překlep „aricle“
             m = re.search(r"xid=([0-9a-f-]+)&amp;entityType=(\d+)", blok)
             if not m or m.group(1) in videno:
                 continue
@@ -128,7 +130,9 @@ def snimek_stranka(xid, n):
     zp, pg, celkem = prohlizec(xid)
     if not 1 <= n <= celkem:
         sys.exit(f"Snímek musí být číslo 1–{celkem}.")
-    page = get(BASE + pg + f"&row={n - 1}") if (pg and n > 1) else zp
+    if n > 1 and not pg:
+        sys.exit("Portál změnil přepínání snímků (nenašel jsem odkaz na další snímky) – nástroj by stáhl špatný snímek. Stáhni ho v prohlížeči.")
+    page = get(BASE + pg + f"&row={n - 1}") if n > 1 else zp
     cesta = re.search(r'zoomifyImgPath = "([^"]+)"', page)
     if not cesta:
         sys.exit("Cestu k obrázku se nepodařilo najít (portál změnil stránku?). Stáhni snímek v prohlížeči.")
@@ -152,6 +156,7 @@ def link(xid, n):
 
 def snimek(xid, n, out, nahled=False, orez=None):
     cesta, sken, _ = snimek_stranka(xid, n)
+    cesta = urllib.parse.urljoin(BASE + "/", cesta)   # i kdyby portál dal cestu relativně
     if urllib.parse.urlsplit(cesta).hostname != "vademecum.nacr.cz":
         sys.exit(f"Neočekávaný server obrázků: {cesta[:80]}")
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)

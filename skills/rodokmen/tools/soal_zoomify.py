@@ -68,6 +68,14 @@ def main():
     w, h = dims[L]
     nx, ny = math.ceil(w / T), math.ceil(h / T)
     start = sum(counts[:L])
+    if box:   # jen dlaždice, které výřez zasahuje (šetří server i čas)
+        px0, py0 = int(box[0] * w), int(box[1] * h)
+        px1, py1 = px0 + int((box[2] - box[0]) * w), py0 + int((box[3] - box[1]) * h)
+        cx0, cx1, cy0, cy1 = px0 // T, max(px0, px1 - 1) // T, py0 // T, max(py0, py1 - 1) // T
+        geo = f"{max(1, px1 - px0)}x{max(1, py1 - py0)}+{px0 - cx0 * T}+{py0 - cy0 * T}"
+    else:
+        cx0, cx1, cy0, cy1 = 0, nx - 1, 0, ny - 1
+        geo = f"{w}x{h}+0+0"
     d = tempfile.mkdtemp(dir=os.path.dirname(os.path.abspath(out)))
     try:   # dočasnou složku uklidit i při výpadku sítě nebo chybě ImageMagicku
         def tile(yx):
@@ -77,19 +85,18 @@ def main():
             with open(f, "wb") as fh:
                 fh.write(get(f"{base}/TileGroup{g}/{L}-{xx}-{y}.jpg"))
         with cf.ThreadPoolExecutor(4) as ex:   # 4 souběžně: několikrát rychlejší, server archivu nezatěžuje víc než 4 prohlížeče
-            list(ex.map(tile, [(y, xx) for y in range(ny) for xx in range(nx)]))
+            list(ex.map(tile, [(y, xx) for y in range(cy0, cy1 + 1) for xx in range(cx0, cx1 + 1)]))
         # řádky dlaždic +append, pak řádky pod sebe -append (montage na ImageMagicku 7.1.2 padá bez písma);
         # krátká jména (cwd=d) a po řádcích: celá stránka v jednom příkazu by na Windows přesáhla limit příkazové řádky
         rows = []
-        for y in range(ny):
+        for y in range(cy0, cy1 + 1):
             rows.append(f"row{y:03d}.miff")   # MIFF zachová vlastnosti JPEG (podvzorkování barev)
-            subprocess.run([MAGICK, *[f"{y:03d}_{xx:03d}.jpg" for xx in range(nx)], "+append", rows[-1]], check=True, cwd=d)
-        geo = f"{w}x{h}+0+0" if not box else f"{int((box[2] - box[0]) * w)}x{int((box[3] - box[1]) * h)}+{int(box[0] * w)}+{int(box[1] * h)}"
+            subprocess.run([MAGICK, *[f"{y:03d}_{xx:03d}.jpg" for xx in range(cx0, cx1 + 1)], "+append", rows[-1]], check=True, cwd=d)
         subprocess.run([MAGICK, *rows, "-append", "-crop", geo, "+repage", "-quality", "88",
                         os.path.abspath(out)], check=True, cwd=d)
     finally:
         shutil.rmtree(d, ignore_errors=True)
-    print(out, *((int((box[2] - box[0]) * w), int((box[3] - box[1]) * h)) if box else (w, h)))
+    print(out, *((max(1, px1 - px0), max(1, py1 - py0)) if box else (w, h)))
 
 
 if __name__ == "__main__":

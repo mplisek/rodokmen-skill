@@ -81,11 +81,11 @@ def knihy(cesta):
 
 def snimky(cesta):
     page = get(cesta)
-    m = re.search(r'"labels":\s*\[(.*?)\]', page, re.S)
+    m = re.search(r'"labels":\s*', page)
     if not m:
         sys.exit("Stránka nemá seznam snímků (je to cesta knihy, např. oesterreich/wien/01-am-hof/01-01?).")
-    try:
-        labely = json.loads("[" + m.group(1) + "]")   # prázdné popisky zůstanou na svém místě, escape sekvence se dekódují
+    try:   # JSON pole se čte celé (i s „]“ v popiscích); prázdné popisky zůstanou na svém místě, escape sekvence se dekódují
+        labely, _ = json.JSONDecoder().raw_decode(page, m.end())
     except ValueError:
         sys.exit("Seznam snímků se nepodařilo přečíst (portál změnil stránku?). Otevři knihu v prohlížeči.")
     for i, lab in enumerate(labely, 1):

@@ -134,8 +134,8 @@ def holy(t):
 def shoda(r, w):
     """Čtyřmístné číslo = rok uvnitř některého z rozsahů N/O/Z; jinak slovo (bez diakritiky) v textu řádku."""
     if re.fullmatch(r"\d{4}", w):   # i jednoletý rozsah („1850“) a otevřený („1850 -“)
-        return any(int(a) <= int(w) <= int(b or a) for k in ("N", "O", "Z")
-                   for a, b in re.findall(r"(\d{4})(?:\s*-\s*(\d{4}))?", r[k][0]))
+        return any(int(a) <= int(w) <= int(b or (9999 if pom else a)) for k in ("N", "O", "Z")
+                   for a, pom, b in re.findall(r"(\d{4})(\s*-\s*(?=\d{4}|$|,))?(?:(\d{4}))?", r[k][0]))
     hodnoty = [r["kniha"], r["puvodce"], r["typ"], r["poznamka"], r["obce_plne"]]
     return holy(w) in holy(" ".join(hodnoty))
 
@@ -154,7 +154,7 @@ def hledat(args, stran):
         print(f"… možná je výsledků víc (načteno {stran} stran); zúžit jde dalším slovem (farnost, okres, rok) nebo --stran", file=sys.stderr)
 
 
-def puvodce(nazev, typ):
+def puvodce(nazev, typ, stran=5):
     typy = {t: i for i, t in re.findall(r'<option value="(\d+)"[^>]*>(.*?)</option>',
                                        get(BASE + "matrika/hledani_puvodce"))}
     tid = ""
@@ -164,8 +164,13 @@ def puvodce(nazev, typ):
             sys.exit(f"Typ původce „{typ}“ neodpovídá právě jednomu z: " + "; ".join(html.unescape(t) for t in typy))
         tid = shody[0]
     url = (f"{BASE}matrika/hledani_puvodce?typ_puvodce_id={tid}&search_by_puvodce={urllib.parse.quote(nazev)}")
-    for r in vysledky(url, 5):
+    nalez = vysledky(url, stran)
+    for r in nalez:
         vypis(r)
+    if not nalez:
+        print("Nic nenalezeno (původce se hledá podle začátku názvu; zkus kratší název nebo jiný typ).", file=sys.stderr)
+    elif len(nalez) >= 20 * stran:
+        print(f"… možná je výsledků víc (načteno {stran} stran); zúžit jde typem původce nebo přesnějším názvem, víc dá --stran", file=sys.stderr)
 
 
 def kniha(bid):
@@ -305,7 +310,7 @@ if __name__ == "__main__":
     if a[0] == "hledat":
         hledat(a[1:], stran)
     elif a[0] == "puvodce" and len(a) >= 2:
-        puvodce(a[1], a[2] if len(a) > 2 else "")
+        puvodce(a[1], a[2] if len(a) > 2 else "", stran)
     elif a[0] == "info" and len(a) == 2:
         info(a[1])
     elif a[0] == "snimek" and len(a) >= 4:
