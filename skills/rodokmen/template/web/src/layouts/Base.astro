@@ -5,8 +5,9 @@ import domyData from '../data/domy.json';
 const siteName = config.nazev || 'Rodokmen';
 const { title, description = config.popis || siteName, wide = false, wider = false, full = false } = Astro.props;
 const path = Astro.url.pathname;
+const storyMenu = config.pribeh?.menu || (config.maVicePribehu ? 'Příběhy' : 'Příběh rodu');
 const groups = [
-  [['/', 'Úvod'], ...(config.maPribeh ? [['/pribehy/', config.pribeh?.menu || 'Příběh rodu']] : []), ['/zajimavosti/', 'Zajímavosti'], ['/statistiky/', 'Statistiky']],
+  [['/', 'Úvod'], ...(config.maPribeh ? [['/pribehy/', storyMenu]] : []), ['/zajimavosti/', 'Zajímavosti'], ['/statistiky/', 'Statistiky']],
   [['/rody/', 'Rody'], ['/mapa/', 'Mapa'], ...(domyData.domy.length ? [['/domy/', 'Domy']] : []), ['/vejir/', 'Vějíř'], ['/strom/', 'Strom'], ['/predci/', 'Předci'], ['/zapisy/', 'Zápisy'], ['/hledame/', 'Co hledáme']],
   [['/hledat/', 'Hledat']],
 ];
