@@ -7,7 +7,7 @@ const { title, description = config.popis || siteName, wide = false, wider = fal
 const path = Astro.url.pathname;
 const storyMenu = config.pribeh?.menu || (config.maVicePribehu ? 'Příběhy' : 'Příběh rodu');
 const groups = [
-  [['/', 'Úvod'], ...(config.maPribeh ? [['/pribehy/', storyMenu]] : []), ['/zajimavosti/', 'Zajímavosti'], ['/statistiky/', 'Statistiky']],
+  [['/', 'Úvod'], ...(config.maPribeh ? [['/pribehy/', storyMenu]] : []), ['/zajimavosti/', 'Zajímavosti'], ['/statistiky/', 'Statistiky'], ['/osobnosti/', 'Osobnosti']],
   [['/rody/', 'Rody'], ['/mapa/', 'Mapa'], ...(domyData.domy.length ? [['/domy/', 'Domy']] : []), ['/vejir/', 'Vějíř'], ['/strom/', 'Strom'], ['/predci/', 'Předci'], ['/zapisy/', 'Zápisy'], ['/hledame/', 'Co hledáme']],
   [['/hledat/', 'Hledat']],
 ];
