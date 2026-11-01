@@ -149,6 +149,11 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 - Stejný předek dvakrát v rodokmenu (vzdálení příbuzní se vzali) – v datech `SAME`.
 - Index nenašel ≠ zápis neexistuje. Zapiš, co přesně jsi prošel.
 - Pomocníci (subagenti) a OCR/AI čtou historické písmo chybně – vždy ověř sám (viz `playbook.md` §1 bod 10).
+- Německé formuláře (např. Vídeň) se čtou hůř než české: nejčastěji chybí nebo se pletou **roky, stav (ledig × vdovec), povolání,
+  adresy a jména svědků**. Tyhle údaje vždy ověř sám na výřezu, než je zapíšeš jako `doc`; „střední“ jistota od pomocníka na to nestačí.
+  Nejisté pole nevyplňuj „?“ – vynech ho a popiš v poznámce.
+- Kniha s „chybějícími čísly“ nemusí mít chybějící strany: čísla zápisů v roce bývají společná pro celou farnost a obce mají
+  vlastní knihy (v knize jedné obce proto čísla vynechávají).
 - Velké kolo s pomocníky (zkušenost s 10 souběžnými): společná pravidla dej do jednoho souboru (`pracovni/ZADANI_POMOCNIK.md`)
   a v zadání na něj jen odkaž. Do pravidel patří: obrázek pro čtení zmenšit na max. 2000 px (jinak se nástroji
   nezobrazí a pomocník „čte“ naslepo), **nikdy nepsat přepis zápisu, který neviděl**, ukládat výsledek průběžně po každém
