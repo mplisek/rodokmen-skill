@@ -177,6 +177,10 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 
 ## Technické pasti (Windows) – napiš je i pomocníkům do zadání
 (Nahrazují první dva body macOS sekce; body o `overit.py` a výřezu platí i tady.)
+- `CERTIFICATE_VERIFY_FAILED` (Porta fontium, Kramerius NK, ANNO – certifikáty HARICA/GEANT): Windows doplňuje méně
+  běžné kořenové certifikáty až při otevření webu v prohlížeči, Python to sám nespustí. Nástroje (brzda `slusne.py`)
+  to zkusí samy jednou přes systémový `curl.exe`; když to nestačí, ať uživatel web jednou otevře v Edge nebo Chrome.
+  **Ověřování certifikátů nikdy nevypínej.**
 - Python: `python -I -X utf8 tools/<nástroj>.py` (ne `python3` – bývá to nefunkční alias z Microsoft Store). Bez `-X utf8`
   je výstup do roury v cp1250: čeština se rozbije a skripty spadnou na „≈“ a „→“ (nástroje skillu si výstup přepnou
   do UTF-8 samy, vlastní jednorázové skripty ne – `-X utf8` proto používej vždy). Totéž platí při

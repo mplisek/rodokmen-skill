@@ -29,7 +29,7 @@ localhost, vlastní web (Netlify), GitHub a npm se nebrzdí. V prohlížeči (Pl
 tam aspoň 5–10 s mezi stránkami a žádné smyčky fetch / Promise.all (SKILL.md, Šetrně k archivům).
 Stav je v ~/.cache/rodokmen_slusne/ (Windows %LOCALAPPDATA%\\rodokmen_slusne), jen malé soubory JSON.
 """
-import http.client, io, json, os, re, shutil, socket, subprocess, sys, tempfile, threading, time
+import http.client, io, json, os, re, shutil, socket, ssl, subprocess, sys, tempfile, threading, time
 from urllib.parse import urlsplit
 
 DOTAZ, OBRAZEK = 2.0, 0.1            # výchozí rozestup v sekundách
@@ -296,6 +296,54 @@ def _host(conn):
     return getattr(conn, "_tunnel_host", None) or conn.host
 
 
+# --- certifikáty na Windows -----------------------------------------------------------------------------------------
+# Windows doplňuje méně běžné kořenové certifikáty (např. HARICA TLS RSA Root CA 2021 – Porta fontium, Kramerius NK,
+# ANNO) až ve chvíli, kdy web ověřuje „windowsí“ program (prohlížeč, curl.exe se Schannel). Python ověřuje sám (OpenSSL)
+# a vidí jen kořeny, které už v úložišti jsou – na čistých Windows pak hlásí CERTIFICATE_VERIFY_FAILED, dokud web
+# nikdo neotevře v prohlížeči. Proto: po chybě ověření jednou otevřít adresu systémovým curl.exe (Windows kořen stáhne
+# běžnou cestou), znovu načíst certifikáty Windows a spojení zopakovat. Ověřování zůstává zapnuté, nic se neobchází.
+_doplneno = set()
+
+
+def _doplnit_koreny(host):
+    """True, když má smysl spojení zopakovat (Windows, u tohoto webu poprvé, curl.exe doběhl)."""
+    if os.name != "nt" or not host or host in _doplneno:
+        return False
+    _doplneno.add(host)
+    curl = os.path.join(os.environ.get("SystemRoot", "C:/Windows"), "System32", "curl.exe")
+    if not os.path.isfile(curl):
+        return False
+    pockej(f"https://{host}/", False)   # i tenhle dotaz jde přes brzdu
+    try:
+        _bez_prepisu(subprocess.run, [curl, "-s", "-I", "-o", "NUL", "-m", "20", f"https://{host}/"],
+                     capture_output=True, timeout=40)   # dotaz už prošel brzdou výše – bez dalšího přepisu na slusne.py curl
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return True
+
+
+def _https_spojeni(self):
+    """HTTPSConnection.connect s jedním opakováním po doplnění kořenových certifikátů z Windows."""
+    try:
+        return _s_connect[0](self)
+    except ssl.SSLCertVerificationError:
+        host = _host(self)
+        if not _doplnit_koreny(host):
+            if os.name == "nt":
+                print(f"slusne: certifikát webu {host} nejde ověřit. Otevři jednou https://{host}/ v prohlížeči (Edge, Chrome) "
+                      "a zkus to znovu – Windows tím doplní chybějící kořenový certifikát. Ověřování nevypínej.",
+                      file=sys.stderr)
+            raise
+        if self.sock is not None:
+            self.sock.close()
+            self.sock = None
+        self._context.load_default_certs()   # znovu načíst úložiště Windows (teď i s doplněným kořenem)
+        return _s_connect[0](self)
+
+
+_s_connect = [http.client.HTTPSConnection.connect]   # seznam: testy sem dosadí náhradu
+
+
 try:   # sdílená mezipaměť obrázků (tools/cache.py); bez ní brzda funguje dál, jen bez úspory
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import cache as _mezipamet
@@ -420,6 +468,7 @@ def _zapni():
 
     C.putrequest, C.getresponse, C.connect, C._slusne = putrequest, getresponse, connect_, True
     C.putheader, C.endheaders, C.send = putheader_, endheaders_, send_
+    http.client.HTTPSConnection.connect = _https_spojeni
 
 
 # --- brzda pro podprocesy: curl, python a bash spuštěné z Pythonu (úpravu http.client nedědí) ---------------------
