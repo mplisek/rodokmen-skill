@@ -1,0 +1,92 @@
+---
+// Poznámky ke stránce (revize, připomínka, nápad): tlačítko vlevo dole otevře formulář a poznámky k této stránce.
+// Zobrazí se jen, když má přístup zapnuté poznámky (web.json → "poznamky": true / pristupy[].poznamky).
+// Ukládá funkce /api/poznamky na Netlify (netlify/poznamky.sablona.mjs); text je vždy jen čistý text.
+import { KDO_MAX, TEXT_MAX } from '../lib/poznamky.mjs';
+---
+<button type="button" class="pozn-btn" aria-haspopup="dialog">Připomínka <span class="pozn-pocet" hidden></span></button>
+<dialog class="pozn-dialog" aria-labelledby="pozn-nadpis">
+  <form method="dialog" class="pozn-zavrit"><button aria-label="Zavřít">×</button></form>
+  <h2 id="pozn-nadpis">Připomínka ke stránce</h2>
+  <p class="small muted">Oprava, doplnění, nápad nebo otázka k této stránce. Jen obyčejný text, uloží se s datem a časem.</p>
+  <form class="pozn-form">
+    <label>Kdo <span class="muted small">(nepovinné)</span>
+      <input name="kdo" maxlength={KDO_MAX} autocomplete="name" />
+    </label>
+    <label>Poznámka
+      <textarea name="text" rows="5" maxlength={TEXT_MAX} required></textarea>
+    </label>
+    <p class="small muted pozn-zbyva"></p>
+    <button type="submit">Odeslat</button>
+    <p class="pozn-chyba" role="alert"></p>
+  </form>
+  <h3>Poznámky k této stránce</h3>
+  <ol class="pozn-seznam"><li class="muted">Načítám…</li></ol>
+  <p class="small"><a href="/poznamky/">Všechny poznámky →</a></p>
+</dialog>
+
+<script>
+  import { zkontroluj, datum, TEXT_MAX } from '../lib/poznamky.mjs';
+
+  const btn = document.querySelector<HTMLButtonElement>('.pozn-btn')!;
+  const dlg = document.querySelector<HTMLDialogElement>('.pozn-dialog')!;
+  const form = dlg.querySelector<HTMLFormElement>('.pozn-form')!;
+  const seznam = dlg.querySelector<HTMLOListElement>('.pozn-seznam')!;
+  const chyba = dlg.querySelector<HTMLElement>('.pozn-chyba')!;
+  const zbyva = dlg.querySelector<HTMLElement>('.pozn-zbyva')!;
+  const pocet = btn.querySelector<HTMLElement>('.pozn-pocet')!;
+  const stranka = location.pathname;
+  type Pozn = { cas: string; kdo: string; text: string; stav?: string };
+
+  // vše přes textContent – poznámka nikdy není HTML
+  const polozka = (p: Pozn) => {
+    const li = document.createElement('li');
+    const hlava = document.createElement('div');
+    hlava.className = 'small muted';
+    hlava.textContent = `${datum(p.cas)} · ${p.kdo || 'bez podpisu'}${p.stav === 'vyrizena' ? ' · vyřízeno' : ''}`;
+    const text = document.createElement('div');
+    text.className = 'pozn-text';
+    text.textContent = p.text;
+    li.append(hlava, text);
+    return li;
+  };
+  const vypis = (seznamPozn: Pozn[]) => {
+    seznam.replaceChildren(...(seznamPozn.length ? seznamPozn.map(polozka) : [Object.assign(document.createElement('li'), { className: 'muted', textContent: 'Zatím žádné.' })]));
+    pocet.textContent = seznamPozn.length ? String(seznamPozn.length) : '';
+    pocet.hidden = !seznamPozn.length;
+  };
+  const nacti = async () => {
+    try {
+      const r = await fetch(`/api/poznamky?stranka=${encodeURIComponent(stranka)}`, { credentials: 'same-origin', cache: 'no-store' });
+      if (!r.ok || !(r.headers.get('content-type') || '').includes('json')) throw new Error(String(r.status));
+      vypis(await r.json());
+    } catch {
+      seznam.replaceChildren(Object.assign(document.createElement('li'), { className: 'muted', textContent: 'Poznámky fungují jen na zveřejněném webu (Netlify).' }));
+    }
+  };
+  const pocitadlo = () => { zbyva.textContent = `Zbývá ${TEXT_MAX - [...form.text.value].length} znaků.`; };
+
+  btn.addEventListener('click', () => { dlg.showModal(); pocitadlo(); });
+  form.text.addEventListener('input', pocitadlo);
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    chyba.textContent = '';
+    const v = zkontroluj({ kdo: form.kdo.value, text: form.text.value, stranka });
+    if ('chyba' in v && v.chyba) { chyba.textContent = v.chyba; return; }
+    const odeslat = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    odeslat.disabled = true;
+    try {
+      const r = await fetch('/api/poznamky', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(v) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.chyba || 'Poznámku se nepodařilo uložit, zkuste to později.');
+      form.text.value = '';
+      pocitadlo();
+      await nacti();
+    } catch (err) {
+      chyba.textContent = err instanceof Error && err.message ? err.message : 'Poznámku se nepodařilo uložit.';
+    } finally {
+      odeslat.disabled = false;
+    }
+  });
+  nacti();
+</script>

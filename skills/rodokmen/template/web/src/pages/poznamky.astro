@@ -1,0 +1,57 @@
+---
+// Přehled všech poznámek (revize, připomínky, nápady) – datum a čas, stránka, kdo, text. Bez možnosti úprav.
+// Data čte z /api/poznamky (Netlify); vyřizuje je správce v projektu (npm run poznamky).
+import Base from '../layouts/Base.astro';
+import { config } from '../lib/data.js';
+---
+<Base title="Poznámky" wide>
+  <h1>Poznámky k webu</h1>
+  {config.poznamky ? (
+    <>
+      <p class="lead">Opravy, doplnění a nápady, které jste poslali tlačítkem <strong>Připomínka</strong> na stránkách webu.
+        Nejnovější nahoře.</p>
+      <div class="table-wrap">
+        <table class="pozn-prehled">
+          <thead><tr><th>Datum a čas</th><th>Stránka</th><th>Kdo</th><th>Poznámka</th></tr></thead>
+          <tbody><tr><td colspan="4" class="muted">Načítám…</td></tr></tbody>
+        </table>
+      </div>
+    </>
+  ) : (
+    <p>Poznámky nejsou na tomto webu zapnuté.</p>
+  )}
+</Base>
+
+<script>
+  import { datum } from '../lib/poznamky.mjs';
+
+  const tbody = document.querySelector<HTMLTableSectionElement>('.pozn-prehled tbody');
+  type Pozn = { cas: string; stranka: string; kdo: string; text: string; stav?: string; pristup?: string };
+  const bunka = (obsah: string | Node, className = '') => {
+    const td = document.createElement('td');
+    if (className) td.className = className;
+    td.append(obsah);   // text jako text – nikdy HTML
+    return td;
+  };
+  const radek = (p: Pozn) => {
+    const tr = document.createElement('tr');
+    const odkaz = Object.assign(document.createElement('a'), { href: p.stranka, textContent: decodeURI(p.stranka) });
+    tr.append(
+      bunka(datum(p.cas), 'nowrap'),
+      bunka(odkaz),
+      bunka(p.kdo || '—'),
+      bunka(p.text + (p.stav === 'vyrizena' ? '\n(vyřízeno)' : '') + (p.pristup ? `\n[přístup ${p.pristup}]` : ''), 'pozn-text'),
+    );
+    return tr;
+  };
+  if (tbody) {
+    fetch('/api/poznamky', { credentials: 'same-origin', cache: 'no-store' })
+      .then((r) => (r.ok && (r.headers.get('content-type') || '').includes('json') ? r.json() : Promise.reject(r.status)))
+      .then((vse: Pozn[]) => {
+        tbody.replaceChildren(...(vse.length ? vse.map(radek) : [Object.assign(document.createElement('tr'), { innerHTML: '<td colspan="4" class="muted">Zatím žádné poznámky.</td>' })]));
+      })
+      .catch(() => {
+        tbody.replaceChildren(Object.assign(document.createElement('tr'), { innerHTML: '<td colspan="4" class="muted">Poznámky fungují jen na zveřejněném webu (Netlify).</td>' }));
+      });
+  }
+</script>

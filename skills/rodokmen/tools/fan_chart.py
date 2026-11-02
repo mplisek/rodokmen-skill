@@ -23,7 +23,8 @@ CHROME = next((c for c in ("/Applications/Google Chrome.app/Contents/MacOS/Googl
                if os.path.exists(c) or __import__("shutil").which(c)), None)
 
 ns = {}
-exec(open(os.path.join(ROOT, "data", "osoby.py"), encoding="utf-8").read(), ns)
+# RODOKMEN_OSOBY: osoby z pohledu jednoho přístupu (export_web.py --pristup, tools/pohled.py); jinak data/osoby.py
+exec(open(os.environ.get("RODOKMEN_OSOBY") or os.path.join(ROOT, "data", "osoby.py"), encoding="utf-8").read(), ns)
 P_ALL, R, LINES = ns["P"], ns.get("RODINA", {}), ns.get("LINES", {})
 
 

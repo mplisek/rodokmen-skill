@@ -12,8 +12,8 @@ a překladem), stránka osoby, rodiny, „Co hledáme“, výzkumný deník, hle
 |---|---|
 | `npm ci` | čistá instalace přesně podle `package-lock.json` |
 | `npm run data` | převede data do webu (vždy po změně dat; funkční Python 3 vyhledá `scripts/data.mjs`) |
-| `npm run build` | sestaví web do `dist/` |
-| `npm run nahled` | data + build + náhled na http://localhost:4321 (Ctrl+C ukončí) |
+| `npm run build` | sestaví web do `dist/` (s přístupy zvlášť verzi pro každý přístup, viz níže) |
+| `npm run nahled` | data + build + náhled na http://localhost:4321 (Ctrl+C ukončí); `-- --pristup <id>` = verze pro jeden přístup |
 | `npm run dev` | vývojový režim při úpravách vzhledu |
 | `npm run nasadit` | data + build + nahrání na Netlify |
 
@@ -107,8 +107,49 @@ zkus v `launch.json` `"runtimeExecutable": "node"` a `"runtimeArgs": ["web/node_
 (Astro 7 má spouštěč `astro.mjs`, ne `astro.js`). Server běží jen na tomto počítači – nepřidávej `--host`.
 
 ## Vlastní server (pokročilé)
-- Docker: `web/Dockerfile` (build Astro → nginx s `nginx.conf` z `nginx.sablona.conf`). Před buildem image vždy `npm run data`.
-- CapRover: `npm run deploy-caprover` (vyžaduje nainstalovaný a přihlášený `caprover` CLI).
+- Docker: `web/Dockerfile` jen servíruje hotový web – `dist/` a `nginx.conf` (z `nginx.sablona.conf`, s přístupy
+  z `nginx.pristupy.sablona.conf`) se sestaví na počítači (`npm run data && npm run build`). Kontejner Python nepotřebuje.
+- CapRover: `npm run deploy-caprover` (data, build, kontrola stylů, balíček a nahrání; vyžaduje přihlášený `caprover` CLI).
+
+## Více přístupů – každá větev rodiny vidí jen svou část
+Když web čte víc rodin (manželé, rodina sestry), může mít každá vlastní odpověď na přihlašovací otázku a vidět jen
+svou část rodokmenu. Ve `web.json`:
+```json
+"prihlaseni": {"otazka": "Rodinná otázka", "odpoved": "…"},
+"pristupy": [
+  {"nazev": "Plíškovi", "odpoved": "…", "koren": [1]},
+  {"nazev": "Rodina Jany", "odpoved": "…", "koren": ["jana-nova"], "rody": {"8": ["Novákové", "Kováři z Holic"]}},
+  {"nazev": "Děti", "odpoved": "…", "koren": [2, 3], "texty": true}
+]
+```
+- `prihlaseni.odpoved` vidí všechno (přístup `vse`; když chybí, celý web vidí jen správce v náhledu). Každý přístup musí
+  mít **jinou** odpověď – podle ní web pozná, kdo se přihlásil. Otázka je jedna společná: formuluj ji obecně
+  („Jak se jmenuje náš rodinný pes?“ – každá rodina má jinou odpověď) nebo ji vynech a dej rodinám heslo.
+- `koren` = výchozí osoby (čísla z `P` nebo zkratky z `RODINA`). První určuje číslování: úvod, vějíř, rody a Předci jsou
+  od ní. Další se přidají s předky jako příbuzní (vlastní stránky a vějíře). Přístup bez `koren` vidí všechno.
+- Přístup s `koren` vidí předky výchozích osob, jejich potomky (sourozence předků, jejich rodiny až do dneška) a partnery –
+  **ne předky partnerů** (rodina manžela sestry). Zápisy, výřezy, dokumenty, mapa, Domy a Statistiky jen z těchto osob.
+- Texty o celé rodině (příběh, zajímavosti, deník, „Co hledáme“, hypotézy, úvod) přístup s `koren` nevidí, ledaže
+  `"texty": true`. Vlastní úvod a název webu: `"uvod": {…}`, `"nazev_webu": "…"`. Názvy rodů: `"rody"` (jinak z `LINES`
+  nebo z příjmení pradědečka / prababičky).
+- `npm run build` sestaví **samostatnou verzi webu pro každý přístup** (`dist/_p/<id>/`, id vypíše
+  `python3 -I tools/export_web.py --seznam-pristupu`). Brána (Netlify i nginx) podle přihlášení posílá jen tu verzi;
+  ostatní větve na serveru pro daný přístup vůbec nejsou a cizí verze nejde otevřít ani přímou adresou. Build trvá
+  déle (× počet přístupů). Náhled jednoho přístupu: `npm run nahled -- --pristup <id>`.
+- Před zveřejněním projdi s uživatelem náhled **každého** přístupu (`soukromi.md`) – co která rodina uvidí.
+
+## Poznámky ke stránkám (revize, připomínky, nápady) – jen Netlify
+`"poznamky": true` ve `web.json` (web bez přístupů) nebo u přístupu v `pristupy` zapne na každé stránce tlačítko
+**Připomínka** (vlevo dole – vpravo dole má Netlify na bezplatném tarifu svůj odznak): formulář *Kdo* (nepovinné, do 100 znaků) a *Poznámka* (1–5000 znaků, jen obyčejný text)
+a pod ním poznámky k té stránce (datum, kdo, text – bez úprav). Přehled všech je na `/poznamky/` (v menu).
+- Ukládá je funkce `/api/poznamky` do **Netlify Blobs** (úložiště zdarma u webu, nic se nenastavuje). Funkci
+  (`netlify/functions/poznamky.mjs`) vyrábí `npm run data` z `netlify/poznamky.sablona.mjs` – jen s otisky odpovědí.
+- Kdo vidí: přístup jen poznámky ze svého přístupu, přístup `vse` všechny (s názvem přístupu). Píše jen přihlášený.
+- **K uživateli se dostanou** přehledem na webu a příkazem `npm run poznamky` (ve `web/`): stáhne nové do
+  `data/poznamky.json` a vypíše nevyřízené. `-- --vyrizeno <id>` označí poznámku na webu jako vyřízenou,
+  `-- --smazat <id>` ji smaže (nevhodná, omyl). Používá Netlify CLI jako nasazení; web nasazovaný z jiné složky:
+  `-- --slozka <cesta>`. Poznámky se zapracovávají jako podněty od rodiny (`st="fam"`), ne jako doklad.
+- Na CapRoveru/nginx ani v místním náhledu poznámky nejsou (tlačítko to napíše).
 
 ## Úpravy vzhledu
 Styly `web/src/styles/global.css` (barvy v `:root`), rozložení `web/src/layouts/Base.astro`, stránky `web/src/pages/`.

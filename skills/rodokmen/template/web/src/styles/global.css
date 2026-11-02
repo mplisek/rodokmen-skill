@@ -241,3 +241,28 @@ main.full { max-width: none; padding: 0; }
 .card-link:hover::after { opacity: 1; transform: translateX(3px); }
 .card-link h3 { padding-right: 1.4rem; }
 .updated { color: var(--muted); font-size: 0.9rem; margin: 0.4rem 0 1.2rem; }
+
+/* Poznámky ke stránkám (components/Poznamky.astro, pages/poznamky.astro) */
+/* vlevo dole: vpravo dole má Netlify na bezplatném tarifu vlastní odznak (/.netlify/scripts/hud), který by tlačítko zakryl */
+.pozn-btn { position: fixed; left: 16px; bottom: 16px; z-index: 1000; font: inherit; font-weight: 600; padding: 0.5rem 0.9rem;
+  border: 0; border-radius: 999px; background: var(--ink); color: var(--bg); box-shadow: 0 2px 8px rgba(0,0,0,0.25); cursor: pointer; }
+.pozn-btn:hover { background: var(--accent); }
+.pozn-pocet { display: inline-block; min-width: 1.4em; margin-left: 0.3rem; padding: 0 0.35em; border-radius: 999px; background: var(--accent-soft); color: var(--ink); font-size: 0.85em; text-align: center; }
+.pozn-dialog { width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.2rem 1.4rem; background: var(--paper); color: var(--ink); }
+.pozn-dialog::backdrop { background: rgba(43, 38, 32, 0.45); }
+.pozn-dialog h2 { margin-top: 0; }
+.pozn-zavrit { position: absolute; top: 0.4rem; right: 0.6rem; }
+.pozn-zavrit button { font-size: 1.5rem; line-height: 1; border: 0; background: none; cursor: pointer; color: var(--muted); }
+.pozn-form label { display: block; margin: 0.6rem 0 0.2rem; font-weight: 600; }
+.pozn-form input, .pozn-form textarea { display: block; width: 100%; margin-top: 0.25rem; font: inherit; font-weight: 400; padding: 0.45rem 0.6rem; border: 1px solid #cfc5b6; border-radius: 6px; }
+.pozn-form button[type="submit"] { font: inherit; font-weight: 600; padding: 0.45rem 1.1rem; border: 0; border-radius: 6px; background: var(--ink); color: var(--bg); cursor: pointer; }
+.pozn-form button:disabled { opacity: 0.6; cursor: wait; }
+.pozn-chyba { color: #b3261e; min-height: 1.2em; }
+.pozn-seznam { padding-left: 1.2rem; }
+.pozn-seznam li { margin-bottom: 0.8rem; }
+.pozn-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.pozn-prehled { width: 100%; border-collapse: collapse; }
+.pozn-prehled th, .pozn-prehled td { text-align: left; vertical-align: top; padding: 0.45rem 0.5rem; border-bottom: 1px solid var(--line); }
+.pozn-prehled .nowrap { white-space: nowrap; }
+.table-wrap { overflow-x: auto; }
+@media print { .pozn-btn, .pozn-dialog { display: none; } }

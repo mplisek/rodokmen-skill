@@ -6,15 +6,17 @@
   "scripts": {
     "data": "node scripts/data.mjs",
     "dev": "astro dev",
-    "build": "astro build && pagefind --site dist",
+    "build": "node scripts/build.mjs",
     "preview": "astro preview",
     "test": "node --test src/lib/*.test.ts",
-    "nahled": "npm run data && npm run build && node scripts/over_css.mjs && astro preview",
+    "nahled": "node scripts/build.mjs --nahled",
     "nasadit": "npm run data -- --nasazeni && npm run build && node scripts/over_css.mjs && npx -y netlify-cli@latest deploy --prod --dir=dist",
-    "pack": "tar -czf ../rodokmen-web.tar.gz --exclude=node_modules --exclude=dist --exclude=.astro .",
-    "deploy-caprover": "npm run data -- --nasazeni && npm run pack && caprover deploy -t ../rodokmen-web.tar.gz"
+    "poznamky": "node scripts/poznamky.mjs",
+    "pack": "tar -czf ../rodokmen-web.tar.gz Dockerfile captain-definition nginx.conf dist",
+    "deploy-caprover": "npm run data -- --nasazeni && npm run build && node scripts/over_css.mjs && npm run pack && caprover deploy -t ../rodokmen-web.tar.gz"
   },
   "dependencies": {
+    "@netlify/blobs": "^10.7.13",
     "astro": "^7.3.8",
     "leaflet": "^1.9.4"
   },

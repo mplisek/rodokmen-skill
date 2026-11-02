@@ -10,6 +10,12 @@
 - Citlivé věci z nedávné minulosti (sebevraždy, věznění, nemoci) – zeptej se uživatele, jestli a jak je zmínit.
 - Matriční údaje starší než lhůty jsou veřejné, ale ohleduplnost platí i pro ně (zbytečně nezesměšňovat).
 
+Web pro víc rodin (manželé, sourozenci s vlastními rodinami): každá rodina může mít vlastní přístup a vidět jen svou
+větev – `web.json` → `pristupy` (`web.md`, „Více přístupů“). Ostatní větve pak na serveru pro ni vůbec nejsou.
+
+Poznámky z webu (`poznamky: true`) píše rodina – můžou obsahovat údaje o žijících. Vidí je jen přihlášení
+s poznámkami zapnutými (a jen ze svého přístupu); nevhodnou smaž `npm run poznamky -- --smazat <id>`.
+
 ## Před zveřejněním webu projdi s uživatelem
 `python3 -I tools/kontrola.py` hlásí `CITLIVÉ` u textů z posledních ~100 let (sebevražda, nemoc, rozvod, dluhy, nemanželské
 dítě…), které jdou na web – v poznámkách osob, ve „Co hledáme“ (`ISSUES`), u bočních příbuzných, v zajímavostech,
