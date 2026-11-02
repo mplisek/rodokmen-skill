@@ -106,7 +106,7 @@ class ExportPristupu(unittest.TestCase):
         cfg_path = cls.p / "data" / "web.json"
         cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
         cfg["prihlaseni"].update(odpoved=cls.ODPOVEDI["vse"], otazka="Rodinná otázka")   # ukázková otázka prozrazuje odpověď
-        cfg["pristupy"] = [{"nazev": "Matčina rodina", "odpoved": cls.ODPOVEDI["matcina-rodina"], "koren": [3]},
+        cfg["pristupy"] = [{"nazev": "Matčina rodina", "odpoved": cls.ODPOVEDI["matcina-rodina"], "koren": [3], "poznamky": True},
                            {"nazev": "Marie", "odpoved": cls.ODPOVEDI["marie"], "koren": ["marie-novakova"]}]
         cfg_path.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
         cls.seznam = json.loads(spust(cls.p, "export_web.py", "--seznam-pristupu").stdout.strip().splitlines()[-1])
@@ -130,7 +130,7 @@ class ExportPristupu(unittest.TestCase):
     def test_odpovedi_nikde_ve_webu(self):
         web = self.p / "web"
         for f in [*(web / "src").rglob("*"), *(web / "public").rglob("*"), web / "nginx.conf",
-                  web / "netlify" / "edge-functions" / "brana.js"]:
+                  web / "netlify" / "edge-functions" / "brana.js", web / "netlify" / "functions" / "poznamky.mjs"]:
             if f.is_file() and f.suffix in (".json", ".md", ".svg", ".html", ".js", ".conf"):
                 t = f.read_text(encoding="utf-8", errors="ignore").lower()
                 for o in self.ODPOVEDI.values():
@@ -144,6 +144,16 @@ class ExportPristupu(unittest.TestCase):
             self.assertIn(f'"{otisk}": "{pid}"', brana)
             self.assertIn(f'"{otisk}" "{pid}";', nginx)
         self.assertIn("location ^~ /_p/", nginx)                       # cizí verze nejdou otevřít přímo
+
+    def test_poznamky_podle_pristupu(self):
+        self.assertTrue(self.site["config"]["poznamky"])               # matčina rodina má poznámky zapnuté
+        fce = (self.p / "web" / "netlify" / "functions" / "poznamky.mjs").read_text(encoding="utf-8")
+        mapa = json.loads(fce.split("const PRISTUPY = ", 1)[1].split(";", 1)[0])
+        self.assertEqual({v["id"]: v["poznamky"] for v in mapa.values()},
+                         {"vse": True, "matcina-rodina": True, "marie": False})   # správce („vse“) vidí přehled
+        spust(self.p, "export_web.py", "--pristup", "marie")
+        site = json.loads((self.p / "web" / "src" / "data" / "site.json").read_text(encoding="utf-8"))
+        self.assertFalse(site["config"]["poznamky"])
 
 
 if __name__ == "__main__":

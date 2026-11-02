@@ -138,6 +138,19 @@ svou část rodokmenu. Ve `web.json`:
   déle (× počet přístupů). Náhled jednoho přístupu: `npm run nahled -- --pristup <id>`.
 - Před zveřejněním projdi s uživatelem náhled **každého** přístupu (`soukromi.md`) – co která rodina uvidí.
 
+## Poznámky ke stránkám (revize, připomínky, nápady) – jen Netlify
+`"poznamky": true` ve `web.json` (web bez přístupů) nebo u přístupu v `pristupy` zapne na každé stránce tlačítko
+**Připomínka** (vpravo dole): formulář *Kdo* (nepovinné, do 100 znaků) a *Poznámka* (1–5000 znaků, jen obyčejný text)
+a pod ním poznámky k té stránce (datum, kdo, text – bez úprav). Přehled všech je na `/poznamky/` (v menu).
+- Ukládá je funkce `/api/poznamky` do **Netlify Blobs** (úložiště zdarma u webu, nic se nenastavuje). Funkci
+  (`netlify/functions/poznamky.mjs`) vyrábí `npm run data` z `netlify/poznamky.sablona.mjs` – jen s otisky odpovědí.
+- Kdo vidí: přístup jen poznámky ze svého přístupu, přístup `vse` všechny (s názvem přístupu). Píše jen přihlášený.
+- **K uživateli se dostanou** přehledem na webu a příkazem `npm run poznamky` (ve `web/`): stáhne nové do
+  `data/poznamky.json` a vypíše nevyřízené. `-- --vyrizeno <id>` označí poznámku na webu jako vyřízenou,
+  `-- --smazat <id>` ji smaže (nevhodná, omyl). Používá Netlify CLI jako nasazení; web nasazovaný z jiné složky:
+  `-- --slozka <cesta>`. Poznámky se zapracovávají jako podněty od rodiny (`st="fam"`), ne jako doklad.
+- Na CapRoveru/nginx ani v místním náhledu poznámky nejsou (tlačítko to napíše).
+
 ## Úpravy vzhledu
 Styly `web/src/styles/global.css` (barvy v `:root`), rozložení `web/src/layouts/Base.astro`, stránky `web/src/pages/`.
 Barvy rodů jsou v `tools/export_web.py` (`LINE_COLORS`) a `tools/fan_chart.py` (`BASE`). Upravuj jen na přání uživatele

@@ -17,6 +17,7 @@ export default async (request, context) => {
   if (url.pathname === '/prihlaseni.html') return context.next();
   const pristup = PRISTUPY[context.cookies.get('rodokmen') || ''];
   if (!pristup) return prihlaseni(url);
+  if (url.pathname.startsWith('/api/')) return context.next();   // funkce (poznámky) si přístup ověří samy
   const vlastni = `/_p/${pristup}/`;
   if (url.pathname.startsWith('/_p/')) {
     // přepsaný požadavek této brány (nebo přímá adresa vlastní verze) projde; cizí verze ne

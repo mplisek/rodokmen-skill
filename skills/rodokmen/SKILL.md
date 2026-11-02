@@ -265,6 +265,9 @@ Podrobně `reference/web.md`. Ve zkratce:
 5. Čte-li web víc rodin (manželé, sourozenci s rodinami), nabídni **přístupy**: každá rodina vlastní odpověď a jen svá
    větev od své výchozí osoby (`web.json` → `pristupy`, `reference/web.md` „Více přístupů“). Náhled každého přístupu
    (`npm run nahled -- --pristup <id>`) projdi s uživatelem.
+6. Chce-li rodina posílat opravy a nápady přímo z webu, zapni **poznámky** (`"poznamky": true`, `reference/web.md`).
+   Na začátku práce s projektem, který je má, spusť ve `web/` `npm run poznamky` a nevyřízené ukaž uživateli: navrhni,
+   co z nich zapracovat (ověř v matrice, jako každý údaj od rodiny), a po jeho souhlasu je označ `-- --vyrizeno <id>`.
 
 ## Fáze 5 – Zveřejnění (volitelné, jen se souhlasem)
 Výchozí cesta je **Netlify** (zdarma): `npm run nasadit`. Přihlášení k Netlify a první propojení webu jsou interaktivní –
