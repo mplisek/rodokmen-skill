@@ -3,6 +3,10 @@
 ## Žijící lidé
 - Na webu jen jméno a rok narození (`note="Žijící – údaje jen základní."`). Žádné adresy, telefony, rodná čísla,
   zdravotní údaje, rozvody, nemanželské děti u žijících či nedávno zemřelých bez souhlasu rodiny.
+- `export_web.py` to u webu hlídá sám: osobě s poznámkou „žijící“ nebo narozené v posledních 100 letech bez známého
+  úmrtí (žádný rok úmrtí v `y`, žádný fakt „† …“) nechá jen jméno, rok narození a vazby – bez faktů, poznámky, zápisů,
+  sňatku na stránce rodiny a bez místa na mapě. Platí pro `P` i `RODINA`; počet vypíše `npm run data`.
+  Zemřelému s neznámým rokem úmrtí doplň do `f` „† po 1990“ (nebo do `y` rok úmrtí), jinak zůstane skrytý.
 - Citlivé věci z nedávné minulosti (sebevraždy, věznění, nemoci) – zeptej se uživatele, jestli a jak je zmínit.
 - Matriční údaje starší než lhůty jsou veřejné, ale ohleduplnost platí i pro ně (zbytečně nezesměšňovat).
 

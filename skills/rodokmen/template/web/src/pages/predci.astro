@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import PersonLink from '../components/PersonLink.astro';
 import { people, lineByK, genName, statusClass } from '../lib/data.js';
-const list = Object.values(people).sort((a, b) => a.k - b.k);
+const list = Object.values(people).filter((p) => !p.extra).sort((a, b) => a.k - b.k);
 const gens = [...new Set(list.map((p) => p.gen))];
 ---
 <Base title="Předci">

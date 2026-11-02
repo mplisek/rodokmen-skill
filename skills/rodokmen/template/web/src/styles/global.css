@@ -144,8 +144,8 @@ th { font-weight: 600; color: #5a4632; background: #f6f0e6; }
 main.full { max-width: none; padding: 0; }
 .fan-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; padding: 0.5rem 1rem; border-bottom: 1px solid var(--line); background: var(--paper); }
 .fan-bar strong { font: 1.15rem var(--serif); color: #3b2e22; }
-.fan-search { display: flex; gap: 0.3rem; }
-.fan-search input { font: inherit; padding: 0.3rem 0.6rem; border: 1px solid #cfc5b6; border-radius: 6px; width: 15rem; max-width: 52vw; }
+.fan-search, .fan-pick { display: flex; gap: 0.3rem; }
+.fan-search input, .fan-pick input { font: inherit; padding: 0.3rem 0.6rem; border: 1px solid #cfc5b6; border-radius: 6px; width: 15rem; max-width: 52vw; }
 .fan-bar button { font: inherit; border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 0.25rem 0.7rem; cursor: pointer; }
 .fan-stage { position: relative; height: calc(100vh - 110px); overflow: hidden; touch-action: none; cursor: grab; background: var(--bg); }
 .fan-stage:active { cursor: grabbing; }

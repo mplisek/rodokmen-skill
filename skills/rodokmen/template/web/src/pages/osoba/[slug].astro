@@ -4,7 +4,7 @@ import PersonLink from '../../components/PersonLink.astro';
 import Record from '../../components/Record.astro';
 import Pedigree from '../../components/Pedigree.astro';
 import MobileTree from '../../components/MobileTree.astro';
-import { people, families, lineByK, records, dateKey, href, statusClass } from '../../lib/data.js';
+import { people, families, lineByK, records, dateKey, href, statusClass, root } from '../../lib/data.js';
 import domyData from '../../data/domy.json';
 
 export function getStaticPaths() {
@@ -16,6 +16,10 @@ const recs = [...new Set(p.records)].filter((r) => records[r]).sort((a, b) => da
 const path = [...p.path].reverse().filter(Boolean);
 const domById = Object.fromEntries(domyData.domy.map((d) => [d.id, d]));
 const myDomy = (domyData.osoby[p.slug] || []).map((id) => domById[id]).filter(Boolean);
+// manžel(ka) v přímé linii je p.spouse; další partneři z PARTNERI, RODINA a ze společných dětí
+const spouseText = p.partners.find((x) => x.slug === p.spouse)?.text;
+const partners = p.partners.filter((x) => x.slug !== p.spouse);
+const nPartners = (p.child ? 1 : 0) + partners.length;
 ---
 <Base title={p.name} description={`${p.name} ${p.years} – ${p.rel}`}>
   <div class="crumbs">
@@ -48,15 +52,34 @@ const myDomy = (domyData.osoby[p.slug] || []).map((id) => domById[id]).filter(Bo
         Matka: {p.mother ? <PersonLink slug={p.mother} /> : <span class="muted">zatím neznámá</span>}</p>
       {p.family && <p class="small"><a href={href.family(p.family)}>Rodina, ze které pochází →</a></p>}
     </div>
-    {p.child && (
+    {nPartners > 0 && (
       <div class="card">
-        <h3>{p.sex === 'M' ? 'Manželka' : 'Manžel'} a dítě v linii</h3>
-        <p>{p.spouse ? <PersonLink slug={p.spouse} /> : <span class="muted">{p.sex === 'F' && people[p.child]?.fatherUnknown ? 'otec dítěte neuveden' : 'neznámý partner'}</span>}<br />
-          {p.children.length > 1 ? 'Děti' : 'Dítě'}: {p.children.map((c, i) => <>{i > 0 && ', '}<PersonLink slug={c} /></>)}</p>
+        <h3>{nPartners > 1 ? 'Manželství' : p.sex === 'F' ? 'Manžel' : 'Manželka'}</h3>
+        <p>{p.child && (p.spouse ? <><PersonLink slug={p.spouse} />{spouseText && <span class="small muted"> ({spouseText})</span>}</>
+            : <span class="muted">{p.sex === 'F' && people[p.child]?.fatherUnknown ? 'otec dítěte neuveden' : 'neznámý partner'}</span>)}
+          {partners.map((x, i) => <>{(i > 0 || p.child) && <br />}<PersonLink slug={x.slug} />{x.text && <span class="small muted"> ({x.text})</span>}</>)}</p>
         {p.ownFamily && <p class="small"><a href={href.family(p.ownFamily)}>Jejich rodina →</a></p>}
       </div>
     )}
   </div>
+
+  {(p.kids.length > 0 || p.siblings.length > 0) && (
+    <div class="grid2">
+      {p.kids.length > 0 && (
+        <div class="card">
+          <h3>{p.kids.length > 1 ? 'Děti' : 'Dítě'}</h3>
+          <p>{p.kids.map((c, i) => <>{i > 0 && <br />}<PersonLink slug={c.slug} />{c.line && <span class="small muted"> (přímá linie)</span>}
+            {nPartners > 1 && c.other && people[c.other] && <span class="small muted"> ({people[c.other].sex === 'F' ? 'matka' : 'otec'} {people[c.other].name})</span>}</>)}</p>
+        </div>
+      )}
+      {p.siblings.length > 0 && (
+        <div class="card">
+          <h3>Sourozenci</h3>
+          <p>{p.siblings.map((c, i) => <>{i > 0 && <br />}<PersonLink slug={c.slug} />{c.half && <span class="small muted"> (nevlastní)</span>}</>)}</p>
+        </div>
+      )}
+    </div>
+  )}
 
   {p.side.length > 0 && (
     <>
@@ -71,10 +94,10 @@ const myDomy = (domyData.osoby[p.slug] || []).map((id) => domById[id]).filter(Bo
     </>
   )}
 
-  <h2>Předci</h2>
-  <p class="small"><a href={`/strom/#f=k${p.k}`}>Stromový graf od této osoby →</a></p>
-  <div class="only-desktop"><Pedigree k={p.k} /></div>
-  <div class="only-mobile"><MobileTree k={p.k} /></div>
+  {!p.extra && <h2>Předci</h2>}
+  <p class="small">{p.fan && <><a href={p.fan}>Vějíř předků{p.slug === root.slug ? '' : ` – ${p.name}`} →</a> · </>}<a href={`/strom/#f=${p.tree}`}>Stromový graf od této osoby →</a></p>
+  {!p.extra && <div class="only-desktop"><Pedigree k={p.k} /></div>}
+  {!p.extra && <div class="only-mobile"><MobileTree k={p.k} /></div>}
 
   {p.docs.length > 0 && (
     <>
@@ -85,5 +108,5 @@ const myDomy = (domyData.osoby[p.slug] || []).map((id) => domById[id]).filter(Bo
 
   <h2>Zápisy z matrik</h2>
   {recs.length ? <div class="recs">{recs.map((r) => <Record id={r} showPeople exclude={p.slug} />)}</div>
-    : <p class="muted">K této osobě zatím nemáme vlastní matriční zápis – údaje pocházejí ze zápisů jejích dětí{p.st === 'fam' ? ' nebo od rodiny' : ''}.</p>}
+    : <p class="muted">K této osobě zatím nemáme vlastní matriční zápis{p.extra ? '' : ` – údaje pocházejí ze zápisů jejích dětí${p.st === 'fam' ? ' nebo od rodiny' : ''}`}.</p>}
 </Base>

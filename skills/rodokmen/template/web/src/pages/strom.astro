@@ -7,7 +7,7 @@ import { people, others, byK, lineByK, records, href } from '../lib/data.js';
 const K = (n) => (byK[n] ? `k${byK[n].k}` : `?${n}`);
 const recs = (list) => list.filter((r) => records[r]).map((r) => [href.record(r), records[r].date]);
 const nodes = {};
-for (const p of Object.values(people)) {
+for (const p of Object.values(people).filter((x) => !x.extra)) {
   nodes[`k${p.k}`] = {
     n: p.name, y: p.years, sex: p.sex, u: href.person(p.slug), c: p.line ? lineByK[p.line]?.color : null, b: p.sibStatus ?? 'none',
     fa: K(2 * p.k), mo: K(2 * p.k + 1), pa: [],
@@ -15,7 +15,7 @@ for (const p of Object.values(people)) {
   };
 }
 for (const o of others) {
-  nodes[o.id] = { n: o.name, y: o.years, sex: o.sex, o: 1, st: o.status, fa: o.father, mo: o.mother, pa: o.partners, f: o.facts, t: o.note, z: recs(o.records) };
+  nodes[o.id] = { n: o.name, y: o.years, sex: o.sex, o: 1, u: o.slug ? href.person(o.slug) : undefined, st: o.status, fa: o.father, mo: o.mother, pa: o.partners, f: o.facts, t: o.note, z: recs(o.records) };
 }
 const json = JSON.stringify(nodes).replace(/</g, '\\u003c');
 const names = [...new Set(Object.values(nodes).map((p) => p.n))].sort((a, b) => a.localeCompare(b, 'cs'));

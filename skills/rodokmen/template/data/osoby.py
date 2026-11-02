@@ -26,12 +26,15 @@ P = {
 LINES = {
 }
 
-# Osoby mimo přímou linii pro stromový graf: sourozenci předků, jejich partneři a děti, předci partnerů…
+# Osoby mimo přímou linii: sourozenci předků, jejich partneři a děti, děti výchozí osoby, předci partnerů…
+# Každá má na webu vlastní stránku (Děti, Sourozenci, Manželství) a je ve stromovém grafu.
 # "zkratka": dict(n="Marie Nováková", y="1892–1970", sex="F", otec=16, matka=17, st="doc", f=[...], r=[...], note="…")
-#   otec, matka  číslo přímého předka (16) nebo zkratka jiné osoby z RODINA ("karel-hruby"); chybí = neznámý.
+#   otec, matka  číslo přímého předka (16; děti výchozí osoby otec=1) nebo zkratka jiné osoby z RODINA
+#                ("karel-hruby"); chybí = neznámý.
 #                Sourozenec předka 8 má otec=16, matka=17 – i když 16/17 ještě neznáme (poznají se jako sourozenci).
 #   partner      seznam partnerů bez společného dítěte v rodokmenu, např. partner=[44] (první manželka předka 44)
 #   sex          "M" nebo "F" (povinné); n, y, st, f, r, note jako u předků. Žijící: jen jméno a rok narození.
+#   v            (volitelné) vztah na stránce osoby, např. "manželka Václava Culka"; jinak ho web odvodí sám.
 RODINA = {
 }
 
@@ -40,6 +43,11 @@ RODINA = {
 #   v  vztah k předkovi: "bratr", "sestra", "manžel", "manželka", "syn", "dcera", jinak volně ("příbuzný")
 #   y  roky jako u předků ("* 1949", "1893–1960"); obojí volitelné
 SIDE = [
+]
+
+# Sňatky s podrobnostmi (rok, místo, konec) – i druhá manželství předků: a, b = číslo předka nebo zkratka z RODINA.
+# dict(a=44, b="rosalie-culkova", rok=1850, misto="Libice", konec="ovdověl 1860")   (rok, misto, konec volitelné)
+PARTNERI = [
 ]
 
 # Rozpory a otevřené otázky (na web do „Co hledáme“) jako dvojice (otázka, odpověď). Odpověď začněte

@@ -17,7 +17,11 @@ a překladem), stránka osoby, rodiny, „Co hledáme“, výzkumný deník, hle
 | `npm run dev` | vývojový režim při úpravách vzhledu |
 | `npm run nasadit` | data + build + nahrání na Netlify |
 
-Náhled spouštěj na pozadí a uživateli pošli odkaz.
+Náhled spouštěj na pozadí a uživateli pošli odkaz. `nahled` i `nasadit` po sestavení spustí `scripts/over_css.mjs`: ověří,
+že každá stránka odkazuje na existující styly. Když selže (web by byl bez stylů – stává se u projektu za odkazem typu
+junction a po zastaralé cache), smaž ve `web/` složky `dist`, `.astro` a `node_modules/.vite` a sestav znovu.
+`astro.config.mjs` má proto `preserveSymlinks: true`. Netlify CLI za junction končí chybou „build.base … must be inside
+the repository root“ – pak ať uživatel spustí nasazení ze skutečné cesty ke složce (ne přes odkaz).
 
 **Web ve vnitřní síti (domácí počítač, bez nasazení na internet):** stačí servírovat hotové `dist/`, např.
 `python3 -I -m http.server 4321 --bind 0.0.0.0 --directory dist` (ve `web/`). Aby běžel i po restartu (Linux),
@@ -59,6 +63,10 @@ Pozor: takový web nemá přihlášení – je vidět z celé domácí sítě. V
   „Catharina Nowakin / Kateřina Nováková“). Výchozí je dnešní spisovná podoba; původní tvar je pak jen řádkem na stránce osoby.
 - `citlive_schvaleno`: seznam úryvků textu, které uživatel na webu schválil (např. `["oběsil se ve stodole"]`) –
   `kontrola.py` je pak nehlásí jako `CITLIVÉ`. Úryvek musí obsahovat hlášené slovo; když se text změní, hlásí se znovu.
+
+## Stránka Dokumenty
+`/dokumenty/` ukáže všechny položky z `data/dokumenty.json` na jedné stránce s odkazy na osoby (u osob jsou i na jejich
+stránkách). V menu je, jen když nějaký dokument existuje; text vybízí rodinu poslat další (kontakt z `web.json`).
 
 ## Stránky Statistiky a Domy
 - **Statistiky** (`/statistiky/`, `tools/statistiky.py`): povolání, věk dožití a při sňatku, měsíce svateb, generační
@@ -106,6 +114,12 @@ zkus v `launch.json` `"runtimeExecutable": "node"` a `"runtimeArgs": ["web/node_
 Styly `web/src/styles/global.css` (barvy v `:root`), rozložení `web/src/layouts/Base.astro`, stránky `web/src/pages/`.
 Barvy rodů jsou v `tools/export_web.py` (`LINE_COLORS`) a `tools/fan_chart.py` (`BASE`). Upravuj jen na přání uživatele
 a po úpravě zkontroluj web na mobilu i počítači.
+
+## Vějíř pro libovolnou osobu
+`/vejir/` je vějíř výchozí osoby. Každá další osoba se známým otcem nebo matkou (předek i příbuzný z `RODINA`) má svůj
+vějíř předků na `/vejir/<adresa osoby>/` – odkaz je na její stránce a ve vějíři pole „Vějíř pro jinou osobu“.
+SVG kreslí `tools/fan_chart.py <soubor.svg> --web <hrefs> --root <číslo předka nebo zkratka z RODINA>` (volá ho
+`npm run data`, několik vějířů najednou). Vějíř ukazuje nejvýš 10 generací nad osobou.
 
 ## Vějíř na webu – plynulý posun a přibližování
 Stránka `/vejir/` je jedno SVG; u velkého vějíře (stovky jmen) by se při posunu a přibližování sekalo. Proto má

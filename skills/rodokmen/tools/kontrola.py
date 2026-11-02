@@ -80,7 +80,8 @@ def main():
             if r not in keys:
                 err.append(f"boční příbuzný '{s.get('n')}' cituje neexistující zápis '{r}'")
     R = ns.get("RODINA", {})
-    odkazy = {v for o in R.values() for v in [o.get("otec"), o.get("matka"), *o.get("partner", [])] if isinstance(v, str)}
+    PARTNERI = ns.get("PARTNERI", [])
+    odkazy = {v for o in R.values() for v in [o.get("otec"), o.get("matka"), *o.get("partner", [])] if isinstance(v, str)} |         {v for pr in PARTNERI for v in (pr.get("a"), pr.get("b")) if isinstance(v, str)}
     for oid, o in R.items():
         kde = f"RODINA '{oid}' ({o.get('n')})"
         if o.get("sex") not in ("M", "F"):
@@ -91,13 +92,18 @@ def main():
             v = o.get(pole)
             if isinstance(v, str) and v not in R:
                 err.append(f"{kde}: {pole} '{v}' není v RODINA")
-            elif isinstance(v, int) and v < 2:
-                err.append(f"{kde}: {pole} {v} – číslo předka musí být aspoň 2")
+            elif isinstance(v, int) and not isinstance(v, bool) and (v < 1 or v not in P and v not in SAME):
+                err.append(f"{kde}: {pole} {v} – takový předek v P není (1 = výchozí osoba, u jejích dětí)")
         for v in o.get("partner", []):
             if isinstance(v, str) and v not in R or isinstance(v, int) and v not in P and v not in SAME:
                 err.append(f"{kde}: partner {v!r} neexistuje")
         if not (o.get("otec") or o.get("matka") or o.get("partner")) and oid not in odkazy:
-            err.append(f"{kde}: není s nikým spojen (chybí otec, matka i partner)")
+            warn.append(f"{kde}: není s nikým spojen (chybí otec, matka i partner) – na webu bude jen samostatná stránka; "
+                        "nejistého příbuzného raději jako poznámku do SIDE")
+    for pr in PARTNERI:
+        for v in (pr.get("a"), pr.get("b")):
+            if isinstance(v, str) and v not in R or isinstance(v, int) and v not in P and v not in SAME or v is None:
+                err.append(f"PARTNERI {pr.get('a')!r} × {pr.get('b')!r}: osoba {v!r} neexistuje (číslo z P nebo klíč z RODINA)")
         for r in o.get("r", []):
             if r not in keys:
                 err.append(f"{kde} cituje neexistující zápis '{r}'")

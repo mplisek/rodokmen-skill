@@ -1,0 +1,107 @@
+---
+// Vějíř předků jedné osoby (SVG z tools/fan_chart.py) s hledáním, přiblížením a výběrem osoby, pro kterou se zobrazí.
+// Používá ho /vejir/ (výchozí osoba) i /vejir/<adresa osoby>/ (každá osoba se známým rodičem).
+import { people, config } from '../lib/data.js';
+const { svg, title = 'Vějíř předků', current } = Astro.props;
+const names = [...new Set(Object.values(people).filter((p) => p.k > 1).map((p) => p.name))].sort((a, b) => a.localeCompare(b, 'cs'));
+const choices = Object.values(people).filter((p) => p.fan)
+  .map((p) => ({ url: p.fan, label: `${p.name}${p.years ? ' ' + p.years : ''}`, current: p.slug === current }))
+  .sort((a, b) => a.label.localeCompare(b.label, 'cs'));
+---
+<div class="fan-bar">
+  <strong>{title}</strong>
+  {choices.length > 1 && (
+    <form class="fan-pick" autocomplete="off">
+      <input list="fan-people" placeholder="Vějíř pro jinou osobu…" aria-label="Zobrazit vějíř pro jinou osobu" />
+      <datalist id="fan-people">{choices.map((c) => <option value={c.label} data-url={c.url} />)}</datalist>
+      <button type="submit">Zobrazit</button>
+    </form>
+  )}
+  <form class="fan-search" autocomplete="off">
+    <input list="fan-names" placeholder="Najít předka…" aria-label="Najít předka" />
+    <datalist id="fan-names">{names.map((n) => <option value={n} />)}</datalist>
+    <button type="submit">Najít</button>
+  </form>
+  <span class="fan-btns">
+    <button type="button" data-z="1.5" aria-label="Přiblížit">+</button>
+    <button type="button" data-z="0.667" aria-label="Oddálit">−</button>
+    <button type="button" data-z="0">Celý</button>
+  </span>
+  <span class="small muted fan-hint">Kolečkem myši přibližujte, tažením posouvejte, klepnutím na jméno otevřete stránku.</span>
+</div>
+<div class="fan-stage" data-akcelerace={String(config.vejir?.akcelerace ?? 'auto')} set:html={svg} />
+
+<script>
+  import { FanView } from '../lib/fanview';
+  import { accelerationEnabled, wheelFactor } from '../lib/fanmath';
+  const stage = document.querySelector<HTMLElement>('.fan-stage')!;
+  const svg = stage.querySelector('svg')!;
+  const fan = new FanView(stage, svg, accelerationEnabled(location.search, stage.dataset.akcelerace, svg.querySelectorAll('text').length));
+
+  stage.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    fan.zoomAt(wheelFactor(e.deltaY, e.deltaMode), e.clientX, e.clientY);
+  }, { passive: false });
+
+  // tažení = posun (myš i jeden prst), dva prsty = přiblížení
+  const pts = new Map<number, { x: number; y: number }>();
+  let moved = 0, pinch = 0;
+  stage.addEventListener('pointerdown', (e) => {
+    // jinak prohlížeč začne přetahovat odkaz (jméno předka) a posun se přeruší; klepnutí na jméno funguje dál
+    if (e.pointerType === 'mouse') e.preventDefault();
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    moved = 0;
+  });
+  stage.addEventListener('pointermove', (e) => {
+    const prev = pts.get(e.pointerId);
+    if (!prev) return;
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size === 2) {
+      const [a, b] = [...pts.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch) fan.zoomAt(d / pinch, (a.x + b.x) / 2, (a.y + b.y) / 2);
+      pinch = d; moved += 10;
+      return;
+    }
+    const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+    moved += Math.abs(dx) + Math.abs(dy);
+    if (moved > 4) {
+      try { stage.setPointerCapture(e.pointerId); } catch { /* ukazatel mezitím zmizel – posunout i tak */ }
+      fan.panBy(dx, dy);
+    }
+  });
+  const up = (e: PointerEvent) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; };
+  stage.addEventListener('pointerup', up);
+  stage.addEventListener('pointercancel', up);
+  stage.addEventListener('dragstart', (e) => e.preventDefault());
+  stage.addEventListener('click', (e) => { if (moved > 4) { e.preventDefault(); e.stopPropagation(); } }, true);
+
+  document.querySelectorAll<HTMLButtonElement>('.fan-btns button').forEach((b) =>
+    b.addEventListener('click', () => { const f = Number(b.dataset.z); if (f) fan.zoomAt(f); else fan.reset(); })
+  );
+
+  // search: zoom to the ancestor's segment and highlight it
+  const norm = (t: string) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  document.querySelector('.fan-search')!.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = norm((e.currentTarget as HTMLFormElement).querySelector('input')!.value.trim());
+    if (!q) return;
+    svg.querySelectorAll('.fan-links a.hit').forEach((a) => a.classList.remove('hit'));
+    const hits = [...svg.querySelectorAll<SVGAElement>('.fan-links a')].filter((a) => norm(a.querySelector('title')?.textContent ?? '').includes(q));
+    if (!hits.length) return;
+    hits.forEach((a) => a.classList.add('hit'));
+    const bb = (hits[0].lastElementChild as SVGGraphicsElement).getBBox();
+    const w = Math.max(bb.width, bb.height) * 7;
+    fan.show({ x: bb.x + bb.width / 2 - w / 2, y: bb.y + bb.height / 2 - w / 2, w, h: w });
+  });
+
+  // výběr osoby: přejde na její vějíř (jméno s roky z nabídky, nebo aspoň jednoznačná část jména)
+  document.querySelector('.fan-pick')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = norm((e.currentTarget as HTMLFormElement).querySelector('input')!.value.trim());
+    if (!q) return;
+    const opts = [...document.querySelectorAll<HTMLOptionElement>('#fan-people option')];
+    const hit = opts.find((o) => norm(o.value) === q) ?? (opts.filter((o) => norm(o.value).includes(q)).length === 1 ? opts.find((o) => norm(o.value).includes(q)) : undefined);
+    if (hit?.dataset.url) location.href = hit.dataset.url;
+  });
+</script>

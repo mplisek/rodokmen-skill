@@ -38,12 +38,17 @@ P = {
 - `vyz` (volitelné) – krátký popis, proč je předek významný (farář, starosta, legionář…); jde na stránku „Osobnosti“ nahoru.
   Bez něj stránka vybírá osobnosti sama podle slov ve faktech (`tools/osobnosti.py`).
 - `LINES = {8: ("Novákové", "Kováři z Holic…"), …}` – jen čísla 8–15; název rodu = příjmení v množném čísle. Vyplň hned, jak znáš pradědečka nebo prababičku – bez LINES web neukáže rody a nepřijde rada k příběhu.
-- `RODINA` – osoby mimo přímou linii (sourozenci předků, jejich partneři a děti, předci partnerů):
+- `RODINA` – osoby mimo přímou linii (sourozenci předků, jejich partneři a děti, děti výchozí osoby, předci partnerů):
   `"zkratka": dict(n="Marie Nováková", y="1892–1970", sex="F", otec=16, matka=17, partner=[...], st="doc", f=[...], r=[...], note="…")`.
-  `otec`/`matka` = číslo přímého předka nebo zkratka jiné osoby z RODINA; sourozenec předka 8 má `otec=16, matka=17`
+  `otec`/`matka` = číslo přímého předka (děti výchozí osoby: `otec=1`) nebo zkratka jiné osoby z RODINA; sourozenec předka 8 má `otec=16, matka=17`
   i když 16/17 ještě neznáme. `partner` jen pro partnery bez společného dítěte. Stromový graf (`/strom/`) z nich skládá
-  rozklikávací větve – od sourozence předka třeba až do 20. století; na stránce osoby se ukážou jako příbuzní.
-  Žijící jen jménem a rokem narození. U předka v `P` lze zapsat `sour="hotovo"` / `"částečně"` (stav hledání sourozenců).
+  rozklikávací větve – od sourozence předka třeba až do 20. století. Každá osoba z RODINA má **vlastní stránku**
+  (adresa: jméno a první rok z `y`) a u všech osob – předků i příbuzných – web stejně počítá **Děti**, **Sourozence**
+  (i nevlastní) a **Manželství** z toho, kdo je čí otec a matka. Volitelné `v="manželka Václava Culka"` = vztah na
+  stránce osoby (jinak ho web odvodí: „sestra osoby Jan Novák“). Žijící jen jménem a rokem narození (web to vynutí sám).
+- `PARTNERI` (volitelné) – sňatky s podrobnostmi, i mezi předky (druhé manželství):
+  `dict(a=44, b="rosalie-culkova", rok=1850, misto="Libice", konec="ovdověl 1860")`; `a`/`b` = číslo z `P` nebo zkratka
+  z RODINA. Na stránce osoby v kartě Manželství („sňatek 1850, Libice, ovdověl 1860“); u žijících bez roku a místa. U předka v `P` lze zapsat `sour="hotovo"` / `"částečně"` (stav hledání sourozenců).
 - `SIDE` – jen poznámky, které do RODINA nejdou (nejistý vztah, celá větev jednou větou):
   `dict(k=<číslo předka>, n="…", v="příbuzný (?)", y="…", t="text", r=[klíče])` – ve stromu jako „pozn.“ u předka.
   Nedoloženou samostatnou rodinu nepřipojuj do hlavního stromu; jako `SIDE` ji veď jen jako výslovně označenou stopu
