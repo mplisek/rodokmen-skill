@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import { config, stats } from '../lib/data.js';
+import { config, stats, docs } from '../lib/data.js';
 import domyData from '../data/domy.json';
 const siteName = config.nazev || 'Rodokmen';
 const { title, description = config.popis || siteName, wide = false, wider = false, full = false } = Astro.props;
@@ -8,7 +8,7 @@ const path = Astro.url.pathname;
 const storyMenu = config.pribeh?.menu || (config.maVicePribehu ? 'Příběhy' : 'Příběh rodu');
 const groups = [
   [['/', 'Úvod'], ...(config.maPribeh ? [['/pribehy/', storyMenu]] : []), ['/zajimavosti/', 'Zajímavosti'], ['/statistiky/', 'Statistiky'], ['/osobnosti/', 'Osobnosti']],
-  [['/rody/', 'Rody'], ['/mapa/', 'Mapa'], ...(domyData.domy.length ? [['/domy/', 'Domy']] : []), ['/vejir/', 'Vějíř'], ['/strom/', 'Strom'], ['/predci/', 'Předci'], ['/zapisy/', 'Zápisy'], ['/hledame/', 'Co hledáme']],
+  [['/rody/', 'Rody'], ['/mapa/', 'Mapa'], ...(domyData.domy.length ? [['/domy/', 'Domy']] : []), ['/vejir/', 'Vějíř'], ['/strom/', 'Strom'], ['/predci/', 'Předci'], ['/zapisy/', 'Zápisy'], ...(docs.length ? [['/dokumenty/', 'Dokumenty']] : []), ['/hledame/', 'Co hledáme']],
   [['/hledat/', 'Hledat']],
 ];
 const current = (url) => ((url === '/' ? path === '/' : path.startsWith(url)) ? 'page' : undefined);

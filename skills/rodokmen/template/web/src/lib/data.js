@@ -12,7 +12,7 @@ export const root = people[site.root];
 export const records = Object.fromEntries(site.records.map((r) => [r.key, r]));
 export const recordList = site.records;
 export const byK = Object.fromEntries([
-  ...Object.values(people).map((p) => [p.k, p]),
+  ...Object.values(people).filter((p) => !p.extra).map((p) => [p.k, p]),   // extra = osoba z RODINA (k=0)
   ...Object.entries(site.aliases ?? {}).map(([k, slug]) => [Number(k), people[slug]]),
 ]);
 export const lineByK = Object.fromEntries(Object.values(lines).map((l) => [l.k, l]));

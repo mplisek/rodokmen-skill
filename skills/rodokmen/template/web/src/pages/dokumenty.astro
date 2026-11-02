@@ -1,0 +1,27 @@
+---
+// Všechny rodinné dokumenty a fotografie z data/dokumenty.json na jedné stránce (u osob jsou i na jejich stránkách).
+import Base from '../layouts/Base.astro';
+import { docs, people, config, href } from '../lib/data.js';
+const kontakt = config.kontakt ?? {};
+---
+<Base title="Dokumenty">
+  <h1>Rodinné dokumenty a fotografie</h1>
+  <p class="lead">Staré dokumenty a fotografie, které nám dala rodina. Kliknutím se obrázek otevře ve velkém.
+    Máte doma další? {kontakt.email
+      ? <>Pošlete fotku {kontakt.jmeno || 'autorovi rodokmenu'} na <a href={`mailto:${kontakt.email}`}>{kontakt.email}</a>.</>
+      : 'Pošlete fotku autorovi rodokmenu.'}</p>
+  {docs.length === 0 && <p>Zatím tu nic není.</p>}
+  <div class="docs">
+    {docs.map((d) => (
+      <figure>
+        <a href={`/img/${d.img}.jpg`} target="_blank" rel="noopener"><img src={`/img/${d.img}.jpg`} alt={d.caption} loading="lazy" /></a>
+        <figcaption>
+          {d.caption}
+          {d.people?.some((s) => people[s]) && (
+            <span class="small"><br />Osoby: {d.people.filter((s) => people[s]).map((s, i) => <>{i > 0 && ', '}<a href={href.person(s)}>{people[s].name}</a></>)}</span>
+          )}
+        </figcaption>
+      </figure>
+    ))}
+  </div>
+</Base>

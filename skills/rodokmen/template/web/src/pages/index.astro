@@ -14,7 +14,7 @@ const defaultStoryButton = config.maVicePribehu ? 'Prohlédnout příběhy' : 'P
 <Base title="" wide>
   <h1>{config.nazev || 'Rodokmen'}</h1>
 
-  {(uvod.nadpis || uvod.odstavce?.length) && (
+  {Boolean(uvod.nadpis || uvod.odstavce?.length) && (
     <section class="teaser">
       <div>
         {uvod.nadpis && <h2>{uvod.nadpis}</h2>}
