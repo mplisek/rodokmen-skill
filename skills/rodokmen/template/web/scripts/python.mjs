@@ -17,6 +17,14 @@ function najdi() {
   process.exit(1);
 }
 
+/** npx s argumenty. Na Windows je npx dávka (npx.cmd) a jde spustit jen přes shell – argumenty proto složí do jednoho
+ *  příkazu sama (s uvozovkami), jinak Node varuje (DEP0190). opts jako u spawnSync. */
+export function npx(args, opts = {}) {
+  if (process.platform !== "win32") return spawnSync("npx", args, opts);
+  const q = (a) => (/^[\w@.:/\=+-]+$/.test(a) ? a : `"${String(a).replace(/"/g, '""')}"`);
+  return spawnSync(["npx", ...args].map(q).join(" "), { ...opts, shell: true });
+}
+
 /** Spustí ../tools/<nastroj> s argumenty; vrátí výsledek spawnSync. vystup=true → stdout jako text (jinak do konzole). */
 export function python(nastroj, args = [], { vystup = false } = {}) {
   const [cmd, ...pre] = najdi();
