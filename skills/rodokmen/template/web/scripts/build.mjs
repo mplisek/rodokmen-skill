@@ -8,7 +8,7 @@ import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { python } from "./python.mjs";
+import { npx as spustNpx, python } from "./python.mjs";
 
 const web = fileURLToPath(new URL("../", import.meta.url));
 const args = process.argv.slice(2);
@@ -16,7 +16,7 @@ const nahled = args.includes("--nahled");
 const pristupArg = args.includes("--pristup") ? args[args.indexOf("--pristup") + 1] : null;
 
 function npx(...a) {   // astro, pagefind z node_modules projektu
-  const r = spawnSync("npx", ["--no-install", ...a], { cwd: web, stdio: "inherit", shell: process.platform === "win32" });
+  const r = spustNpx(["--no-install", ...a], { cwd: web, stdio: "inherit" });
   if (r.status !== 0) process.exit(r.status ?? 1);
 }
 function exportuj(...a) {

@@ -6,11 +6,11 @@
 //   npm run poznamky -- --vyrizeno <id>      označí poznámku jako vyřízenou (na webu „vyřízeno“, zůstane v přehledu)
 //   npm run poznamky -- --smazat <id>        smaže poznámku (nevhodná, omyl) – z webu i z úložiště
 //   … --slozka <cesta>                       složka propojená s webem na Netlify, když to není web/
-import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { npx } from "./python.mjs";
 
 const web = fileURLToPath(new URL("../", import.meta.url));
 const soubor = join(web, "..", "data", "poznamky.json");
@@ -20,9 +20,7 @@ const slozka = resolve(volba("--slozka") || web);
 const STORE = "poznamky";
 
 function netlify(...a) {
-  const r = spawnSync("npx", ["-y", "netlify-cli@latest", ...a], {
-    cwd: slozka, encoding: "utf8", shell: process.platform === "win32", maxBuffer: 64 * 1024 * 1024,
-  });
+  const r = npx(["-y", "netlify-cli@latest", ...a], { cwd: slozka, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   if (r.status !== 0) {
     console.error((r.stderr || r.stdout || "").trim());
     console.error(`\nNetlify CLI skončil chybou. Je složka ${slozka} propojená s webem (npx netlify-cli link) a jsi přihlášený (npx netlify-cli login)?`);
