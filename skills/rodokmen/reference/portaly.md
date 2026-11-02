@@ -180,6 +180,9 @@ nebo se změnil (CHYBA) – pak je třeba opravit nástroj i tento návod. Pro p
   a číslo snímku použiješ v `snimek`. Knihy bývají po farnostech a letech, indexy jsou v poli rejstříku u N/O/Z.
 - `snimek` potřebuje ImageMagick (`magick`) a `curl`; hledání, `info`, `link` a `svazek` ne. Pomocníkům to napiš do zadání.
 - Ber ohled na server: stahuj jen snímky, které čteš (podmínky užití na portálu).
+- **Pozor na blokování:** MZA blokuje IP adresu už po desítkách rychlých dotazů nebo stovkách snímků za večer.
+  `mza.py` jde přes brzdu `tools/slusne.py` sám (i dlaždice přes `curl`); stahuj jen konkrétní snímky, žádné předběžné
+  stahování celých knih. Ruční stahování z prohlížeče přes `python3 -I tools/slusne.py curl …`.
 - Když stažení snímku nejde (403), čti přímo v prohlížeči: prohlížeč na celou obrazovku (tlačítko vpravo), lupa + dvakrát, pak
   kolečko myši nad místem zápisu (zvětšuje kolem kurzoru); velké tažení viewer resetuje, malé posuny fungují. Pole „Snímek“
   skáče přímo. **Rejstříky** (oddaní ~1890–1949) bývají na konci knihy a uvádějí stránku – stránka ≠ snímek, dohledej

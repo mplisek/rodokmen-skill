@@ -22,6 +22,7 @@ Ber ohled na server: stahuj jen snímky, které čteš. Podmínky užití: https
 """
 import concurrent.futures as cf
 import html, http.cookiejar, json, math, os, re, shutil, subprocess, sys, tempfile, time, unicodedata, urllib.parse, urllib.request
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -59,8 +60,12 @@ def curl_get(url):
         sys.exit("Chybí příkaz curl (obrázky MZA vyžadují HTTP/2). Windows 10+ a macOS ho mají; jinak ho nainstaluj.")
     err = ""
     for attempt in range(4):
+        obr = slusne.je_obrazek(url)
+        slusne.pockej(url, obr)   # curl jde mimo Python, brzdu je třeba zavolat ručně
         r = subprocess.run([c, "-sS", "-m", "90", "-A", "Mozilla/5.0 (rodokmen)", "-w", "%{http_code}", url], capture_output=True)
         kod = r.stdout[-3:].decode("ascii", "replace")   # stavový kód připsaný curl za tělo odpovědi
+        if kod.isdigit():
+            slusne.kontroluj_odpoved(urllib.parse.urlsplit(url).hostname, int(kod), obr)   # 429/503 → stop pro všechny
         if r.returncode == 0 and kod == "200":
             return r.stdout[:-3]
         err = r.stderr.decode("utf-8", "replace").strip() or f"HTTP {kod}"

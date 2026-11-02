@@ -9,9 +9,18 @@ znalost rodiny a rozhodujete.
 
 Vznikl při skutečném hledání předků jedné rodiny.
 
-**Aktuální verze: 0.8.0 (říjen 2026).** Skill se průběžně vyvíjí – opravuji chyby a doplňuji postupy pro další archivy
+**Autor původního skillu:** Jindřich Šaršon ([sarsonj/rodokmen-skill](https://github.com/sarsonj/rodokmen-skill)).
+
+> **Tohle je fork** – [mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skill). Vychází z originálu, přebírá
+> jeho novinky (naposledy verzi 0.6.0 s brzdou proti zablokování archivem) a navíc obsahuje příspěvky, které v originále
+> zatím nejsou: další archivy a nástroje (MZA Brno, SOA Litoměřice, židovské matriky, oběti a vězni 2. sv. války,
+> Encyklopedie Brna…), sdílenou cache snímků, stromový graf, stránky Statistiky, Domy a Osobnosti, víc příběhů rodu,
+> vlastní stránky příbuzných mimo přímou linii, vějíř předků pro libovolnou osobu a vynucené soukromí žijících na webu.
+> Kdo přechází z originálu, najde postup v části [Instalace](#přechod-z-originálu).
+
+**Aktuální verze: 0.8.0 (listopad 2026).** Skill se průběžně vyvíjí – opravujeme chyby a doplňujeme postupy pro další archivy
 podle toho, na co narazíte vy. Jak aktualizovat, najdete v části [Instalace](#instalace), seznam změn
-v [historii repozitáře](https://github.com/sarsonj/rodokmen-skill/commits/main).
+v [historii repozitáře](https://github.com/mplisek/rodokmen-skill/commits/main).
 
 > **Než začnete**
 >
@@ -32,11 +41,11 @@ v [historii repozitáře](https://github.com/sarsonj/rodokmen-skill/commits/main
 > podklad.
 >
 > **Jste genealog nebo zkušený badatel?** Budu rád za kritiku. Když uvidíte chybu v postupu, ve čtení nebo v tom,
-> co skill radí, [založte issue](https://github.com/sarsonj/rodokmen-skill/issues) nebo mi napište. Vaše zkušenost
+> co skill radí, [založte issue](https://github.com/mplisek/rodokmen-skill/issues) nebo mi napište. Vaše zkušenost
 > je přesně to, co AI chybí.
 
 **Přečetla AI něco špatně, něco nefunguje nebo jste narazili na jiný problém?**
-[Založte prosím issue na GitHubu →](https://github.com/sarsonj/rodokmen-skill/issues/new)
+[Založte prosím issue na GitHubu →](https://github.com/mplisek/rodokmen-skill/issues/new)
 (víc v části [Zpětná vazba](#zpětná-vazba-a-vaše-zkušenosti)).
 
 ## Jak vypadá web
@@ -59,7 +68,7 @@ s přepisem a překladem, „Co hledáme“ a deník hledání. **[Podívejte se
 AI se vyvíjí rychle a za pár měsíců může skill dávat lepší, nebo jen jiné výsledky. Proto je tu uvedeno, s čím byl
 vyzkoušený.
 
-- **Stav k říjnu 2026 (verze 0.8.0):** Claude Code s hlavním modelem **Claude Opus 5.5**. Pomocníci, kteří hledají
+- **Stav k listopadu 2026 (verze 0.8.0):** Claude Code s hlavním modelem **Claude Opus 5.5**. Pomocníci, kteří hledají
   a čtou matriky jako první, běží na **Claude Sonnet 5.5**. Každý jejich nález pak hlavní model ověřuje na snímku.
 - Vyzkoušeno na několika skutečných rodokmenech (největší má 243 předků v 11 generacích a 192 matričních zápisů).
   Výsledek se porovnával s větví, kterou jsme léta dělali ručně.
@@ -71,12 +80,36 @@ S jiným nebo slabším modelem počítejte s víc chybami ve čtení starého p
 ### Varianta A – jako plugin (doporučeno)
 V Claude Code napište:
 ```
-/plugin marketplace add sarsonj/rodokmen-skill
+/plugin marketplace add mplisek/rodokmen-skill
 /plugin install rodokmen@rodokmen-skill
 ```
 Pak Claude Code restartujte (do běžící relace se nový plugin nenačte).
-Aktualizace později: `/plugin marketplace update rodokmen-skill`. Rozpracovaný projekt pak Claude při další práci
-sám nabídne aktualizovat na novou verzi (vaše data zůstanou, změněné soubory webu zazálohuje do `pracovni/`).
+
+#### Přechod z originálu
+Máte nainstalovaný originál (`sarsonj/rodokmen-skill`)? Oba repozitáře mají stejný název katalogu (`rodokmen-skill`)
+i pluginu, proto originál nejdřív odeberte a pak přidejte fork:
+```
+/plugin uninstall rodokmen@rodokmen-skill
+/plugin marketplace remove rodokmen-skill
+/plugin marketplace add mplisek/rodokmen-skill
+/plugin install rodokmen@rodokmen-skill
+```
+Restartujte Claude Code. Projekt zůstane, jak je (`rodokmen@rodokmen-skill` v jeho nastavení platí dál), a Claude při
+další práci nabídne aktualizaci projektu na verzi forku. Před ní si projekt uložte do gitu (`git add -A && git commit`).
+Upravovali jste si web nebo nástroje v projektu sami? Aktualizace přepíše `tools/` a změněné soubory webu (web
+zazálohuje do `pracovni/zaloha_web_…`) – nejdřív si nechte od Clauda porovnat vaše úpravy s novou verzí.
+**Aktualizace.** Claude Code u pluginů od jiných autorů než Anthropic nové verze sám nehlídá. Máte dvě možnosti:
+- **Automaticky (doporučuji):** jednou v `/plugin` na kartě **Marketplaces** vyberte `rodokmen-skill` a zapněte
+  automatické aktualizace (Enable auto-update). Nová verze se pak stáhne při spuštění Claude Code.
+- **Ručně:** v terminálu (nebo v Claude Code s `!` na začátku)
+  ```
+  claude plugin marketplace update rodokmen-skill
+  claude plugin update rodokmen@rodokmen-skill
+  ```
+  O nových verzích se dozvíte přes **Watch → Custom → Releases** na GitHubu.
+
+Po aktualizaci Claude Code restartujte. Rozpracovaný projekt pak Claude při další práci sám nabídne aktualizovat
+na novou verzi (vaše data zůstanou, změněné soubory webu zazálohuje do `pracovni/`).
 
 ### Varianta B – ručně
 Stáhněte repozitář (zelené tlačítko **Code → Download ZIP** na GitHubu, nebo `git clone`) a zkopírujte složku
@@ -149,9 +182,9 @@ skills/rodokmen/
 ## Soukromí
 Projekt obsahuje osobní údaje vaší rodiny. Zůstává na vašem počítači. Web je chráněný rodinnou otázkou
 a není indexovaný vyhledávači; bez nastavené otázky ho nástroj nenasadí. Je to lehká ochrana proti náhodným
-návštěvníkům, ne trezor: kdo zná odpověď, vidí všechno, co na web dáte. Claude má pokyn psát o žijících lidech
-jen jméno a rok narození a před zveřejněním s vámi projít, co o nich web říká – kód to ale nevynucuje,
-rozhodnutí je na vás.
+návštěvníkům, ne trezor: kdo zná odpověď, vidí všechno, co na web dáte. U žijících lidí (a narozených v posledních 100 letech
+bez známého úmrtí) dá web jen jméno a rok narození – vynucuje to export webu. Před zveřejněním s vámi Claude projde,
+co web říká o žijících i o citlivých věcech; rozhodnutí je na vás.
 Pokud projekt chcete zálohovat na GitHub, použijte **soukromý** repozitář.
 
 ## Zpětná vazba a vaše zkušenosti
@@ -160,11 +193,12 @@ Windows a staršího ImageMagicku, postupy pro MZA Brno a ZA Opava, bezpečná �
 a průběžně zapracovávám – ne každou hned a ne každou doslova, aby skill zůstal jednoduchý pro všechny.
 
 **Chyby a problémy** – AI špatně přečetla zápis, spojila nesprávné lidi, nějaký krok nefunguje nebo spadl nástroj –
-prosím [založte jako issue na GitHubu](https://github.com/sarsonj/rodokmen-skill/issues/new) (stačí bezplatný účet).
+prosím [založte jako issue na GitHubu](https://github.com/mplisek/rodokmen-skill/issues/new) (stačí bezplatný účet).
 Popište, co se stalo, a pokud jde o čtení zápisu, přidejte odkaz na snímek v archivu. Issues jsou veřejné, proto
 do nich nepište údaje o žijících lidech.
 
-Budu rád i za další zkušenosti. Napište mi na **sarsonj@gmail.com**, co fungovalo, co ne, jaký archiv jste použili, co vám na webu chybělo.
+Budeme rádi i za další zkušenosti – co fungovalo, co ne, jaký archiv jste použili, co vám na webu chybělo – v issues
+tohoto forku. K původnímu skillu můžete psát jeho autorovi (**sarsonj@gmail.com**).
 Užitečné změny rád zapracuji do skillu, aby je měli k dispozici i ostatní. Další verze tak bude lepší pro každého,
 kdo hledá své předky.
 
@@ -177,9 +211,17 @@ Skill je obyčejný text (návod pro Clauda) a pár skriptů v Pythonu. Všechno
 tady v repozitáři.
 - **Žádný automaticky spouštěný kód.** Plugin nemá hooky ani MCP servery. Skripty spouští jen Claude, když je
   při práci potřebuje, a Claude Code se vás na ně zeptá.
+  Jediná výjimka je volitelný **hlídač sítě**. Claude se na něj zeptá při zakládání projektu a bez vašeho souhlasu
+  se nezapne. Je to malý skript v projektu (`tools/hlidac_site.py`, hook v `.claude/settings.json` projektu). Před
+  každým příkazem zkontroluje, jestli nejde na web archivu mimo brzdu, a takový příkaz zamítne. Sám nic nestahuje
+  ani nikam neposílá. Vypnete ho příkazem `novy_projekt.py <projekt> --bez-hlidace`.
+- **Brzda proti zablokování archivem.** Archivy blokují IP adresu po sérii rychlých dotazů. Nástroje proto mají
+  společný limit pro každý web (`tools/slusne.py`) a po varování archivu se na 30 minut zastaví. Projekt má
+  v `.claude/settings.json` zakázané přímé `curl` a `wget`, stahuje se jen přes brzdu.
 - **Kam skripty sahají:** zapisují do složky projektu rodokmenu (stažené snímky, mezivýsledky, web).
-  Výjimkou jsou dočasné soubory systému, npm při instalaci webu a přihlášení nástroje pro nasazení (Netlify,
-  CapRover), pokud web zveřejňujete. Mimo projekt nic nemažou ani nepřepisují.
+  Výjimkou jsou dočasné soubory systému, stav brzdy (pár malých souborů v `~/.cache/rodokmen_slusne`, na Windows
+  v `%LOCALAPPDATA%`), npm při instalaci webu a přihlášení nástroje pro nasazení (Netlify, CapRover), pokud web
+  zveřejňujete. Mimo projekt nic nemažou ani nepřepisují.
 - **Na které servery chodí:** archivní portály (ARON SOA Zámrsk, SOA Třeboň, SOA Plzeň – Porta fontium, SOA Praha –
   eBadatelna, MZA Brno – Acta Publica, AHMP, Encyklopedie dějin města Brna, Národní archiv včetně VadeMeCum, Památník Terezín, Arolsen Archives, Mauthausen Memorial, holocaust.cz, SOA Litoměřice, Matricula), noviny (ANNO, Kramerius), OpenStreetMap (mapa
   a souřadnice obcí) a při instalaci webu registr npm.
@@ -189,6 +231,6 @@ tady v repozitáři.
   jeho návodem řídí.
 
 ## Licence
-Skill je pod licencí [MIT](LICENSE): smíte ho volně používat, upravovat a šířit dál, jen zachovejte uvedení autora.
+Skill je pod licencí [MIT](LICENSE): smíte ho volně používat, upravovat a šířit dál, jen zachovejte uvedení autora (Jindřich Šaršon).
 Výjimkou je metodická příručka `skills/rodokmen/reference/playbook.md`. Je to převzatá rešeršní zpráva bez uvedeného
 autora, licence MIT se na ni nevztahuje (podrobnosti na začátku souboru).
