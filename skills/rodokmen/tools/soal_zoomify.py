@@ -14,8 +14,10 @@ Použití (z kořene projektu):
 POZOR: aplikace digi.soalitomerice.cz po ~100 rychlých požadavcích (digi.archives.cz v Opavě už po ~75) zablokuje
 přístup na 30 minut. Prohlížečem jen najdi knihu a cestu k obrázkům, snímky pak stahuj tímto nástrojem (obrázkový server
 neomezuje).
+Celé snímky (bez výřezu) jsou ve sdílené cache (tools/cache.py), klíč určuje celá adresa obrázku – stejný snímek podruhé
+je z disku, bez dotazu na archiv. Adresu si proto zapiš, příště snímek stáhneš (nebo vezmeš z cache) bez prohlížeče.
 """
-import math, os, re, shutil, subprocess, sys, tempfile, time, urllib.parse, urllib.request
+import hashlib, math, os, re, shutil, subprocess, sys, tempfile, time, urllib.parse, urllib.request
 import concurrent.futures as cf
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
@@ -27,6 +29,7 @@ HOSTS = ("images.soalitomerice.cz", "images.archives.cz", "vademecum.nacr.cz")  
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
 from obraz import magick   # společný hledač ImageMagicku (tools/obraz.py)
+import cache   # sdílená cache stažených snímků (tools/cache.py)
 
 
 def get(url):
@@ -40,19 +43,7 @@ def get(url):
     raise err
 
 
-def main():
-    if len(sys.argv) not in (4, 5):
-        sys.exit(__doc__)
-    arg = sys.argv[1].strip().removesuffix("/ImageProperties.xml").strip("/")
-    base = arg if arg.startswith("http") else BASE + arg
-    if urllib.parse.urlsplit(base).scheme != "https" or urllib.parse.urlsplit(base).hostname not in HOSTS:
-        sys.exit(f"Adresa musí být https:// na serveru archivu ({', '.join(HOSTS)}), ne {base[:80]}")
-    red, out = int(sys.argv[2]), sys.argv[3]
-    box = None
-    if len(sys.argv) == 5:
-        box = [float(v) for v in sys.argv[4].split(",")]
-        if len(box) != 4 or not all(0 <= v <= 1 for v in box) or box[0] >= box[2] or box[1] >= box[3]:
-            sys.exit("Výřez: x0,y0,x1,y1 v rozsahu 0–1 (zleva doprava, shora dolů).")
+def stahni(base, red, box, out):
     MAGICK = magick()
     x = get(base + "/ImageProperties.xml").decode()
     W, H, T = (int(re.search(fr'{k}="(\d+)"', x).group(1)) for k in ("WIDTH", "HEIGHT", "TILESIZE"))
@@ -96,7 +87,33 @@ def main():
                         os.path.abspath(out)], check=True, cwd=d)
     finally:
         shutil.rmtree(d, ignore_errors=True)
-    print(out, *((max(1, px1 - px0), max(1, py1 - py0)) if box else (w, h)))
+    return (max(1, px1 - px0), max(1, py1 - py0)) if box else (w, h)
+
+
+def main():
+    if len(sys.argv) not in (4, 5):
+        sys.exit(__doc__)
+    arg = sys.argv[1].strip().removesuffix("/ImageProperties.xml").strip("/")
+    base = arg if arg.startswith("http") else BASE + arg
+    if urllib.parse.urlsplit(base).scheme != "https" or urllib.parse.urlsplit(base).hostname not in HOSTS:
+        sys.exit(f"Adresa musí být https:// na serveru archivu ({', '.join(HOSTS)}), ne {base[:80]}")
+    red, out = int(sys.argv[2]), sys.argv[3]
+    box = None
+    if len(sys.argv) == 5:
+        box = [float(v) for v in sys.argv[4].split(",")]
+        if len(box) != 4 or not all(0 <= v <= 1 for v in box) or box[0] >= box[2] or box[1] >= box[3]:
+            sys.exit("Výřez: x0,y0,x1,y1 v rozsahu 0–1 (zleva doprava, shora dolů).")
+    if box:   # výřez: stáhnou se jen zasažené dlaždice, vždy znovu (výřez je malý)
+        print(out, *stahni(base, red, box, out))
+        return
+    # celý snímek: jednou z archivu, pak ze sdílené cache (tools/cache.py); obrázek určuje celá adresa (hash),
+    # složka a jméno v klíči jsou jen pro orientaci
+    u = urllib.parse.urlsplit(base)
+    slozka, jmeno = ([""] + u.path.rstrip("/").split("/"))[-2:]
+    klic = f"zoomify/{u.hostname}/{slozka}/{os.path.splitext(jmeno)[0]}-{hashlib.sha1(base.encode()).hexdigest()[:8]}-u{red}.jpg"
+    rozmer = []
+    cache.soubor(klic, out, lambda cil: rozmer.extend(stahni(base, red, None, cil)))
+    print(out, *rozmer)
 
 
 if __name__ == "__main__":

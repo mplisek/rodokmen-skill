@@ -13,10 +13,12 @@ Použití (z kořene projektu `python3 -I tools/portafontium.py …`, na Windows
                                                 x0,y0,x1,y1 = jen výřez (zlomky 0..1)
   portafontium.py link <kniha> <snímek>      -> trvalý odkaz na snímek (pole „odkaz“ v zaznamy.json)
   portafontium.py svazek <kniha>             -> zapíše svazek do data/svazky.json (klíč pf_<kniha>)
-Snímek = pořadové číslo náhledu v prohlížeči portálu (1, 2, 3…). Stránky knih se ukládají do pracovni/.cache_pf/.
+Snímek = pořadové číslo náhledu v prohlížeči portálu (1, 2, 3…). Stránky knih se ukládají do pracovni/.cache_pf/, celé snímky do sdílené cache (tools/cache.py).
 Ber ohled na server: stahuj jen snímky, které čteš.
 """
 import html, http.client, json, os, re, ssl, sys, time, unicodedata, urllib.error, urllib.parse, urllib.request
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
+import cache   # sdílená cache stažených snímků (tools/cache.py)
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -158,13 +160,20 @@ def snimek(kniha, n, out, nahled=False, crop=None):
             sys.exit("výřez x0,y0,x1,y1 musí být zlomky 0–1 a x0 < x1, y0 < y1")
         region = "pct:" + ",".join(f"{v * 100:.3f}" for v in (x0, y0, x1 - x0, y1 - y0))
     size = "pct:25" if nahled else "full"
-    data = get(f"/fcgi-bin/iipsrv.fcgi?IIIF={urllib.parse.quote(path)}/{region}/{size}/0/default.jpg", binary=True)
-    if not data.startswith(b"\xff\xd8"):
-        sys.exit("Porta fontium nevrátil obrázek JPEG (zkus to později)")
-    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
-    with open(out, "wb") as f:
-        f.write(data)
-    print(out, f"{len(data) // 1024} kB", "odkaz:", BASE + link)
+
+    def stahni(cil):
+        data = get(f"/fcgi-bin/iipsrv.fcgi?IIIF={urllib.parse.quote(path)}/{region}/{size}/0/default.jpg", binary=True)
+        if not data.startswith(b"\xff\xd8"):
+            sys.exit("Porta fontium nevrátil obrázek JPEG (zkus to později)")
+        os.makedirs(os.path.dirname(os.path.abspath(cil)), exist_ok=True)
+        with open(cil, "wb") as f:
+            f.write(data)
+
+    if crop:   # výřez je malý, stahuje se vždy znovu
+        stahni(out)
+    else:   # celý snímek (i náhled): jednou z archivu, pak z cache
+        cache.soubor(f"portafontium/{kniha}/sn{int(n):04d}{'-nahled' if nahled else ''}.jpg", out, stahni)
+    print(out, f"{os.path.getsize(out) // 1024} kB", "odkaz:", BASE + link)
 
 
 def fara(slug):

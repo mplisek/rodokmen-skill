@@ -11,7 +11,7 @@ Použití:
   aron_img.py odkazy [--opravit]     -> najde v data/ odkazy z dřívějšího `link`, které otevřou knihu na prvním
                                         snímku (id souboru PUBLISHED); s --opravit je přepíše na správný snímek (TILE)
 
-Popis svazků se ukládá do pracovni/.cache_aron/<apu_id>.json (ve složce projektu).
+Popis svazků se ukládá do pracovni/.cache_aron/<apu_id>.json (ve složce projektu), celé snímky do sdílené cache (tools/cache.py).
 """
 import glob, json, math, os, re, shutil, subprocess, sys, tempfile, time, urllib.request
 import concurrent.futures as cf
@@ -27,6 +27,7 @@ CACHE = os.path.join(ROOT, "pracovni", ".cache_aron")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
 from obraz import magick   # společný hledač ImageMagicku (tools/obraz.py)
+import cache   # sdílená cache stažených snímků (tools/cache.py)
 
 
 def get(url, binary=False, tries=4):
@@ -195,5 +196,9 @@ if __name__ == "__main__":
     lo = int(sys.argv[3]) if len(sys.argv) > 3 else 1
     out = sys.argv[4] if len(sys.argv) > 4 else f"{apu[:8]}_{n:04d}.jpg"
     crop = tuple(float(v) for v in sys.argv[5].split(",")) if len(sys.argv) > 5 else None
-    path, dims = fetch_image(tiles[n], lo, out, crop)
-    print(path, "full size", dims)
+    if crop:   # výřez je malý, stahuje se vždy znovu
+        path, dims = fetch_image(tiles[n], lo, out, crop)
+        print(path, "full size", dims)
+    else:   # celý snímek: jednou z archivu, pak z cache
+        cache.soubor(f"aron/{apu}/sn{n:04d}-u{lo}.jpg", out, lambda cil: fetch_image(tiles[n], lo, cil))
+        print(out)

@@ -287,6 +287,7 @@ Nedělej to pořád. Postup:
 | `ramecek.py <klíč> x0,y0,x1,y1` | rámeček čteného místa + kontrolní obrázek |
 | `mista.py pridej "Obec"` / `mista.py` | místa pro mapu (souřadnice z OpenStreetMap) |
 | `zapis.py <soubor> <klíč> <vstup.json> [--sloucit]` | přidá / změní položku v `zaznamy`, `svazky`, `prepisy`… beze změny formátu |
+| `cache.py` | sdílená cache celých snímků (`~/.cache/rodokmen_snimky`, jinde `RODOKMEN_SNIMKY`); stahovací nástroje ji používají samy – stejný snímek podruhé jde z disku, ne z archivu (výřezy se stahují vždy znovu) |
 | `kontrola.py` | kontrola dat; hlásí i citlivé údaje na webu a kdy psát příběh |
 | `export_web.py` | data → web (volá ho `npm run data`) |
 | `fan_chart.py vystupy/` | vějíř předků jako plakát k tisku |
