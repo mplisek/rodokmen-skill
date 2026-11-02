@@ -49,6 +49,12 @@ nebo se změnil (CHYBA) – pak je třeba opravit nástroj i tento návod. Pro p
 - Ber ohled na server: stahuj jen to, co čteš; žádné hromadné stahování celých svazků.
 
 ## SOA Třeboň (digi.ceskearchivy.cz) – `tools/trebon.py`, bez prohlížeče
+- **Stav 2. 11. 2026: portál odmítá (HTTP 403) požadavky s identifikací nástrojů skillu** (`User-Agent: Mozilla/5.0 (rodokmen)`),
+  zatímco běžný prohlížeč i `curl` projdou. Dopoledne to ještě šlo. Je to cílené odmítnutí, ne blokace IP adresy – brzda
+  `slusne.py` Třeboň po prvním 403 na 30 minut zastaví. **Nezkoušej jiný User-Agent ani to jinak obcházet** (archiv dal
+  najevo, že nástroj nechce). Dokud se to nevyjasní: hledej a čti snímky v prohlížeči (https://digi.ceskearchivy.cz/),
+  id knihy a trvalý odkaz `https://digi.ceskearchivy.cz/<id knihy>/<snímek>` fungují dál, svazek zapiš ručně (`zapis.py`).
+  Zjistíš-li, že nástroj zase funguje (`trebon.py misto Tabor`), tuto odrážku smaž.
 - `trebon.py misto "Obec"` → id místa. Diakritiku a mezery nástroj odstraní sám (portál zná jen „RatiborskeHory“).
   Portál vrátí vždy jen jedno místo – **zkontroluj vypsaný název a okres**: u stejnojmenných obcí jinou (Buk → Bukovka),
   u měst i okres nebo synagogu (Jindřichův Hradec → okres 1949–1960). Správné id pak najdi na portálu a pracuj s ním.
