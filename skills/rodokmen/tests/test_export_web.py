@@ -136,6 +136,30 @@ class ExportUkazky(unittest.TestCase):
         self.assertIsNone(self.lide["josef-hruby-1855"]["fan"])         # bez známých rodičů vějíř není
 
 
+class Poznamky(unittest.TestCase):
+    """Web bez přístupů: „poznamky“ ve web.json zapne tlačítko a vyrobí funkci; vypnutí ji smaže."""
+
+    def test_zapnout_a_vypnout(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            projekt = Path(tmp) / "p"
+            self.assertEqual(novy_projekt(projekt, "--ukazka").returncode, 0)
+            cfg_path = projekt / "data" / "web.json"
+            fce = projekt / "web" / "netlify" / "functions" / "poznamky.mjs"
+            site = projekt / "web" / "src" / "data" / "site.json"
+            spust(projekt, "export_web.py")
+            self.assertFalse(fce.exists())
+            self.assertFalse(json.loads(site.read_text(encoding="utf-8"))["config"]["poznamky"])
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+            cfg_path.write_text(json.dumps(dict(cfg, poznamky=True), ensure_ascii=False), encoding="utf-8")
+            spust(projekt, "export_web.py")
+            self.assertTrue(json.loads(site.read_text(encoding="utf-8"))["config"]["poznamky"])
+            self.assertIn('"id": "vse"', fce.read_text(encoding="utf-8"))
+            self.assertNotIn(cfg["prihlaseni"]["odpoved"], fce.read_text(encoding="utf-8"))
+            cfg_path.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+            spust(projekt, "export_web.py")
+            self.assertFalse(fce.exists())
+
+
 class Kontrola(unittest.TestCase):
     def test_rodina_a_partneri(self):
         with tempfile.TemporaryDirectory() as tmp:

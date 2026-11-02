@@ -13,3 +13,4 @@ public/zdroje/
 public/prihlaseni.html
 nginx.conf
 netlify/edge-functions/
+netlify/functions/

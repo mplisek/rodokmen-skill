@@ -217,6 +217,20 @@ def write(path, text):
         f.write(text)
 
 
+def poznamky_files(otisky):
+    """Funkce Netlify /api/poznamky (netlify/functions/poznamky.mjs) s otisky přístupů, které smí poznámky číst a psát.
+    Když je nemá žádný, funkce se smaže (na webu pak není ani tlačítko)."""
+    out = os.path.join(WEB, "netlify", "functions", "poznamky.mjs")
+    if not any(v["poznamky"] for v in otisky.values()):
+        if os.path.exists(out):
+            os.remove(out)
+        return
+    tpl = os.path.join(WEB, "netlify", "poznamky.sablona.mjs")
+    if not os.path.exists(tpl):
+        sys.exit("CHYBA: web/ nemá šablonu poznámek. Aktualizujte projekt: python3 -I <skill>/tools/novy_projekt.py <složka projektu>")
+    write(out, open(tpl, encoding="utf-8").read().replace("{{PRISTUPY}}", json.dumps(otisky, indent=2)))
+
+
 def login_files(cfg, pristupy=None):
     """Přihlašovací brána: otázka na webu, na serveru (nginx i Netlify) jen otisk odpovědi (SHA-256).
     Stejný otisk spočítá přihlašovací stránka a uloží ho do cookie – samotná odpověď se nikam neukládá.
@@ -243,15 +257,19 @@ def login_files(cfg, pristupy=None):
         if not all(os.path.exists(x) for x in sablony):
             sys.exit("CHYBA: web/ nemá šablony brány pro přístupy. Aktualizujte projekt: python3 -I <skill>/tools/novy_projekt.py <složka projektu>")
         otisky = {hashlib.sha256(("rodokmen:" + norm_answer(p["odpoved"])).encode()).hexdigest(): p["id"] for p in pristupy}
+        poznamky_files({h: dict(id=p["id"], poznamky=p["poznamky"]) for h, p in
+                        zip(otisky, pristupy)})
         write(edge, open(sablony[0], encoding="utf-8").read().replace("{{PRISTUPY}}", json.dumps(otisky, indent=2)))
         mapa = "\n".join(f'  "{h}" "{i}";' for h, i in otisky.items())
         write(os.path.join(WEB, "nginx.conf"), open(sablony[1], encoding="utf-8").read().replace("{{PRISTUPY}}", mapa))
         return True
     if answer:
         digest = hashlib.sha256(("rodokmen:" + answer).encode()).hexdigest()
+        poznamky_files({digest: dict(id="vse", poznamky=bool(cfg.get("poznamky")))})
         nginx_map = f'  "{digest}" 1;'
         write(edge, open(os.path.join(WEB, "netlify", "brana.sablona.js"), encoding="utf-8").read().replace("{{HASH}}", digest))
     else:   # bez přihlášení – web je otevřený
+        poznamky_files({})   # poznámky jen pro přihlášené
         nginx_map = "  default 1;"
         if os.path.exists(edge):
             os.remove(edge)
@@ -631,6 +649,9 @@ def main():
         stories, multi_stories = [], False
     has_story = bool(stories)
     public_cfg = {k: v for k, v in cfg.items() if k not in ("prihlaseni", "pristupy")}   # odpovědi nikdy na web
+    # poznámky ke stránkám (tlačítko „Připomínka“, /poznamky/): podle přístupu, jinak web.json „poznamky“
+    vse = next((p for p in pristupy or [] if p["id"] == "vse"), None)
+    public_cfg["poznamky"] = bool(pristup["poznamky"] if pristup else vse["poznamky"] if vse else cfg.get("poznamky"))
     public_cfg["maPribeh"] = has_story
     public_cfg["maVicePribehu"] = multi_stories
     public_cfg["pribehy"] = [story["slug"] for story in stories] if multi_stories else []

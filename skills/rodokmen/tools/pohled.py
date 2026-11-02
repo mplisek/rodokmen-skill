@@ -12,7 +12,8 @@ web se pro něj sestaví zvlášť, takže ostatní větve na serveru vůbec nej
     ]
 koren: čísla předků z P nebo zkratky z RODINA; první určuje číslování (vějíř, rody, předci), další se přidají jako
 příbuzní s vlastní stránkou a vějířem. texty: true = i příběh, zajímavosti, deník a „Co hledáme“ (jinak skryté –
-píšou o celé rodině). Volitelně „nazev_webu“ a „uvod“ (jako ve web.json) jen pro tento přístup a „rody“ – názvy rodů
+píšou o celé rodině). poznamky: true = tlačítko „Připomínka“ na stránkách a přehled /poznamky/ (jen Netlify;
+přístup vidí jen poznámky ze svého přístupu, „vse“ všechny). Volitelně „nazev_webu“ a „uvod“ (jako ve web.json) jen pro tento přístup a „rody“ – názvy rodů
 nového stromu {"8": ["Dvořákové", "popis"], …}; bez nich se vezmou z LINES, nebo z příjmení pradědečka / prababičky.
 Předci partnerů (rodiče manžela sestry…) v pohledu nejsou – jen partner sám.
 """
@@ -46,7 +47,8 @@ def nacti_pristupy(cfg):
         raise SystemExit("CHYBA: web.json – otevřený web (prihlaseni.otevreny) a přístupy (pristupy) nejdou dohromady.")
     out = []
     if norm_odpoved(login.get("odpoved", "")):
-        out.append(dict(id="vse", nazev="všechno", odpoved=login["odpoved"], koren=[], texty=True))
+        poz = cfg["poznamky"] if "poznamky" in cfg else any(p.get("poznamky") for p in seznam)   # správce vidí přehled
+        out.append(dict(id="vse", nazev="všechno", odpoved=login["odpoved"], koren=[], texty=True, poznamky=bool(poz)))
     for i, p in enumerate(seznam, 1):
         pid = _slug(p.get("nazev", "")) or f"pristup-{i}"
         if pid in ("vse", "_p") or any(x["id"] == pid for x in out):
@@ -56,7 +58,7 @@ def nacti_pristupy(cfg):
         koren = p.get("koren") or []
         if not isinstance(koren, list) or not all(isinstance(k, (int, str)) and not isinstance(k, bool) for k in koren):
             raise SystemExit(f"CHYBA: web.json → pristupy „{p.get('nazev', pid)}“: koren musí být seznam čísel předků nebo zkratek z RODINA.")
-        out.append(dict(p, id=pid, koren=koren, texty=bool(p.get("texty")) or not koren))
+        out.append(dict(p, id=pid, koren=koren, texty=bool(p.get("texty")) or not koren, poznamky=bool(p.get("poznamky"))))
     odpovedi = [norm_odpoved(p["odpoved"]) for p in out]
     if len(set(odpovedi)) != len(odpovedi):
         raise SystemExit("CHYBA: web.json – dva přístupy mají stejnou odpověď; každý přístup potřebuje jinou.")
