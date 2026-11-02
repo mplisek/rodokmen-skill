@@ -14,7 +14,7 @@ Použití (z kořene projektu):
 Trvalý odkaz na snímek: https://digi.ceskearchivy.cz/<id_knihy>/<snímek>
 Ber ohled na server: stahuj jen snímky, které čteš.
 """
-import html, json, os, re, subprocess, sys, tempfile, unicodedata, urllib.parse, urllib.request, http.cookiejar
+import html, json, os, re, shutil, subprocess, sys, tempfile, unicodedata, urllib.parse, urllib.request, http.cookiejar
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
