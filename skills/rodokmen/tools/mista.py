@@ -15,6 +15,7 @@ Položka může mít "hypoteza": true a "rod": <Kekulé 8–15> – pak se na ma
 """
 import json, os, re, sys, time, urllib.parse, urllib.request
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
+from soubory import zapis_json   # bezpečný zápis dat celého souboru naráz (tools/soubory.py)  # noqa: E402
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -51,7 +52,7 @@ def main():
                 e["lat"], e["lon"], e["osm"] = g
             else:
                 print("NENALEZENO:", name, "– upravte 'dotaz' nebo doplňte lat/lon ručně")
-    json.dump(cache, open(OUT, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
+    zapis_json(OUT, cache)
     for n, e in cache.items():
         print(f"{n:28} {e.get('lat', '?'):>8} {e.get('lon', '?'):>8}  hledá „{e.get('re')}“  {e.get('osm', '')[:60]}")
 

@@ -26,6 +26,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
 from obraz import magick   # společný hledač ImageMagicku (tools/obraz.py)
+from soubory import zapis_json   # bezpečný zápis dat celého souboru naráz (tools/soubory.py)
 import cache   # sdílená cache stažených snímků (tools/cache.py)
 _cj = http.cookiejar.CookieJar()
 _op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_cj))
@@ -163,7 +164,7 @@ def svazek(bid):
     d = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else {}
     d[f"trebon_{bid}"] = {"archiv": "SOA Třeboň – Sbírka matrik", "portal": "digi.ceskearchivy.cz",
                           "svazek": nazev, "popis": "", "url": f"{BASE}/{bid}"}
-    json.dump(d, open(path, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
+    zapis_json(path, d)
     print(f"trebon_{bid} -> {nazev}")
 
 

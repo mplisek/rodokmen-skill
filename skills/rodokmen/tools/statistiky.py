@@ -9,6 +9,8 @@ Počítá se jen z faktů předků (pole `facts`), boční příbuzní se nepoč
 import json, os, re, sys
 from collections import Counter, defaultdict
 from datetime import date
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
+from soubory import zapis_json   # bezpečný zápis dat celého souboru naráz (tools/soubory.py)  # noqa: E402
 
 for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
@@ -233,7 +235,7 @@ def main():
         "zapisy_portal": [{"name": k, "count": v} for k, v in arch.most_common()],
         "zapisy_obdobi": [{"name": f"{d}–{d + 49}", "count": decades[d]} for d in sorted(decades)],
     }
-    json.dump(out, open(OUT, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
+    zapis_json(OUT, out)
     print(f"statistiky: {len(anc)} předků, {len(life)} s věkem dožití, {sum(len(v) for v in wed_age.values())} s věkem při sňatku, "
           f"{len(occ_list)} povolání")
 

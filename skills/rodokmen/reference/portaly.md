@@ -115,17 +115,21 @@ nebo se změnil (CHYBA) – pak je třeba opravit nástroj i tento návod. Pro p
 - Nový portál digi.ahmp.cz má ochranu proti robotům – nepoužívat. Pražské matriky 1890–1940 většinou **nemají rejstříky**
   a farností je mnoho – bez přesného data a farnosti (z úmrtí/sňatku nebo od rodiny) je hledání velmi drahé.
 
-## SOA Litoměřice (severní Čechy) – `tools/litomerice.py`, bez prohlížeče
+## SOA Litoměřice (severní Čechy) – `tools/litomerice.py`, když portál nežádá ověření
 - Digitální badatelna `https://digi.soalitomerice.cz/digitalnibadatelna/` – Sbírka matrik Severočeského kraje (NAD 856, farní i další matriky,
-  často německé). Dřívější návod (CAPTCHA/„počítání“) při ověření v říjnu 2026 nevyšel: hledání i obrázky jdou bez prohlížeče.
+  často německé). Ochranu proti robotům portál zapíná a vypíná: v říjnu 2026 šlo hledání i obrázky bez prohlížeče, 2. 11. 2026
+  vracel stránku „Ověření přístupu“ (výpočet v JavaScriptu, `/human/challenge`). Nástroj to pozná a skončí hláškou
+  „žádá ověření v prohlížeči“ – **ověření neobcházej**, pokračuj postupem přes prohlížeč (poslední odrážka).
 - `litomerice.py hledat "Obec" [slovo…] [--stran N]` → `id | pořadí | druh • obce • roky • NAD • signatura`. Dotaz hledá jen mezi **matrikami**
   (99 knih na stránku); u velké obce přidej rok nebo farnost. `litomerice.py info <id>` → původce, roky, signatura, územní rozsah, počet snímků.
 - `litomerice.py snimek <id> <snímek> pracovni/x.jpg [nahled] [x0,y0,x1,y1]`, `link`, `svazek` (klíč `soal_<id>`). Portál zobrazuje záznam
   podle pořadí ve výsledcích hledání, proto si nástroj u každého id pamatuje dotaz (`pracovni/litomerice_dotazy.json`) nebo zadej `--dotaz "Obec"`.
 - **POZOR: po zhruba 100 rychlých požadavcích na stránky portálu archiv zablokuje přístup na 30 minut.** Každé `snimek`/`info`/`link`
   jsou ~4 požadavky (nástroj dělá pauzy). Nestahuj desítky snímků za sebou; obrázkový server images.soalitomerice.cz limit nemá. Pomocníkům to napiš do zadání.
-- Starší návod přes prohlížeč (jen když nástroj selže): v síťovém provozu najdi `…/zoomify/cz/archives/CZ-214000010/matriky/<cesta>/ImageProperties.xml`
-  a snímek stáhni `soal_zoomify.py <cesta> 0 pracovni/x.jpg`.
+- **Přes prohlížeč** (když portál žádá ověření): ověření proběhne v prohlížeči samo (pár sekund „počítání“), knihu najdi tam.
+  V síťovém provozu najdi `…/zoomify/cz/archives/CZ-214000010/matriky/<cesta>/ImageProperties.xml` a snímek stáhni
+  `soal_zoomify.py <cesta> 0 pracovni/x.jpg` – obrázkový server ověření nemá. Další snímky téže knihy mají stejnou cestu
+  (liší se číslo obrázku). Svazek do `svazky.json` zapiš ručně přes `zapis.py`.
 
 ## ZA Opava (severní Morava, Slezsko, Olomoucko, Litovelsko) – `tools/soal_zoomify.py`
 - Ověřeno v říjnu 2026: `digi.archives.cz` vrací jen kontrolní stránku Radware („Radware Page“, cookies `__uzm*`) – bez JavaScriptu se

@@ -3,7 +3,7 @@
 # Použití: ahmp_scan.py XID SCAN OUT.jpg [down] [x0,y0,x1,y1]   (down=0 plné rozlišení, 1 = poloviční…; oblast ve zlomcích)
 # Celé snímky (bez oblasti) jsou ve sdílené cache (tools/cache.py).
 # XID svazku vypíše ahmp_search.sh. Trvalý odkaz: https://katalog.ahmp.cz/pragapublica/permalink?xid=<XID>&scan=<N>
-import sys,re,math,subprocess,urllib.request,os,tempfile
+import sys,re,math,shutil,subprocess,urllib.request,os,tempfile
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
@@ -33,19 +33,22 @@ def stahni(out):
     off=sum(a*b for a,b in ntiles[:z])
     cols,rows=ntiles[z]
     d=tempfile.mkdtemp()
-    files=[]
-    tw,th=tiers[z]
-    xs=range(int(reg[0]*tw)//T, min(cols,math.ceil(reg[2]*tw/T))); ys=range(int(reg[1]*th)//T, min(rows,math.ceil(reg[3]*th/T)))
-    for y in ys:
-        for x in xs:
-            idx=off+y*cols+x; g=idx//256
-            f=f'{d}/{y:03d}_{x:03d}.jpg'
-            open(f,'wb').write(get(f'{path}/TileGroup{g}/{z}-{x}-{y}.jpg')); files.append(f)
-    rowsf=[]
-    nc=len(xs)
-    for i,y in enumerate(ys):
-        rf=f'{d}/row{y:03d}.png'; subprocess.run([MAGICK,*files[i*nc:(i+1)*nc],'+append',rf],check=True); rowsf.append(rf)
-    subprocess.run([MAGICK,*rowsf,'-append','-quality','90',out],check=True)
+    try:   # dlaždice v dočasné složce smazat i při chybě (jinak by v TEMP zůstaly desítky MB na snímek)
+        files=[]
+        tw,th=tiers[z]
+        xs=range(int(reg[0]*tw)//T, min(cols,math.ceil(reg[2]*tw/T))); ys=range(int(reg[1]*th)//T, min(rows,math.ceil(reg[3]*th/T)))
+        for y in ys:
+            for x in xs:
+                idx=off+y*cols+x; g=idx//256
+                f=f'{d}/{y:03d}_{x:03d}.jpg'
+                open(f,'wb').write(get(f'{path}/TileGroup{g}/{z}-{x}-{y}.jpg')); files.append(f)
+        rowsf=[]
+        nc=len(xs)
+        for i,y in enumerate(ys):
+            rf=f'{d}/row{y:03d}.png'; subprocess.run([MAGICK,*files[i*nc:(i+1)*nc],'+append',rf],check=True); rowsf.append(rf)
+        subprocess.run([MAGICK,*rowsf,'-append','-quality','90',out],check=True)
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
     print(tiers[z],'src',path)
 if len(sys.argv)>5: stahni(out)   # výřez je malý, stahuje se vždy znovu
 else: cache.soubor(f'ahmp/{xid}/sn{scan:04d}-u{down}.jpg',out,stahni)   # celý snímek: jednou z archivu, pak z cache
