@@ -140,7 +140,7 @@ svou část rodokmenu. Ve `web.json`:
 
 ## Poznámky ke stránkám (revize, připomínky, nápady) – jen Netlify
 `"poznamky": true` ve `web.json` (web bez přístupů) nebo u přístupu v `pristupy` zapne na každé stránce tlačítko
-**Připomínka** (vpravo dole): formulář *Kdo* (nepovinné, do 100 znaků) a *Poznámka* (1–5000 znaků, jen obyčejný text)
+**Připomínka** (vlevo dole – vpravo dole má Netlify na bezplatném tarifu svůj odznak): formulář *Kdo* (nepovinné, do 100 znaků) a *Poznámka* (1–5000 znaků, jen obyčejný text)
 a pod ním poznámky k té stránce (datum, kdo, text – bez úprav). Přehled všech je na `/poznamky/` (v menu).
 - Ukládá je funkce `/api/poznamky` do **Netlify Blobs** (úložiště zdarma u webu, nic se nenastavuje). Funkci
   (`netlify/functions/poznamky.mjs`) vyrábí `npm run data` z `netlify/poznamky.sablona.mjs` – jen s otisky odpovědí.

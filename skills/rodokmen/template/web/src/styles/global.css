@@ -243,7 +243,8 @@ main.full { max-width: none; padding: 0; }
 .updated { color: var(--muted); font-size: 0.9rem; margin: 0.4rem 0 1.2rem; }
 
 /* Poznámky ke stránkám (components/Poznamky.astro, pages/poznamky.astro) */
-.pozn-btn { position: fixed; right: 16px; bottom: 16px; z-index: 50; font: inherit; font-weight: 600; padding: 0.5rem 0.9rem;
+/* vlevo dole: vpravo dole má Netlify na bezplatném tarifu vlastní odznak (/.netlify/scripts/hud), který by tlačítko zakryl */
+.pozn-btn { position: fixed; left: 16px; bottom: 16px; z-index: 1000; font: inherit; font-weight: 600; padding: 0.5rem 0.9rem;
   border: 0; border-radius: 999px; background: var(--ink); color: var(--bg); box-shadow: 0 2px 8px rgba(0,0,0,0.25); cursor: pointer; }
 .pozn-btn:hover { background: var(--accent); }
 .pozn-pocet { display: inline-block; min-width: 1.4em; margin-left: 0.3rem; padding: 0 0.35em; border-radius: 999px; background: var(--accent-soft); color: var(--ink); font-size: 0.85em; text-align: center; }
