@@ -30,6 +30,9 @@ CACHE = os.path.join(ROOT, "pracovni", "litomerice_dotazy.json")
 _op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 _op.addheaders = [("User-Agent", "Mozilla/5.0 (rodokmen)")]
 _posledni = [0.0]
+OVERENI = ("SOA Litoměřice teď žádá ověření v prohlížeči (stránka „Ověření přístupu“, výpočet v JavaScriptu) – nástroj ho "
+           "neobchází. Knihu najdi v prohlížeči (https://digi.soalitomerice.cz/digitalnibadatelna/) a snímky stáhni "
+           "tools/soal_zoomify.py podle adresy obrázku (obrázkový server ověření nemá) – viz reference/portaly.md, SOA Litoměřice.")
 
 
 def get(url, data=None):
@@ -41,7 +44,10 @@ def get(url, data=None):
         try:
             req = urllib.request.Request(url, data=urllib.parse.urlencode(data, doseq=True).encode() if data else None)
             with _op.open(req, timeout=60) as r:
-                return r.read().decode("utf-8", "replace")
+                page = r.read().decode("utf-8", "replace")
+                if "/human/challenge" in r.geturl() or 'id="powForm"' in page:   # ochrana proti robotům – neobcházet
+                    sys.exit(OVERENI)
+                return page
         except OSError as e:
             err = e
             if getattr(e, "code", 0) in (403, 404):

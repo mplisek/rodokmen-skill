@@ -14,7 +14,7 @@ const KATEGORIE = [
   ['Mistři, sedláci a podnikatelé', /\b(továrník|majitel továrny|podnikatel|statkář|velkostatk|sedlák|mlynář|sládek|pivovar|hostinsk|obchodník|kupec|stavitel|mistr|firma)/i],
 ];
 
-const all = Object.values(people);
+const all = Object.values(people).filter((p) => !p.extra);   // jen předci (příbuzní z RODINA mají k=0)
 const rucne = all.filter((p) => p.vyz);
 const skupiny = KATEGORIE.map(([nazev, rx]) => ({
   nazev,

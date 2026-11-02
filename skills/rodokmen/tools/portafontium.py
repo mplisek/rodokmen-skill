@@ -18,6 +18,7 @@ Ber ohled na server: stahuj jen snímky, které čteš.
 """
 import html, http.client, json, os, re, ssl, sys, time, unicodedata, urllib.error, urllib.parse, urllib.request
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
+from soubory import zapis_json   # bezpečný zápis dat celého souboru naráz (tools/soubory.py)
 import cache  # noqa: E402 – sdílená mezipaměť obrázků (tools/cache.py): výřez a náhled z uloženého snímku
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
@@ -206,8 +207,7 @@ def svazek(kniha):
     d[f"pf_{kniha}"] = {"archiv": "SOA Plzeň – Sbírka matrik západních Čech", "portal": "Porta fontium",
                         "svazek": f"{sig}, {fields.get('Typ', '')}".strip(", "), "popis": popis[:300],
                         "snimku": len(scans), "url": f"{BASE}/register/{ARCHIV}/{kniha}"}
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(d, f, ensure_ascii=False, indent=1)
+    zapis_json(path, d)
     print(f"pf_{kniha} ->", d[f"pf_{kniha}"]["svazek"])
 
 

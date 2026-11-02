@@ -19,6 +19,7 @@ PATH = os.path.join(ROOT, "data", "zvyrazneni.json")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
 from obraz import magick   # společný hledač ImageMagicku (tools/obraz.py)
+from soubory import zapis_json   # bezpečný zápis dat celého souboru naráz (tools/soubory.py)
 
 
 def preview(key, boxes):
@@ -54,7 +55,7 @@ def main():
         if len(b) != 4 or not (0 <= b[0] < b[2] <= 1 and 0 <= b[1] < b[3] <= 1):
             sys.exit(f"Špatný rámeček {b}: musí být x0,y0,x1,y1 v rozsahu 0..1 a x0<x1, y0<y1")
     data[key] = dict(boxes=boxes, status="ok", note=note)
-    json.dump(data, open(PATH, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
+    zapis_json(PATH, data)
     print("zapsáno; zkontrolujte:", preview(key, boxes))
 
 

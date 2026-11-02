@@ -28,6 +28,7 @@ CACHE = os.path.join(ROOT, "pracovni", ".cache_aron")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
 from obraz import magick   # společný hledač ImageMagicku (tools/obraz.py)
+from soubory import zapis_json   # bezpečný zápis dat celého souboru naráz (tools/soubory.py)
 
 
 def get(url, binary=False, tries=4):
@@ -214,8 +215,7 @@ if __name__ == "__main__":
         sv[apu[:8]] = dict(archiv=fond if rest else "", portal="ARON", svazek=rest or vol["name"],
                            popis=(vol.get("description") or "")[:300], snimku=len(tiles),
                            url=f"https://aron.vychodoceskearchivy.cz/apu/{vol['id']}")
-        with open(path, "w", encoding="utf-8", newline="\n") as f:
-            json.dump(sv, f, ensure_ascii=False, indent=1)
+        zapis_json(path, sv)
         print(apu[:8], "->", sv[apu[:8]]["svazek"])
         sys.exit(0)
     if sys.argv[2] == "link":

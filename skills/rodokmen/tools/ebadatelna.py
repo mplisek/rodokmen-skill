@@ -283,6 +283,7 @@ def radek_matriky(mid, c):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
 from obraz import najdi_magick   # společný hledač ImageMagicku (tools/obraz.py)
+from soubory import zapis_json   # bezpečný zápis dat celého souboru naráz (tools/soubory.py)
 
 
 def magick():
@@ -363,8 +364,7 @@ def zapis_svazek(klic, zaznam):
         with open(path, encoding="utf-8") as f:
             d = json.load(f)
     d[klic] = zaznam
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
-        json.dump(d, f, ensure_ascii=False, indent=1)
+    zapis_json(path, d)
     print(f"{klic} -> {zaznam['svazek']}")
 
 

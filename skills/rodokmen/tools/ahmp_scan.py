@@ -29,17 +29,20 @@ z=len(tiers)-1-down
 off=sum(a*b for a,b in ntiles[:z])
 cols,rows=ntiles[z]
 d=tempfile.mkdtemp()
-files=[]
-tw,th=tiers[z]
-xs=range(int(reg[0]*tw)//T, min(cols,math.ceil(reg[2]*tw/T))); ys=range(int(reg[1]*th)//T, min(rows,math.ceil(reg[3]*th/T)))
-for y in ys:
-    for x in xs:
-        idx=off+y*cols+x; g=idx//256
-        f=f'{d}/{y:03d}_{x:03d}.jpg'
-        open(f,'wb').write(get(f'{path}/TileGroup{g}/{z}-{x}-{y}.jpg')); files.append(f)
-rowsf=[]
-nc=len(xs)
-for i,y in enumerate(ys):
-    rf=f'{d}/row{y:03d}.png'; subprocess.run([MAGICK,*files[i*nc:(i+1)*nc],'+append',rf],check=True); rowsf.append(rf)
-subprocess.run([MAGICK,*rowsf,'-append','-quality','90',out],check=True)
+try:   # dlaždice v dočasné složce smazat i při chybě (jinak by v TEMP zůstaly desítky MB na snímek)
+    files=[]
+    tw,th=tiers[z]
+    xs=range(int(reg[0]*tw)//T, min(cols,math.ceil(reg[2]*tw/T))); ys=range(int(reg[1]*th)//T, min(rows,math.ceil(reg[3]*th/T)))
+    for y in ys:
+        for x in xs:
+            idx=off+y*cols+x; g=idx//256
+            f=f'{d}/{y:03d}_{x:03d}.jpg'
+            open(f,'wb').write(get(f'{path}/TileGroup{g}/{z}-{x}-{y}.jpg')); files.append(f)
+    rowsf=[]
+    nc=len(xs)
+    for i,y in enumerate(ys):
+        rf=f'{d}/row{y:03d}.png'; subprocess.run([MAGICK,*files[i*nc:(i+1)*nc],'+append',rf],check=True); rowsf.append(rf)
+    subprocess.run([MAGICK,*rowsf,'-append','-quality','90',out],check=True)
+finally:
+    shutil.rmtree(d, ignore_errors=True)
 print(out,tiers[z],'src',path,'permalink',f'https://katalog.ahmp.cz/pragapublica/permalink?xid={xid}&scan={scan}')

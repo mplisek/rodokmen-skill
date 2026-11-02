@@ -10,6 +10,8 @@ vždy přednost (u obcí, kde se kmen při skloňování mění: Praha → v Pra
 osoba jinde zmiňuje nejčastěji. Přiřadí zmínky ke geokódovaným domům (odkazy oběma směry) a adresy, které
 na mapě chybí, uloží do data/domy/chybi.txt (podklad pro další geokódování)."""
 import json, os, re, shutil, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
+from soubory import zapis_json   # bezpečný zápis dat celého souboru naráz (tools/soubory.py)  # noqa: E402
 
 for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
@@ -52,7 +54,7 @@ def main():
     gj = os.path.join(SRC, "domy.geojson")
     shutil.rmtree(os.path.join(PUB, "vyrezy"), ignore_errors=True)   # bez starých výřezů smazaných domů
     if not os.path.exists(gj):
-        json.dump({"domy": [], "osoby": {}, "zapisy": {}, "rody": []}, open(OUT, "w", encoding="utf-8", newline="\n"))
+        zapis_json(OUT, {"domy": [], "osoby": {}, "zapisy": {}, "rody": []}, indent=None)
         return
     feats = json.load(open(gj, encoding="utf-8"))["features"]
     site = json.load(open(SITE, encoding="utf-8"))
@@ -190,8 +192,7 @@ def main():
         d["rod"] = max(cnt, key=cnt.get) if cnt else None
     rody = [{"slug": l["slug"], "name": l["name"], "color": l["color"]} for l in sorted(site["lines"].values(), key=lambda l: l["k"])]
     domy.sort(key=lambda d: (d.get("obec", ""), d.get("cp") or 0))
-    json.dump({"domy": domy, "osoby": osoby_domy, "zapisy": zapisy_domy, "rody": rody},
-              open(OUT, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
+    zapis_json(OUT, {"domy": domy, "osoby": osoby_domy, "zapisy": zapisy_domy, "rody": rody})
     lines = []
     for (o, cp), c in sorted(chybi.items(), key=lambda x: (min(x[1]["roky"]) if x[1]["roky"] else 9999, x[0][0], x[0][1])):
         rok = f"{min(c['roky'])}" if c["roky"] else "?"
