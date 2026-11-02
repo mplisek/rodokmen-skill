@@ -239,6 +239,9 @@ Podrobně `reference/web.md`. Ve zkratce:
 4. Před zveřejněním si vezmi `reference/soukromi.md` a projdi s uživatelem, co na webu bude (žijící lidé!).
    Na web jde i „Co hledáme“ (`ISSUES`), poznámky osob, deník a všechny soubory `data/pribehy/*.md`. Hlášky `CITLIVÉ` z `kontrola.py` vyřeš s uživatelem;
    co na webu nechat smí, zapiš úryvkem textu do `web.json` → `citlive_schvaleno` (pak se už nehlásí).
+5. Čte-li web víc rodin (manželé, sourozenci s rodinami), nabídni **přístupy**: každá rodina vlastní odpověď a jen svá
+   větev od své výchozí osoby (`web.json` → `pristupy`, `reference/web.md` „Více přístupů“). Náhled každého přístupu
+   (`npm run nahled -- --pristup <id>`) projdi s uživatelem.
 
 ## Fáze 5 – Zveřejnění (volitelné, jen se souhlasem)
 Výchozí cesta je **Netlify** (zdarma): `npm run nasadit`. Přihlášení k Netlify a první propojení webu jsou interaktivní –

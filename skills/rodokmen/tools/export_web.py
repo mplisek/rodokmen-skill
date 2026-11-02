@@ -8,7 +8,7 @@ web/nginx.conf a web/netlify/edge-functions/brana.js.
 
 Spouští se z web/ příkazem `npm run data` (nebo přímo `python3 -I tools/export_web.py`, na Windows `python -I -X utf8 …`).
 """
-import datetime, glob, hashlib, html, json, os, re, shutil, subprocess, sys, unicodedata
+import datetime, glob, hashlib, html, json, os, re, shutil, subprocess, sys, tempfile, unicodedata
 import concurrent.futures as cf
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
@@ -182,6 +182,7 @@ def placeholder(p):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
 from obraz import najdi_magick   # společný hledač ImageMagicku (tools/obraz.py)
+from pohled import nacti_pristupy, pohled   # noqa: E402 – přístupy k webu a pohled od jiné výchozí osoby (tools/pohled.py)
 
 
 def magick_bin():
@@ -216,9 +217,10 @@ def write(path, text):
         f.write(text)
 
 
-def login_files(cfg):
+def login_files(cfg, pristupy=None):
     """Přihlašovací brána: otázka na webu, na serveru (nginx i Netlify) jen otisk odpovědi (SHA-256).
-    Stejný otisk spočítá přihlašovací stránka a uloží ho do cookie – samotná odpověď se nikam neukládá."""
+    Stejný otisk spočítá přihlašovací stránka a uloží ho do cookie – samotná odpověď se nikam neukládá.
+    S přístupy (web.json → pristupy) brána podle otisku pošle jen verzi webu pro ten přístup (dist/_p/<id>/)."""
     login = cfg.get("prihlaseni") or {}
     answer = norm_answer(login.get("odpoved", ""))
     tpl = open(os.path.join(WEB, "prihlaseni.sablona.html"), encoding="utf-8").read()
@@ -236,6 +238,15 @@ def login_files(cfg):
     write(os.path.join(WEB, "public", "prihlaseni.html"), page)
 
     edge = os.path.join(WEB, "netlify", "edge-functions", "brana.js")
+    if pristupy:
+        sablony = [os.path.join(WEB, "netlify", "brana.pristupy.sablona.js"), os.path.join(WEB, "nginx.pristupy.sablona.conf")]
+        if not all(os.path.exists(x) for x in sablony):
+            sys.exit("CHYBA: web/ nemá šablony brány pro přístupy. Aktualizujte projekt: python3 -I <skill>/tools/novy_projekt.py <složka projektu>")
+        otisky = {hashlib.sha256(("rodokmen:" + norm_answer(p["odpoved"])).encode()).hexdigest(): p["id"] for p in pristupy}
+        write(edge, open(sablony[0], encoding="utf-8").read().replace("{{PRISTUPY}}", json.dumps(otisky, indent=2)))
+        mapa = "\n".join(f'  "{h}" "{i}";' for h, i in otisky.items())
+        write(os.path.join(WEB, "nginx.conf"), open(sablony[1], encoding="utf-8").read().replace("{{PRISTUPY}}", mapa))
+        return True
     if answer:
         digest = hashlib.sha256(("rodokmen:" + answer).encode()).hexdigest()
         nginx_map = f'  "{digest}" 1;'
@@ -254,20 +265,48 @@ def login_files(cfg):
 
 def main():
     ns = load_people()
-    P, LINES, SIDE, ISSUES = ns["P"], ns["LINES"], ns["SIDE"], ns["ISSUES"]
-    if 1 not in P:
+    if 1 not in ns["P"]:
         sys.exit("V data/osoby.py chybí výchozí osoba (číslo 1).")
+    cfg = cfg_puvodni = jload("web.json", {})
+    # Přístupy (web.json → pristupy, tools/pohled.py): --seznam-pristupu vypíše jejich id pro scripts/build.mjs,
+    # --pristup <id> exportuje web jen pro ten přístup – od jeho výchozí osoby, jen jeho větve.
+    pristupy = nacti_pristupy(cfg)
+    if "--seznam-pristupu" in sys.argv:
+        print(json.dumps([p["id"] for p in pristupy or []]))
+        return
+    pristup, prevod = None, None
+    if "--pristup" in sys.argv:
+        pid = (sys.argv[sys.argv.index("--pristup") + 1:] or [""])[0]
+        pristup = next((p for p in pristupy or [] if p["id"] == pid), None)
+        if not pristup:
+            sys.exit(f"CHYBA: přístup „{pid}“ není ve web.json → pristupy (jsou: {', '.join(p['id'] for p in pristupy or []) or 'žádné'}).")
+    texty = not pristup or pristup["texty"]   # příběh, zajímavosti, deník, „Co hledáme“ (píšou o celé rodině)
+    puvodni_same = ns["SAME"]
+    if pristup and pristup["koren"]:
+        ns, prevod = pohled(ns, pristup["koren"], texty, pristup.get("rody"))
+        cfg = dict(cfg, nazev=pristup.get("nazev_webu", cfg.get("nazev")))
+        if "uvod" in pristup:
+            cfg["uvod"] = pristup["uvod"]
+        elif not texty:
+            cfg.pop("uvod", None)
+        if not texty:
+            cfg.pop("zajimavosti_na_uvodu", None)
+    P, LINES, SIDE, ISSUES = ns["P"], ns["LINES"], ns["SIDE"], ns["ISSUES"]
     SAME = ns["SAME"]                       # alias Kekulé → kanonické Kekulé (předek v rodokmenu vícekrát)
-    cfg = jload("web.json", {})
     # web.json "puvodni_jmena": true → jméno osoby v původních tvarech ze zápisů (pole zap v osoby.py, „Nowakin / Nováková“);
     # jinak dnešní podoba n. Adresa stránky (slug) je vždy podle n.
     puvodni = lambda p: " / ".join(p["zap"]) if cfg.get("puvodni_jmena") and p.get("zap") else p["n"]
     login = cfg.get("prihlaseni") or {}
-    if "--nasazeni" in sys.argv and not norm_answer(login.get("odpoved", "")) and not login.get("otevreny"):
+    if "--nasazeni" in sys.argv and not pristupy and not norm_answer(login.get("odpoved", "")) and not login.get("otevreny"):
         sys.exit("CHYBA: v data/web.json není odpověď na přihlašovací otázku – web by byl otevřený komukoli.\n"
                  "Nastavte prihlaseni.odpoved, nebo (jen když to opravdu chcete) prihlaseni.otevreny: true.")
     docs_cfg = jload("dokumenty.json", [])
     recs = {r["key"]: r for r in record_rows()}
+    if prevod is not None:   # jen zápisy a dokumenty viditelných osob
+        recs = {k: v for k, v in recs.items() if k in ns["_zapisy"]}
+        docs_cfg = [dict(d, osoby=[prevod[o] for o in (puvodni_same.get(x, x) if isinstance(x, int) else x
+                                                       for x in d.get("osoby", [])) if o in prevod]) for d in docs_cfg]
+        docs_cfg = [d for d in docs_cfg if d["osoby"]]
 
     slugs, used = {}, set()
     for k in sorted(P):
@@ -588,8 +627,10 @@ def main():
         stories = [dict(slug="", title=legacy_fields.get("title", "Příběh"),
                         lead=legacy_fields.get("lead", ""), rod=cfg.get("pribeh", {}).get("rod"),
                         text=legacy_text)]
+    if not texty:
+        stories, multi_stories = [], False
     has_story = bool(stories)
-    public_cfg = {k: v for k, v in cfg.items() if k != "prihlaseni"}
+    public_cfg = {k: v for k, v in cfg.items() if k not in ("prihlaseni", "pristupy")}   # odpovědi nikdy na web
     public_cfg["maPribeh"] = has_story
     public_cfg["maVicePribehu"] = multi_stories
     public_cfg["pribehy"] = [story["slug"] for story in stories] if multi_stories else []
@@ -614,13 +655,23 @@ def main():
         if any(pkey(o.get(x)) in people for x in ("otec", "matka")):
             ukoly.append((os.path.join(gen_dir, f"fan_{rslug[oid]}.svg"), oid))
             people[rslug[oid]]["fan"] = f"/vejir/{rslug[oid]}/"
+    env = None
+    if prevod is not None:   # fan_chart.py čte osoby ze souboru – pro přístup jen jeho pohled
+        fd, osoby_pohled = tempfile.mkstemp(prefix="rodokmen_pohled_", suffix=".py")
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write("\n".join(f"{x} = {ns[x]!r}" for x in ("P", "RODINA", "LINES", "SAME")) + "\n")
+        env = dict(os.environ, RODOKMEN_OSOBY=osoby_pohled)
 
     def vejir(ukol):
         out, koren = ukol
         subprocess.run([sys.executable, "-I", "-X", "utf8", os.path.join(TOOLS, "fan_chart.py"), out, "--web", hrefs]
-                       + (["--root", str(koren)] if koren is not None else []), check=True, capture_output=True)
-    with cf.ThreadPoolExecutor(min(8, os.cpu_count() or 2)) as ex:   # každý vějíř je samostatný proces
-        list(ex.map(vejir, ukoly))
+                       + (["--root", str(koren)] if koren is not None else []), check=True, capture_output=True, env=env)
+    try:
+        with cf.ThreadPoolExecutor(min(8, os.cpu_count() or 2)) as ex:   # každý vějíř je samostatný proces
+            list(ex.map(vejir, ukoly))
+    finally:
+        if env:
+            os.remove(env["RODOKMEN_OSOBY"])
     shutil.copyfile(os.path.join(gen_dir, "fan.svg"), os.path.join(gen_dir, f"fan_{slugs[1]}.svg"))   # i /vejir/<výchozí osoba>/
 
     site = dict(config=public_cfg, places=places, root=slugs[1], aliases={a: slugs[a] for a in SAME}, people=people,
@@ -632,7 +683,7 @@ def main():
     write(os.path.join(WEB, "src", "data", "site.json"), json.dumps(site, ensure_ascii=False, indent=1))
     for src, dst in (("archivni_dotazy.md", "dotazy.md"), ("research_log.md", "denik.md"), ("zajimavosti.md", "zajimavosti.md")):
         path = os.path.join(DATA, src)
-        text = open(path, encoding="utf-8").read() if os.path.exists(path) else ""
+        text = open(path, encoding="utf-8").read() if os.path.exists(path) and texty else ""
         write(os.path.join(gen_dir, dst), strip_comments(re.sub(r"^# .*\n", "", text, count=1)))
     shutil.rmtree(os.path.join(gen_dir, "pribehy"), ignore_errors=True)
     if multi_stories:
@@ -644,13 +695,15 @@ def main():
     story = stories[0]["text"] if stories else "---\ntitle: Příběh\nlead: ''\n---\n"
     write(os.path.join(gen_dir, "pribeh.md"), strip_comments(story))
 
-    gated = login_files(cfg)
+    gated = login_files(cfg_puvodni, pristupy)
 
     copied = 0
     zv = os.path.join(DATA, "zvyrazneni.json")
     hl_mtime = os.path.getmtime(zv) if os.path.exists(zv) else 0
     for sub, src_dir in (("img", VYREZY), ("zdroje", ZDROJE)):
         dst_dir = os.path.join(WEB, "public", sub)
+        if pristup:   # web pro jeden přístup: jen jeho obrázky (ze sestavení jiného přístupu nic nezůstane)
+            shutil.rmtree(dst_dir, ignore_errors=True)
         os.makedirs(dst_dir, exist_ok=True)
         for key in list(recs) + [d["img"] for d in docs_cfg] + ([cfg["uvod"]["foto"]] if cfg.get("uvod", {}).get("foto") else []):
             src = os.path.join(src_dir, key + ".jpg")
@@ -667,6 +720,8 @@ def main():
                 continue
             shutil.copy2(src, dst)
             copied += 1
+    if pristup:
+        print(f"přístup {pristup['id']} ({pristup['nazev']}): " + (f"výchozí osoba {people[slugs[1]]['name']}" if prevod is not None else "vše"))
     print(f"{len(people)} osob, {len(families)} rodin, {len(records)} zápisů, {len(lines)} rodů, {len(places)} míst; "
           f"zkopírováno {copied} obrázků; přihlášení {'zapnuté' if gated else 'VYPNUTÉ (web je otevřený)'}")
     if skryto:
