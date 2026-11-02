@@ -2,8 +2,7 @@
   "name": "rodokmen-skill",
   "description": "Skill pro Claude Code: rodokmen z českých matrik a rodinný web (fork originálu sarsonj/rodokmen-skill).",
   "owner": {
-    "name": "Martin Plíšek",
-    "url": "https://github.com/mplisek"
+    "name": "Martin Plíšek"
   },
   "plugins": [
     {
