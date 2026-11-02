@@ -6,6 +6,8 @@ Stav brzdy jde do dočasné složky, ne do skutečného stavu uživatele.
 import contextlib
 import http.server
 import io
+import os
+import ssl
 import subprocess
 import sys
 import tempfile
@@ -14,6 +16,7 @@ import time
 import unittest
 import urllib.error
 import urllib.request
+from unittest import mock
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -131,6 +134,59 @@ class Brzda(unittest.TestCase):
         finally:
             srv.shutdown()
             srv.server_close()
+
+
+
+class Certifikaty(unittest.TestCase):
+    """Windows: po chybě ověření certifikátu doplnit kořen přes curl.exe, znovu načíst certifikáty a jednou zopakovat."""
+
+    def setUp(self):
+        self._puvodni = (slusne._s_connect[0], slusne._doplnit_koreny)
+        self.volani = []
+
+        def spojeni(conn):   # první pokus: kořen chybí; druhý projde
+            self.volani.append(conn.host)
+            if len(self.volani) == 1:
+                raise ssl.SSLCertVerificationError("certificate verify failed: unable to get local issuer certificate")
+        slusne._s_connect[0] = spojeni
+
+    def tearDown(self):
+        slusne._s_connect[0], slusne._doplnit_koreny = self._puvodni
+
+    def spoj(self):
+        conn = http.client.HTTPSConnection("archiv.example")
+        conn._context = mock.Mock()
+        conn.connect()
+        return conn
+
+    def test_po_doplneni_korenu_zopakuje(self):
+        slusne._doplnit_koreny = lambda host: True
+        conn = self.spoj()
+        self.assertEqual(self.volani, ["archiv.example", "archiv.example"])
+        conn._context.load_default_certs.assert_called_once()
+
+    def test_kdyz_doplnit_nejde_chyba_zustane(self):
+        slusne._doplnit_koreny = lambda host: False
+        with contextlib.redirect_stderr(io.StringIO()) as err, self.assertRaises(ssl.SSLCertVerificationError):
+            self.spoj()
+        self.assertEqual(len(self.volani), 1)
+        if os.name == "nt":
+            self.assertIn("v prohlížeči", err.getvalue())
+
+    def test_doplneni_jen_na_windows_a_jednou_za_web(self):
+        slusne._doplnit_koreny = self._puvodni[1]
+        slusne._doplneno.discard("archiv.example")
+        with mock.patch.object(slusne.subprocess, "run") as run, mock.patch.object(slusne, "pockej"):
+            prvni = slusne._doplnit_koreny("archiv.example")
+            druhy = slusne._doplnit_koreny("archiv.example")
+        if os.name == "nt":
+            self.assertEqual((prvni, druhy), (True, False))
+            prikaz = run.call_args[0][0]
+            self.assertTrue(prikaz[0].lower().endswith("curl.exe"))
+            self.assertIn("https://archiv.example/", prikaz)
+        else:
+            self.assertEqual((prvni, druhy), (False, False))
+            run.assert_not_called()
 
 
 if __name__ == "__main__":
