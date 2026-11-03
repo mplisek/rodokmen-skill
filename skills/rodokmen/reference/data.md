@@ -35,6 +35,8 @@ P = {
   Názvy obcí ve faktech používá mapa (`mista.json` → `re`).
 - `r` klíče zápisů ze `zaznamy.json`. `st` viz `matriky.md`: `doc` přečteno v matrice, `prob` pravděpodobné,
   `fam` od rodiny (i strom, který si rodina vede sama, např. GEDCOM z jejího MyHeritage), `mh` cizí strom z internetu, `unk`.
+- `vyz` (volitelné) – krátký popis, proč je předek významný (farář, starosta, legionář…); jde na stránku „Osobnosti“ nahoru.
+  Bez něj stránka vybírá osobnosti sama podle slov ve faktech (`tools/osobnosti.py`).
 - `LINES = {8: ("Novákové", "Kováři z Holic…"), …}` – jen čísla 8–15; název rodu = příjmení v množném čísle. Vyplň hned, jak znáš pradědečka nebo prababičku – bez LINES web neukáže rody a nepřijde rada k příběhu.
 - `SIDE` – sourozenci a další příbuzní: `dict(k=<číslo předka>, n="Josef Novák (1865–1920)", t="text", r=[klíče])`.
   Nedoloženou samostatnou rodinu nepřipojuj do hlavního stromu; jako `SIDE` ji veď jen jako výslovně označenou stopu
