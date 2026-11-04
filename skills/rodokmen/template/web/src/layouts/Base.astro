@@ -43,7 +43,7 @@ const current = (url) => ((url === '/' ? path === '/' : path.startsWith(url)) ? 
         btn.setAttribute('aria-expanded', String(open));
       });
     </script>
-    <main class={full ? 'full' : wider ? 'wider' : wide ? 'wide' : ''} data-pagefind-body>
+    <main class={full ? 'full' : wide || wider ? 'wide' : ''} data-pagefind-body>
       <slot />
     </main>
     {config.poznamky && <Poznamky />}

@@ -24,6 +24,8 @@ Fork na originálu 0.8.0 (bezpečná aktualizace projektu, ARON celým skenem, n
   (`web/scripts/nasadit.mjs`).
 
 ### Nové
+- Web má jen dvě šířky stránek: úzkou pro textové stránky (osoba, zajímavosti, příběhy…) a širokou přes celé okno
+  (úvod, mapa, místo, časová osa, deník, poznámky, domy, zdroj); na široké stránce se text nezalamuje v polovině.
 - Žádosti archivům a úřadům: `mailto.py` udělá z konceptu odkaz do e-mailu (i Gmail, Outlook, Seznam), přehled
   `data/zadosti.md` a vzory v `reference/zadosti.md` (PR #87).
 - Příčina úmrtí u zápisů (`pricina_umrti`: původní znění, překlad, jistota čtení) na stránce osoby i zápisu (PR #92).
