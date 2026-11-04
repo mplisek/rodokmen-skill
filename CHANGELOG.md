@@ -12,7 +12,11 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
 ## 0.8.0-fork.1 – 4. 11. 2026
 
+Fork na originálu 0.8.0 (bezpečná aktualizace projektu, ARON celým skenem, nové kontroly – viz níže) a navíc:
+
 ### Opravy
+- `mista.py` dává přednost bodu vsi či města před hranicí obce (bod uprostřed katastru padal u obce s více částmi
+  do jiné části nebo do pole).
 - `kontrola.py` už nepadá (`UnboundLocalError`) u projektu s `PARTNERI` a bez `RODINA`; neexistující zápis hlídá
   u každé osoby z `RODINA`, ne jen u poslední.
 - `npm run nasadit` funguje i u projektu za odkazem (junction/symlink): Netlify CLI tam končilo chybou „build.base …
@@ -20,6 +24,12 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   (`web/scripts/nasadit.mjs`).
 
 ### Nové
+- Žádosti archivům a úřadům: `mailto.py` udělá z konceptu odkaz do e-mailu (i Gmail, Outlook, Seznam), přehled
+  `data/zadosti.md` a vzory v `reference/zadosti.md` (PR #87).
+- Příčina úmrtí u zápisů (`pricina_umrti`: původní znění, překlad, jistota čtení) na stránce osoby i zápisu (PR #92).
+- Opravy z issues (PR #89): `zapis.py --smazat`, `overit.py`/`vyrez.py --vylepsit` pro vybledlé snímky,
+  `ramecek.py --stranka`, kontrola polí v přepisech, doklady bez online odkazu; odkaz ARON hledá snímek ve všech
+  digitálních objektech.
 - Stránka osoby mimo přímou linii (z `RODINA`) má i kapitolu **Předci** (tři generace přes otce a matku, od přímého
   předka dál po číslech) a řádek **Místa** s odkazy na obce z jejích údajů.
 - `kontrola.py` hlídá Kekulého čísla: upozorní, když poznámka „otec Václava (72)“ nebo „syn Josefa (40)“
@@ -29,6 +39,7 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 - Stránka Domy: odkaz na skill stare-adresy, jak ho nainstalovat a že bez `domy.geojson` se stránka neukáže.
 - Rejstřík celé fary (eBadatelna, klíč písmen ke vsím) jako rychlá cesta k zápisu mimo knihu vsi ženicha.
 - Poznámky pro správce skillu jdou do issues forku (https://github.com/mplisek/rodokmen-skill/issues).
+- `smoke_test.py` už nezkouší Třeboň ani eBadatelnu (skriptem zakázané); testy originálu běží i v CI forku.
 
 ## 0.8.0 – 4. 11. 2026
 
