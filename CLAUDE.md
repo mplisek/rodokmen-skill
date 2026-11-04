@@ -1,5 +1,11 @@
 # Správa repozitáře rodokmen-skill
 
+Fork originálu `sarsonj/rodokmen-skill` (remote `upstream`). Číslo verze forku = verze originálu, na které stojí,
+plus `-fork.N` (např. `0.7.0-fork.1`, `0.7.0-fork.2`; po sloučení originálu 0.8.0 znovu `0.8.0-fork.1`) – nikdy
+se nepotká s číslem originálu. Novou verzi originálu slučuj `git merge upstream/main` (historie se už nepřepisuje),
+PR originálu `git merge --no-ff -m "Merge sarsonj/rodokmen-skill#N: <název>" refs/upstream-pr/N`. Pravidla archivů
+z originálu (co skriptem nesmí, `tools/slusne.py` ZAKAZ) platí i pro úpravy forku.
+
 Vydání nové verze: zvedni číslo ve třech místech najednou – `.claude-plugin/plugin.json` (`version`),
 `skills/rodokmen/VERZE` (podle něj Claude u uživatele pozná, že má aktualizovat projekt) a README na dvou místech – nahoře „Aktuální verze: X.Y.Z (vydána D. M. RRRR)“ a v požadavcích
 „Stav k D. M. RRRR (verze X.Y.Z)“, vždy s číslem verze i datem vydání.

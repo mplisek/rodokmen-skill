@@ -1,10 +1,57 @@
 # Co je nového
 
 Změny ve skillu rodokmen, nejnovější verze nahoře. Každá verze má na GitHubu i
-[vydání (Releases)](https://github.com/sarsonj/rodokmen-skill/releases) – kdo chce dostávat upozornění,
+[vydání (Releases)](https://github.com/mplisek/rodokmen-skill/releases) – kdo chce dostávat upozornění,
 dá v repozitáři **Watch → Custom → Releases**.
 
 Projekt založený starší verzí Claude sám nabídne aktualizovat (pozná to podle souboru `VERZE`).
+
+Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skill)). Verze `X.Y.Z-fork.N` stojí
+na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
+odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
+
+## 0.7.0-fork.1 – 4. 11. 2026
+
+První verze forku postavená přímo na originálu 0.7.0 (historie odpovídá originálu, otevřené pull requesty jsou
+sloučené jako merge commity) a pravidla archivů z originálu platí i pro všechno, co fork přidává.
+
+**Nové**
+- Web: stránky **Statistiky** a **Domy**, volitelné původní tvary jmen (PR #19), **Osobnosti** (PR #23),
+  **stromový graf** celé rodiny s rozbalováním větví a sourozenci (PR #13), **víc příběhů rodu** (PR #49),
+  **Časová osa** s pruhy životů předků a seznamem „Co časově nesedí“ (PR #77), **stránka každého místa** s časovou
+  osou lidí a událostí, odkaz z mapy (PR #73), vějíř s plynulým posunem a přibližováním (PR #55).
+- Web podle projektu: příbuzní z `RODINA` mají vlastní stránky (děti, sourozenci, manželství se počítají stejně
+  u všech), volitelné `PARTNERI`, vějíř předků pro libovolnou osobu (`/vejir/<osoba>/`), stránka `/dokumenty/`.
+- **Soukromí žijících vynucuje export webu:** žijící a narození v posledních 100 letech bez známého úmrtí jen se
+  jménem, rokem narození a vazbami – i na mapě, v Domech, Statistikách a na časové ose.
+- **Přístupy k webu:** každá větev rodiny může mít vlastní odpověď a vidí jen svou část rodokmenu (`pristupy` ve web.json).
+- **Poznámky ke stránkám:** tlačítko „Připomínka“, přehled `/poznamky/`, `npm run poznamky`.
+- `kontrola.py` hlídá **časovou návaznost** narození, sňatků a úmrtí; ověřený neobvyklý údaj se odškrtne polem
+  `overeno` (PR #76).
+- Nové nástroje (PR #29): SOA Litoměřice (`litomerice.py`, jen když portál nežádá ověření), židovské matriky
+  (`vademecum.py`), vězni a oběti 2. sv. války (`arolsen.py`, `mauthausen.py`, `obeti.py`, `vezni.py`), Matricula
+  (`matricula.py`, `matricula_snimek.js`), Encyklopedie dějin města Brna (`brno_encyklopedie.py`), `kramerius.py --server`,
+  `smoke_test.py` (kontrola síťových nástrojů na živých portálech). MZA Brno: `mza.py` jen hledá knihy, detail
+  a snímky jsou v prohlížeči (MZA stahování skriptem nepovoluje). Všechny nové síťové nástroje jdou přes brzdu `slusne.py`.
+- Bezpečný zápis datových souborů (`tools/soubory.py`): přerušení nenechá useknutý `svazky.json` ani jiný soubor.
+
+**Opravy**
+- ARON: odkaz na snímek otevře správný snímek, ne první; `aron_img.py odkazy` opraví staré odkazy (PR #22).
+- SOA Třeboň: správné slepení dlaždic (PR #48).
+- Přihlašovací odpověď bez znaků a-z0-9 (např. „***“, azbuka) už neskončí chybou (PR #66); nginx
+  `map_hash_bucket_size 128` proti chybě 502 v Dockeru/CapRoveru (PR #56).
+- `SKILL.md` se načte i v přísnějších parserech YAML a v GitHub Copilotu (PR #26, PR #59).
+- Windows: chybějící kořenový certifikát (Porta fontium, Kramerius, ANNO) brzda doplní přes systémový `curl.exe`
+  a spojení zopakuje – ověřování certifikátů zůstává zapnuté.
+- AHMP: dočasné dlaždice se smažou i při chybě; stránka Osobnosti ukazuje jen předky; web skripty bez varování
+  DEP0190 na Windows.
+
+**Návody**
+- Předávání výzkumu a práce s GEDCOM (PR #46), přesnější pokyny pro archivy a opakované pokusy eBadatelny (PR #47),
+  vylepšení z praxe – čas aktualizace webu, web ve vnitřní síti, zaniklé obce (PR #41).
+- Písemnosti vrchnosti, zemské desky a vodnimlyny.cz (PR #62); nové archivy a poválečné osídlení (PR #29).
+- Německé formuláře – co vždy ověřit na výřezu; čísla zápisů společná pro celou farnost (z PR #28).
+- Node.js 22.19 nebo novější (Astro 7.3.8).
 
 ## 0.7.0 – 3. 11. 2026
 
