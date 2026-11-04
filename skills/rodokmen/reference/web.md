@@ -4,7 +4,7 @@ Web je statický (Astro + vyhledávání Pagefind), data bere z `data/` přes `t
 Šablona používá Astro 7.3.8; podle `package-lock.json` vyžaduje Astro Node.js `>=22.12.0` a tranzitivní `undici`
 8.11.2 `>=22.19.0`. Používej proto Node.js `>=22.19.0` při čisté instalaci i sestavení webu.
 Stránky: úvod (lákadlo, statistiky, zajímavosti, mapa, rody, vějíř), příběh, zajímavosti, rody, stránka rodu,
-mapa (OpenStreetMap), vějíř přes celou obrazovku s hledáním, seznam předků, zápisy (s výřezem, rámečkem, přepisem
+mapa (OpenStreetMap; název obce v bublině vede na stránku místa s časovou osou lidí a událostí v obci), vějíř přes celou obrazovku s hledáním, seznam předků, zápisy (s výřezem, rámečkem, přepisem
 a překladem), stránka osoby, rodiny, „Co hledáme“, výzkumný deník, hledání.
 
 ## Příkazy (ve složce `web/`)

@@ -39,6 +39,9 @@ const nPartners = (p.child ? 1 : 0) + partners.length;
       Podruhé jako {p.also.map((a) => a.rel).join(', ')}.</p>
   )}
   {p.facts.length > 0 && <ul class="facts">{p.facts.map((f) => <li>{f}</li>)}</ul>}
+  {p.places?.length > 0 && (
+    <p class="small">Místa: {p.places.map((m, i) => <>{i > 0 && ', '}<a href={href.place(m.slug)}>{m.name}</a></>)}</p>
+  )}
   {p.note && <p class="note">{p.note}</p>}
   {myDomy.length > 0 && (
     <p>{p.sex === 'F' ? 'Žila' : 'Žil'} v domě: {myDomy.map((d, i) => <>{i > 0 && ', '}<a href={`/domy/#${d.id}`}>{d.obec} čp. {d.cp}</a></>)} <span class="muted small">(na mapě domů)</span></p>
