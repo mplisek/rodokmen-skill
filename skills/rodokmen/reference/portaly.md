@@ -96,6 +96,10 @@ Adresy u nevyzkoušených portálů ověř při prvním použití (portály se m
   požadavkem (IIIF), `nahled` = 1/4. Číslo snímku = pořadí náhledu v prohlížeči; soubory nesou číslo folia
   (`dolni-bela-17_0951` = fol. 95), takže u knih se souvislou foliací je **snímek ≈ folio**.
 - `link <kniha> <snímek>` → trvalý odkaz, `svazek <kniha>` → `svazky.json` (klíč `pf_<kniha>`).
+- Zaniklé obce (Slavkovský les, Doupovsko, pohraničí): stejné jméno má často víc vsí (Schönlind = Krásná Lípa u Kraslic
+  i zaniklá Krásná Lípa u Sokolova). Rozhodne sousední obec z rodinných údajů a fara: např. Schönlind ve Slavkovském lese
+  → fara Kostelní Bříza (`kostelni-briza`), Perlsberg/Lazy a Rockendorf/Žitná → fara Smrkovec (`smrkovec`). Svatby hledej
+  i ve faře nevěsty (sousední fara), oddací rejstříky jsou v knihách `…ooi`.
 - Bez prohlížečového User-Agentu portál vrací 403 (nástroj ho posílá). Jmenné hledání portál nemá – indexy jsou jen uvnitř knih
   (`*i`, `ooi`, `+i` v seznamu knih fary).
 
