@@ -257,8 +257,8 @@ nebo se změnil (CHYBA) – pak je třeba opravit nástroj i tento návod. Pro p
   snímek 16 → `…-00160.jp2`). Svazek do `svazky.json` ručně (Ostatní portály, krok 4).
 - Doména actapublica.eu MZA nepatří (MZA to potvrdila) – nepoužívej ji, jen www.mza.cz/actapublica. Když MZA nejde
   načíst ani v prohlížeči, ať uživatel zkusí vypnout VPN nebo jinou síť.
-- `tools/mza.py hledat|puvodce|info` jen hledá knihy (stejné dotazy jako výše, přes brzdu). Příkaz `snimek` je od 2. 11. 2026
-  nepoužitelný (MZA stahování dlaždic blokuje, brzda MZA zastaví) – snímky jen v prohlížeči, viz výše.
+- `tools/mza.py hledat|puvodce` jen hledá knihy (stejné dotazy jako výše, přes brzdu). Detail knihy, odkaz na snímek i snímky jsou od 2. 11. 2026
+  jen v prohlížeči, skriptem je MZA nepovoluje (brzda je zastaví) – viz výše.
 
 ## Po válce přistěhovaní, reemigranti, přesídlení (osídlování pohraničí 1945–1950)
 Ověřené (2026-10): v Národním archivu je fond **Ministerstvo práce a sociální péče, Praha** (NAD 1028), inv. č. 655, sign. 3521: „Reemigrace – čs. reemigrační mise ve Vídni,
