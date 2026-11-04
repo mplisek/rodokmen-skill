@@ -224,6 +224,9 @@ def oprav_odkazy(opravit):
         print("Opravíš je: python3 -I tools/aron_img.py odkazy --opravit")
 
 
+ODKAZ = re.compile(r"https://aron\.vychodoceskearchivy\.cz/apu/([^/\s]+)/dao/([^/\s]+)/file/([^/?#\s]+)")
+
+
 if __name__ == "__main__":
     if sys.argv[1:2] == ["odkazy"]:
         oprav_odkazy("--opravit" in sys.argv[2:])
@@ -258,12 +261,14 @@ if __name__ == "__main__":
         sys.exit(0)
     if sys.argv[2] == "link":
         n = int(sys.argv[3])
-        dao = (vol.get("digitalObjects") or [{}])[0]
-        # prohlížeč ARON pozná snímek podle id souboru TILE; s id souboru PUBLISHED otevře knihu vždy na prvním snímku
-        tile = [f for f in dao.get("files", []) if f["type"] == "TILE" and f["order"] == n]
+        # prohlížeč ARONu najde snímek jen podle souboru typu TILE (dlaždice); s id varianty PUBLISHED
+        # otevře knihu vždy na prvním snímku (#18)
+        tile = [(dao, f) for dao in vol.get("digitalObjects") or [] for f in dao.get("files", [])
+                if f["type"] == "TILE" and f["order"] == n]
         if not tile:
             bez_snimku(vol, tiles, n)
-        print(f"https://aron.vychodoceskearchivy.cz/apu/{apu}/dao/{dao['id']}/file/{tile[0]['id']}")
+        dao, f = tile[0]
+        print(f"https://aron.vychodoceskearchivy.cz/apu/{apu}/dao/{dao['id']}/file/{f['id']}")
         sys.exit(0)
     n = int(sys.argv[2])
     lo = int(sys.argv[3]) if len(sys.argv) > 3 else 1

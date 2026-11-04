@@ -193,7 +193,9 @@ def main():
             err.append(f"zápis {k}: svazek '{z['svazek']}' není v data/svazky.json")
         if z.get("ukazka"):   # vymyšlený zápis ukázkové rodiny – nemá snímek ani přepis
             continue
-        if not z.get("odkaz") and not svazky.get(z.get("svazek", ""), {}).get("url"):
+        sv = svazky.get(z.get("svazek", ""))
+        if not z.get("odkaz") and not (sv or {}).get("url") and not (sv and not sv.get("portal")):
+            # svazek bez „portal“ = doklad od rodiny nebo z badatelny, online odkaz nemá (#37)
             warn.append(f"zápis {k}: chybí odkaz na snímek (pole 'odkaz')")
         if not os.path.exists(os.path.join(ROOT, "vyrezy", k + ".jpg")):
             warn.append(f"zápis {k}: chybí výřez vyrezy/{k}.jpg")
@@ -203,6 +205,16 @@ def main():
             warn.append(f"zápis {k}: chybí přepis a překlad v data/prepisy.json")
         if k not in cited:
             warn.append(f"zápis {k}: necituje ho žádná osoba (doplnit do 'r' u osoby nebo bočního příbuzného)")
+    for k, v in prep.items():   # web čte jen „orig“ a „cs“ – jiné pole (třeba „preklad“) by tiše chybělo (#74)
+        if not isinstance(v, dict):
+            err.append(f"přepis {k}: má být objekt {{\"orig\": …, \"cs\": …}}")
+            continue
+        jine = sorted(set(v) - {"orig", "cs"})
+        if jine:
+            warn.append(f"přepis {k}: pole {', '.join(jine)} web nezobrazí – přepis patří do „orig“, překlad do „cs“")
+        for pole, co in (("orig", "přepis originálu"), ("cs", "český překlad")):
+            if not str(v.get(pole) or "").strip():
+                warn.append(f"přepis {k}: chybí {co} (pole „{pole}“) – na webu bude prázdný")
 
     znamy = [k for k in range(8, 16) if P.get(k, {}).get("st") in ("doc", "prob")]
     chybi = [f"{k} ({P[k].get('n', '?')})" for k in znamy if k not in LINES]

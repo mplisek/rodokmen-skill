@@ -108,12 +108,16 @@ Pole je nepovinné kvůli starším datům. Když chybí, znamená to „zatím 
 ## `svazky.json`
 `{"1a0b2337": {"archiv": "SOA Zámrsk – Sbírka matrik…", "portal": "ARON", "svazek": "N Holice 1880–1900, sign. …",
 "popis": "obce", "url": "odkaz na svazek"}}` – u ARON zapisuje `aron_img.py <apu> svazek`.
+Doklad, který online není (rodný list od rodiny, kopie z badatelny), má svazek bez `portal` a `url`, např.
+`"rodina": {"archiv": "doklady od rodiny", "svazek": "Rodné a oddací listy", "popis": "dokumenty/…"}` – `kontrola.py`
+pak u jeho zápisů nechce odkaz na snímek.
 
 ## `prepisy.json`
 `{"<klic>": {"orig": "[Datum] 14. února 1890\n[Dům] 112\n[Otec] …", "cs": "Český překlad celou větou…"}}`
 - `orig` věrný přepis po sloupcích, `[Název sloupce]` v hranatých závorkách, nejisté „(?)“, nečitelné „[…]“, zkratky ponechat.
 - `cs` srozumitelný překlad pro rodinu; vysvětli staré pojmy (domkář, podruh).
 - Souhrn nalezený v předaných poznámkách není originál ani přepis. Bez snímku ponech `orig` nedoplněné a zdrojovou mezeru popiš.
+- Jiná pole web nezobrazí (třeba `preklad`) – `zapis.py prepisy` je odmítne a `kontrola.py` je ohlásí.
 
 ## `zvyrazneni.json`
 `{"<klic>": {"boxes": [[x0, y0, x1, y1]], "status": "ok", "note": ""}}` – zlomky šířky/výšky obrázku `vyrezy/<klic>.jpg`.
