@@ -146,6 +146,7 @@ skills/rodokmen/
   VadeMeCum) a Encyklopedii dějin města Brna. Pro severní Čechy (SOA Litoměřice) stahuje snímky nástrojem, knihu
   ale najde přes prohlížeč (portál může žádat ověření). Pro Rakousko (Vídeň) a Polsko je to Matricula (nástroj najde
   farnost a knihu, snímky se čtou v prohlížeči). Slovensko, Maďarsko a Rumunsko skill zatím jen popisuje.
+- **Jen přes prohlížeč:** střední Čechy (SOA Praha, eBadatelna – i urbáře a gruntovní knihy), jižní Čechy
   (SOA Třeboň) a Morava (MZA Brno) – tyto archivy od listopadu 2026 stahovací nástroje odmítají, Claude proto
   zápis přiblíží v jejich prohlížeči a uloží snímek obrazovky. Opava taky přes prohlížeč. Funguje to, ale je to
   pomalejší.
