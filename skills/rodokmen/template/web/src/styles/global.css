@@ -190,6 +190,7 @@ main.full { max-width: none; padding: 0; }
 
 /* home teaser */
 .teaser { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 1.5rem; align-items: center; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 1.4rem 1.5rem; margin: 0.6rem 0 1.4rem; }
+.teaser > :only-child { grid-column: 1 / -1; }   /* bez fotky text přes celou šířku, ne jen do 3/5 */
 .teaser h2 { border: 0; margin: 0 0 0.4rem; font-size: 1.8rem; }
 .teaser p { margin: 0.5rem 0; }
 .teaser img { width: 100%; max-height: 300px; object-fit: cover; object-position: center 22%; border-radius: 10px; }
