@@ -13,6 +13,8 @@ import concurrent.futures as cf
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # python -I nepřidává složku skriptu do cesty
+import chronologie  # noqa: E402 – data a pravidla časové osy (tools/chronologie.py)
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(TOOLS)
@@ -197,7 +199,41 @@ def relation(k):
 
 
 def placeholder(p):
-    return p["n"].startswith(("otec neuveden", "matka neuvedena")) or p["n"] in ("", "?")
+    return chronologie.zastupna(p)
+
+
+def timeline_data(P, SAME, slugs, people, line_of):
+    """Časová osa: řádky v pořadí otec – dítě – matka, události jako intervaly v desetinných letech, varování."""
+    dnes = datetime.date.today()
+
+    def ev(d):
+        if d is None:
+            return None
+        return {"from": None if d.od == chronologie.MIN else round(chronologie.rok(d.od), 3),
+                "to": None if d.do == chronologie.MAX else round(chronologie.rok(d.do), 3), "text": d.text}
+    # Soukromí: u žijících (viz skryj() v main) jen rok narození, bez data sňatku a bez varování o jejich datech
+    skryti = {k for k in slugs if k not in SAME and zijici(P[k].get("y"), P[k].get("note"), P[k].get("f", []))}
+    warns = [v for v in chronologie.kontrola(P, SAME) if not ({v.k, *v.osoby} & skryti)]
+    s_varovanim = {v.k for v in warns}
+    ud = {k: chronologie.udalosti(P, k) for k in slugs if k not in SAME}
+    rows = []
+    for pos, k in chronologie.radky(P, SAME):
+        if k not in ud:
+            continue
+        p, u = P[k], ud[k]
+        b = ev(u["narozeni"])
+        if k in skryti and b:
+            b["text"] = str(int(b["from"])) if b["from"] is not None else ""
+        manzel = {k, k ^ 1} & skryti if k > 1 else {k} & skryti   # sňatek rodičů žijícího: otec i matka (k ^ 1) mají stejný
+        rows.append(dict(k=pos, slug=slugs[k], name=p["n"], line=line_of(pos), years=people[slugs[k]]["years"],
+                         birth=b, marriage=None if manzel else ev(u["snatek"]), death=None if k in skryti else ev(u["umrti"]),
+                         living=chronologie.zije(p, u, dnes),
+                         uncertain=p.get("st") in ("prob", "mh") or any(d and d.approx for d in u.values()),
+                         warn=k in s_varovanim))
+    roky = [x for r in rows for e in (r["birth"], r["marriage"], r["death"]) if e for x in (e["from"], e["to"]) if x is not None]
+    return {"from": int(min(roky)) // 10 * 10 if roky else dnes.year - 100, "to": dnes.year, "rows": rows,
+            "warnings": [dict(k=v.k, slug=slugs[v.k], rule=v.pravidlo, text=v.text, maybe=v.mozna,
+                              people=[slugs[x] for x in v.osoby if x in slugs]) for v in warns]}
 
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
@@ -725,7 +761,8 @@ def main():
                 families=families, others=others, records=records, lines=lines,
                 issues=[dict(title=i, text="") if isinstance(i, str) else dict(title=i[0], text=i[1]) for i in ISSUES], stats=stats, hypotheses=hypotheses,
                 docs=[dict(img=d["img"], caption=d["popis"], people=[slugs.get(k) or rslug[k] for k in d.get("osoby", []) if k in slugs or k in rslug])
-                      for d in docs_cfg if os.path.exists(os.path.join(VYREZY, d["img"] + ".jpg"))])
+                      for d in docs_cfg if os.path.exists(os.path.join(VYREZY, d["img"] + ".jpg"))],
+                timeline=timeline_data(P, SAME, slugs, people, line_of))
 
     write(os.path.join(WEB, "src", "data", "site.json"), json.dumps(site, ensure_ascii=False, indent=1))
     for src, dst in (("archivni_dotazy.md", "dotazy.md"), ("research_log.md", "denik.md"), ("zajimavosti.md", "zajimavosti.md")):

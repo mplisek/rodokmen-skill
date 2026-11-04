@@ -9,7 +9,7 @@ const path = Astro.url.pathname;
 const storyMenu = config.pribeh?.menu || (config.maVicePribehu ? 'Příběhy' : 'Příběh rodu');
 const groups = [
   [['/', 'Úvod'], ...(config.maPribeh ? [['/pribehy/', storyMenu]] : []), ['/zajimavosti/', 'Zajímavosti'], ['/statistiky/', 'Statistiky'], ['/osobnosti/', 'Osobnosti']],
-  [['/rody/', 'Rody'], ['/mapa/', 'Mapa'], ...(domyData.domy.length ? [['/domy/', 'Domy']] : []), ['/vejir/', 'Vějíř'], ['/strom/', 'Strom'], ['/predci/', 'Předci'], ['/zapisy/', 'Zápisy'], ...(docs.length ? [['/dokumenty/', 'Dokumenty']] : []), ['/hledame/', 'Co hledáme'], ...(config.poznamky ? [['/poznamky/', 'Poznámky']] : [])],
+  [['/rody/', 'Rody'], ['/mapa/', 'Mapa'], ...(domyData.domy.length ? [['/domy/', 'Domy']] : []), ['/vejir/', 'Vějíř'], ['/osa/', 'Časová osa'], ['/strom/', 'Strom'], ['/predci/', 'Předci'], ['/zapisy/', 'Zápisy'], ...(docs.length ? [['/dokumenty/', 'Dokumenty']] : []), ['/hledame/', 'Co hledáme'], ...(config.poznamky ? [['/poznamky/', 'Poznámky']] : [])],
   [['/hledat/', 'Hledat']],
 ];
 const current = (url) => ((url === '/' ? path === '/' : path.startsWith(url)) ? 'page' : undefined);

@@ -2,7 +2,7 @@
 import site from '../data/site.json';
 import stories from '../generated/pribehy.json';
 
-export const { people, families, lines, stats, issues, hypotheses, docs, config } = site;
+export const { people, families, lines, stats, issues, hypotheses, docs, config, timeline } = site;
 export { stories };
 /** Osoby mimo přímou linii (data/osoby.py RODINA) pro stromový graf. */
 export const others = site.others ?? [];
