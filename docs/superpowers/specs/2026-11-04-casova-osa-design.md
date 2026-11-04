@@ -161,6 +161,7 @@ Všechno z toho jde přidat později.
 - `tests/chronologie/test_chronologie.py`: testy pouze přes `assert` a standardní knihovnu, mimo složku skillu
   (stejně jako `tests/brzda/`, aby se nekopírovaly uživatelům). Ověří rozbor dat na intervaly a každé
   pravidlo, včetně hraničních případů: pohrobek s daty jen na rok se nehlásí, „před“, „po“, „asi“ a celá data.
+  Ověří také, že varování odškrtnuté přes `overeno` se nehlásí.
   Spouští se `python -I -X utf8 tests/chronologie/test_chronologie.py`.
 - Spuštěný `kontrola.py` na ukázkových datech nehlásí žádné chronologické upozornění. Na kopii
   s podvrženou chybou je hlásí.
