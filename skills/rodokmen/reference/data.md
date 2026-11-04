@@ -38,7 +38,14 @@ P = {
 - `vyz` (volitelné) – krátký popis, proč je předek významný (farář, starosta, legionář…); jde na stránku „Osobnosti“ nahoru.
   Bez něj stránka vybírá osobnosti sama podle slov ve faktech (`tools/osobnosti.py`).
 - `LINES = {8: ("Novákové", "Kováři z Holic…"), …}` – jen čísla 8–15; název rodu = příjmení v množném čísle. Vyplň hned, jak znáš pradědečka nebo prababičku – bez LINES web neukáže rody a nepřijde rada k příběhu.
-- `SIDE` – sourozenci a další příbuzní: `dict(k=<číslo předka>, n="Josef Novák (1865–1920)", t="text", r=[klíče])`.
+- `RODINA` – osoby mimo přímou linii (sourozenci předků, jejich partneři a děti, předci partnerů):
+  `"zkratka": dict(n="Marie Nováková", y="1892–1970", sex="F", otec=16, matka=17, partner=[...], st="doc", f=[...], r=[...], note="…")`.
+  `otec`/`matka` = číslo přímého předka nebo zkratka jiné osoby z RODINA; sourozenec předka 8 má `otec=16, matka=17`
+  i když 16/17 ještě neznáme. `partner` jen pro partnery bez společného dítěte. Stromový graf (`/strom/`) z nich skládá
+  rozklikávací větve – od sourozence předka třeba až do 20. století; na stránce osoby se ukážou jako příbuzní.
+  Žijící jen jménem a rokem narození. U předka v `P` lze zapsat `sour="hotovo"` / `"částečně"` (stav hledání sourozenců).
+- `SIDE` – jen poznámky, které do RODINA nejdou (nejistý vztah, celá větev jednou větou):
+  `dict(k=<číslo předka>, n="…", v="příbuzný (?)", y="…", t="text", r=[klíče])` – ve stromu jako „pozn.“ u předka.
   Nedoloženou samostatnou rodinu nepřipojuj do hlavního stromu; jako `SIDE` ji veď jen jako výslovně označenou stopu
   u konkrétního možného příbuzného. Jinak ji ponech odděleně v deníku.
 - `ISSUES` – dvojice `("Otázka", "Vyřešeno: … / Hypotéza: … / Otevřené: …")` → stránka „Co hledáme“ (vyřešené se skryjí).
