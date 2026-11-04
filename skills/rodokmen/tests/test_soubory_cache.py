@@ -45,7 +45,7 @@ class Cache(unittest.TestCase):
         cache.KOREN = self._koren
         self._tmp.cleanup()
 
-    JPG = bytes([0xFF, 0xD8, 0xFF, 0xE0]) + b"x" * 20
+    JPG = bytes([0xFF, 0xD8, 0xFF, 0xE0]) + b"x" * 20 + bytes([0xFF, 0xD9])   # celý JPEG (značka konce)
 
     def test_obrazek_se_ulozi_a_najde_podle_adresy(self):
         url = "https://images.example.cz/zoomify/a/TileGroup0/3-1-2.jpg"

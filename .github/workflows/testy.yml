@@ -39,6 +39,17 @@ jobs:
       - name: Testy časové návaznosti (chronologie.py)
         run: python -X utf8 tests/chronologie/test_chronologie.py
 
+      - name: Testy z originálu (kontrola, místa, brzda, aktualizace projektu)
+        shell: bash
+        run: |
+          T=skills/rodokmen/tools
+          python -X utf8 -I tests/kontrola/test_cisla.py $T/kontrola.py
+          python -X utf8 tests/mista/test_mista.py
+          python -X utf8 -I $T/slusne.py tests/brzda/test_brzda.py $T/slusne.py
+          python -X utf8 -I $T/slusne.py tests/brzda/test_mezipamet.py $T
+          python -X utf8 -I $T/slusne.py tests/brzda/test_hlidac.py skills/rodokmen
+          python -X utf8 -I tests/aktualizace/test_aktualizace.py skills/rodokmen
+
       - name: Ukázkový web – založení a kontrola dat
         shell: bash
         run: |

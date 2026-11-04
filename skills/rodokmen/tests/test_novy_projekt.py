@@ -36,20 +36,19 @@ class NovyProjekt(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertFalse((Path.cwd() / "--help").exists())
 
-    def test_aktualizace_zalohuje_web_prepise_nastroje_a_necha_data(self):
+    def test_aktualizace_necha_vlastni_upravy_a_data(self):
+        # od 0.8.0 projekt pamatuje šablonu (.skill_sablona/): vlastní úprava při nezměněné šabloně zůstane
         index = self.p / "web" / "src" / "pages" / "index.astro"
         sablona = index.read_text(encoding="utf-8")
         index.write_text(sablona + "\n<!-- moje úprava -->\n", encoding="utf-8")
-        (self.p / "tools" / "kontrola.py").write_text("# rozbitý nástroj\n", encoding="utf-8")
         osoby = self.p / "data" / "osoby.py"
         osoby.write_text(osoby.read_text(encoding="utf-8") + "\n# moje data\n", encoding="utf-8")
         (self.p / "tools" / "muj_skript.py").write_text("print(1)\n", encoding="utf-8")
 
         r = novy_projekt(self.p)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        self.assertEqual(index.read_text(encoding="utf-8"), sablona)                     # web podle šablony
-        zalohy = list((self.p / "pracovni").glob("zaloha_web_*/**/index.astro"))
-        self.assertTrue(any("moje úprava" in z.read_text(encoding="utf-8") for z in zalohy))  # úprava je v záloze
+        self.assertIn("moje úprava", index.read_text(encoding="utf-8"))                 # úprava webu zůstala
+        self.assertIn("Ponecháno", r.stdout)
         self.assertEqual((self.p / "tools" / "kontrola.py").read_bytes(), (SKILL / "tools" / "kontrola.py").read_bytes())
         self.assertIn("# moje data", osoby.read_text(encoding="utf-8"))                 # data zůstala
         self.assertTrue((self.p / "tools" / "muj_skript.py").exists())                  # cizí soubory nemaže

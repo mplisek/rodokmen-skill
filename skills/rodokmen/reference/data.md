@@ -36,6 +36,10 @@ P = {
   `"× 3/1867"`, `"† asi 1785"`, `"† před 1740"`): podle jeho přesnosti hlídá `kontrola.py` i stránka Časová osa
   časovou návaznost (otec zemřel dřív, než se dítě mohlo narodit, matce by bylo 12 let…). Celé datum pozná víc než
   jen rok, „asi“ počítá s tolerancí ±5 let a hlásí se jen rozpor, který platí pro všechna možná data.
+  Sňatek jmenuje partnera (`× 1919 Holice Josefa Pokorná`); `kontrola.py` hlásí, když žádný sňatek nejmenuje osobu
+  na sousedním čísle (manžel 2k, manželka 2k+1, i přes `SAME`). U `doc` hlásí `čp.`, které není v žádném citovaném
+  zápisu (`shrnuti`, přepis) jako číslo domu (`čp. 23`, `No 23`, `N. 23`, `[Dům] 23`, `z Ostřetína 23`; datum, věk ani
+  číslo zápisu, strany či snímku neplatí); číslo převzaté odjinud označ ve faktu zdrojem: `* 1862 Ostřetín čp. 23 (podle stromu)`.
 - `r` klíče zápisů ze `zaznamy.json`. `st` viz `matriky.md`: `doc` přečteno v matrice, `prob` pravděpodobné,
   `fam` od rodiny (i strom, který si rodina vede sama, např. GEDCOM z jejího MyHeritage), `mh` cizí strom z internetu, `unk`.
 - `vyz` (volitelné) – krátký popis, proč je předek významný (farář, starosta, legionář…); jde na stránku „Osobnosti“ nahoru.
@@ -105,6 +109,10 @@ obcí (Lhota × Dolní Lhota) proto vzor zúži, jinak se domy obou obcí slijí
 nebo dotaz s větší obcí či okresem. U **víceznačných názvů** (Podolí, Dub, Lhota) vezme OpenStreetMap kteroukoli ves
 („Podolí, Česko“ = Podolí u Brna) – v posledním sloupci výpisu zkontroluj okres a dej dotaz se sousední obcí
 (`mista.py pridej "Podolí" "Podol" "Podolí, Odlochovice"`). Místopis nejlíp zná rodina – když si nejsi jistý, zeptej se.
+`mista.py` hledá jen sídla a pod seznamem upozorní, když našel něco jiného než obec (bar, ulici) nebo když je nový bod
+víc než 50 km od všech ostatních míst projektu (nejspíš jiná obec stejného jména). Kontrola mapy (`kontrola.py`) u
+předků bez obce vypíše v hranatých závorkách slova z faktů, která vypadají jako obec. Když je obec v `mista.json`,
+jen ji výraz `re` nechytí ve skloňovaném tvaru („v Přesece“ × `Přesek`) – uprav výraz (`Přese?[kc]`).
 
 ## `domy/` – domy předků na mapě (volitelné)
 `data/domy/domy.geojson` a `data/domy/vyrezy/` jsou výstup skillu **stare-adresy** (`mapa.py`, polohy domů „obec čp.“
