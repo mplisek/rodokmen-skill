@@ -9,11 +9,20 @@ znalost rodiny a rozhodujete.
 
 Vznikl při skutečném hledání předků jedné rodiny.
 
-**Autor a správce:** Jindřich Šaršon ([sarsonj@gmail.com](mailto:sarsonj@gmail.com), [GitHub](https://github.com/sarsonj))
+**Autor původního skillu:** Jindřich Šaršon ([sarsonj/rodokmen-skill](https://github.com/sarsonj/rodokmen-skill)).
+
+> **Tohle je fork** – [mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skill). Vychází z originálu, přebírá
+> jeho novinky (naposledy verzi 0.7.0) a navíc obsahuje příspěvky, které v originále zatím nejsou (jsou tam jako otevřené
+> pull requesty): další archivy a nástroje (SOA Litoměřice, židovské matriky, oběti a vězni 2. sv. války, Encyklopedie
+> Brna, hledání v MZA Brno…), stromový graf, stránky Statistiky, Domy, Osobnosti, Časová osa a stránky míst, víc příběhů rodu,
+> vlastní stránky příbuzných mimo přímou linii, vějíř předků pro libovolnou osobu, vynucené soukromí žijících na webu,
+> přístupy k webu pro jednotlivé větve rodiny a poznámky ke stránkám. Pravidla archivů z originálu (co se smí stahovat
+> skriptem a co jen v prohlížeči) fork dodržuje. Kdo přechází z originálu, najde postup v části
+> [Přechod z originálu](#přechod-z-originálu).
 
 **Aktuální verze: 0.7.0 (vydána 3. 11. 2026).** Skill se průběžně vyvíjí – opravuji chyby a doplňuji postupy pro další archivy
 podle toho, na co narazíte vy. Jak aktualizovat, najdete v části [Instalace](#instalace), seznam změn
-v [historii repozitáře](https://github.com/sarsonj/rodokmen-skill/commits/main).
+v [historii repozitáře](https://github.com/mplisek/rodokmen-skill/commits/main).
 
 > **Než začnete**
 >
@@ -34,11 +43,11 @@ v [historii repozitáře](https://github.com/sarsonj/rodokmen-skill/commits/main
 > podklad.
 >
 > **Jste genealog nebo zkušený badatel?** Budu rád za kritiku. Když uvidíte chybu v postupu, ve čtení nebo v tom,
-> co skill radí, [založte issue](https://github.com/sarsonj/rodokmen-skill/issues) nebo mi napište. Vaše zkušenost
+> co skill radí, [založte issue](https://github.com/mplisek/rodokmen-skill/issues) nebo mi napište. Vaše zkušenost
 > je přesně to, co AI chybí.
 
 **Přečetla AI něco špatně, něco nefunguje nebo jste narazili na jiný problém?**
-[Založte prosím issue na GitHubu →](https://github.com/sarsonj/rodokmen-skill/issues/new)
+[Založte prosím issue na GitHubu →](https://github.com/mplisek/rodokmen-skill/issues/new)
 (víc v části [Zpětná vazba](#zpětná-vazba-a-vaše-zkušenosti)).
 
 ## Jak vypadá web
@@ -78,10 +87,25 @@ S jiným nebo slabším modelem počítejte s víc chybami ve čtení starého p
 ### Varianta A – jako plugin (doporučeno)
 V Claude Code napište:
 ```
-/plugin marketplace add sarsonj/rodokmen-skill
+/plugin marketplace add mplisek/rodokmen-skill
 /plugin install rodokmen@rodokmen-skill
 ```
 Pak Claude Code restartujte (do běžící relace se nový plugin nenačte).
+
+#### Přechod z originálu
+Máte nainstalovaný originál (`sarsonj/rodokmen-skill`)? Oba repozitáře mají stejný název katalogu (`rodokmen-skill`)
+i pluginu, proto originál nejdřív odeberte a pak přidejte fork:
+```
+/plugin uninstall rodokmen@rodokmen-skill
+/plugin marketplace remove rodokmen-skill
+/plugin marketplace add mplisek/rodokmen-skill
+/plugin install rodokmen@rodokmen-skill
+```
+Restartujte Claude Code. Projekt zůstane, jak je (`rodokmen@rodokmen-skill` v jeho nastavení platí dál), a Claude při
+další práci nabídne aktualizaci projektu na verzi forku. Před ní si projekt uložte do gitu (`git add -A && git commit`).
+Upravovali jste si web nebo nástroje v projektu sami? Aktualizace přepíše `tools/` a změněné soubory webu (web
+zazálohuje do `pracovni/zaloha_web_…`) – nejdřív si nechte od Clauda porovnat vaše úpravy s novou verzí.
+
 **Aktualizace.** Claude Code u pluginů od jiných autorů než Anthropic nové verze sám nehlídá. Máte dvě možnosti:
 - **Automaticky (doporučuji):** jednou v `/plugin` na kartě **Marketplaces** vyberte `rodokmen-skill` a zapněte
   automatické aktualizace (Enable auto-update). Nová verze se pak stáhne při spuštění Claude Code.
@@ -167,9 +191,9 @@ skills/rodokmen/
 ## Soukromí
 Projekt obsahuje osobní údaje vaší rodiny. Zůstává na vašem počítači. Web je chráněný rodinnou otázkou
 a není indexovaný vyhledávači; bez nastavené otázky ho nástroj nenasadí. Je to lehká ochrana proti náhodným
-návštěvníkům, ne trezor: kdo zná odpověď, vidí všechno, co na web dáte. Claude má pokyn psát o žijících lidech
-jen jméno a rok narození a před zveřejněním s vámi projít, co o nich web říká – kód to ale nevynucuje,
-rozhodnutí je na vás.
+návštěvníkům, ne trezor: kdo zná odpověď, vidí všechno, co na web dáte. U žijících lidí (a narozených v posledních 100 letech
+bez známého úmrtí) dá web jen jméno a rok narození – vynucuje to export webu. Před zveřejněním s vámi Claude projde,
+co web říká o žijících i o citlivých věcech; rozhodnutí je na vás.
 Pokud projekt chcete zálohovat na GitHub, použijte **soukromý** repozitář.
 
 ## Zpětná vazba a vaše zkušenosti
@@ -178,11 +202,12 @@ Windows a staršího ImageMagicku, postupy pro MZA Brno a ZA Opava, bezpečná �
 a průběžně zapracovávám – ne každou hned a ne každou doslova, aby skill zůstal jednoduchý pro všechny.
 
 **Chyby a problémy** – AI špatně přečetla zápis, spojila nesprávné lidi, nějaký krok nefunguje nebo spadl nástroj –
-prosím [založte jako issue na GitHubu](https://github.com/sarsonj/rodokmen-skill/issues/new) (stačí bezplatný účet).
+prosím [založte jako issue na GitHubu](https://github.com/mplisek/rodokmen-skill/issues/new) (stačí bezplatný účet).
 Popište, co se stalo, a pokud jde o čtení zápisu, přidejte odkaz na snímek v archivu. Issues jsou veřejné, proto
 do nich nepište údaje o žijících lidech.
 
-Budu rád i za další zkušenosti. Napište mi na **sarsonj@gmail.com**, co fungovalo, co ne, jaký archiv jste použili, co vám na webu chybělo.
+Budeme rádi i za další zkušenosti – co fungovalo, co ne, jaký archiv jste použili, co vám na webu chybělo – v issues
+tohoto forku. K původnímu skillu můžete psát jeho autorovi (**sarsonj@gmail.com**).
 Užitečné změny rád zapracuji do skillu, aby je měli k dispozici i ostatní. Další verze tak bude lepší pro každého,
 kdo hledá své předky.
 
