@@ -63,6 +63,8 @@ P = {
   z RODINA. Na stránce osoby v kartě Manželství („sňatek 1850, Libice, ovdověl 1860“); u žijících bez roku a místa. U předka v `P` lze zapsat `sour="hotovo"` / `"částečně"` (stav hledání sourozenců).
 - `SIDE` – jen poznámky, které do RODINA nejdou (nejistý vztah, celá větev jednou větou):
   `dict(k=<číslo předka>, n="…", v="příbuzný (?)", y="…", t="text", r=[klíče])` – ve stromu jako „pozn.“ u předka.
+  `v="bratr"`/`"sestra"` u předka k a `v="syn"`/`"dcera"` u jeho rodiče (2k, 2k+1) web ukáže u rodičů v kartě Děti jako
+  „Další děti“ (s odkazem na poznámku); nevlastní sourozence ne – nevíme, po kterém rodiči jsou.
   Nedoloženou samostatnou rodinu nepřipojuj do hlavního stromu; jako `SIDE` ji veď jen jako výslovně označenou stopu
   u konkrétního možného příbuzného. Jinak ji ponech odděleně v deníku.
 - `ISSUES` – dvojice `("Otázka", "Vyřešeno: … / Hypotéza: … / Otevřené: …")` → stránka „Co hledáme“ (vyřešené se skryjí).

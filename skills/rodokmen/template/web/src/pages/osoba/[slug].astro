@@ -20,6 +20,7 @@ const myDomy = (domyData.osoby[p.slug] || []).map((id) => domById[id]).filter(Bo
 const spouseText = p.partners.find((x) => x.slug === p.spouse)?.text;
 const partners = p.partners.filter((x) => x.slug !== p.spouse);
 const nPartners = (p.child ? 1 : 0) + partners.length;
+const sideKids = p.sideKids || [];   // děti zapsané jen v SIDE (export_web.py); starší data pole nemají
 ---
 <Base title={p.name} description={`${p.name} ${p.years} – ${p.rel}`}>
   <div class="crumbs">
@@ -66,13 +67,14 @@ const nPartners = (p.child ? 1 : 0) + partners.length;
     )}
   </div>
 
-  {(p.kids.length > 0 || p.siblings.length > 0) && (
+  {(p.kids.length > 0 || sideKids.length > 0 || p.siblings.length > 0) && (
     <div class="grid2">
-      {p.kids.length > 0 && (
+      {(p.kids.length > 0 || sideKids.length > 0) && (
         <div class="card">
-          <h3>{p.kids.length > 1 ? 'Děti' : 'Dítě'}</h3>
-          <p>{p.kids.map((c, i) => <>{i > 0 && <br />}<PersonLink slug={c.slug} />{c.line && <span class="small muted"> (přímá linie)</span>}
-            {nPartners > 1 && c.other && people[c.other] && <span class="small muted"> ({people[c.other].sex === 'F' ? 'matka' : 'otec'} {people[c.other].name})</span>}</>)}</p>
+          <h3>{p.kids.length + sideKids.length > 1 ? 'Děti' : 'Dítě'}</h3>
+          {p.kids.length > 0 && <p>{p.kids.map((c, i) => <>{i > 0 && <br />}<PersonLink slug={c.slug} />{c.line && <span class="small muted"> (přímá linie)</span>}
+            {nPartners > 1 && c.other && people[c.other] && <span class="small muted"> ({people[c.other].sex === 'F' ? 'matka' : 'otec'} {people[c.other].name})</span>}</>)}</p>}
+          {sideKids.length > 0 && <p class="small">Další děti: {sideKids.map((c, i) => <>{i > 0 && ', '}<a href={`${href.person(c.slug)}#${c.anchor}`}>{c.name}{c.years && ` (${c.years})`}</a></>)}</p>}
         </div>
       )}
       {p.siblings.length > 0 && (

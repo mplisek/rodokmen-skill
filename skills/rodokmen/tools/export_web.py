@@ -577,6 +577,16 @@ def main():
     for p in people.values():   # příbuzní z RODINA mají vlastní stránku a jsou v Dětech / Sourozencích / Manželství
         p["side"] = [e for e in p["side"] if not e.get("slug")]
         p["tree"] = f"k{p['k']}" if not p.get("extra") else next(o["id"] for o in others if o["slug"] == p["slug"])
+    # Další děti předka zapsané jen v SIDE (děti z RODINA už jsou v p["kids"]): u předka jako syn/dcera,
+    # u jeho dítěte v linii jako bratr/sestra. Nevlastní sourozence vynechá – nevíme, po kterém rodiči jsou.
+    for p in people.values():
+        p["sideKids"] = []
+        if p.get("extra"):
+            continue
+        for owner, kind in [(p["slug"], "child")] + [(c, "sib") for c in p["children"]]:
+            for i, e in enumerate(people[owner]["side"]):
+                if e["kind"] == kind and not any(x["name"] == e["name"] for x in p["sideKids"]):
+                    p["sideKids"].append(dict(name=e["name"], years=e["years"], slug=owner, anchor=f"pribuzny-{i}"))
 
     families = {}
     for k in sorted(P):

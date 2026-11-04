@@ -13,6 +13,7 @@ Použití:
   aron_img.py <apu_id> svazek        -> zapíše svazek do data/svazky.json (klíč = prvních 8 znaků apu_id)
   aron_img.py odkazy [--opravit]     -> najde v data/ odkazy z dřívějšího `link`, které otevřou knihu na prvním
                                         snímku (id souboru PUBLISHED); s --opravit je přepíše na správný snímek (TILE)
+                                        (totéž jako `opravit-odkazy [--zapsat]` z originálu)
 
 Popis svazků se ukládá do pracovni/.cache_aron/<apu_id>.json (ve složce projektu).
 """
@@ -184,7 +185,8 @@ ODKAZ = re.compile(r"aron\.vychodoceskearchivy\.cz/apu/([0-9a-f-]{36})/dao/([0-9
 
 def oprav_odkazy(opravit):
     """Odkazy na snímek v data/*.json a data/*.md s id souboru PUBLISHED (dřívější `link`) otevřou knihu na prvním
-    snímku. Nahradí to id za id souboru TILE téhož snímku; zbytek souborů zůstane beze změny."""
+    snímku. Nahradí celou adresu adresou souboru TILE téhož snímku (může být i v jiném digitálním objektu svazku);
+    zbytek souborů zůstane beze změny. Popis svazku bere z mezipaměti, chybějící stáhne (jeden dotaz na svazek)."""
     soubory = sorted(glob.glob(os.path.join(ROOT, "data", "*.json")) + glob.glob(os.path.join(ROOT, "data", "*.md")))
     texty = {}
     for p in soubory:
@@ -192,28 +194,35 @@ def oprav_odkazy(opravit):
             texty[p] = f.read()
     nahrady, nezname, dobre = {}, [], 0
     for apu, dao_id, file_id in sorted({m.groups() for t in texty.values() for m in ODKAZ.finditer(t)}):
-        dao = next((d for d in volume(apu).get("digitalObjects", []) if d["id"] == dao_id), {})
-        f = next((f for f in dao.get("files", []) if f["id"] == file_id), None)
-        tile = f and next((t for t in dao["files"] if t["type"] == "TILE" and t["order"] == f["order"]), None)
+        stara = f"/apu/{apu}/dao/{dao_id}/file/{file_id}"
+        try:
+            vol = volume(apu)
+        except SIT + (ValueError, urllib.error.HTTPError) as e:
+            nezname.append(f"…{stara} (svazek se nepodařilo načíst: {e})")
+            continue
+        daos = vol.get("digitalObjects") or []
+        f = next((f for d in daos for f in d.get("files", []) if f["id"] == file_id), None)
+        tile = f and next(((d, t) for d in daos for t in d.get("files", [])
+                           if t["type"] == "TILE" and t["order"] == f["order"]), None)
         if f and f["type"] == "TILE":
             dobre += 1
         elif tile:
-            nahrady[file_id] = tile["id"]
+            nahrady[stara] = f"/apu/{apu}/dao/{tile[0]['id']}/file/{tile[1]['id']}"
         else:
-            nezname.append(f"…/apu/{apu}/dao/{dao_id}/file/{file_id}")
+            nezname.append(f"…{stara} ({'snímek nemá dlaždice' if f else 'soubor ve svazku není'})")
     zmenene = {}
     for p, t in texty.items():
         nove = t
-        for stare, tile_id in nahrady.items():
-            nove = nove.replace(stare, tile_id)
+        for stara, nova in nahrady.items():
+            nove = nove.replace(stara, nova)
         if nove != t:
-            zmenene[p] = (nove, sum(t.count(stare) for stare in nahrady))
+            zmenene[p] = (nove, sum(t.count(stara) for stara in nahrady))
     print(f"odkazy na snímky ARON: {dobre + len(nahrady) + len(nezname)} různých, správně {dobre}, "
-          f"na první snímek {len(nahrady)}" + (f", nenalezeno ve svazku {len(nezname)}" if nezname else ""))
+          f"na první snímek {len(nahrady)}" + (f", nejasné {len(nezname)}" if nezname else ""))
     for p, (_, kolik) in zmenene.items():
         print(f"  {os.path.relpath(p, ROOT)}: {kolik}× {'opraveno' if opravit else 'k opravě'}")
     for o in nezname:
-        print("  nenalezeno:", o)
+        print("  nejasné:", o)
     if opravit:
         for p, (nove, _) in zmenene.items():
             with open(p, "w", encoding="utf-8", newline="") as f:
@@ -224,12 +233,11 @@ def oprav_odkazy(opravit):
         print("Opravíš je: python3 -I tools/aron_img.py odkazy --opravit")
 
 
-ODKAZ = re.compile(r"https://aron\.vychodoceskearchivy\.cz/apu/([^/\s]+)/dao/([^/\s]+)/file/([^/?#\s]+)")
 
 
 if __name__ == "__main__":
-    if sys.argv[1:2] == ["odkazy"]:
-        oprav_odkazy("--opravit" in sys.argv[2:])
+    if sys.argv[1:2] in (["odkazy"], ["opravit-odkazy"]):   # opravit-odkazy [--zapsat] = název z originálu (#89)
+        oprav_odkazy(bool({"--opravit", "--zapsat"} & set(sys.argv[2:])))
         sys.exit(0)
     if len(sys.argv) < 3 or sys.argv[1] in ("-h", "--help"):
         sys.exit(__doc__)

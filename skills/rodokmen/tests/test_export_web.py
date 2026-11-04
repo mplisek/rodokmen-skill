@@ -49,6 +49,11 @@ PARTNERI = [
     dict(a=16, b="anna-hruba", rok=1890, misto="Holice", konec="ovdověl 1900"),
     dict(a=1, b="jana-nova", rok=2008, misto="Pardubice"),
 ]
+SIDE += [
+    dict(k=8, n="Josef Novák", v="bratr", y="1885–1886", t="Zemřel jako dítě."),
+    dict(k=8, n="Karel Novák", v="nevlastní bratr", y="* 1902", t="Z druhého manželství otce."),
+    dict(k=16, n="František Novák", v="syn", y="1888", t="Zemřel po narození."),
+]
 '''
 
 
@@ -131,8 +136,17 @@ class ExportUkazky(unittest.TestCase):
         self.assertTrue(any(c["slug"] == jan["slug"] and c["line"] for c in deti16))
         rodina = self.site["families"][jan["family"]]
         self.assertTrue({jan["slug"], "marie-novakova-1892", "anicka-novakova-1879"} <= set(rodina["children"]))
-        self.assertEqual(rodina["side"], [])   # příbuzní s vlastní stránkou nejsou podruhé jako poznámka
+        self.assertFalse({e.get("slug") for e in rodina["side"]} & set(rodina["children"]))   # s vlastní stránkou ne podruhé
+        self.assertEqual([e["name"] for e in rodina["side"]], ["Josef Novák", "Karel Novák"])   # jen poznámky ze SIDE
         self.assertIn(self.slug("Tomáš Novák"), {c["slug"] for c in self.koren["kids"]})
+
+    def test_dalsi_deti_ze_side(self):
+        # SIDE: bratr dítěte v linii a syn předka = další děti předka; nevlastní bratr ne (nevíme, po kom je)
+        deti = self.podle_k[16]["sideKids"]
+        self.assertEqual([c["name"] for c in deti], ["František Novák", "Josef Novák"])
+        self.assertEqual({c["slug"] for c in deti}, {self.podle_k[16]["slug"], self.podle_k[8]["slug"]})
+        self.assertTrue(all(c["anchor"].startswith("pribuzny-") for c in deti))
+        self.assertEqual(self.podle_k[8]["sideKids"], [])
 
     def test_partneri_s_podrobnostmi(self):
         anna = self.slug("Anna (příjmení neznámé)")

@@ -346,7 +346,7 @@ Nedělej to pořád. Postup:
 | Nástroj | Co dělá |
 |---|---|
 | `aron_search.py "Obec"` | najde svazky matrik na ARON (SOA Zámrsk); `"Obec,Fara"` zúží stejnojmenné obce |
-| `aron_img.py <apu> info / <snímek> 1 pracovni/x.jpg / link <n> / svazek`, `aron_img.py odkazy [--opravit]` | stáhne snímek, dá odkaz, zapíše svazek; opraví staré odkazy, které otevřou první snímek |
+| `aron_img.py <apu> info / <snímek> 1 pracovni/x.jpg / link <n> / svazek`, `aron_img.py odkazy [--opravit]` (i `opravit-odkazy [--zapsat]`) | stáhne snímek, dá odkaz, zapíše svazek; opraví staré odkazy, které otevřou první snímek |
 | `portafontium.py fara / info / snimek / link / svazek` | matriky SOA Plzeň (západní Čechy, Porta fontium) bez prohlížeče (faru zjisti na portálu) |
 | `ebadatelna.py link / a-link`, `snimek / a-snimek` | trvalý odkaz; náhled a výřez ze snímku uloženého z prohlížeče – stahovat nástroj nesmí (archiv od 2. 11. 2026 zakazuje), postup v `portaly.md` |
 | `cache.py stav / najdi <adresa> / uloz <soubor.json>`, `--nahled x.jpg` | sdílená mezipaměť obrázků (ukládá ji brzda sama); uložení snímku eBadatelny z prohlížeče, rovnou s náhledem 1600 px |

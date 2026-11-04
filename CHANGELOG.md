@@ -30,6 +30,10 @@ Fork na originálu 0.8.0 (bezpečná aktualizace projektu, ARON celým skenem, n
 - Opravy z issues (PR #89): `zapis.py --smazat`, `overit.py`/`vyrez.py --vylepsit` pro vybledlé snímky,
   `ramecek.py --stranka`, kontrola polí v přepisech, doklady bez online odkazu; odkaz ARON hledá snímek ve všech
   digitálních objektech.
+- Stránka předka ukazuje v kartě Děti i **Další děti** zapsané jen v `SIDE` (bratr/sestra dítěte v linii, syn/dcera
+  předka) s odkazem na poznámku; děti z `RODINA` tam byly už dřív (obdoba #69 z PR #89 pro data forku).
+- `aron_img.py odkazy --opravit` najde správný snímek i v jiném digitálním objektu svazku (nahradí celou adresu),
+  nespadne na jednom nedostupném svazku a jde spustit i jako `opravit-odkazy [--zapsat]` jako v originálu.
 - Stránka osoby mimo přímou linii (z `RODINA`) má i kapitolu **Předci** (tři generace přes otce a matku, od přímého
   předka dál po číslech) a řádek **Místa** s odkazy na obce z jejích údajů.
 - `kontrola.py` hlídá Kekulého čísla: upozorní, když poznámka „otec Václava (72)“ nebo „syn Josefa (40)“
