@@ -170,14 +170,15 @@ Všechno z toho jde přidat později.
   založeného verzí 0.7.0. Postup: `novy_projekt.py` na stejnou složku, `npm install`, `npm run data`,
   `npm run build`.
 
-## Vydání
+## Návody a vydání
 
-- Nová verze **0.8.0**: `.claude-plugin/plugin.json`, `skills/rodokmen/VERZE`, README na dvou místech
-  a sekce v `CHANGELOG.md` (postup podle `CLAUDE.md` v kořeni repozitáře).
 - Návody: seznam stránek v `reference/web.md`. Řádek `kontrola.py` v tabulce nástrojů v `SKILL.md`
   doplní, že hlídá i časovou návaznost. `reference/data.md` dostane poznámku, že přesnost dat ve faktech
   ovlivňuje kontrolu.
-- Tag a vydání na GitHubu až po sloučení do `main` a se souhlasem uživatele.
+- **Verzi skillu vydává jen autor.** Tyto PR nemění `plugin.json`, `VERZE`, README ani `CHANGELOG.md`
+  a nezakládají tag ani vydání na GitHubu.
+- Dodávka ve dvou navazujících PR: (1) pravidla v `chronologie.py`, `kontrola.py`, `overeno`, testy a návody
+  k datům; (2) export dat pro osu a stránka `/osa/`.
 
 ## Necháno na staviteli
 
