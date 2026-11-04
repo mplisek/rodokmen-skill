@@ -89,6 +89,18 @@ class ExportUkazky(unittest.TestCase):
         jana = self.slug("Jana Nová")
         self.assertIn(dict(slug=jana, text=""), self.koren["partners"])   # bez roku a místa sňatku
 
+    def test_zijici_na_casove_ose_jen_rok_narozeni(self):
+        osa = {r["slug"]: r for r in self.site["timeline"]["rows"]}
+        for sl, p in self.lide.items():
+            if "Žijící" in (p.get("note") or "") and sl in osa:
+                r = osa[sl]
+                self.assertIsNone(r["marriage"], sl)
+                self.assertIsNone(r["death"], sl)
+                self.assertRegex(r["birth"]["text"] if r["birth"] else "1900", r"^\d{0,4}$", sl)
+        skryti = {sl for sl, p in self.lide.items() if "Žijící" in (p.get("note") or "")}
+        for v in self.site["timeline"]["warnings"]:
+            self.assertFalse(set(v["people"]) & skryti)
+
     def test_zijici_nejsou_na_mape(self):
         skryti = {s for s, p in self.lide.items() if p["note"] == ew.ZIJICI_POZN or p.get("extra")}
         na_mape = {s for m in self.site["places"] for skupina in m["lines"] for s in skupina["people"]}

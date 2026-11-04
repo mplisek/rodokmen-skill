@@ -36,6 +36,9 @@ jobs:
       - name: Testy nástrojů
         run: python -X utf8 -m unittest discover -s skills/rodokmen/tests -v
 
+      - name: Testy časové návaznosti (chronologie.py)
+        run: python -X utf8 tests/chronologie/test_chronologie.py
+
       - name: Ukázkový web – založení a kontrola dat
         shell: bash
         run: |
