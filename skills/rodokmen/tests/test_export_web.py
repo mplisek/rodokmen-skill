@@ -114,6 +114,12 @@ class ExportUkazky(unittest.TestCase):
         self.assertTrue(marie["rel"].startswith("sestra osoby"))
         self.assertTrue(self.lide[self.slug("Tomáš Novák")]["rel"].startswith("syn osoby"))
 
+    def test_rodina_ma_rodice_pro_graf_predku_a_mista(self):
+        marie = self.lide["marie-novakova-1892"]
+        self.assertEqual(marie["parents"], [self.podle_k[16]["slug"], self.podle_k[17]["slug"]])
+        self.assertEqual(self.podle_k[8]["parents"], [self.podle_k[16]["slug"], self.podle_k[17]["slug"]])
+        self.assertIn("holice", {m["slug"] for m in marie.get("places", [])})   # odkaz na místo i mimo přímou linii
+
     def test_adresa_s_rokem_umrti(self):
         self.assertIn("anicka-novakova-1879", self.lide)   # jediný rok v y je úmrtí – patří do adresy
 
@@ -188,6 +194,23 @@ class Kontrola(unittest.TestCase):
             self.assertEqual(r.returncode, 1)
             self.assertIn("PARTNERI 16 × 'nikdo'", r.stdout)
             self.assertIn("upozornění: RODINA 'sam'", r.stdout)   # nespojená osoba = jen upozornění
+
+    def test_partneri_bez_rodiny_a_citace_u_kazde_osoby(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            projekt = Path(tmp) / "p"
+            self.assertEqual(novy_projekt(projekt, "--ukazka").returncode, 0)
+            osoby = projekt / "data" / "osoby.py"
+            puvodni = osoby.read_text(encoding="utf-8")
+            with open(osoby, "a", encoding="utf-8", newline="\n") as f:   # 0.7.0-fork.1 tu padal (UnboundLocalError)
+                f.write("RODINA = {}\nPARTNERI = [dict(a=2, b=3)]\n")
+            r = spust(projekt, "kontrola.py", check=False)
+            self.assertNotIn("Traceback", r.stderr)
+            self.assertEqual(r.returncode, 0, r.stdout)
+            osoby.write_text(puvodni + 'RODINA = {"a": dict(n="Anna", sex="F", otec=1, r=["neni-takovy"]),'
+                             ' "b": dict(n="Bedřich", sex="M", otec=1)}\nPARTNERI = []\n', encoding="utf-8")
+            r = spust(projekt, "kontrola.py", check=False)
+            self.assertEqual(r.returncode, 1)
+            self.assertIn("RODINA 'a' (Anna) cituje neexistující zápis 'neni-takovy'", r.stdout)
 
 
 if __name__ == "__main__":

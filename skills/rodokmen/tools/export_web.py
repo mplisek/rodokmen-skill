@@ -525,6 +525,8 @@ def main():
         if people[s].get("extra"):
             people[s]["father"] = f_ if f_ in people else None
             people[s]["mother"] = m_ if m_ in people else None
+    for s, p in people.items():   # rodiče podle odkazů (ne podle čísla) – graf předků i u osob z RODINA
+        p["parents"] = [x if x in people else None for x in rodice.get(s, (None, None))]
     by_parent = {}
     for s, par in rodice.items():
         for x in par:
@@ -659,8 +661,8 @@ def main():
         timeline = [] if e.get("hypoteza") else [
             dict(slug=p["slug"], line=p["line"] or 0, life=life(p["y"]), events=[place_event(f) for f in p["facts"] if rx.search(f)])
             for p in hits]
-        for p in hits:
-            p.setdefault("places", []).append(dict(slug=slug, name=name))
+        for p in hits + [p for p in people.values() if p.get("extra") and rx.search(" ".join(p["facts"]))]:
+            p.setdefault("places", []).append(dict(slug=slug, name=name))   # příbuzní mimo linii: jen odkaz, mapa beze změny
         places.append(dict(name=name, slug=slug, lat=e["lat"], lon=e["lon"], lines=[dict(k=k, people=v) for k, v in sorted(byline.items())],
                            years=[min(yrs), max(yrs)] if yrs else None, hypothesis=bool(e.get("hypoteza")), timeline=timeline))
 

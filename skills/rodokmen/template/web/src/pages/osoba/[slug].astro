@@ -97,10 +97,10 @@ const nPartners = (p.child ? 1 : 0) + partners.length;
     </>
   )}
 
-  {!p.extra && <h2>Předci</h2>}
+  <h2>Předci</h2>
   <p class="small">{p.fan && <><a href={p.fan}>Vějíř předků{p.slug === root.slug ? '' : ` – ${p.name}`} →</a> · </>}<a href={`/strom/#f=${p.tree}`}>Stromový graf od této osoby →</a></p>
-  {!p.extra && <div class="only-desktop"><Pedigree k={p.k} /></div>}
-  {!p.extra && <div class="only-mobile"><MobileTree k={p.k} /></div>}
+  <div class="only-desktop">{p.extra ? <Pedigree slug={p.slug} /> : <Pedigree k={p.k} />}</div>
+  <div class="only-mobile">{p.extra ? <MobileTree slug={p.slug} /> : <MobileTree k={p.k} />}</div>
 
   {p.docs.length > 0 && (
     <>

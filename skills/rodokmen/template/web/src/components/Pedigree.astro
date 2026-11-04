@@ -1,25 +1,26 @@
 ---
-// Four columns: the person, parents, grandparents, great-grandparents (Kekulé arithmetic on the root-relative number).
-// Boxes in the last column show how many more known generations continue behind them.
-import { byK, href } from '../lib/data.js';
-const { k } = Astro.props;
+// Four columns: the person, parents, grandparents, great-grandparents (Kekulé arithmetic on the root-relative number;
+// a person from RODINA, k = 0, goes through their father/mother links). Boxes in the last column show how many more
+// known generations continue behind them.
+import { byK, people, href, slot, rodiceSlotu, hloubka, znamych } from '../lib/data.js';
+const { k, slug } = Astro.props;
+let level = [slug ? slot(people[slug]) : { k, p: byK[k] ?? null }];
 const cols = [0, 1, 2, 3].map((d) => {
+  if (d > 0) level = level.flatMap(rodiceSlotu);
   const n = 2 ** d;
-  return Array.from({ length: n }, (_, i) => ({ k: k * n + i, span: 8 / n, row: 1 + i * (8 / n) }));
+  return level.map((sl, i) => ({ sl, span: 8 / n, row: 1 + i * (8 / n) }));
 });
-const depth = (kk) => (byK[2 * kk] || byK[2 * kk + 1] ? 1 + Math.max(depth(2 * kk), depth(2 * kk + 1)) : 0);
-const known = (kk) => (byK[kk] ? 1 + known(2 * kk) + known(2 * kk + 1) : 0);
 const genWord = (n) => (n === 1 ? 'generace' : n < 5 ? 'generace' : 'generací');
 ---
 <div class="pedigree" role="list" aria-label="Rodokmen tři generace nazpět">
   {cols.map((col, c) =>
-    col.map(({ k: kk, span, row }) => {
-      const p = byK[kk];
+    col.map(({ sl, span, row }) => {
+      const p = sl.p;
       const style = `grid-column:${c + 1};grid-row:${row} / span ${span}`;
-      const more = c === 3 && p ? depth(kk) : 0;
+      const more = c === 3 && p ? hloubka(sl) : 0;
       return p ? (
         <a role="listitem" class={`box ${c === 0 ? 'self' : ''} ${more ? 'has-more' : ''}`} style={style} href={href.person(p.slug)}
-          title={more ? `Rodokmen pokračuje: ${known(kk) - 1} dalších předků` : undefined}>
+          title={more ? `Rodokmen pokračuje: ${znamych(sl) - 1} dalších předků` : undefined}>
           {p.name}<span class="y">{p.years || ' '}</span>
           {more > 0 && <span class="more">a dál {more} {genWord(more)} →</span>}
         </a>

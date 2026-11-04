@@ -213,7 +213,7 @@ kdo hledá své předky.
 
 Nemusíte nic sepisovat sami. Claude si během práce zapisuje do `poznamky_pro_skill.md` (v projektu), co by šlo zlepšit:
 chyby, nové archivy, postupy a nápady, bez údajů o vaší rodině. Občas vám je nabídne k odeslání. Nic se neposílá samo:
-když budete chtít, zkopírujte je do e-mailu.
+když budete chtít, založte z nich [issue u tohoto forku](https://github.com/mplisek/rodokmen-skill/issues/new).
 
 ## Bezpečnost
 Skill je obyčejný text (návod pro Clauda) a pár skriptů v Pythonu. Všechno si můžete před instalací prohlédnout

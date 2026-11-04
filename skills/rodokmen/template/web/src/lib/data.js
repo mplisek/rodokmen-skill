@@ -16,6 +16,15 @@ export const byK = Object.fromEntries([
   ...Object.entries(site.aliases ?? {}).map(([k, slug]) => [Number(k), people[slug]]),
 ]);
 export const lineByK = Object.fromEntries(Object.values(lines).map((l) => [l.k, l]));
+// Místo v grafu předků: { k, p }. U přímé linie rodiče podle Kekulého čísla (2k, 2k+1 – ukáže i předka za mezerou),
+// u osoby z RODINA (k = 0) podle odkazů otec/matka z exportu (p.parents); od přímého předka se pak jde zase po číslech.
+export const slot = (p) => ({ k: p && !p.extra ? p.k : 0, p: p ?? null });
+export function rodiceSlotu({ k, p }) {
+  if (k) return [{ k: 2 * k, p: byK[2 * k] ?? null }, { k: 2 * k + 1, p: byK[2 * k + 1] ?? null }];
+  return (p?.parents ?? [null, null]).map((s) => slot(s ? people[s] : null));
+}
+export const hloubka = (sl) => { const [a, b] = rodiceSlotu(sl); return a.p || b.p ? 1 + Math.max(hloubka(a), hloubka(b)) : 0; };
+export const znamych = (sl) => { if (!sl.p) return 0; const [a, b] = rodiceSlotu(sl); return 1 + znamych(a) + znamych(b); };
 
 export const href = {
   person: (slug) => `/osoba/${slug}/`,

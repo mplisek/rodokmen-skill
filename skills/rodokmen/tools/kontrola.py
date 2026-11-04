@@ -44,6 +44,39 @@ def research_log_stats(path):
     return rows, sorted(duplicates, key=str.casefold)
 
 
+# „otec Václava (72)“ = tato osoba je otcem osoby 72; „syn Jana Nováka (36)“ = je synem osoby 36.
+_RODIC = re.compile(r"\b(otec|matka)\s+(\w+)[^()\"]{0,40}?\((\d+)\)", re.I)
+_DITE = re.compile(r"\b(syn|dcera)\s+(\w+)[^()\"]{0,40}?\((\d+)\)", re.I)
+
+
+def _stejne_jmeno(gen, jmeno):
+    """Jméno v 2. pádě („Václava“, „Josefy“) patří ke křestnímu jménu („Václav“, „Josefa“)?"""
+    a, b = gen.lower(), (jmeno.split() or [""])[0].lower()
+    return len(a) >= 3 and len(b) >= 3 and a[:3] == b[:3]
+
+
+def kekule(P, SAME=None):
+    """Hlídá Kekulého čísla podle poznámek: rodiče osoby k jsou 2k a 2k+1, dítě je k // 2. Upozorní, když fakta
+    nebo poznámka osoby zmiňují příbuzného s číslem v závorce, které tomu neodpovídá (předek dostal špatné číslo).
+    Jen když osoba s tím číslem existuje a jméno sedí – číslo v závorce může být i rok nebo číslo domu.
+    U předka, který je v rodokmenu víckrát (SAME), stačí, když sedí kterékoli z jeho čísel."""
+    warn = []
+    for k, p in sorted((k, p) for k, p in P.items() if isinstance(k, int) and k > 1):
+        cisla = [k] + [a for a, c in (SAME or {}).items() if c == k and isinstance(a, int)]
+        text = " ".join(p.get("f", [])) + " " + p.get("note", "")
+        for rx, sedi in ((_RODIC, lambda n: any(c // 2 == n for c in cisla)),
+                         (_DITE, lambda n: any(n // 2 == c for c in cisla))):
+            for m in rx.finditer(text):
+                n = int(m.group(3))
+                if n not in P or sedi(n) or not _stejne_jmeno(m.group(2), P[n].get("n", "")):
+                    continue
+                spravne = (f"dítě má mít číslo {k // 2}" if rx is _RODIC
+                           else f"rodiče mají čísla {2 * k} a {2 * k + 1}")
+                warn.append(f"osoba {k} ({p.get('n')}): v poznámce „{m.group(0)}“, ale podle Kekulého čísla {spravne}"
+                            " – má předek správné číslo? (rodiče osoby k jsou 2k a 2k+1)")
+    return warn
+
+
 def main():
     err, warn = [], []
     ns = {}
@@ -84,7 +117,8 @@ def main():
                 err.append(f"boční příbuzný '{s.get('n')}' cituje neexistující zápis '{r}'")
     R = ns.get("RODINA", {})
     PARTNERI = ns.get("PARTNERI", [])
-    odkazy = {v for o in R.values() for v in [o.get("otec"), o.get("matka"), *o.get("partner", [])] if isinstance(v, str)} |         {v for pr in PARTNERI for v in (pr.get("a"), pr.get("b")) if isinstance(v, str)}
+    odkazy = ({v for o in R.values() for v in [o.get("otec"), o.get("matka"), *o.get("partner", [])] if isinstance(v, str)}
+              | {v for pr in PARTNERI for v in (pr.get("a"), pr.get("b")) if isinstance(v, str)})
     for oid, o in R.items():
         kde = f"RODINA '{oid}' ({o.get('n')})"
         if o.get("sex") not in ("M", "F"):
@@ -103,13 +137,14 @@ def main():
         if not (o.get("otec") or o.get("matka") or o.get("partner")) and oid not in odkazy:
             warn.append(f"{kde}: není s nikým spojen (chybí otec, matka i partner) – na webu bude jen samostatná stránka; "
                         "nejistého příbuzného raději jako poznámku do SIDE")
+        for r in o.get("r", []):
+            if r not in keys:
+                err.append(f"{kde} cituje neexistující zápis '{r}'")
     for pr in PARTNERI:
         for v in (pr.get("a"), pr.get("b")):
             if isinstance(v, str) and v not in R or isinstance(v, int) and v not in P and v not in SAME or v is None:
                 err.append(f"PARTNERI {pr.get('a')!r} × {pr.get('b')!r}: osoba {v!r} neexistuje (číslo z P nebo klíč z RODINA)")
-        for r in o.get("r", []):
-            if r not in keys:
-                err.append(f"{kde} cituje neexistující zápis '{r}'")
+    warn += kekule(P, SAME)
     for a, c in SAME.items():
         if c not in P:
             err.append(f"SAME: {a} -> {c}, ale osoba {c} neexistuje")

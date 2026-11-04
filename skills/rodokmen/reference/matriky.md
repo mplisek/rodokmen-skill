@@ -62,7 +62,10 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
    rozsah“, Porta fontium `info`. Přechody vsí mezi farami mívají mezery – zápis z mezery hledej v obou farách.
 2. **Rejstřík fary:** uvádí ves (písmenem nebo „tom“ = kniha vsi, ne pořadí svazku) a **stranu uvnitř oddílu**, ne celé
    knihy. Snímek ≈ začátek oddílu + strana/2 (folio/2), dolaď podle čísla na snímku. Uvnitř písmene jde rejstřík podle let.
-   Klíč písmeno/tom → ves zjistíš ze záhlaví stránek; sestav si tabulku do deníku.
+   Klíč písmeno/tom → ves zjistíš ze záhlaví stránek; sestav si tabulku do deníku. Rejstřík **celé fary** je nejrychlejší
+   cesta i k zápisu, který není v knize vsi ženicha (nevěsta z jiné vsi): u eBadatelny v seznamu matrik obce (v prohlížeči)
+   hledej knihy s vyplněným indexem N/O/Z; klíč písmen ke vsím bývá na úvodní straně některého z rejstříků (Bykáň:
+   u rejstříku zemřelých).
 3. **Mapa knihy:** z každého 5.–30. snímku jen horní pruh (název vsi, rok) v malém rozlišení, slepit pod sebe s číslem
    snímku → stavba celé knihy na jednom obrázku: `python3 -I tools/mapa_knihy.py aron|pf|ahmp <kniha> <od> <do> [krok]`
    (u archivů jen v prohlížeči z uložených snímků obrazovky: `mapa_knihy.py soubory pracovni/x_*.png`). Pak v plném

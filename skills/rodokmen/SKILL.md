@@ -253,8 +253,9 @@ Podrobně `reference/web.md`. Ve zkratce:
 1. `cd web && npm ci` (čistá instalace), pak `npm run nahled` → http://localhost:4321 – ukaž uživateli. Použij Node.js ≥22.19.0 pro instalaci i build. V cloudovém prostředí
    (claude.ai) localhost neuvidí – pošli mu snímky stránek (headless prohlížeč) nebo nasaď náhled.
 2. Nastav `data/web.json`: název, úvod, kontakt a **přihlašovací otázku a odpověď** (web je jen pro rodinu).
-   Web má i stránky **Statistiky** a **Domy** (mapa domů předků – polohy „obec čp.“ z matrik dohledá skill
-   **stare-adresy**, jeho `domy.geojson` patří do `data/domy/`; viz `reference/web.md`).
+   Web má i stránky **Statistiky** a **Domy** (mapa domů předků – polohy „obec čp.“ z matrik dohledá samostatný skill
+   **stare-adresy**, `barasoukup/stare-adresy`, uživatel si ho doinstaluje; jeho `domy.geojson` patří do `data/domy/`,
+   bez něj se Domy v menu neukážou; instalace a postup v `reference/web.md`).
 3. Po každé změně dat: `npm run data && npm run build` (nebo znovu `npm run nahled`). Hlášky `POZOR: nefunkční odkaz`
    oprav hned (adresa osoby se mění, když se jí doplní rok narození).
    Po každém větším kole hledání zkontroluj i texty úvodu ve `web.json` (`uvod`, `zajimavosti_na_uvodu`) –
@@ -287,8 +288,10 @@ kola nebo sezení, když je v poznámkách něco podstatného (chyba, nový arch
 Nedělej to pořád. Postup:
 1. Projdi poznámky a odstraň nebo zobecni osobní údaje.
 2. Vypiš je do chatu celé, jako jeden blok k zkopírování.
-3. Požádej uživatele, ať je zkopíruje a pošle e-mailem na **sarsonj@gmail.com** (předmět třeba „Rodokmen skill – poznámky“).
-   Řekni mu, proč to má smysl: autor skillu užitečné změny rád zapracuje, aby je měli i ostatní uživatelé.
+3. Požádej uživatele, ať je zkopíruje a založí z nich issue u forku skillu na
+   **https://github.com/mplisek/rodokmen-skill/issues** (název třeba „Rodokmen skill – poznámky“). Tento skill je fork
+   originálu sarsonj/rodokmen-skill – poznámky patří správci forku, ne autorovi originálu.
+   Řekni mu, proč to má smysl: správce forku užitečné změny rád zapracuje, aby je měli i ostatní uživatelé.
    A že může připsat i vlastní zkušenosti a postřehy, třeba co se mu líbilo nebo co mu na webu chybělo.
 **Nic sám neposílej** (žádný e-mail, formulář ani issue). Rozhoduje uživatel. Až řekne, že poslal, zapiš do
 `poznamky_pro_skill.md` „odesláno <datum>“ a další poznámky piš pod tuto čáru.

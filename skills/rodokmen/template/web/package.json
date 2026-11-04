@@ -10,7 +10,7 @@
     "preview": "astro preview",
     "test": "node --test src/lib/*.test.ts",
     "nahled": "node scripts/build.mjs --nahled",
-    "nasadit": "npm run data -- --nasazeni && npm run build && node scripts/over_css.mjs && npx -y netlify-cli@latest deploy --prod --dir=dist",
+    "nasadit": "npm run data -- --nasazeni && npm run build && node scripts/over_css.mjs && node scripts/nasadit.mjs",
     "poznamky": "node scripts/poznamky.mjs",
     "pack": "tar -czf ../rodokmen-web.tar.gz Dockerfile captain-definition nginx.conf dist",
     "deploy-caprover": "npm run data -- --nasazeni && npm run build && node scripts/over_css.mjs && npm run pack && caprover deploy -t ../rodokmen-web.tar.gz"

@@ -10,6 +10,26 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
+## 0.8.0-fork.1 – 4. 11. 2026
+
+### Opravy
+- `kontrola.py` už nepadá (`UnboundLocalError`) u projektu s `PARTNERI` a bez `RODINA`; neexistující zápis hlídá
+  u každé osoby z `RODINA`, ne jen u poslední.
+- `npm run nasadit` funguje i u projektu za odkazem (junction/symlink): Netlify CLI tam končilo chybou „build.base …
+  must be inside the repository root“, nově se nasazuje z čisté složky `~/.rodokmen-netlify/<projekt>`
+  (`web/scripts/nasadit.mjs`).
+
+### Nové
+- Stránka osoby mimo přímou linii (z `RODINA`) má i kapitolu **Předci** (tři generace přes otce a matku, od přímého
+  předka dál po číslech) a řádek **Místa** s odkazy na obce z jejích údajů.
+- `kontrola.py` hlídá Kekulého čísla: upozorní, když poznámka „otec Václava (72)“ nebo „syn Josefa (40)“
+  neodpovídá číslu osoby (rodiče osoby k jsou 2k a 2k+1).
+
+### Návody
+- Stránka Domy: odkaz na skill stare-adresy, jak ho nainstalovat a že bez `domy.geojson` se stránka neukáže.
+- Rejstřík celé fary (eBadatelna, klíč písmen ke vsím) jako rychlá cesta k zápisu mimo knihu vsi ženicha.
+- Poznámky pro správce skillu jdou do issues forku (https://github.com/mplisek/rodokmen-skill/issues).
+
 ## 0.7.0-fork.1 – 4. 11. 2026
 
 První verze forku postavená přímo na originálu 0.7.0 (historie odpovídá originálu, otevřené pull requesty jsou

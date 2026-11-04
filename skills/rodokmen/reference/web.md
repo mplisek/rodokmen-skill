@@ -22,7 +22,9 @@ Náhled spouštěj na pozadí a uživateli pošli odkaz. `nahled` i `nasadit` po
 že každá stránka odkazuje na existující styly. Když selže (web by byl bez stylů – stává se u projektu za odkazem typu
 junction a po zastaralé cache), smaž ve `web/` složky `dist`, `.astro` a `node_modules/.vite` a sestav znovu.
 `astro.config.mjs` má proto `preserveSymlinks: true`. Netlify CLI za junction končí chybou „build.base … must be inside
-the repository root“ – pak ať uživatel spustí nasazení ze skutečné cesty ke složce (ne přes odkaz).
+the repository root“ – `nasadit` to řeší sám (`scripts/nasadit.mjs`): za odkazem nasazuje z čisté složky
+`~/.rodokmen-netlify/<projekt>`, kam zkopíruje jen `dist/`, `netlify/` a `netlify.toml`. Propojení s webem
+(`web/.netlify/state.json`) tam zkopíruje; když chybí, vypíše, ve které složce udělat jednou `sites:create` (nebo `link`).
 
 **Web ve vnitřní síti (domácí počítač, bez nasazení na internet):** stačí servírovat hotové `dist/`, např.
 `python3 -I -m http.server 4321 --bind 0.0.0.0 --directory dist` (ve `web/`). Aby běžel i po restartu (Linux),
@@ -73,7 +75,13 @@ stránkách). V menu je, jen když nějaký dokument existuje; text vybízí rod
 - **Statistiky** (`/statistiky/`, `tools/statistiky.py`): povolání, věk dožití a při sňatku, měsíce svateb, generační
   odstup, místa narození, křestní jména, víra, zápisy podle druhu a archivu. Počítá se jen z faktů přímých předků –
   čím jednotnější zápis faktů (`* 12. 3. 1873 Obec čp. 5`, `× …`, `† …`, řemeslo samostatně), tím lepší čísla.
-- **Domy** (`/domy/`, `tools/domy_export.py`): mapa domů předků z výstupu skillu stare-adresy (viz `data.md` → `domy/`).
+- **Domy** (`/domy/`, `tools/domy_export.py`): mapa domů předků z výstupu samostatného skillu **stare-adresy**
+  (https://github.com/barasoukup/stare-adresy, viz `data.md` → `domy/`). Skill rodokmen ho neobsahuje – bez
+  `data/domy/domy.geojson` se stránka v menu neukáže a web funguje dál. Instalace (uživatel, jednou):
+  `/plugin marketplace add barasoukup/stare-adresy` a `/plugin install stare-adresy@stare-adresy` (potřebuje ImageMagick
+  a prohlížeč, který Claude ovládá). V projektu pak stačí „Projdi adresy v mém rodokmenu a udělej mapu domů předků“ –
+  adresy „Obec čp. N“ čte z `data/osoby.py`, výstup patří do `data/domy/`, potom `npm run data && npm run build`.
+  Adresy, které na mapě chybí, vypíše export do `data/domy/chybi.txt` (podklad pro další kolo).
   Podklad ČÚZK (mapa / letecký snímek), domy shluknuté podle obcí, barva podle rodu, v okénku lidé, kteří v domě
   žili (přímí předci první, boční příbuzní s odkazem na kartičku u předka), výřez skici a jedna věta o jistotě polohy.
   Na stránkách osob a zápisů jsou odkazy na domy. Výřezy skic na veřejném webu jen s citací archivu (podmínky
