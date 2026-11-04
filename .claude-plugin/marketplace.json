@@ -1,8 +1,8 @@
 {
   "name": "rodokmen-skill",
-  "description": "Skill pro Claude Code: rodokmen z českých matrik a rodinný web.",
+  "description": "Skill pro Claude Code: rodokmen z českých matrik a rodinný web (fork originálu sarsonj/rodokmen-skill).",
   "owner": {
-    "name": "Jindřich Šaršon"
+    "name": "Martin Plíšek"
   },
   "plugins": [
     {
