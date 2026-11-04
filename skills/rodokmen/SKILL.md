@@ -178,6 +178,7 @@ Pravidla, která chrání kvalitu (naučená na skutečném projektu):
 - Při změně Kekulého čísel zkontroluj a aktualizuj i odkazy na čísla osob: `SIDE.k`, klíče `LINES`,
   číselné odkazy v `web.json` a odkazy na osoby v příbězích. Zkontroluj také `SAME` a další textové odkazy.
 - **Čti celý zápis včetně okrajů** – pozdější poznámky o úmrtí, sňatku, legitimaci bývají nejcennější.
+- **U úmrtí čti i příčinu:** ulož původní výraz, český překlad a jistotu čtení do `pricina_umrti` (`reference/data.md`). Rozliš nečitelný údaj, prázdnou rubriku a matriku bez této rubriky. Příčinu neodvozuj z věku ani okolních úmrtí; historický výraz nepřeváděj na nepodloženou moderní diagnózu. Pro novější citlivé údaje platí `reference/soukromi.md`.
 - **Rodina přes čísla domů**: stejné číslo popisné a řemeslo přes generace je silná stopa; v knize hledej celé domácnosti.
 - **Ztotožnění míst ověř** podle panství/kraje v zápisu (německé „Langenau“ je v Čechách několikrát – rozhodne „bey Hohenelbe“ = u Vrchlabí).
 - **U úředníků, vojáků, lékařů, učitelů, farářů** zkus noviny a ročenky (`reference/portaly.md` → Noviny): ukážou

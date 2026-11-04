@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import PersonLink from '../../components/PersonLink.astro';
+import Cause from '../../components/Cause.astro';
 import { records, recordList } from '../../lib/data.js';
 import domyData from '../../data/domy.json';
 
@@ -15,6 +16,7 @@ const recDomy = (domyData.zapisy[r.key] || []).map((id) => domById[id]).filter(B
   <p class="crumbs"><a href="/zapisy/">Zápisy z matrik</a> · <span class="kind">{r.kindName}</span></p>
   <h1>{r.title}</h1>
   <p class="lead">{r.summary}</p>
+  <Cause cause={r.cause} />
   <div class="table-box"><table>
     <tbody>
       <tr><th>Datum</th><td>{r.date}</td></tr>
