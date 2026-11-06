@@ -373,6 +373,7 @@ text i tak nečitelný, udělej z plného rozlišení výřez (`x0,y0,x1,y1`), n
 | `vyrez.py <stránka.jpg> <klíč> x0,y0,x1,y1 [--kontrast \| --vylepsit]` | výřez do `zdroje/` a `vyrezy/` (`--kontrast` u vybledlého písma, `--vylepsit` jen když ani tak nejde přečíst – výřez pak bude šedý) |
 | `ramecek.py <klíč> x0,y0,x1,y1` / `--stranka x0,y0,x1,y1` | rámeček čteného místa + kontrolní obrázek (zlomky výřezu, s `--stranka` celé stránky) |
 | `mista.py pridej "Obec"` / `mista.py` | místa pro mapu (souřadnice z OpenStreetMap) |
+| `brno_encyklopedie.py hledat "text"`, `detail osobnosti:<id>` | Encyklopedie dějin města Brna: osobnosti s adresami, povoláním a hrobem (brněnští předci) |
 | `zapis.py <soubor> <klíč> <vstup.json> [--sloucit]` | přidá / změní položku v `zaznamy`, `svazky`, `prepisy`… beze změny formátu |
 | `zapis.py --smazat <klíč>` | smaže zápis, který se ukázal jako omyl (zaznamy, prepisy, zvyrazneni; výřezy do `pracovni/smazano_…`) |
 | `slusne.py <skript.py> / curl … / bash x.sh / stav` | brzda proti zablokování archivem – vlastní skripty a curl spouštěj přes ni |

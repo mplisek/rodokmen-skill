@@ -383,12 +383,13 @@ kde matriky hledat.
   to může fungovat: `kramerius.py 'text_ocr:"Jan Novák"' 10 --server https://digitalnistudovna.mo.gov.cz`. Při zkoušce z prostředí skillu (říjen 2026) server odpověděl,
   ale jeho certifikát nebyl důvěryhodný (CERTIFICATE_VERIFY_FAILED) – **kontrolu certifikátu nevypínej**; na počítači uživatele to může jít, nebo studovnu použij v prohlížeči.
 
-## Encyklopedie dějin města Brna (Archiv města Brna) – `tools/brno_encyklopedie.py`
+## Encyklopedie dějin města Brna (encyklopedie.brna.cz; Masarykova univerzita a Muzeum města Brna) – `tools/brno_encyklopedie.py`
 - `brno_encyklopedie.py hledat "Novák klempíř Králova"` → až ~30 zásahů fulltextu (osobnost, ulice, objekt, spolek…) s úryvkem a odkazem; portál vrací jen první stránku,
   zužuj dalšími slovy (příjmení, ulice, povolání). `detail osobnosti:15` (nebo odkaz z výpisu) vypíše celé heslo: narození, úmrtí, **bydliště s adresou**, vzdělání,
   zaměstnání, **hrob (hřbitov, skupina, číslo hrobu)**, poznámky.
 - Je to tištěná encyklopedie významných osob a míst, ne evidence obyvatel – běžní předkové tu být nemusí. U brněnských řemeslníků a úředníků ale často dá adresy,
-  povolání a hrob na Ústředním hřbitově (a z toho pokračuj v matrikách MZA, `mza.py`). Zdroj cituj jako „Encyklopedie dějin města Brna“.
+  povolání a hrob na Ústředním hřbitově (a z toho pokračuj v matrikách MZA – hledání `mza.py`, snímky jen v prohlížeči). Zdroj cituj jako „Encyklopedie dějin města Brna“.
+  robots.txt portálu nic nezakazuje; nástroj jde přes brzdu `slusne.py`.
 
 ## Další pomůcky a zdroje (ověřeno 2026-10)
 - **Historický lexikon obcí ČR 1869–2015** (ČSÚ, `csu.gov.cz` – web se přestěhoval z czso.cz; hledej „Historický lexikon obcí“): změny názvů, příslušnost obcí k okresům, počty
