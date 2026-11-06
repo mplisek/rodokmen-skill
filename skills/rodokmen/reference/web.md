@@ -17,6 +17,7 @@ a překladem), stránka osoby, rodiny, „Co hledáme“, výzkumný deník, hle
 | `npm run nahled` | data + build + náhled na http://localhost:4321 (Ctrl+C ukončí); `-- --pristup <id>` = verze pro jeden přístup |
 | `npm run dev` | vývojový režim při úpravách vzhledu |
 | `npm run nasadit` | data + build + nahrání na Netlify |
+| `npm run overit` | kontrola nasazeného webu bez přihlášení (rodinná otázka × ochrana týmu Netlify) |
 
 Náhled spouštěj na pozadí a uživateli pošli odkaz. `nahled` i `nasadit` po sestavení spustí `scripts/over_css.mjs`: ověří,
 že každá stránka odkazuje na existující styly. Když selže (web by byl bez stylů – stává se u projektu za odkazem typu
@@ -102,11 +103,14 @@ stránkách). V menu je, jen když nějaký dokument existuje; text vybízí rod
    (můžeš spustit sám): `cd web && npx -y netlify-cli@latest sites:create --name <název> --account-slug <tým>`.
    **Windows:** když `!` běží ve Windows PowerShellu 5.1 (`&&` tam nefunguje a `npx` blokuje Execution Policy), ať uživatel
    otevře PowerShell 7 nebo Příkazový řádek, přejde do složky `web` a spustí `npx -y netlify-cli@latest login` (a `sites:create`).
-4. Nasazení: `cd web && npm run nasadit` (můžeš spustit sám; vypíše adresu webu).
-5. Ověř: otevři adresu **v anonymním okně** → musí se ukázat rodinná přihlašovací otázka; po správné odpovědi web.
-   Ukáže-li se místo ní přihlášení k Netlify (401, „Login Redirect“), zdědil web ochranu týmu („Team protection“).
-   Uživatel ji vypne v administraci webu: Project configuration → Access & security → Visitor access. Web pak chrání
-   rodinná otázka – proto znovu ověř v anonymním okně, že se ukáže.
+   **Nový web bývá „Private“ (ochrana týmu)** – rodina by místo rodinné otázky viděla přihlášení k Netlify a majitel to
+   nepozná (je přihlášený). Řekni to uživateli předem; kontrola po nasazení (krok 4) ji pozná. Vypni ji se souhlasem uživatele:
+   `npx -y netlify-cli@latest api updateSite --data '{"site_id":"<siteId z web/.netlify/state.json>","body":{"sso_login":false}}'`
+   (v administraci: Project configuration → Access & security → Visitor access → Project visibility → Edit visibility → Public).
+4. Nasazení: `cd web && npm run nasadit` (můžeš spustit sám; vypíše adresu webu). Na konci se sama spustí kontrola
+   `scripts/overit.mjs` (ručně `npm run overit`): otevře web bez přihlášení a pozná rodinnou otázku, ochranu týmu Netlify
+   (vypíše, jak ji vypnout) i web bez brány. Skončí-li chybou, oprav to a spusť `npm run overit` znovu.
+5. Ověř i sám: otevři adresu **v anonymním okně** → rodinná otázka, po správné odpovědi web.
    Přihlášení zajišťuje Netlify Edge Function `web/netlify/edge-functions/brana.js` (generuje ji export).
 Další aktualizace = jen `npm run nasadit`. Tarif zdarma má měsíční kredity a každé nasazení je spotřebovává –
 nenasazuj po každé drobné změně, ale až na požádání uživatele (třeba po skončení kola hledání). Vlastní doménu lze nastavit v administraci Netlify.

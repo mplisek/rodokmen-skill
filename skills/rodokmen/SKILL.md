@@ -140,7 +140,7 @@ Základní smyčka pro každou osobu:
    Podrobnosti v `reference/zadosti.md`. Co jde jen přes úřad, zapiš do `data/archivni_dotazy.md` a jdi dál.
    Chce-li uživatel žádost poslat, viz „Žádosti“ níže.
 3. **Najdi svazek**: podle obce → farnost → archiv. ARON: `python3 -I tools/aron_search.py "Obec"`, SOA Plzeň:
-   `tools/portafontium.py`, Praha: `tools/ahmp_search.sh`, židovské matriky (Národní archiv): `tools/vademecum.py`,
+   `python3 -I tools/portafontium.py obec "Obec"`, Praha: `tools/ahmp_search.sh`, židovské matriky (Národní archiv): `tools/vademecum.py`,
    SOA Litoměřice: `tools/litomerice.py`, Brno – osobnosti, ulice, hroby: `tools/brno_encyklopedie.py`, Rakousko/Vídeň:
    `tools/matricula.py` (seznamy) + `tools/matricula_snimek.js` (snímek přes Playwright), vězni a oběti 2. sv. války:
    `tools/arolsen.py`, `tools/mauthausen.py`, `tools/obeti.py`;
@@ -205,6 +205,9 @@ pro každý web (dotaz 1 za 2 s, obrázky 10 za s) pro všechny procesy na poč�
 - **Hláška „slusne: … je zastavený“ (kód 3)** = archiv dal najevo, že ho zatěžujeme (429/503/403, stránka
   „zablokováno“, spojení odmítnuto). Nezkoušej to znovu, neobcházej to (jiný nástroj, prohlížeč), řekni to uživateli
   a dělej jinou práci. Stav: `slusne.py stav`. `slusne.py odblokuj` jen když víš, že šlo o tvou chybu (špatná adresa).
+- **Výpadky archivů** (večer a v noci – eBadatelna zhruba 22:45–0:45 a kolem 2:00 –, údržba, prošlý certifikát):
+  nástroj hlásí „neodpovídá“ a brzda po 3 neúspěšných spojeních nebo vypršeních za sebou web zastaví. Přepni na jiný
+  archiv nebo jinou práci a zkus to později. Kontrolu certifikátu nikdy nevypínej, na prošlý certifikát jen počkej.
 - **V prohlížeči brzda neplatí, hlídáš se sám:** při cíleném hledání (konkrétní snímek, rejstřík) aspoň 5 s mezi
   stránkami, při listování stránku po stránce 10 s. Na jednom archivu jen jeden prohlížeč, žádní pomocníci, žádné
   smyčky `fetch` ani `Promise.all`.
@@ -349,20 +352,20 @@ Nedělej to pořád. Postup:
 |---|---|
 | `aron_search.py "Obec"` | najde svazky matrik na ARON (SOA Zámrsk); `"Obec,Fara"` zúží stejnojmenné obce |
 | `aron_img.py <apu> info / <snímek> 1 pracovni/x.jpg / link <n> / svazek`, `aron_img.py odkazy [--opravit]` (i `opravit-odkazy [--zapsat]`) | stáhne snímek, dá odkaz, zapíše svazek; opraví staré odkazy, které otevřou první snímek |
-| `portafontium.py fara / info / snimek / link / svazek` | matriky SOA Plzeň (západní Čechy, Porta fontium) bez prohlížeče (faru zjisti na portálu) |
+| `portafontium.py obec / fara / info / snimek / link / svazek` | matriky SOA Plzeň (západní Čechy, Porta fontium) bez prohlížeče (`obec` = knihy obce podle far) |
 | `ebadatelna.py link / a-link`, `snimek / a-snimek` | trvalý odkaz; náhled a výřez ze snímku uloženého z prohlížeče – stahovat nástroj nesmí (archiv od 2. 11. 2026 zakazuje), postup v `portaly.md` |
 | `cache.py stav / najdi <adresa> / uloz <soubor.json>`, `--nahled x.jpg` | sdílená mezipaměť obrázků (ukládá ji brzda sama); uložení snímku eBadatelny z prohlížeče, rovnou s náhledem 1600 px |
 | `ahmp_search.sh "dotaz"`, `ahmp_scan.py XID snímek out.jpg` | matriky Prahy (AHMP) |
 | `policie_prihlasky.py Příjmení [Jméno] [od] [do]`, `karta <pořadí> out.jpg …` | pražské policejní přihlášky 1850–1914 (rodiny s dětmi a adresami), stažení karty |
 | `soal_zoomify.py <cesta nebo adresa> 0 out.jpg` | snímek SOA Litoměřice nebo ZA Opava (knihu najdi v prohlížeči; pozor na blokování) |
 | `matricula_dl.sh`, `matricula_batch.sh` | snímky z Matriculy (Rakousko…), URL se bere z prohlížeče |
-| `anno.py`, `anno_snap.py`, `kramerius.py` | noviny: ANNO (rakouské), Kramerius (české) |
+| `anno.py`, `anno_snap.py`, `kramerius.py` | noviny: ANNO (rakouské; `--ztraty` = seznamy ztrát 1914–1919), Kramerius (české) |
 | `ged_import.py strom.ged "Jméno"` | předci z rodinného stromu (GEDCOM) + fronta zápisů |
 | `ftb_export.py strom.ftb out.ged ["Jméno" rok linie.md [Photos/]]` | záloha z MyHeritage (.ftb) → GEDCOM + přímá linie s původem údajů |
 | `mapa_knihy.py aron/pf/ahmp <kniha> <od> <do> [krok]`, `--vedle --ostre --vyrez …`, `soubory …` | mapa knihy (horní pruhy snímků pod sebou) a montáž sloupce se jmény vedle sebe – orientace v knihách po vsích (`matriky.md`) |
-| `overit.py <snímek> x0,y0,x1,y1 <prefix> [--vylepsit]` | zápis na dvě čitelné poloviny – ověření čtení (souřadnice = zlomky 0–1); `--vylepsit` u vybledlých snímků |
+| `overit.py <snímek> x0,y0,x1,y1 <prefix> [--kontrast \| --vylepsit]` | zápis na dvě čitelné poloviny – ověření čtení (souřadnice = zlomky 0–1); u vybledlého písma nejdřív `--kontrast`, u nejhorších `--vylepsit` (i doostří) |
 | `napady.py` | náměty na zajímavosti z dat |
-| `vyrez.py <stránka.jpg> <klíč> x0,y0,x1,y1 [--vylepsit]` | výřez do `zdroje/` a `vyrezy/` (`--vylepsit` jen když originál nejde přečíst – výřez pak bude šedý) |
+| `vyrez.py <stránka.jpg> <klíč> x0,y0,x1,y1 [--kontrast \| --vylepsit]` | výřez do `zdroje/` a `vyrezy/` (`--kontrast` u vybledlého písma, `--vylepsit` jen když ani tak nejde přečíst – výřez pak bude šedý) |
 | `ramecek.py <klíč> x0,y0,x1,y1` / `--stranka x0,y0,x1,y1` | rámeček čteného místa + kontrolní obrázek (zlomky výřezu, s `--stranka` celé stránky) |
 | `mista.py pridej "Obec"` / `mista.py` | místa pro mapu (souřadnice z OpenStreetMap) |
 | `zapis.py <soubor> <klíč> <vstup.json> [--sloucit]` | přidá / změní položku v `zaznamy`, `svazky`, `prepisy`… beze změny formátu |

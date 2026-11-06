@@ -12,7 +12,7 @@ Vznikl při skutečném hledání předků jedné rodiny.
 **Autor původního skillu:** Jindřich Šaršon ([sarsonj/rodokmen-skill](https://github.com/sarsonj/rodokmen-skill)).
 
 > **Tohle je fork** – [mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skill). Vychází z originálu, přebírá
-> jeho novinky (naposledy verzi 0.8.0) a navíc obsahuje příspěvky, které v originále zatím nejsou (jsou tam jako otevřené
+> jeho novinky (naposledy verzi 0.8.2) a navíc obsahuje příspěvky, které v originále zatím nejsou (jsou tam jako otevřené
 > pull requesty): další archivy a nástroje (SOA Litoměřice, židovské matriky, oběti a vězni 2. sv. války, Encyklopedie
 > Brna, hledání v MZA Brno…), stromový graf, stránky Statistiky, Domy, Osobnosti, Časová osa a stránky míst, víc příběhů rodu,
 > vlastní stránky příbuzných mimo přímou linii, vějíř předků pro libovolnou osobu, vynucené soukromí žijících na webu,
@@ -20,7 +20,7 @@ Vznikl při skutečném hledání předků jedné rodiny.
 > skriptem a co jen v prohlížeči) fork dodržuje. Kdo přechází z originálu, najde postup v části
 > [Přechod z originálu](#přechod-z-originálu).
 
-**Aktuální verze: 0.8.0-fork.1 (vydána 4. 11. 2026).** Skill se průběžně vyvíjí – opravuji chyby a doplňuji postupy pro další archivy
+**Aktuální verze: 0.8.2-fork.1 (vydána 6. 11. 2026).** Skill se průběžně vyvíjí – opravuji chyby a doplňuji postupy pro další archivy
 podle toho, na co narazíte vy. Jak aktualizovat, najdete v části [Instalace](#instalace), přehled změn
 po verzích v [CHANGELOG.md](CHANGELOG.md).
 
@@ -75,7 +75,7 @@ s přepisem a překladem, „Co hledáme“ a deník hledání. **[Podívejte se
 AI se vyvíjí rychle a za pár měsíců může skill dávat lepší, nebo jen jiné výsledky. Proto je tu uvedeno, s čím byl
 vyzkoušený.
 
-- **Stav k 4. 11. 2026 (verze 0.8.0-fork.1):** Claude Code s hlavním modelem **Claude Opus 5.5**. Pomocníci, kteří hledají
+- **Stav k 6. 11. 2026 (verze 0.8.2-fork.1):** Claude Code s hlavním modelem **Claude Opus 5.5**. Pomocníci, kteří hledají
   a čtou matriky jako první, běží na **Claude Sonnet 5.5**. Každý jejich nález pak hlavní model ověřuje na snímku.
 - Vyzkoušeno na několika skutečných rodokmenech (největší má 243 předků v 11 generacích a 192 matričních zápisů).
   Výsledek se porovnával s větví, kterou jsme léta dělali ručně.

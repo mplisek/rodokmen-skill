@@ -16,6 +16,11 @@ vojenské záznamy, domovské listy, parte. Viz `portaly.md` a `playbook.md` §2
 Do archivu (a tedy online) jde svazek, až od jeho **posledního** zápisu uplyne: narození **100 let**, sňatky **75**, úmrtí **30**.
 Mladší knihy jsou na matričním úřadě obce s rozšířenou působností / pověřeném úřadě – výpis dostane přímý příbuzný
 (žádost + doklady o příbuzenství). Zapiš do `archivni_dotazy.md`.
+Katalogy archivů uvádějí **i svazky, které jsou ještě na úřadě**: v detailu „Technická poznámka: MATRIKA JE DOSUD
+ULOŽENA NA MATRIČNÍM ÚŘADĚ“, „Místo uložení: Obecní úřad X“ a 0 příloh (snímků). Tu poznámku přečti dřív, než hledáš
+snímky; svazek rovnou zapiš do `archivni_dotazy.md` i s místem uložení (tam se píše o výpis). Zkus **samostatný rejstřík**
+(I-N, I-O, I-Z) přes stejné roky – bývá online a dá aspoň datum a číslo domu. Uživateli řekni předem, že narození
+zhruba po roce 1910 často online nebudou (kniha pokračuje za rok 1926, lhůta běží od posledního zápisu).
 
 ## Jak vypadá hledání v praxi
 1. **Obec → farnost.** Malé vesnice patřily k faře v sousední obci; popis svazku vyjmenovává všechny obce farnosti.
@@ -34,6 +39,9 @@ Mladší knihy jsou na matričním úřadě obce s rozšířenou působností / 
    na číslo snímku. Najdi folio podle číslování přímo v knize a zkontroluj okolní strany – vložené, chybějící nebo
    nečíslované listy mohou vztah mezi folií a snímkem změnit.
    Posun „snímek – strana“ se v knize mění (vložené listy, chybějící strany) – přečti číslo strany na náhledu a dopočítej.
+   **Posun nikdy nedomýšlej:** přečti „Pag./fol.“ na 2–3 snímcích, spočítej ho a teprve pak skoč (bývá +1, +2, ale i −19).
+   U knih **dodatečně přefoliovaných** odkazuje rejstřík na původní ruční číslo listu (vpravo nahoře), ne na archivní
+   foliaci. Farní rejstřík bývá společný pro víc obcí (sloupec obec) a folio pak platí v knize té obce.
    U starých far se vyplatí nejdřív najít **souhrnný index** přes víc desetiletí (např. N/O/Z 1636–1746) – dovede
    rychle až do 17. století. Rejstříky bývají podle **německého pravopisu**: česká jména na O a V hledej i pod W
    (Otava = Wotawa, Vávra = Wawra). Knihy pro více obcí bývají řazené po obcích, rejstřík na konci (viz níže).
@@ -65,8 +73,15 @@ až na konci knihy. Odhad snímku podle roku pak selže a „zápis tam není“
 vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–405).
 1. **Popis knihy první:** eBadatelna „Obecný popis“ (rozvržení stran po vsích), MZA „Části matriky“, ARON „územní
    rozsah“, Porta fontium `info`. Přechody vsí mezi farami mívají mezery – zápis z mezery hledej v obou farách.
+   Popis bývá **neúplný**: eBadatelna rozvržení ořízne asi na 250 znaků (konec chybí i na webu archivu), u jiných knih
+   chybí úplně, i když je kniha po vsích řazená, a název vsi bývá zkomolený („Onšovec“ = Vonšovec). Úplný seznam vsí
+   knihy je v poli **Lokality**; zbylé oddíly najdi mapou knihy (bod 3) podle čísel stran „Pag.“ a nadpisu vsi
+   (bývá jen na první straně oddílu).
 2. **Rejstřík fary:** uvádí ves (písmenem nebo „tom“ = kniha vsi, ne pořadí svazku) a **stranu uvnitř oddílu**, ne celé
    knihy. Snímek ≈ začátek oddílu + strana/2 (folio/2), dolaď podle čísla na snímku. Uvnitř písmene jde rejstřík podle let.
+   Staré rejstříky odkazují často na **přeškrtnutá stará čísla** listů a rok s listem bývá posunutý o řádek proti jménu –
+   čti i sousední položky a ověř na snímku. Na konci knih bývá i ručně psaný **rejstřík po obcích** (prohlédni poslední
+   snímky). Dobrovolnické rejstříky nejsou úplné – při neúspěchu čti oddíl vsi přímo.
    Klíč písmeno/tom → ves zjistíš ze záhlaví stránek; sestav si tabulku do deníku. Rejstřík **celé fary** je nejrychlejší
    cesta i k zápisu, který není v knize vsi ženicha (nevěsta z jiné vsi): u eBadatelny v seznamu matrik obce (v prohlížeči)
    hledej knihy s vyplněným indexem N/O/Z; klíč písmen ke vsím bývá na úvodní straně některého z rejstříků (Bykáň:
@@ -82,6 +97,9 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 5. **Pasti:** sňatek bývá v oddílu vsi nevěsty, ale některé fary řadily podle ženicha (Držkov); starší knihy mají
    narozené, oddané a zemřelé proložené a bez obsahu; čísla stran v samostatném rejstříku nemusí sedět se stránkováním
    knihy. Než napíšeš „nenalezeno“, zmapuj **všechny** oddíly.
+6. **Samostatné knihy vsí:** velké fary vedly pro některé vesnice vlastní knihy (Nové Strašecí × Pecínov). Hledej knihy
+   i podle obce bydliště, ne jen podle fary, a u každé zkontroluj Lokality. **„Nenalezeno“ platí jen pro knihu, která ves
+   pokrývá** (skutečná chyba: sňatek „nenalezen“ ve dvou farách, přitom byl ve vesnické knize správné fary).
 
 ## Čtení písma
 - Kurentový rejstřík: stáhni plné rozlišení a rozřež stránku na čtvrtiny (sloupec jmen + data),
@@ -92,6 +110,11 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
   najednou přes `xargs -P 4`) a slož je po osmi vedle sebe (`magick montage o1.jpg … o8.jpg -tile 8x1 -geometry +4+0 m.jpg`).
   Úroveň 2 na čtení příjmení stačí, menší ne. Nalezený zápis pak stáhni celý v úrovni 1 nebo 0 (0 = plné rozlišení).
   Nezapomeň na nemanželské děti – otec je prázdný a příjmení je ve sloupci matky.
+- **Vybledlé písmo** (mikrofilm, propiska nebo tužka 1945–1949, celé knihy hlavně v eBadatelně): je-li písmo zápisu
+  světlé nebo stránka vypadá skoro prázdná, čti z výřezu s `--kontrast` (`vyrez.py … --kontrast`,
+  `overit.py … --kontrast`; jinak `magick x.jpg -colorspace Gray -contrast-stretch 2%x35% x_k.jpg`). Stránku
+  **neprohlašuj za prázdnou a zápis za nenalezený**, dokud ji nezkusíš s kontrastem. Do webu pak dej kontrastní výřez
+  a poznamenej to v přepisu. Zelený tón snímku: `magick x.jpg -channel G -separate -normalize x_k.jpg`.
 - Do ~1780 latina nebo čeština, pak hodně němčina (kurent), od ~1860 často čeština, ve 20. století čeština.
 - Česká jména v němčině/latině: Johann/Joannes = Jan, Wenzel/Wenceslaus = Václav, Joseph = Josef, Franz/Franciscus = František,
   Maria = Marie, Anna, Katharina = Kateřina, Barbara = Barbora, Magdalena = Majdalena/Magdaléna, Theresia = Terezie,
@@ -156,6 +179,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 - Nemanželské dítě nese příjmení matky; otec chybí nebo je dopsán později (legitimace na okraji).
 - Stejný předek dvakrát v rodokmenu (vzdálení příbuzní se vzali) – v datech `SAME`.
 - Index nenašel ≠ zápis neexistuje. Zapiš, co přesně jsi prošel.
+- Oddací zápis uvádí „narozen dle mat. IV f. 149“ – podle folia najdeš křest jedním stažením (folio ≈ snímek − posun knihy).
 - Pomocníci (subagenti) a OCR/AI čtou historické písmo chybně – vždy ověř sám (viz `playbook.md` §1 bod 10).
 - Německé formuláře (např. Vídeň) se čtou hůř než české: nejčastěji chybí nebo se pletou **roky, stav (ledig × vdovec), povolání,
   adresy a jména svědků**. Tyhle údaje vždy ověř sám na výřezu, než je zapíšeš jako `doc`; „střední“ jistota od pomocníka na to nestačí.

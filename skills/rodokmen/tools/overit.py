@@ -2,9 +2,10 @@
 """Ověření čtení (např. po pomocníkovi): výřez zápisu rozdělený na dvě poloviny, každá nejvýš 1900 px.
 
 Použití:
-  overit.py <snímek.jpg> x0,y0,x1,y1 <prefix> [v] [--vylepsit]
+  overit.py <snímek.jpg> x0,y0,x1,y1 <prefix> [v] [--kontrast | --vylepsit]
       x0..y1  oblast zápisu jako zlomky šířky a výšky snímku (0..1), ne pixely
       v       dělit vodorovně (horní a dolní polovina); bez něj levá a pravá
+      --kontrast  vybledlý zápis: šedá škála, papír vybělit a písmo ztmavit
       --vylepsit  šedá, vyrovnaný kontrast a doostření – pro vybledlé a tmavé snímky (jen ke čtení)
 Uloží <prefix>_0.jpg a <prefix>_1.jpg; poloviny se překrývají o 8 % oblasti, aby slovo na hraně nebylo rozseknuté.
 Potřebuje ImageMagick (příkaz magick).
@@ -31,7 +32,7 @@ def vylepseni(m):
 
 
 def main():
-    args = [a for a in sys.argv[1:] if a != "--vylepsit"]
+    args = [a for a in sys.argv[1:] if a not in ("--vylepsit", "--kontrast")]
     if len(args) < 3:
         sys.exit(__doc__)
     f, box, pre = args[:3]
@@ -51,7 +52,8 @@ def main():
     else:
         xm, p = (x0 + x1) / 2, PREKRYV * (x1 - x0) / 2
         parts = [(x0, y0, xm + p, y1), (xm - p, y0, x1, y1)]
-    uprava = vylepseni(m) if "--vylepsit" in sys.argv else []
+    uprava = (vylepseni(m) if "--vylepsit" in sys.argv
+              else ["-colorspace", "Gray", "-contrast-stretch", "2%x35%"] if "--kontrast" in sys.argv else [])
     os.makedirs(os.path.dirname(os.path.abspath(pre)), exist_ok=True)   # výstupní složka (pracovni/overeni/…) nemusí existovat
     for i, (a, b, c, d) in enumerate(parts):
         o = f"{pre}_{i}.jpg"
