@@ -65,10 +65,11 @@ class Ukazka(unittest.TestCase):
                                                     encoding="utf-8")
             (d / "archivni_dotazy.md").write_text("# P\n\n## Jan Novák (zapsáno 2026-10-31)\n- křest\n", encoding="utf-8")
             (d / "osoby.py").write_text(puvodni["osoby.py"] + '\nISSUES.append(("Kdo?", "Libice, kniha 737"))\n'
-                                        'ISSUES.append(dict(k=99999, otazka="X?", stav="nevim"))\n', encoding="utf-8")
+                                        'ISSUES.append(dict(k=99999, otazka="X?", stav="nevim"))\n'
+                                        'RODINA["mk"] = dict(n="Marie Králová (Nováková)", otec=16)\n', encoding="utf-8")
             out = spust(self.p, "kontrola.py", check=False).stdout
             for hlaska in ("„Sousedé“ není rod", "zodpovězenou položku", "zapsáno", "nevypadá jako archiv",
-                           "převeď na dict", "stav „nevim“", "k=99999"):
+                           "převeď na dict", "stav „nevim“", "k=99999", "příjmení po sňatku „Nováková“"):
                 self.assertIn(hlaska, out)
         finally:
             for f, t in puvodni.items():

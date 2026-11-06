@@ -302,6 +302,12 @@ def main():
             vzory += [re.compile(e.get("re") or re.escape(n))] if "lat" in e else []
         except re.error:   # špatný výraz hlásí kontrola míst níž
             pass
+    # jméno ženy: rodné příjmení, ne „Marie Tesařová (Plíšková)“ (příjmení po sňatku je vidět u manžela)
+    for kde, o in [(f"osoba {k}", p) for k, p in P.items()] + [(f"RODINA '{k}'", o) for k, o in ns.get("RODINA", {}).items()]:
+        m = re.search(r"\((\w+(?:ová|á))\)\s*$", o.get("n", ""))
+        if m:
+            warn.append(f"{kde} ({o['n']}): v n je příjmení po sňatku „{m.group(1)}“ – piš jen rodné příjmení "
+                        "(neznámé: „(příjmení neznámé)“); příjmení po sňatku je vidět u manžela")
     bez_mista = [k for k, p in sorted(P.items()) if isinstance(k, int) and p.get("st") == "doc" and p.get("f")
                  and not any(rx.search(" ".join(p["f"])) for rx in vzory)]
     if bez_mista:   # mapa na webu ukáže jen obce z data/mista.json

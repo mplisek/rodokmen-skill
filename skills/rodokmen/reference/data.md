@@ -26,7 +26,8 @@ P = {
  33: dict(n="otec neuveden", st="unk", f=[], note="Nemanželský syn; otec v matrice není."),
 }
 ```
-- `n` jméno (ženy rodným příjmením), `y` roky pro přehledy (`"* 1895"`, `"1890–1944"`, `"asi 1720–1785"`, `"1680 – před 1740"`,
+- `n` jméno (ženy rodným příjmením, bez příjmení po sňatku – to je vidět u manžela; neznámé rodné příjmení
+  `"Anna (příjmení neznámé)"`, ne `"Anna (Nováková)"`), `y` roky pro přehledy (`"* 1895"`, `"1890–1944"`, `"asi 1720–1785"`, `"1680 – před 1740"`,
   `"† 1940"` když známe jen úmrtí; nic nevíme → `""`).
 - `zap` (volitelné) – tvary jména, jak stojí v zápisech: `zap=["Catharina Nowakin", "Kateřina Nováková"]`.
   Na stránce osoby se ukážou jako „V zápisech zapsána jako …“; s `"puvodni_jmena": true` ve `web.json` se jimi osoba
