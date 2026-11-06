@@ -37,6 +37,7 @@ Fork na originálu 0.8.2 (Porta fontium podle far a 10 s mezi dotazy, FamilySear
 - Úvodní text bez fotky vede přes celou šířku stránky (dřív jen do tří pětin).
 - Kontrola po nasazení (`npm run overit`) běží i po nasazení z čisté složky (`nasadit.mjs`) a pozná přihlašovací
   stránku i bez otázky (jen osobní odkazy).
+- `npm run nasadit` z čisté složky (projekt za odkazem) nasadí i funkci poznámek – zkopíruje `src/lib/poznamky.mjs` a doinstaluje `@netlify/blobs`; nasazuje s `--no-build` (web je sestavený předem).
 
 ### Návody
 - Vybledlé písmo: nejdřív `--kontrast` (originál), u nejhorších snímků `--vylepsit` (navíc doostření).

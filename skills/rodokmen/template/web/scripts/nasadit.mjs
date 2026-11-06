@@ -3,7 +3,7 @@
 // téže cesty a skončí chybou „build.base … must be inside the repository root directory“. V tom případě se nasazuje
 // z čisté složky mimo projekt (~/.rodokmen-netlify/<projekt>), kam se zkopíruje jen dist/, netlify/ a netlify.toml.
 // Propojení s webem na Netlify (.netlify/state.json) se drží ve web/.netlify a do čisté složky se jen kopíruje.
-import { cpSync, rmSync, mkdirSync, existsSync, realpathSync } from "node:fs";
+import { cpSync, rmSync, mkdirSync, existsSync, realpathSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,7 +20,7 @@ function netlify(args, cwd) {
   return spawnSync("npx", [...NETLIFY, ...args], { cwd, stdio: "inherit", shell: true }).status ?? 1;
 }
 
-if (!zaOdkazem) process.exit(netlify(["deploy", "--prod", "--dir=dist"], web));
+if (!zaOdkazem) process.exit(netlify(["deploy", "--prod", "--dir=dist", "--no-build"], web));
 
 const projekt = basename(dirname(skutecna)).replace(/[^\w.-]+/g, "_");
 const cil = join(homedir(), ".rodokmen-netlify", `${projekt}-${createHash("sha1").update(skutecna.toLowerCase()).digest("hex").slice(0, 8)}`);
@@ -30,6 +30,13 @@ for (const n of ["dist", "netlify"]) rmSync(join(cil, n), { recursive: true, for
 cpSync(join(web, "dist"), join(cil, "dist"), { recursive: true });
 if (existsSync(join(web, "netlify"))) cpSync(join(web, "netlify"), join(cil, "netlify"), { recursive: true });
 cpSync(join(web, "netlify.toml"), join(cil, "netlify.toml"));
+// Poznámky (netlify/functions/poznamky.mjs) potřebují src/lib/poznamky.mjs a balíček @netlify/blobs
+if (existsSync(join(web, "netlify", "functions"))) {
+  mkdirSync(join(cil, "src", "lib"), { recursive: true });
+  cpSync(join(web, "src", "lib", "poznamky.mjs"), join(cil, "src", "lib", "poznamky.mjs"));
+  writeFileSync(join(cil, "package.json"), JSON.stringify({ name: "rodokmen-nasazeni", private: true, type: "module", dependencies: { "@netlify/blobs": "^10.7.13" } }, null, 1));
+  if (!existsSync(join(cil, "node_modules", "@netlify", "blobs"))) spawnSync("npm", ["install", "--omit=dev"], { cwd: cil, stdio: "inherit", shell: true });
+}
 const stary = join(homedir(), ".rodokmen-netlify", stav);   // dřívější ruční řešení: jedna složka pro všechno
 if (existsSync(join(web, stav))) cpSync(join(web, stav), join(cil, stav));
 else if (!existsSync(join(cil, stav)) && existsSync(stary)) cpSync(stary, join(cil, stav));
@@ -40,7 +47,7 @@ if (!existsSync(join(cil, stav))) {
     "a pak znovu npm run nasadit (propojení se uloží i do web/.netlify).");
   process.exit(1);
 }
-const kod = netlify(["deploy", "--prod", "--dir=dist"], cil);
+const kod = netlify(["deploy", "--prod", "--dir=dist", "--no-build"], cil);
 if (kod === 0) {
   mkdirSync(join(web, ".netlify"), { recursive: true });
   cpSync(join(cil, stav), join(web, stav));   // propojení zůstane u projektu (i po smazání čisté složky)
