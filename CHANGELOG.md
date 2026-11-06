@@ -10,14 +10,36 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
-## Nevydáno
+## 0.8.2-fork.1 – 6. 11. 2026
+
+Fork na originálu 0.8.2 (Porta fontium podle far a 10 s mezi dotazy, FamilySearch do mezipaměti, `--kontrast`,
+`anno.py --ztraty`, kontrola po nasazení na Netlify, brzda při visícím archivu – viz níže) a navíc:
 
 ### Nové
+- **Osobní odkazy na web** (PR #94): každý příbuzný může dostat vlastní odkaz `https://<web>/?k=<klíč>`
+  (`tools/pozvanky.py pridej "Teta Jana"`), který jde jednomu člověku zrušit nebo vyměnit; rodinná otázka platí dál.
+  Ve forku navíc **i s přístupy**: `pozvanky.py pridej "Teta Jana" --pristup <id>` – teta pak vidí jen verzi webu
+  pro ten přístup; změna `pozvanky.py pristup p1 <id>`. Poznámky ke stránkám fungují i pro příchozí přes odkaz.
+  Jen na Netlify (nginx/Docker odkazy neumí).
+- Snímky z ARONu na čtení ve výchozím plném rozlišení (PR #120).
+- Holocaust.cz (`obeti.py`) a Arolsen (`arolsen.py`) stahují až po souhlasu s podmínkami portálu, který potvrdí
+  uživatel sám v terminálu (`souhlas`, jednou za 30 dní; PR #123, #124).
+- `smoke_test.py` rozliší i ZASTAVENO (brzda web zastavila) a přeskočí nástroje čekající na souhlas (PR #125).
+- README: kapitola Nastavení – mezipaměť snímků, brzda, co jde nastavit v projektu (PR #107).
 - **Dějiny významných domů:** `data/stavby.py` (držitelé, obyvatelé, události, čísla popisná v čase, otevřené otázky)
   a nástroj `tools/stavby.py` – `kontrola` (osoby, zápisy, stavy, soukromí), `kandidati` (náměty z `osoby.py`: řemesla
   a domy s více lidmi), `export` (volá ho `export_web.py`). Na stránce Domy je u domu rozbalovací „Dějiny domu“.
 - Návod `reference/stavby.md`: formát, přehled pramenů podle doby (gruntovní a pozemkové knihy, sčítání lidu po domech,
   reambulace pro datování novostaveb) a postup. Vznikl podle skillu dejiny-domu.
+
+### Opravy
+- Encyklopedie Brna a Mauthausen: srozumitelná hláška při výpadku portálu, spolehlivější čtení výsledků (PR #121, #122).
+- Úvodní text bez fotky vede přes celou šířku stránky (dřív jen do tří pětin).
+- Kontrola po nasazení (`npm run overit`) běží i po nasazení z čisté složky (`nasadit.mjs`) a pozná přihlašovací
+  stránku i bez otázky (jen osobní odkazy).
+
+### Návody
+- Vybledlé písmo: nejdřív `--kontrast` (originál), u nejhorších snímků `--vylepsit` (navíc doostření).
 
 ## 0.8.2 – 5. 11. 2026
 
