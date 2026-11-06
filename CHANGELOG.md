@@ -23,6 +23,9 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 - Poznámky z náhledu (`test--<web>.netlify.app`, nasazení bez `--prod`) jdou do vlastního úložiště `poznamky-test`,
   na ostrém webu se neukážou; `npm run poznamky -- --test` je stáhne zvlášť.
 
+- Poznámky pro správce skillu jsou v `data/poznamky_pro_skill.md` (dřív v kořeni projektu); aktualizace projektu
+  starý soubor přesune sama, a když jsou oba, jen upozorní.
+
 ### Návody
 - Kredity na Netlify: ostré nasazení 15 kreditů, náhled (bez `--prod`, `--alias test`) zdarma – na zkoušení.
 

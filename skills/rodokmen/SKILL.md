@@ -148,7 +148,7 @@ Základní smyčka pro každou osobu:
    ve farnosti nevěsty.
    Je-li ke svazku index (rejstřík), začni jím. Starší matriky (před ~1784) bývají ve faře sousedního města.
    Nástroj najednou přestal fungovat? Portál se nejspíš změnil: `python3 -I tools/smoke_test.py <nástroj>` řekne, jestli je to výpadek
-   (NEDOSTUPNÉ), nebo změna stránky (CHYBA) – pak to zapiš do `poznamky_pro_skill.md` a řiď se obecným postupem v `portaly.md`.
+   (NEDOSTUPNÉ), nebo změna stránky (CHYBA) – pak to zapiš do `data/poznamky_pro_skill.md` a řiď se obecným postupem v `portaly.md`.
 4. **Stáhni snímek** do `pracovni/<svazek>/` a nech ho tam – před dalším stažením se podívej, jestli ho už nemáš
    (šetří čas, archiv i CAPTCHY). Najdi zápis, **přečti ho sám ze snímku** (přiblíž si výřez v plném rozlišení).
 5. **Zapiš nález** (vždy všech 6 kroků, i když to zdržuje):
@@ -307,7 +307,7 @@ dej je uživateli jako `! npx netlify-cli login` atd. (postup v `reference/web.m
 Nic nezveřejňuj bez výslovného souhlasu uživatele.
 
 ## Poznámky pro správce skillu
-Skill se zlepšuje podle zkušeností lidí, kteří ho používají. Proto **průběžně zapisuj do `poznamky_pro_skill.md`**
+Skill se zlepšuje podle zkušeností lidí, kteří ho používají. Proto **průběžně zapisuj do `data/poznamky_pro_skill.md`**
 (v kořeni projektu), co by se mělo ve skillu zlepšit:
 - chyby nástrojů a webu (příkaz, co se stalo, co jsi čekal, jak jsi to obešel),
 - nový archiv nebo portál a postup, který fungoval (adresy, pasti, omezení), nástroje, které sis musel napsat sám,
@@ -325,7 +325,7 @@ Nedělej to pořád. Postup:
    Řekni mu, proč to má smysl: správce forku užitečné změny rád zapracuje, aby je měli i ostatní uživatelé.
    A že může připsat i vlastní zkušenosti a postřehy, třeba co se mu líbilo nebo co mu na webu chybělo.
 **Nic sám neposílej** (žádný e-mail, formulář ani issue). Rozhoduje uživatel. Až řekne, že poslal, zapiš do
-`poznamky_pro_skill.md` „odesláno <datum>“ a další poznámky piš pod tuto čáru.
+`data/poznamky_pro_skill.md` „odesláno <datum>“ a další poznámky piš pod tuto čáru.
 
 ## Co nikdy
 - Nestahuj hromadně z placených služeb (MyHeritage, Ancestry, Geni…) a neobcházej jejich ochranu –
@@ -349,7 +349,7 @@ Nedělej to pořád. Postup:
 | `data/zajimavosti.md`, `data/pribeh.md`, `data/pribehy/*.md`, `data/web.json`, `data/dokumenty.json`, `data/mista.json`, `data/pozvanky.json` | texty a nastavení webu, rodinné fotky, místa na mapě, osobní odkazy (jen otisky) |
 | `vyrezy/`, `zdroje/` | výřezy zápisů a dokumentů (web / plné rozlišení), název = klíč + `.jpg` |
 | `dokumenty/`, `pracovni/` | originály od rodiny; pracovní soubory (nejdou na web) |
-| `poznamky_pro_skill.md` | poznámky pro správce skillu (chyby, nové archivy, nápady) – posílá je uživatel ručně |
+| `data/poznamky_pro_skill.md` | poznámky pro správce skillu (chyby, nové archivy, nápady) – posílá je uživatel ručně |
 | `tools/` | nástroje (kopie ze skillu; aktualizace celého projektu: znovu spustit `novy_projekt.py` na stejnou složku, viz `reference/web.md`) |
 | `web/` | web (Astro); data do něj jdou jen přes `npm run data` |
 

@@ -149,7 +149,7 @@ def scan(kniha, n):
     stem = os.path.splitext(os.path.basename(path))[0]
     if not link or link.rsplit("/", 1)[-1] != stem:   # odkaz musí nést stejné jméno souboru jako snímek
         sys.exit(f"{kniha}: k snímku {n} ({stem}) se nepodařilo najít jeho odkaz – portál asi změnil stránku. "
-                 "Odkaz neuváděj, nahlas to (poznamky_pro_skill.md).")
+                 "Odkaz neuváděj, nahlas to (data/poznamky_pro_skill.md).")
     return kniha, fields, path, link
 
 

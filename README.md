@@ -253,7 +253,7 @@ tohoto forku. K původnímu skillu můžete psát jeho autorovi (**sarsonj@gmail
 Užitečné změny rád zapracuji do skillu, aby je měli k dispozici i ostatní. Další verze tak bude lepší pro každého,
 kdo hledá své předky.
 
-Nemusíte nic sepisovat sami. Claude si během práce zapisuje do `poznamky_pro_skill.md` (v projektu), co by šlo zlepšit:
+Nemusíte nic sepisovat sami. Claude si během práce zapisuje do `data/poznamky_pro_skill.md` (v projektu), co by šlo zlepšit:
 chyby, nové archivy, postupy a nápady, bez údajů o vaší rodině. Občas vám je nabídne k odeslání. Nic se neposílá samo:
 když budete chtít, založte z nich [issue u tohoto forku](https://github.com/mplisek/rodokmen-skill/issues/new).
 

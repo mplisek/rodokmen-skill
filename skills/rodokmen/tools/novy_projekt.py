@@ -381,6 +381,15 @@ def main():
         sys.exit(0 if all([vyresit(dst, c) for c in cesty]) else 1)
     demo = "--ukazka" in sys.argv
     os.makedirs(dst, exist_ok=True)
+    # poznámky pro správce skillu jsou od 0.8.2-fork.2 v data/ (dřív v kořeni projektu): starý soubor přesunout
+    stare, nove = os.path.join(dst, "poznamky_pro_skill.md"), os.path.join(dst, "data", "poznamky_pro_skill.md")
+    if os.path.isfile(stare) and not os.path.islink(stare):
+        if os.path.lexists(nove):
+            print("POZOR: poznamky_pro_skill.md je v kořeni projektu i v data/ – sluč je do data/poznamky_pro_skill.md a ten v kořeni smaž.")
+        else:
+            os.makedirs(os.path.dirname(nove), exist_ok=True)
+            os.replace(stare, nove)
+            print("Přesunuto: poznamky_pro_skill.md → data/poznamky_pro_skill.md")
     copy_tree(os.path.join(SKILL, "template", "ukazka" if demo else "data"), os.path.join(dst, "data"))
     if demo:
         for sub in ("vyrezy", "zdroje"):
@@ -408,7 +417,8 @@ def main():
     for d in ("vyrezy", "zdroje", "dokumenty", "pracovni"):
         os.makedirs(os.path.join(dst, d), exist_ok=True)
     os.makedirs(os.path.join(dst, ".claude"), exist_ok=True)
-    for name in ("CLAUDE.md", ".gitignore", ".gitattributes", "poznamky_pro_skill.md", os.path.join(".claude", "launch.json")):
+    for name in ("CLAUDE.md", ".gitignore", ".gitattributes", os.path.join("data", "poznamky_pro_skill.md"),   # i u ukázky
+                 os.path.join(".claude", "launch.json")):
         out = os.path.join(dst, name)
         if not os.path.lexists(out):
             copy(os.path.join(SKILL, "template", name), out)

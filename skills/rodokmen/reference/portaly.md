@@ -327,7 +327,7 @@ reemigrační střediska v Žatci, Berouně, Chebu, reemigrace z jednotlivých z
 Matriky tady nestačí: lidé, kteří přišli po 1945 do pohraničí (Volyňští Češi, reemigranti z Rumunska, Jugoslávie,
 Polska, Slováci a Češi z vnitrozemí), mají v matrikách jen narození a sňatky *před* příchodem v jiné farnosti, často v zahraničí.
 Skill pro ně zatím nemá hotový nástroj ani vyzkoušený portál. Postup, který je podle literatury rozumný, ale na skutečném případu
-ho nikdo neověřil – vždy ho zapiš do `STAV.md` a výsledek do `poznamky_pro_skill.md`:
+ho nikdo neověřil – vždy ho zapiš do `STAV.md` a výsledek do `data/poznamky_pro_skill.md`:
 1. **Zeptej se rodiny**: odkud a kdy přišli, na jaké hospodářství/dům (číslo popisné!), jaké měli doklady (osídlenecký
    dekret, přídělová listina, domovský list, repatriační průkaz).
 2. **Rodiště před příchodem** (matriky v cizině): Volyň – skeny jsou na Ukrajině a v Polsku, ne online; Rumunsko/Jugoslávie –
@@ -556,7 +556,7 @@ Nástroje pro ně hotové nejsou. Postupuj takto a výsledek zapiš do `STAV.md`
    "svazek": "N Volary 1784–1820, sign. …", "popis": "obce…", "url": "<odkaz na svazek>"}`.
 5. Dál stejně jako u ARON: `vyrez.py`, `ramecek.py`, přepis, osoby, deník.
 6. Když se postup osvědčí, napiš pro portál vlastní malý nástroj podle `portafontium.py` (bez prohlížeče, jen když to archiv nezakazuje)
-   a postup zapiš do `STAV.md`. Poznatek zapiš i do `poznamky_pro_skill.md` (pro správce skillu).
+   a postup zapiš do `STAV.md`. Poznatek zapiš i do `data/poznamky_pro_skill.md` (pro správce skillu).
 
 ## Starší prameny (17.–18. století)
 - **Soupis poddaných podle víry 1651** – celé rodiny s věkem, po krajích; edice Národního archivu jako PDF

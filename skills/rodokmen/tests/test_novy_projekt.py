@@ -53,6 +53,24 @@ class NovyProjekt(unittest.TestCase):
         self.assertIn("# moje data", osoby.read_text(encoding="utf-8"))                 # data zůstala
         self.assertTrue((self.p / "tools" / "muj_skript.py").exists())                  # cizí soubory nemaže
 
+    def test_poznamky_pro_skill_v_data_a_presun_z_korene(self):
+        nove = self.p / "data" / "poznamky_pro_skill.md"
+        self.assertTrue(nove.exists())
+        self.assertFalse((self.p / "poznamky_pro_skill.md").exists())
+        # starší projekt: poznámky v kořeni → aktualizace je přesune do data/ i s obsahem
+        nove.unlink()
+        (self.p / "poznamky_pro_skill.md").write_text("# moje poznámky\n", encoding="utf-8")
+        r = novy_projekt(self.p)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("Přesunuto: poznamky_pro_skill.md", r.stdout)
+        self.assertEqual(nove.read_text(encoding="utf-8"), "# moje poznámky\n")
+        self.assertFalse((self.p / "poznamky_pro_skill.md").exists())
+        # obojí: nic se nepřepíše, jen upozornění
+        (self.p / "poznamky_pro_skill.md").write_text("# jiné\n", encoding="utf-8")
+        r = novy_projekt(self.p)
+        self.assertIn("POZOR: poznamky_pro_skill.md je v kořeni projektu i v data/", r.stdout)
+        self.assertEqual(nove.read_text(encoding="utf-8"), "# moje poznámky\n")
+
     def test_nastaveni_zachova_cizi_klice_a_prepina_hlidac(self):
         s = self.nastaveni()
         s["enabledPlugins"] = {"rodokmen@rodokmen-skill": True}
