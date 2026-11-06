@@ -84,7 +84,12 @@ P = {
   "odkaz": "https://aron.vychodoceskearchivy.cz/apu/…/dao/…/file/…"}]
 ```
 - `klic`: malá písmena bez diakritiky, `obec_druh_kdo_rok` (druh: krest, snatek, umrti, index, scitani…). Je to i název obrázku.
-- `druh`: N, O, Z, I (index/rejstřík), S (sčítání), J (jiný pramen).
+- `druh` = **událost**: `N` křest / narození, `O` sňatek (i ohlášky), `Z` úmrtí / pohřeb, `B` biřmování, `S` soupis
+  obyvatel (sčítání lidu, soupis duší, soupis poddaných), `J` jiný pramen (policejní přihláška, pozemková kniha, parte…).
+  Web podle něj řadí stránku Zápisy do skupin.
+- `rejstrik: true` – jen položka **rejstříku** (abecední seznam s odkazem do knihy: jméno, datum, dům), samotný zápis
+  nečten. `druh` je i tak událost (položka rejstříku zemřelých → `"Z"`); na webu má štítek „rejstřík“. Starší
+  `"druh": "I"` web převede sám podle klíče a názvu, `kontrola.py` ho připomene.
 - `datum` jako v češtině („14. 2. 1890“, „3/1867“, „1797“) – web podle něj řadí.
 - `shrnuti` je stručný obsahový souhrn, ne doslovný přepis. Při předání výzkumu bez originálního snímku nepřepisuj
   souhrn jako `orig` v `prepisy.json` a nevyráběj výřez ani rámeček; chybějící podklady výslovně poznamenej.

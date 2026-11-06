@@ -25,6 +25,13 @@ class Funkce(unittest.TestCase):
         self.assertEqual((r[2]["stav"], r[2]["text"]), ("otevřené", "bez stavu"))
         self.assertEqual(r[3]["title"], "D?")
 
+    def test_druh_zapisu_rejstrik_je_priznak(self):
+        self.assertEqual(ew.druh_zapisu(dict(druh="Z", rejstrik=True)), ("Z", True))
+        self.assertEqual(ew.druh_zapisu(dict(druh="I", klic="libice_index_umrti_x", nazev="Rejstřík zemřelých")), ("Z", True))
+        self.assertEqual(ew.druh_zapisu(dict(druh="I", klic="libice_index_krtu_x", nazev="Rejstřík křtů")), ("N", True))
+        self.assertEqual(ew.druh_zapisu(dict(druh="O")), ("O", False))
+        self.assertEqual(ew.druh_zapisu(dict(druh="X")), ("J", False))
+
     def test_hvezdicka_narozeni_nerozbije_tucne(self):
         self.assertEqual(ew.hvezdicky_narozeni("- **Jan Novák (* 1890):** křest"), "- **Jan Novák (\\* 1890):** křest")
         self.assertEqual(ew.hvezdicky_narozeni("* bod seznamu\n**1890**"), "* bod seznamu\n**1890**")

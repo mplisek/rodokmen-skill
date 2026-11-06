@@ -73,6 +73,7 @@ main.wide :is(.lead, .prose, .next-step) { max-width: none; }
 .rec .scan img { display: block; width: 100%; }
 .rec .links { font-size: 0.85rem; display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; }
 .kind { display: inline-block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 0.05rem 0.45rem; border-radius: 4px; background: #efe7da; color: #5a4632; margin-right: 0.4rem; }
+.kind-index { background: transparent; border: 1px dashed #b9a88f; color: #6e6153; }
 
 /* pedigree */
 .pedigree { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); grid-template-rows: repeat(8, minmax(44px, auto)); gap: 4px 10px; overflow-x: auto; }

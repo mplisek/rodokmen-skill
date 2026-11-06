@@ -13,6 +13,7 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 ## Nevydáno
 
 ### Nové
+- Stránka **Zápisy z matrik** je rozdělená podle události: křest / narození, sňatek, úmrtí (a biřmování, soupisy obyvatel, jiné prameny, jsou-li). Rejstřík už není samostatný druh: položka rejstříku je u své události se štítkem „rejstřík“ (`"rejstrik": true`, `druh` = událost); starší `"druh": "I"` web převede sám a `kontrola.py` ho připomene.
 - Stránka **Co hledáme** má tři části: **Otázky pro rodinu** (`data/otazky_pro_rodinu.md`, nově i na webu) a **Otevřené otázky** (`ISSUES`) seřazené podle rodů, **Prameny mimo online matriky** (`archivni_dotazy.md`) podle archivů. `ISSUES` má nový tvar `dict(k=…, otazka=…, stav=…, text=…)` – otázka se zařadí k rodu a odkáže na osobu, stav je štítek (dřív se ukazoval kus textu do první dvojtečky); starší dvojice dál fungují.
 - `kontrola.py` hlídá „Co hledáme“: otázky ve starém tvaru, oddíly, které nejsou rod nebo archiv, data zápisu („zapsáno …“), zodpovězené položky a citlivé údaje i v otázkách pro rodinu a v pramenech.
 - Obrázky pro web se při exportu zmenší a překódují: na stránce nejvýš 1400 px (je-li k zápisu plné rozlišení),

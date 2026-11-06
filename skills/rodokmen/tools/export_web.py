@@ -34,7 +34,18 @@ STATUS = {"doc": "doloženo matrikou", "prob": "pravděpodobné", "fam": "údaj 
           "mh": "jen z cizího rodokmenu", "unk": "neznámé"}
 SIDE_KIND = {"bratr": "sib", "sestra": "sib", "manžel": "spouse", "manželka": "spouse", "syn": "child", "dcera": "child"}
 SIB_STATUS = {"hotovo": "done", "částečně": "partial"}
-KINDS = {"N": "křest / narození", "O": "sňatek", "Z": "úmrtí", "I": "rejstřík", "S": "sčítání lidu", "J": "jiný pramen"}
+KINDS = {"N": "křest / narození", "O": "sňatek", "Z": "úmrtí", "B": "biřmování", "S": "soupis obyvatel", "J": "jiný pramen"}
+
+
+def druh_zapisu(z):
+    """(druh události, jen rejstřík?) – rejstřík není druh, ale forma: položka rejstříku křtů je křest jen bez
+    podrobností. Starší data mají druh „I“: událost se pozná z klíče nebo názvu (křtů/narozených, oddaných, zemřelých)."""
+    druh, index = z.get("druh", "J"), bool(z.get("rejstrik"))
+    if druh == "I":
+        index, t = True, (z.get("klic", "") + " " + z.get("nazev", "")).lower()
+        druh = ("Z" if re.search(r"zem[řr]|[úu]mrt|umrti|poh[řr]", t) else "O" if re.search(r"odda|s[ňn]at|snatek", t)
+                else "N" if re.search(r"k[řr]t|naroz|krest", t) else "J")   # úmrtí dřív: „mrtvě narozené dítě“
+    return (druh if druh in KINDS else "J"), index
 
 
 def jload(name, default):
@@ -60,7 +71,7 @@ def record_rows():
         sv = svazky.get(z.get("svazek", ""), {})
         key = z["klic"]
         rows.append(dict(
-            key=key, kind=z.get("druh", "J"), date=z.get("datum", ""), title=z.get("nazev", key),
+            key=key, kind=druh_zapisu(z)[0], index=druh_zapisu(z)[1], date=z.get("datum", ""), title=z.get("nazev", key),
             summary=z.get("shrnuti", ""), scan=z.get("snimek", ""), cause=z.get("pricina_umrti"),
             archive=sv.get("archiv", ""), volume=sv.get("svazek", ""), vdesc=sv.get("popis", ""),
             portal=sv.get("portal", "archivu"), url=z.get("odkaz") or sv.get("url", ""),

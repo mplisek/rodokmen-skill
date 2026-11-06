@@ -8,7 +8,7 @@ const r = records[id];
 {r && (
   <article class="rec">
     <div>
-      <div class="meta"><span class="kind">{r.kindName}</span>{r.date} · {r.archive && r.volume ? r.volume : r.vdesc} · snímek {r.scan}</div>
+      <div class="meta"><span class="kind">{r.kindName}</span>{r.index && <span class="kind kind-index" title="Jen položka rejstříku – odkaz do knihy, samotný zápis jsme nečetli">rejstřík</span>}{r.date} · {r.archive && r.volume ? r.volume : r.vdesc} · snímek {r.scan}</div>
       <div class="title"><a href={href.record(r.key)}>{r.title}</a></div>
       <div class="small">{r.summary}</div>
       <Cause cause={r.cause} />

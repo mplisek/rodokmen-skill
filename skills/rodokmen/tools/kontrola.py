@@ -158,6 +158,13 @@ def main():
     if dup:
         err.append(f"zápisy se stejným klíčem: {sorted(dup)}")
     keys = set(keys)
+    stare = [z.get("klic") for z in zaz if z.get("druh") == "I"]
+    if stare:   # rejstřík není událost: druh = křest/sňatek/úmrtí, rejstrik: true
+        warn.append(f"zaznamy.json: {len(stare)} zápisů má druh „I“ (např. {stare[0]}) – nastav druh události (N, O, Z) a "
+                    "„rejstrik“: true (zapis.py zaznamy <klíč> - --sloucit; reference/data.md)")
+    jine = sorted({z.get("druh") for z in zaz} - {"N", "O", "Z", "B", "S", "J", "I", None})
+    if jine:
+        warn.append(f"zaznamy.json: neznámý druh {', '.join(map(str, jine))} – platné jsou N, O, Z, B, S, J")
 
     if 1 not in P:
         err.append("chybí osoba 1 (výchozí osoba rodokmenu)")
