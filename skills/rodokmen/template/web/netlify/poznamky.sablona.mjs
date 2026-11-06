@@ -1,12 +1,23 @@
 // Poznámky ke stránkám webu – funkce na Netlify (/api/poznamky). Soubor functions/poznamky.mjs z této šablony vyrábí
 // tools/export_web.py – ručně neupravovat. Ukládá do Netlify Blobs (úložiště „poznamky“, jedna položka = jedna poznámka).
-// Kdo smí číst a psát: přihlášený přístup s „poznamky“: true (otisk odpovědi z cookie, stejně jako brána).
+// Kdo smí číst a psát: přihlášený přístup s „poznamky“: true (v cookie otisk odpovědi nebo klíč z osobního odkazu,
+// stejně jako brána).
 // Každý přístup vidí jen poznámky ze svého přístupu, přístup „vse“ všechny. Měnit (vyřízeno, smazat) jen správce
 // v projektu: npm run poznamky (scripts/poznamky.mjs).
 import { getStore } from '@netlify/blobs';
 import { zkontroluj } from '../../src/lib/poznamky.mjs';
 
 const PRISTUPY = {{PRISTUPY}};   // otisk odpovědi → { id, poznamky }
+const KLICE = {{KLICE}};         // otisk klíče z osobního odkazu (tools/pozvanky.py) → { id, poznamky }
+
+async function pristupZCookie(cookie) {
+  if (!cookie) return undefined;
+  if (Object.hasOwn(PRISTUPY, cookie)) return PRISTUPY[cookie];
+  if (Object.keys(KLICE).length === 0) return undefined;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(cookie));
+  const h = Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
+  return Object.hasOwn(KLICE, h) ? KLICE[h] : undefined;
+}
 
 const odpoved = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
@@ -14,7 +25,7 @@ const odpoved = (data, status = 200) => new Response(JSON.stringify(data), {
 });
 
 export default async (req, context) => {
-  const pristup = PRISTUPY[context.cookies.get('rodokmen') || ''];
+  const pristup = await pristupZCookie(context.cookies.get('rodokmen'));
   if (!pristup || !pristup.poznamky) return odpoved({ chyba: 'Poznámky nejsou pro tento přístup zapnuté.' }, 403);
   const store = getStore({ name: 'poznamky', consistency: 'strong' });
 

@@ -6,7 +6,9 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 
-const BRANA = /document\.cookie\s*=\s*'rodokmen=/;   // přihlašovací stránka (prihlaseni.html z tools/export_web.py)
+// přihlašovací stránka (prihlaseni.html z tools/export_web.py): s otázkou ukládá otisk do cookie, jen s osobními
+// odkazy (tools/pozvanky.py) otázku nemá, ale má rámeček pro neplatný odkaz
+const BRANA = /document\.cookie\s*=\s*'rodokmen=|class="vadny"/;
 const maBranu = existsSync("netlify/edge-functions/brana.js");   // export ji vyrobí, jen když je v nastavení otázka
 const a = process.argv.slice(2);
 let url = a[a.indexOf("--url") + 1] && a.includes("--url") ? a[a.indexOf("--url") + 1] : null;
@@ -65,7 +67,7 @@ for (let pokus = 0; pokus < 3; pokus++) {   // hned po nasazení může web pár
 
 const kam = res.headers.get("location") || "";
 if (BRANA.test(text)) {
-  konec(0, `V pořádku: ${url} bez přihlášení ukáže rodinnou otázku.`);
+  konec(0, `V pořádku: ${url} bez přihlášení ukáže přihlašovací stránku (rodinnou otázku nebo radu k osobnímu odkazu).`);
 }
 if ((res.status >= 300 && res.status < 400 && /netlify\.com/.test(kam)) ||
     ((res.status === 401 || res.status === 403) && /netlify|login/i.test(text))) {

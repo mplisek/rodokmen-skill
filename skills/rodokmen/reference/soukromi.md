@@ -25,7 +25,8 @@ Databáze obětí holocaustu (`obeti.py`) a vojenské ztráty jsou citlivé: jm�
 Údaje z rodinného stromu (GEDCOM) a od rodiny bývají právě takové – pro výzkum ano, na web jen se souhlasem.
 1. Seznam žijících osob na webu a co o nich web říká.
 2. Rodinné fotky a dokumenty – souhlasí ti, kdo jsou na nich (nebo jejich rodina)?
-3. Přihlašovací otázka a odpověď (`web.json`) – nastavená a dost těžká?
+3. Přihlášení: otázka a odpověď (`web.json`) nastavená a dost těžká, nebo osobní odkazy
+   (`tools/pozvanky.py seznam`) jen pro lidi, kteří je mají mít?
 4. Kontakt na webu – chce tam uživatel svůj e-mail?
 Teprve pak `npm run nasadit`.
 

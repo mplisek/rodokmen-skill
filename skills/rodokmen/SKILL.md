@@ -285,6 +285,7 @@ Podrobně `reference/web.md`. Ve zkratce:
    bez něj se Domy v menu neukážou; instalace a postup v `reference/web.md`). U významných domů (hostinec, mlýn, rychta,
    rodová usedlost, dům jiné větve rodu) lze přidat **dějiny domu** – držitele, obyvatele, události a otevřené otázky:
    `data/stavby.py`, nástroj `tools/stavby.py` (náměty `kandidati`, `kontrola`) a postup v `reference/stavby.md`.
+   Místo otázky nebo vedle ní můžou příbuzní dostat osobní odkazy (`tools/pozvanky.py`, jen Netlify, i pro jednotlivé přístupy; `reference/web.md`).
 3. Po každé změně dat: `npm run data && npm run build` (nebo znovu `npm run nahled`). Hlášky `POZOR: nefunkční odkaz`
    oprav hned (adresa osoby se mění, když se jí doplní rok narození).
    Po každém větším kole hledání zkontroluj i texty úvodu ve `web.json` (`uvod`, `zajimavosti_na_uvodu`) –
@@ -343,7 +344,7 @@ Nedělej to pořád. Postup:
 | `data/research_log.md` | deník všech hledání |
 | `data/udaje_od_rodiny.md`, `data/archivni_dotazy.md` | co víme od rodiny; co jen v archivu |
 | `data/zadosti.md` | poslané žádosti archivům a úřadům a jejich stav (nejde na web) |
-| `data/zajimavosti.md`, `data/pribeh.md`, `data/pribehy/*.md`, `data/web.json`, `data/dokumenty.json`, `data/mista.json` | texty a nastavení webu, rodinné fotky, místa na mapě |
+| `data/zajimavosti.md`, `data/pribeh.md`, `data/pribehy/*.md`, `data/web.json`, `data/dokumenty.json`, `data/mista.json`, `data/pozvanky.json` | texty a nastavení webu, rodinné fotky, místa na mapě, osobní odkazy (jen otisky) |
 | `vyrezy/`, `zdroje/` | výřezy zápisů a dokumentů (web / plné rozlišení), název = klíč + `.jpg` |
 | `dokumenty/`, `pracovni/` | originály od rodiny; pracovní soubory (nejdou na web) |
 | `poznamky_pro_skill.md` | poznámky pro správce skillu (chyby, nové archivy, nápady) – posílá je uživatel ručně |
@@ -380,6 +381,7 @@ text i tak nečitelný, udělej z plného rozlišení výřez (`x0,y0,x1,y1`), n
 | `ramecek.py <klíč> x0,y0,x1,y1` / `--stranka x0,y0,x1,y1` | rámeček čteného místa + kontrolní obrázek (zlomky výřezu, s `--stranka` celé stránky) |
 | `mista.py pridej "Obec"` / `mista.py` | místa pro mapu (souřadnice z OpenStreetMap) |
 | `brno_encyklopedie.py hledat "text"`, `detail osobnosti:<id>` | Encyklopedie dějin města Brna: osobnosti s adresami, povoláním a hrobem (brněnští předci) |
+| `pozvanky.py pridej "Jméno" [--pristup <id>]` / `seznam` / `prejmenuj p1 "…"` / `pristup p1 <id>` / `nova p1` / `zrus p1` | osobní odkazy na rodinný web (`web.md`) |
 | `zapis.py <soubor> <klíč> <vstup.json> [--sloucit]` | přidá / změní položku v `zaznamy`, `svazky`, `prepisy`… beze změny formátu |
 | `zapis.py --smazat <klíč>` | smaže zápis, který se ukázal jako omyl (zaznamy, prepisy, zvyrazneni; výřezy do `pracovni/smazano_…`) |
 | `slusne.py <skript.py> / curl … / bash x.sh / stav` | brzda proti zablokování archivem – vlastní skripty a curl spouštěj přes ni |
