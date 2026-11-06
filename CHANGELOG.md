@@ -10,6 +10,15 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
+## Nevydáno
+
+### Nové
+- **Dějiny významných domů:** `data/stavby.py` (držitelé, obyvatelé, události, čísla popisná v čase, otevřené otázky)
+  a nástroj `tools/stavby.py` – `kontrola` (osoby, zápisy, stavy, soukromí), `kandidati` (náměty z `osoby.py`: řemesla
+  a domy s více lidmi), `export` (volá ho `export_web.py`). Na stránce Domy je u domu rozbalovací „Dějiny domu“.
+- Návod `reference/stavby.md`: formát, přehled pramenů podle doby (gruntovní a pozemkové knihy, sčítání lidu po domech,
+  reambulace pro datování novostaveb) a postup. Vznikl podle skillu dejiny-domu.
+
 ## 0.8.0-fork.1 – 4. 11. 2026
 
 Fork na originálu 0.8.0 (bezpečná aktualizace projektu, ARON celým skenem, nové kontroly – viz níže) a navíc:

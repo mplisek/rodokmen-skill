@@ -839,9 +839,13 @@ def main():
 
     # stránky Statistiky a Domy se počítají z hotového site.json
     sys.path.insert(0, TOOLS)
-    import statistiky, domy_export
+    import statistiky, domy_export, stavby
     statistiky.main()
     domy_export.main()
+    upoz, n_staveb = stavby.export()   # data/stavby.py → web/src/data/stavby.json (u Domů: držitelé, obyvatelé, události)
+    stavby.tisk_upozorneni(upoz)
+    if n_staveb:
+        print(f"stavby: {n_staveb} staveb s dějinami na stránce Domy")
 
 
 if __name__ == "__main__":

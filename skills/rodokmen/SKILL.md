@@ -276,7 +276,9 @@ Podrobně `reference/web.md`. Ve zkratce:
 2. Nastav `data/web.json`: název, úvod, kontakt a **přihlašovací otázku a odpověď** (web je jen pro rodinu).
    Web má i stránky **Statistiky** a **Domy** (mapa domů předků – polohy „obec čp.“ z matrik dohledá samostatný skill
    **stare-adresy**, `barasoukup/stare-adresy`, uživatel si ho doinstaluje; jeho `domy.geojson` patří do `data/domy/`,
-   bez něj se Domy v menu neukážou; instalace a postup v `reference/web.md`).
+   bez něj se Domy v menu neukážou; instalace a postup v `reference/web.md`). U významných domů (hostinec, mlýn, rychta,
+   rodová usedlost, dům jiné větve rodu) lze přidat **dějiny domu** – držitele, obyvatele, události a otevřené otázky:
+   `data/stavby.py`, nástroj `tools/stavby.py` (náměty `kandidati`, `kontrola`) a postup v `reference/stavby.md`.
 3. Po každé změně dat: `npm run data && npm run build` (nebo znovu `npm run nahled`). Hlášky `POZOR: nefunkční odkaz`
    oprav hned (adresa osoby se mění, když se jí doplní rok narození).
    Po každém větším kole hledání zkontroluj i texty úvodu ve `web.json` (`uvod`, `zajimavosti_na_uvodu`) –

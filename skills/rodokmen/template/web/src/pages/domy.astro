@@ -2,7 +2,14 @@
 import Base from '../layouts/Base.astro';
 import 'leaflet/dist/leaflet.css';
 import data from '../data/domy.json';
+import stavbyData from '../data/stavby.json';
 const domy = data.domy;
+// dějiny staveb (data/stavby.py → tools/stavby.py): klíč = id domu; bez nich je stránka beze změny
+const S: Record<string, any> = stavbyData.stavby || {};
+const STAV: Record<string, string> = { doc: 'doloženo', lit: 'z literatury', prob: 'pravděpodobně', fam: 'od rodiny', unk: 'neznámé' };
+const stav = (st: string) => (st && st !== 'doc' ? STAV[st] || '' : '');
+const kratce = Object.fromEntries(Object.entries(S).map(([k, v]: [string, any]) => [k, { nazev: v.nazev, typ_text: v.typ_text, popis: v.popis }]));
+const rozsah = (od: string, do_: string) => (od && do_ ? `${od} – ${do_}` : od ? `od ${od}` : do_ ? `do ${do_}` : '');
 // barvy rodů jako na stránce Rody a ve vějíři; domy bez rodu šedě
 const BEZ = { slug: '', name: 'ostatní', color: '#a39a8e' };
 const rody = [...data.rody, BEZ]
@@ -17,7 +24,7 @@ const JIST = {
   D: 'Známe jen obec, ne přesné místo.',
 };
 const obce = [...new Set(domy.map((d) => d.obec))];
-const payload = JSON.stringify({ domy, rody, jist: JIST });
+const payload = JSON.stringify({ domy, rody, jist: JIST, stavby: kratce });
 ---
 <Base title="Domy předků" wide>
   <h1>Domy, kde předci žili</h1>
@@ -26,7 +33,9 @@ const payload = JSON.stringify({ domy, rody, jist: JIST });
   {domy.length > 0 && <>
   <p class="lead">{domy.length} adres z matrik („obec, číslo popisné“) dohledaných na indikačních skicách stabilního katastru
     (1824–1843) a porovnaných s dnešní mapou. Barva domu je barva rodu, jako ve vějíři. Při oddálení je u každé obce jedna
-    značka s počtem domů – kliknutím se na obec přiblížíte. Klikněte na dům – uvidíte, kdo v něm žil, a výřez staré skici.</p>
+    značka s počtem domů – kliknutím se na obec přiblížíte. Klikněte na dům – uvidíte, kdo v něm žil, a výřez staré skici.
+    {Object.keys(S).length > 0 && <> U domů s dějinami (hostince, rodové usedlosti…) je v seznamu pod mapou rozbalovací
+    „Dějiny domu“: držitelé, obyvatelé, co se v domě dělo a co zatím nevíme.</>}</p>
 
   <div class="dmap" data-domy={payload}></div>
   <div class="dlegend">
@@ -47,6 +56,51 @@ const payload = JSON.stringify({ domy, rody, jist: JIST });
             {d.predci.length > 0 && <> – {d.predci.map((p, i) => <>{i > 0 && ', '}<a href={`/osoba/${p.slug}/${p.bocni ? '#' + p.bocni : ''}`}>{p.name}</a></>)}</>}
             {d.predci.length === 0 && d.osoby && <span class="muted"> – {d.osoby}</span>}
             {d.zapisy.length > 0 && <span class="small"> · zápisy: {d.zapisy.map((z, i) => <>{i > 0 && ', '}<a href={`/zdroj/${z.key}/`}>{z.date}</a></>)}</span>}
+            {[S[d.id]].filter(Boolean).map((s) => (
+              <div class="stavba">
+                <p class="snazev"><strong>{s.nazev}</strong> <span class="muted">· {s.typ_text}</span>{stav(s.st) && <span class="muted"> · {stav(s.st)}</span>}</p>
+                {s.popis && <p>{s.popis}</p>}
+                <details>
+                  <summary>Dějiny domu</summary>
+                  {s.cisla.length > 0 && <p class="small">Číslo popisné v čase: {s.cisla.map((c: string[]) => (c[0] ? `${c[0]}: ${c[1]}` : c[1])).join(' · ')}</p>}
+                  {s.udalosti.length > 0 && <>
+                    <h4>Co se v domě dělo</h4>
+                    <ul class="sl">
+                      {s.udalosti.map((u: any) => (
+                        <li><b>{u.rok}</b> – {u.text}{stav(u.st) && <span class="muted"> ({stav(u.st)})</span>}
+                          {u.zapisy.length > 0 && <span class="small"> · {u.zapisy.map((z: any, i: number) => <>{i > 0 && ', '}<a href={`/zdroj/${z.key}/`}>zápis {z.date}</a></>)}</span>}
+                          {u.zdroj && <span class="muted small"> · {u.zdroj}</span>}
+                          {u.note && <span class="muted small"> · {u.note}</span>}</li>
+                      ))}
+                    </ul></>}
+                  {s.drzitele.length > 0 && <>
+                    <h4>Držitelé domu</h4>
+                    <ul class="sl">
+                      {s.drzitele.map((h: any) => (
+                        <li>{rozsah(h.od, h.do) && <b>{rozsah(h.od, h.do)} – </b>}
+                          {h.slug ? <a href={`/osoba/${h.slug}/`}>{h.name}</a> : h.name}
+                          {h.jak && <span class="muted"> · {h.jak}</span>}{stav(h.st) && <span class="muted"> ({stav(h.st)})</span>}
+                          {h.zapisy.length > 0 && <span class="small"> · {h.zapisy.map((z: any, i: number) => <>{i > 0 && ', '}<a href={`/zdroj/${z.key}/`}>zápis {z.date}</a></>)}</span>}
+                          {h.note && <span class="muted small"> · {h.note}</span>}</li>
+                      ))}
+                    </ul></>}
+                  {s.obyvatele.length > 0 && <>
+                    <h4>Kdo v domě žil nebo pracoval</h4>
+                    <ul class="sl">
+                      {s.obyvatele.map((h: any) => (
+                        <li>{h.slug ? <a href={`/osoba/${h.slug}/`}>{h.name}</a> : h.name}
+                          {h.role && <span class="muted"> · {h.role}</span>}{stav(h.st) && <span class="muted"> ({stav(h.st)})</span>}
+                          {h.zapisy.length > 0 && <span class="small"> · {h.zapisy.map((z: any, i: number) => <>{i > 0 && ', '}<a href={`/zdroj/${z.key}/`}>zápis {z.date}</a></>)}</span>}
+                          {h.note && <span class="muted small"> · {h.note}</span>}</li>
+                      ))}
+                    </ul></>}
+                  {s.pamatka && s.pamatka.chranena && <p class="small">Památkově chráněno{s.pamatka.rejstrik ? ` (${s.pamatka.rejstrik})` : ''}{s.pamatka.odkaz && <> · <a href={s.pamatka.odkaz} target="_blank" rel="noopener">Památkový katalog</a></>}.</p>}
+                  {s.otevrene.length > 0 && <>
+                    <h4>Co zatím nevíme</h4>
+                    <ul class="sl">{s.otevrene.map((t: string) => <li>{t}</li>)}</ul></>}
+                </details>
+              </div>
+            ))}
           </li>
         ))}
       </ul>
@@ -64,7 +118,7 @@ const payload = JSON.stringify({ domy, rody, jist: JIST });
   if (mapEl) init(mapEl);   // bez domů se mapa nevykresluje
 
   function init(el: HTMLElement) {
-  const { domy, rody, jist } = JSON.parse(el.dataset.domy!);
+  const { domy, rody, jist, stavby } = JSON.parse(el.dataset.domy!);
   // skici Čech má Národní archiv, Moravy MZA, Slezska ZA Opava (podle začátku signatury)
   const archiv = (sig: string) => (/^MOR/.test(sig) ? 'Moravský zemský archiv' : /^SLE/.test(sig) ? 'Zemský archiv v Opavě' : 'Národní archiv');
   const rod = (slug: string | null) => rody.find((r: any) => r.slug === (slug || '')) || rody[rody.length - 1];
@@ -121,9 +175,11 @@ const payload = JSON.stringify({ domy, rody, jist: JIST });
       : (d.osoby ? `<p class="y">${esc(d.osoby)}</p>` : '');
     const zap = d.zapisy.length
       ? '<p class="dzap"><span class="y">Zmínka v zápisech:</span> ' + d.zapisy.map((z: any) => `<a href="/zdroj/${esc(z.key)}/">${esc(z.title)}</a>`).join(', ') + '</p>' : '';
+    const sb = stavby[d.id];
+    const stavba = sb ? `<p><strong>${esc(sb.nazev)}</strong> <span class="y">· ${esc(sb.typ_text)}</span><br><span class="y">${esc(sb.popis)}</span></p>` : '';
     m.bindPopup(
       `<strong class="dtit">${esc(d.obec)} čp. ${esc(d.cp)}</strong>` +
-      (d.rod ? `<span class="y"> · ${esc(r.name)}</span>` : '') + who + zap +
+      (d.rod ? `<span class="y"> · ${esc(r.name)}</span>` : '') + stavba + who + zap +
       (d.vyrez ? `<a href="${esc(d.vyrez)}" target="_blank"><img src="${esc(d.vyrez)}" alt="výřez staré skici" class="dimg"></a>` : '') +
       `<p class="y">${d.skica ? `${archiv(d.skica)}, indikační skica ${d.skica_url ? `<a href="${esc(d.skica_url)}" target="_blank" rel="noopener">${esc(d.skica)}</a>` : esc(d.skica)}${d.skica_rok ? ` (${esc(d.skica_rok)})` : ''}, ČÚZK – Archiv. ` : ''}${esc(jist[d.jistota] || '')}` +
       `${d.dnes_na_miste?.length ? ` Dnes: ${esc(d.dnes_na_miste[0].split(',')[0])}.` : ''}</p>`,
@@ -211,6 +267,13 @@ const payload = JSON.stringify({ domy, rody, jist: JIST });
   .obec li { margin: 0.2rem 0; }
   .obec h3 { margin: 1rem 0 0.2rem; }
   .small { font-size: 0.85rem; }
+  .stavba { margin: 0.3rem 0 0.9rem 1.1rem; padding-left: 0.8rem; border-left: 3px solid var(--line); }
+  .stavba p { margin: 0.2rem 0; }
+  .stavba details { margin: 0.3rem 0; }
+  .stavba summary { cursor: pointer; font-weight: 600; }
+  .stavba h4 { margin: 0.7rem 0 0.15rem; font: 700 0.9rem var(--serif); }
+  .stavba ul.sl { list-style: disc; padding-left: 1.2rem; margin: 0.1rem 0 0.3rem; }
+  .stavba ul.sl li { margin: 0.2rem 0; }
   :global(.leaflet-popup-content .y) { color: #6e6153; font-size: 0.85em; }
   :global(.leaflet-popup-content p) { margin: 0.4rem 0 0; }
   :global(.dtit) { font: 700 1rem var(--serif); }

@@ -147,6 +147,16 @@ podle stabilního katastru). Export z nich udělá stránku `/domy/` a propojí 
 „Obec čp. N“ ve faktech, poznámkách, `SIDE` a souhrnech zápisů. Adresy, které na mapě chybí, zapíše do
 `data/domy/chybi.txt` – podklad pro další kolo geokódování. Bez `domy.geojson` se stránka v menu neukáže.
 
+## `stavby.py` – dějiny významných domů (volitelné)
+`data/stavby.py` (slovník `D`, klíč = id adresy z `data/domy/adresy.json`): držitelé, obyvatelé, události, čísla
+popisná v čase a otevřené otázky k domům, které stojí za příběh (hostinec, mlýn, rychta, rodová usedlost, dům jiné
+větve). Poloha domu zůstává v `data/domy/`, stavba na ni odkazuje polem `dum`. Každá položka má stav `st`
+(`doc` / `lit` / `prob` / `fam` / `unk`) a zdroj (`r` = klíče ze `zaznamy.json`, nebo `zdroj` textem). Osoby se
+odkazují Kekulého číslem z `P` nebo klíčem z `RODINA`. `python3 -I tools/stavby.py kontrola` hlídá existenci osob a
+zápisů, povinné zdroje a soukromí; `tools/stavby.py kandidati` navrhne domy z `osoby.py`. Export (`export_web.py`)
+zapíše `web/src/data/stavby.json`; na stránce Domy je u domu rozbalovací „Dějiny domu“. Úplný formát a postup
+bádání: `reference/stavby.md`.
+
 ## `dokumenty.json` – rodinné fotky a dokumenty na webu
 `[{"img": "foto_svatba_1919", "popis": "Svatba Jana a Josefy, Holice 1919.", "osoby": [8, 9]}]`
 Obrázek ulož přes `vyrez.py dokumenty/<sken>.jpg foto_svatba_1919` (vznikne `vyrezy/` i `zdroje/`).

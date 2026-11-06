@@ -86,6 +86,10 @@ stránkách). V menu je, jen když nějaký dokument existuje; text vybízí rod
   žili (přímí předci první, boční příbuzní s odkazem na kartičku u předka), výřez skici a jedna věta o jistotě polohy.
   Na stránkách osob a zápisů jsou odkazy na domy. Výřezy skic na veřejném webu jen s citací archivu (podmínky
   v návodu stare-adresy).
+  U domů, které mají záznam v `data/stavby.py` (`tools/stavby.py`, `reference/stavby.md`), je v seznamu pod mapou
+  název a typ stavby, popis a rozbalovací **Dějiny domu** (čísla popisná v čase, události, držitelé, obyvatelé,
+  „Co zatím nevíme“); nejistý údaj je označený („pravděpodobně“). Žijící a držitelé po roce 1950 bez souhlasu se
+  na web nedostanou. Stavba, jejíž dům není v `domy.geojson`, se nezobrazí – export na to upozorní.
 
 ## Zveřejnění na Netlify (výchozí, zdarma)
 1. Uživatel si založí účet na netlify.com (stačí přihlášení přes Google/GitHub) – udělá sám.
