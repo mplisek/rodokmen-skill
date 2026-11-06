@@ -6,6 +6,7 @@
 //   npm run poznamky -- --vyrizeno <id>      označí poznámku jako vyřízenou (na webu „vyřízeno“, zůstane v přehledu)
 //   npm run poznamky -- --smazat <id>        smaže poznámku (nevhodná, omyl) – z webu i z úložiště
 //   … --slozka <cesta>                       složka propojená s webem na Netlify, když to není web/
+//   … --test                                 poznámky z náhledu (test--<web>.netlify.app) do pracovni/poznamky_test.json
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -13,11 +14,12 @@ import { fileURLToPath } from "node:url";
 import { npx } from "./python.mjs";
 
 const web = fileURLToPath(new URL("../", import.meta.url));
-const soubor = join(web, "..", "data", "poznamky.json");
 const args = process.argv.slice(2);
+const test = args.includes("--test");   // náhled má vlastní úložiště (poznamky-test), do dat projektu nepatří
+const soubor = test ? join(web, "..", "pracovni", "poznamky_test.json") : join(web, "..", "data", "poznamky.json");
 const volba = (n) => (args.includes(n) ? args[args.indexOf(n) + 1] : null);
 const slozka = resolve(volba("--slozka") || web);
-const STORE = "poznamky";
+const STORE = test ? "poznamky-test" : "poznamky";
 
 function netlify(...a) {
   const r = npx(["-y", "netlify-cli@latest", ...a], { cwd: slozka, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });

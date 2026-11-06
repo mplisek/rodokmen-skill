@@ -142,8 +142,9 @@ nenasazuj po každé drobné změně, ale až na požádání uživatele (třeba
 Ostré nasazení (`--prod`) stojí 15 kreditů (zdarma je 300 měsíčně; po vyčerpání Netlify pozastaví **všechny** weby účtu),
 provoz rodinného webu jen jednotky (2 kredity za 10 000 požadavků, 20 za GB dat – proto export obrázky pro web zmenšuje
 a překóduje, mezipaměť `pracovni/.web_obrazky/`). Na **zkoušení** (testovací web, nová verze skillu) nasazuj náhled bez
-`--prod`, ten kredity nestojí: `npx -y netlify-cli@latest deploy --dir=dist --no-build --alias test` → adresa
-`https://test--<web>.netlify.app`; brána i poznámky tam běží stejně. Testovací web zapiš do `CLAUDE.md` projektu.
+`--prod`, ten kredity nestojí ani ostrý web nemění: `npx -y netlify-cli@latest deploy --dir=dist --no-build --alias test` →
+adresa `https://test--<web>.netlify.app` (stejný web na Netlify, žádný druhý není potřeba); brána tam běží stejně,
+poznámky mají vlastní úložiště. Zapiš to do `CLAUDE.md` projektu.
 
 **Pozor:** „Netlify Drop“ (přetažení složky v prohlížeči) neumí Edge Functions → web by byl bez přihlášení. Nepoužívat.
 
@@ -203,6 +204,7 @@ a pod ním poznámky k té stránce (datum, kdo, text – bez úprav). Přehled 
   `-- --smazat <id>` ji smaže (nevhodná, omyl). Používá Netlify CLI jako nasazení; web nasazovaný z jiné složky:
   `-- --slozka <cesta>`. Poznámky se zapracovávají jako podněty od rodiny (`st="fam"`), ne jako doklad.
 - Na CapRoveru/nginx ani v místním náhledu poznámky nejsou (tlačítko to napíše).
+- Náhled bez `--prod` (`test--<web>.netlify.app`) ukládá poznámky do vlastního úložiště `poznamky-test` – zkušební poznámky se na ostrém webu neukážou; stáhne je `npm run poznamky -- --test` (do `pracovni/poznamky_test.json`).
 
 ## Úpravy vzhledu
 Styly `web/src/styles/global.css` (barvy v `:root`), rozložení `web/src/layouts/Base.astro`, stránky `web/src/pages/`.

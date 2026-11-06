@@ -27,7 +27,9 @@ const odpoved = (data, status = 200) => new Response(JSON.stringify(data), {
 export default async (req, context) => {
   const pristup = await pristupZCookie(context.cookies.get('rodokmen'));
   if (!pristup || !pristup.poznamky) return odpoved({ chyba: 'Poznámky nejsou pro tento přístup zapnuté.' }, 403);
-  const store = getStore({ name: 'poznamky', consistency: 'strong' });
+  // náhled (adresa s „--“, např. test--web.netlify.app) má vlastní úložiště – zkušební poznámky se nepletou s ostrým webem
+  const nahled = new URL(req.url).hostname.includes('--');
+  const store = getStore({ name: nahled ? 'poznamky-test' : 'poznamky', consistency: 'strong' });
 
   if (req.method === 'GET') {
     const stranka = new URL(req.url).searchParams.get('stranka');

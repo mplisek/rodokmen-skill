@@ -18,6 +18,9 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   na stránkách a o čtvrtinu u plného rozlišení – méně přenesených dat a kreditů na Netlify. Upravené verze jsou
   v `pracovni/.web_obrazky/`, další export je bere odtud. Bez ImageMagicku se jen kopíruje jako dřív.
 
+- Poznámky z náhledu (`test--<web>.netlify.app`, nasazení bez `--prod`) jdou do vlastního úložiště `poznamky-test`,
+  na ostrém webu se neukážou; `npm run poznamky -- --test` je stáhne zvlášť.
+
 ### Návody
 - Kredity na Netlify: ostré nasazení 15 kreditů, náhled (bez `--prod`, `--alias test`) zdarma – na zkoušení.
 
