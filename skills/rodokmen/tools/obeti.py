@@ -2,6 +2,8 @@
 """Databáze obětí nacistické perzekuce (holocaust.cz, Terezínská iniciativa) bez prohlížeče.
 
 Použití (z kořene projektu):
+  obeti.py souhlas      -> uživatel (ne Claude!) jednou za 30 dní potvrdí „Podmínky vstupu do databáze“, které portál ukazuje při vstupu
+                           (databáze obsahuje citlivé údaje; v Claude Code `!python3 -I tools/obeti.py souhlas`). Bez souhlasu nástroj nic nestahuje.
   obeti.py hledat [--prijmeni P] [--jmeno J] [--bydliste B] [--misto-narozeni M] [--rok R] [--stran N]
         -> jméno | narození | osud (transporty, úmrtí) | odkaz; N stran po 20 oběti (výchozí 3).
            Příjmení zadávej i v ženském tvaru a s diakritikou („Neumannová“); část jména hledá jako začátek.
@@ -12,11 +14,19 @@ vodítko pro osud předka, ne náhrada matriky. Na web rodiny jen se souhlasem r
 """
 import html, http.cookiejar, re, sys, time, urllib.parse, urllib.request
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
+import souhlas  # noqa: E402 – souhlas s podmínkami vstupu do databáze (tools/souhlas.py)
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
 
 BASE = "https://www.holocaust.cz/databaze-obeti/"
+SOUHLAS_KLIC, SOUHLAS_PORTAL, SOUHLAS_PRIKAZ = "holocaust_cz", "Databáze obětí (holocaust.cz)", "tools/obeti.py souhlas"
+SOUHLAS_ZNENI = ("Databáze obětí nacistického pronásledování obsahuje jména a osudy Židů deportovaných z českých zemí a vězňů terezínského "
+                 "ghetta z dalších evropských zemí a dále základní informace o Romech, Sintech a dalších osobách, které zemřely jako vězni "
+                 "v takzvaném „Cikánském táboře I“ v Letech u Písku. Upozorňujeme, že databáze obsahuje citlivé osobní údaje a jejím účelem "
+                 "je důstojné vzpomínání s respektem vůči pozůstalým. Vstupem do databáze uživatel potvrzuje, že se seznámil s informacemi "
+                 "o jejím obsahu a je si plně vědom své osobní odpovědnosti za nakládání s materiály a informacemi, které v ní nalezne.")
+SOUHLAS_URL = "https://www.holocaust.cz/databaze-obeti/help/"
 _op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 _op.addheaders = [("User-Agent", "Mozilla/5.0 (rodokmen)")]
 
@@ -33,7 +43,7 @@ def get(url, data=None):
             if getattr(e, "code", 0) in (403, 404):
                 break
             time.sleep(2 * (attempt + 1))
-    raise err
+    sys.exit(f"Portál neodpověděl ({type(err).__name__}: {str(err)[:100]}). Zkus to později.")
 
 
 def text(s):
@@ -97,6 +107,11 @@ if __name__ == "__main__":
     a = sys.argv[1:]
     if not a:
         sys.exit(__doc__)
+    if a[0] == "souhlas" and len(a) == 1:
+        souhlas.potvrd(SOUHLAS_KLIC, SOUHLAS_PORTAL, SOUHLAS_ZNENI, SOUHLAS_URL, SOUHLAS_PRIKAZ)
+        sys.exit(0)
+    if a[0] in ("hledat", "detail"):
+        souhlas.vyzaduj(SOUHLAS_KLIC, SOUHLAS_PORTAL, SOUHLAS_ZNENI, SOUHLAS_PRIKAZ)
     if a[0] == "hledat":
         pole, stran, i = {}, 3, 1
         klice = {"--prijmeni": "prijmeni", "--jmeno": "jmeno", "--bydliste": "bydliste", "--misto-narozeni": "misto-narozeni", "--rok": "rok"}

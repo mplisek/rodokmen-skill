@@ -365,13 +365,6 @@ kde matriky hledat.
 - Oběti, jejichž rodiny jsou v těchto matrikách, najdeš i v `obeti.py` (viz níže). Stejné VadeMeCum má i další archivy,
   nástroj je zatím nastavený jen na Národní archiv.
 
-## Databáze obětí nacistické perzekuce – `tools/obeti.py`
-- `obeti.py hledat --prijmeni Neumannová [--jmeno Anna] [--bydliste Ostrava] [--misto-narozeni …] [--rok 1906]` → jméno, datum narození,
-  transporty (Terezín → Osvětim…), osud, odkaz. `obeti.py detail <odkaz>` vypíše poslední bydliště, adresu v protektorátu a transporty.
-  Příjmení hledej **v ženském tvaru** („Neumannová“, ne „Neumann“) a nejdřív jen příjmení.
-- Je to vodítko k osudu osob a k tomu, **odkud rodina pocházela** (poslední bydliště před deportací). Citlivé údaje – na web jen se
-  souhlasem rodiny (`soukromi.md`). Romové mají samostatnou databázi (odkaz na holocaust.cz).
-
 ## Vojáci 1. světové války – nevyzkoušeno
 - **Seznamy ztrát c. a k. armády** (Verlustlisten, 1914–1919, tištěné; jména, domovská obec, datum narození, stav) jsou digitalizované
   ve **Digitální studovně Ministerstva obrany** (digitalnistudovna.mo.gov.cz, plný text) a v Kramerius NK / ANNO. Odkazy shrnuje
@@ -513,6 +506,14 @@ Stav ověřený v říjnu 2026 ze zkušebního prostředí skillu: slovenské (a
   (nebo ho se souhlasem stáhneš ty) – soubor přijde do `~/Downloads` jako `<id snímku>.jpg`, chvíli může mít
   příponu `.tmp`. Přesuň **jen soubor s očekávaným názvem**, nikdy „nejnovější soubor ve Stažených“ (je tam i cizí).
   Žádné vlastní přijímače na localhostu ani jiné obcházení ochran prohlížeče.
+
+## Databáze obětí nacistického pronásledování (holocaust.cz) – `tools/obeti.py`
+- Terezínská iniciativa: Židé deportovaní z českých zemí, vězni terezínského ghetta, Romové a Sintové z tábora v Letech u Písku. `obeti.py hledat --prijmeni Neumannová --jmeno Anna
+  [--bydliste Ostrava] [--misto-narozeni …] [--rok 1906]` → jméno, datum narození, transporty (Terezín → Osvětim…), osud, odkaz; `obeti.py detail <odkaz nebo číslo-jméno>` → poslední bydliště
+  před deportací, adresa v protektorátu, transporty, související dokumenty. Příjmení hledej **v ženském tvaru** a nejdřív samotné.
+- Portál při vstupu žádá o „Podmínky vstupu do databáze“ (citlivé údaje, osobní odpovědnost uživatele). Nástroj proto bez souhlasu nic nestahuje (kód 4) a **souhlas musí potvrdit uživatel sám**:
+  `!python3 -I tools/obeti.py souhlas` (jednou za 30 dní); Claude ho nikdy nepotvrzuje za uživatele. robots.txt hledání nezakazuje.
+- Údaje jsou citlivé – na web jen se souhlasem rodiny (`soukromi.md`). Je to vodítko k osudu a k původu rodiny (poslední bydliště), ne náhrada matriky.
 
 ## Hroby a hřbitovy
 - Kde jsou předci pohřbeni, víš z rozhovoru s rodinou (Fáze 1). Fotky náhrobků (jména, data, rodná příjmení) jsou
