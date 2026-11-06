@@ -645,6 +645,9 @@ datum a místo narození na kartě a v rodině. Údaje jsou citlivé – na web 
   stáhne kartotéční kartu nebo dokument. Obsahuje kartotéky Dachau, Mauthausenu, Buchenwaldu, Flossenbürgu, Terezína, **část Osvětimi**, seznamy
   transportů, nuceně nasazené a poválečné **vysídlené osoby (DP)**. Datum narození je v databázi měsíc/den/rok (nástroj převádí). U Osvětimi
   (a dalších) chybějí v databázi zápisy, které se nedochovaly; nenalezení neznamená, že tam člověk nebyl.
+  **Vstupní prohlášení:** portál při vstupu žádá o souhlas s podmínkami (citlivé údaje, trestní odpovědnost za porušení zákonů o ochraně údajů). Nástroj proto bez souhlasu nic nestahuje
+  (kód 4) a **souhlas musí potvrdit uživatel sám**: `!python3 -I tools/arolsen.py souhlas` (jednou za 30 dní); Claude ho nikdy nepotvrzuje za uživatele. Podmínky:
+  arolsen-archives.org/en/materials/terms-of-use/ (programový přístup k větším souborům nabízí archiv na požádání).
 - **Mauthausen – Raum der Namen** – `tools/mauthausen.py hledat "Novak"`: jen zemřelí v Mauthausenu a pobočkách (Gusen, Ebensee, Melk…), často s fotografiemi a životopisem.
 - **Židé z českých zemí** – `tools/obeti.py` (holocaust.cz, Terezínská iniciativa): jméno, narození, poslední bydliště před deportací, transporty.
 - **Osvětim**: databáze Muzea Auschwitz (victims.auschwitz.org) má na serveru neúplný certifikát, ze skillu proto nejde; ověř ji v prohlížeči.

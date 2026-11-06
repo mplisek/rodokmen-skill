@@ -368,6 +368,8 @@ text i tak nečitelný, udělej z plného rozlišení výřez (`x0,y0,x1,y1`), n
 | `anno.py`, `anno_snap.py`, `kramerius.py` | noviny: ANNO (rakouské; `--ztraty` = seznamy ztrát 1914–1919), Kramerius (české) |
 | `ged_import.py strom.ged "Jméno"` | předci z rodinného stromu (GEDCOM) + fronta zápisů |
 | `ftb_export.py strom.ftb out.ged ["Jméno" rok linie.md [Photos/]]` | záloha z MyHeritage (.ftb) → GEDCOM + přímá linie s původem údajů |
+| `arolsen.py souhlas` / `hledat "Příjmení Jméno rok" [filtry]` / `karta <id> out.jpg` | Arolsen Archives: vězni, oběti, nuceně nasazení, vysídlení; **souhlas s prohlášením portálu potvrzuje uživatel sám** (`!python3 -I tools/arolsen.py souhlas`), Claude ho nepotvrzuje |
+| `mauthausen.py hledat "Novak" [--stran N]` | zemřelí v koncentračním táboře Mauthausen a pobočkách (Raum der Namen): datum a místo narození a úmrtí |
 | `mapa_knihy.py aron/pf/ahmp <kniha> <od> <do> [krok]`, `--vedle --ostre --vyrez …`, `soubory …` | mapa knihy (horní pruhy snímků pod sebou) a montáž sloupce se jmény vedle sebe – orientace v knihách po vsích (`matriky.md`) |
 | `overit.py <snímek> x0,y0,x1,y1 <prefix> [--kontrast \| --vylepsit]` | zápis na dvě čitelné poloviny – ověření čtení (souřadnice = zlomky 0–1); u vybledlého písma nejdřív `--kontrast`, u nejhorších `--vylepsit` (i doostří) |
 | `napady.py` | náměty na zajímavosti z dat |

@@ -5,6 +5,8 @@ Dachau, Mauthausen, Osvětim (část), Buchenwald, Flossenbürg, Terezín, Gesta
 a další – přes 30 milionů záznamů o osobách (kartotéky táborů, seznamy transportů, korespondence ITS).
 
 Použití (z kořene projektu):
+  arolsen.py souhlas    -> uživatel (ne Claude!) jednou za 30 dní potvrdí prohlášení, které portál ukazuje při vstupu (citlivé údaje,
+                           osobní odpovědnost; v Claude Code `!python3 -I tools/arolsen.py souhlas`). Bez souhlasu nástroj nic nestahuje.
   arolsen.py hledat "Příjmení Jméno [rok]" [filtry] [--max N] [--od N] [--podrobne] [--jazyk en|de]
         -> osoby: id | příjmení | jméno | rodné | narozen | místo narození | č. vězně | národnost | část archivu | odkaz
            Slova jsou spojená „a zároveň“ (každé musí být v záznamu); rok narození přidej jako další slovo („Novák Josef 1905“).
@@ -23,10 +25,23 @@ https://arolsen-archives.org (údaje jen pro osobní, vědecké a genealogické 
 """
 import http.cookiejar, json, os, random, re, string, sys, time, urllib.parse, urllib.request
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
+import souhlas  # noqa: E402 – souhlas s podmínkami vstupu do online archivu (tools/souhlas.py)
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
 
+SOUHLAS_KLIC, SOUHLAS_PORTAL, SOUHLAS_PRIKAZ = "arolsen", "Arolsen Archives (online archiv)", "tools/arolsen.py souhlas"
+SOUHLAS_ZNENI = ("Welcome to the Online Archive of the Arolsen Archives! Our Data Protection Rules and Terms of Use were established by the "
+                 "International Commission as the governing body of the Arolsen Archives and do not correspond to German or other national "
+                 "archival law. Please note that this portal on persons persecuted by the National Socialists includes sensitive personal data "
+                 "on identified or identifiable persons. As a user of this portal, you are obliged to observe applicable data protection law "
+                 "and to respect the legitimate concerns of third parties or victims. The Arolsen Archives cannot be held responsible for "
+                 "third-party publications that appear as a result of the use made of the collections. Some of the documents held by the "
+                 "Arolsen Archives are copies. Other archives hold the originals and the rights of use. Before publishing documents from our "
+                 "archives, please always take note of our Terms of Use and, if necessary, obtain the rights from third parties.\n\n"
+                 "Declaration of consent: I hereby declare my consent to using sensitive personal data in accordance with applicable national "
+                 "laws and provisions. I am aware that any violation of these laws and/or provisions may result in criminal charges.")
+SOUHLAS_URL = "https://arolsen-archives.org/en/materials/terms-of-use/ (pravidla ochrany údajů: https://aroa.to/data-processing-rules)"
 API = "https://collections-server.arolsen-archives.org/ITS-WS.asmx/"
 WEB = "https://collections.arolsen-archives.org/"
 _op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))   # server drží dotaz v session
@@ -104,7 +119,11 @@ def hledat(dotaz, maxn, jazyk, filtry=None, od=0, podrobne=False):
     else:
         if len(rows) > maxn:
             print(f"… načteno {len(rows)} z {celkem} záznamů, zobrazeno {maxn}; víc ukáže --max {len(rows)}, užší výběr rok, křestní jméno nebo filtr", file=sys.stderr)
-        if int(celkem) > od + len(rows):
+        try:
+            vic = int(re.sub(r"\D", "", str(celkem)) or 0) > od + len(rows)
+        except ValueError:
+            vic = False
+        if vic:
             print(f"… celkem {celkem} záznamů, načteno {len(rows)} (od {od}); další tisícovka: --od {od + len(rows)}, užší výběr rok, křestní jméno nebo filtr",
                   file=sys.stderr)
 
@@ -117,13 +136,15 @@ def karta(objid, out):
         sys.exit("K záznamu není obrázek (jen údaj v kartotéce).")
     base, ext = os.path.splitext(out)
     for i, o in enumerate(obrazky, 1):
-        url = o["image"].replace("\\\\", "//").replace("\\", "/")
+        url = (o.get("image") or "").replace("\\\\", "//").replace("\\", "/")
         if urllib.parse.urlsplit(url).hostname != "collections-server.arolsen-archives.org":
             sys.exit(f"Neočekávaný server obrázku: {url[:80]}")
         cil = out if i == 1 else f"{base}_{i}{ext}"
         os.makedirs(os.path.dirname(os.path.abspath(cil)), exist_ok=True)
         req = urllib.request.Request(url, headers={"Referer": WEB, "User-Agent": "Mozilla/5.0 (rodokmen)"})
         with _op.open(req, timeout=90) as r:
+            if urllib.parse.urlsplit(r.geturl()).hostname != "collections-server.arolsen-archives.org":
+                sys.exit(f"Přesměrování na neočekávaný server: {r.geturl()[:80]}")
             if not (r.headers.get("Content-Type") or "").startswith("image/"):
                 sys.exit(f"Server nevrátil obrázek ({r.headers.get('Content-Type')}).")
             data = r.read()
@@ -158,9 +179,13 @@ if __name__ == "__main__":
             del a[i:i + 2]
     if not a:
         sys.exit(__doc__)
-    if a[0] == "hledat" and len(a) == 2 and a[1].strip():
+    if a[0] == "souhlas" and len(a) == 1:
+        souhlas.potvrd(SOUHLAS_KLIC, SOUHLAS_PORTAL, SOUHLAS_ZNENI, SOUHLAS_URL, SOUHLAS_PRIKAZ)
+    elif a[0] == "hledat" and len(a) == 2 and a[1].strip():
+        souhlas.vyzaduj(SOUHLAS_KLIC, SOUHLAS_PORTAL, SOUHLAS_ZNENI, SOUHLAS_PRIKAZ)
         hledat(a[1], maxn, jazyk, filtry, od, podrobne)
     elif a[0] == "karta" and len(a) == 3:
+        souhlas.vyzaduj(SOUHLAS_KLIC, SOUHLAS_PORTAL, SOUHLAS_ZNENI, SOUHLAS_PRIKAZ)
         karta(a[1], a[2])
     else:
         sys.exit(__doc__)
