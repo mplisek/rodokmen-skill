@@ -95,6 +95,23 @@ def hvezdicky_narozeni(md):
 STAVY_OTAZEK = ("otevřené", "hypotéza", "vyřešeno")
 
 
+def rody_osoby(ref, R, _videno=None):
+    """Rody (8–15), ke kterým osoba patří: předek k ≥ 8 svému rodu, bližší předek (1–7) rodům, které z něj vycházejí,
+    osoba z RODINA rodům svých rodičů (bez rodičů rodům partnera). Podle toho se rodinné dokumenty ukážou u příběhu rodu."""
+    if isinstance(ref, bool) or ref is None:
+        return set()
+    if isinstance(ref, int):
+        g = gen(ref)
+        return {ref >> (g - 3)} if g >= 3 else {r for r in range(8, 16) if r >> (3 - g) == ref}
+    videno = _videno if _videno is not None else set()
+    if ref in videno or ref not in R:
+        return set()
+    videno.add(ref)
+    o = R[ref]
+    out = set().union(*(rody_osoby(o.get(x), R, videno) for x in ("otec", "matka")))
+    return out or set().union(set(), *(rody_osoby(p, R, videno) for p in o.get("partner", [])))
+
+
 def text_pro_misto(text):
     """Údaj osoby bez poznámek, podle kterých by se osoba přiřadila k obci, kde nežila: text v závorkách
     („(kniha narozených Libice 727)“, „(Libice nad Doubravou)“, „(rok potvrzuje náhrobek v Libici)“) a okres
@@ -982,7 +999,8 @@ def main():
     site = dict(config=public_cfg, places=places, root=slugs[1], aliases={a: slugs[a] for a in SAME}, people=people,
                 families=families, others=others, records=records, lines=lines,
                 issues=issue_rows(ISSUES, slug_otazky, rod_otazky), stats=stats, hypotheses=hypotheses,
-                docs=[dict(img=d["img"], caption=d["popis"], people=[slugs.get(k) or rslug[k] for k in d.get("osoby", []) if k in slugs or k in rslug])
+                docs=[dict(img=d["img"], caption=d["popis"], people=[slugs.get(k) or rslug[k] for k in d.get("osoby", []) if k in slugs or k in rslug],
+                           rods=sorted(set().union(set(), *(rody_osoby(SAME.get(k, k) if isinstance(k, int) else k, R) for k in d.get("osoby", [])))))
                       for d in docs_cfg if os.path.exists(os.path.join(VYREZY, d["img"] + ".jpg"))],
                 timeline=timeline_data(P, SAME, slugs, people, line_of))
 

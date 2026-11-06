@@ -31,6 +31,7 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 - Kredity na Netlify: ostré nasazení 15 kreditů, náhled (bez `--prod`, `--alias test`) zdarma – na zkoušení.
 
 ### Opravy
+- Příběh rodu ukazuje jen rodinné dokumenty osob z toho rodu (dřív všechny, např. vysvědčení jiného rodu).
 - Mapa: jedna tečka za místo, s víc rody rozdělená jejich barvami (dřív samostatné tečky posunuté o ~700 m, při
   přiblížení vypadaly jako další místa v polích). Osoba se k obci přiřadí jen podle skutečného údaje – ne podle
   poznámky v závorce („kniha narozených Libice…“), okresu („okr. Havlíčkův Brod“) ani původu partnera u sňatku.

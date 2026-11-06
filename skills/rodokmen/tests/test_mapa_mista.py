@@ -30,5 +30,18 @@ class TextProMisto(unittest.TestCase):
         self.assertTrue(najde("Stru", "ze Stružince"))
 
 
+class RodyOsoby(unittest.TestCase):
+    def test_rody(self):
+        from export_web import rody_osoby
+        R = {"dite": dict(otec=8, matka=9), "partner": dict(partner=["dite"]), "nikdo": dict()}
+        self.assertEqual(rody_osoby(10, R), {10})
+        self.assertEqual(rody_osoby(21, R), {10})
+        self.assertEqual(rody_osoby(4, R), {8, 9})
+        self.assertEqual(rody_osoby(1, R), set(range(8, 16)))
+        self.assertEqual(rody_osoby("dite", R), {8, 9})
+        self.assertEqual(rody_osoby("partner", R), {8, 9})
+        self.assertEqual(rody_osoby("nikdo", R), set())
+
+
 if __name__ == "__main__":
     unittest.main()
