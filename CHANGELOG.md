@@ -29,6 +29,11 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 ### Návody
 - Kredity na Netlify: ostré nasazení 15 kreditů, náhled (bez `--prod`, `--alias test`) zdarma – na zkoušení.
 
+### Opravy
+- Mapa: jedna tečka za místo, s víc rody rozdělená jejich barvami (dřív samostatné tečky posunuté o ~700 m, při
+  přiblížení vypadaly jako další místa v polích). Osoba se k obci přiřadí jen podle skutečného údaje – ne podle
+  poznámky v závorce („kniha narozených Libice…“), okresu („okr. Havlíčkův Brod“) ani původu partnera u sňatku.
+
 ## 0.8.2-fork.1 – 6. 11. 2026
 
 Fork na originálu 0.8.2 (Porta fontium podle far a 10 s mezi dotazy, FamilySearch do mezipaměti, `--kontrast`,

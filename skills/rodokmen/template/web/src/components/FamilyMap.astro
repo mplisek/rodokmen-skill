@@ -1,5 +1,5 @@
 ---
-// Mapa míst, kde žili předci (Leaflet + OpenStreetMap); jedna tečka za (místo, rod).
+// Mapa míst, kde žili předci (Leaflet + OpenStreetMap); jedna tečka za místo, barvy rodů v ní jako koláč.
 import 'leaflet/dist/leaflet.css';
 import site from '../data/site.json';
 import { lineByK, people, href } from '../lib/data.js';
@@ -52,45 +52,60 @@ const payload = JSON.stringify({ places: site.places, lines, names, compact });
       maxZoom: 18,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
-    const groups: Record<string, L.LayerGroup> = {};
-    const bounds: L.LatLngExpression[] = [];
-    for (const pl of places) {
-      const n = pl.lines.length;
-      pl.lines.forEach((ln: { k: number; people: string[] }, i: number) => {
-        const a = (2 * Math.PI * i) / Math.max(n, 1);
-        const d = n > 1 ? 0.006 : 0;
-        const pos: L.LatLngExpression = [pl.lat + d * Math.cos(a), pl.lon + (d * Math.sin(a)) / Math.cos((pl.lat * Math.PI) / 180)];
-        const line = lines[ln.k] ?? lines[0];
-        const count = ln.people.length;
-        const marker = L.circleMarker(pos, {
-          radius: compact ? 5 + Math.sqrt(count) * 1.6 : 7 + Math.sqrt(count) * 2.2,
-          color: '#3b2e22',
-          weight: 1,
-          fillColor: line.color,
-          fillOpacity: pl.hypothesis ? 0.35 : 0.9,
-          dashArray: pl.hypothesis ? '3 3' : undefined,
+    // Jedna tečka za místo. S víc rody je rozdělená barvami rodů (koláč podle počtu osob), popup vypíše rody pod sebou.
+    // Dřív byla každá barva samostatná tečka posunutá o pevnou vzdálenost – při přiblížení to vypadalo jako víc míst.
+    const layer = L.layerGroup().addTo(map);
+    const visible = new Set(Object.keys(lines));
+    const bounds: L.LatLngExpression[] = places.map((pl: { lat: number; lon: number }) => [pl.lat, pl.lon]);
+    const draw = () => {
+      layer.clearLayers();
+      for (const pl of places) {
+        const shown = pl.lines.filter((ln: { k: number }) => visible.has(String(ln.k)));
+        if (!shown.length) continue;
+        const count = shown.reduce((a: number, ln: { people: string[] }) => a + ln.people.length, 0);
+        const size = Math.round(2 * (compact ? 5 + Math.sqrt(count) * 1.6 : 7 + Math.sqrt(count) * 2.2));
+        const total = shown.reduce((a: number, ln: { people: string[] }) => a + Math.max(ln.people.length, 1), 0);
+        let from = 0;
+        const stops = shown.map((ln: { k: number; people: string[] }) => {
+          const c = (lines[ln.k] ?? lines[0]).color;
+          const to = from + (360 * Math.max(ln.people.length, 1)) / total;
+          const s = `${c} ${from}deg ${to}deg`;
+          from = to;
+          return s;
         });
-        const who = ln.people
-          .map((s) => `<a href="${esc(names[s][2])}">${esc(names[s][0])}</a>${names[s][1] ? ` <span class="y">${esc(names[s][1])}</span>` : ''}`)
-          .join('<br>');
-        const head = line.slug ? `<a href="/rod/${esc(line.slug)}/">${esc(line.name)}</a>` : esc(line.name);
+        const bg = shown.length > 1 ? `conic-gradient(${stops.join(',')})` : (lines[shown[0].k] ?? lines[0]).color;
+        const icon = L.divIcon({
+          className: 'fmap-pin',
+          html: `<span style="width:${size}px;height:${size}px;background:${esc(bg)};opacity:${pl.hypothesis ? 0.45 : 0.92}${pl.hypothesis ? ';border-style:dashed' : ''}"></span>`,
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+        });
+        const marker = L.marker([pl.lat, pl.lon], { icon, keyboard: false });
+        const sections = shown.map((ln: { k: number; people: string[] }) => {
+          const line = lines[ln.k] ?? lines[0];
+          const head = line.slug ? `<a href="/rod/${esc(line.slug)}/">${esc(line.name)}</a>` : esc(line.name);
+          const who = ln.people
+            .map((s) => `<a href="${esc(names[s][2])}">${esc(names[s][0])}</a>${names[s][1] ? ` <span class="y">${esc(names[s][1])}</span>` : ''}`)
+            .join('<br>');
+          return `<div class="pl" style="--c:${esc(line.color)}">${head}<br>${pl.hypothesis ? 'hypotéza – vazba zatím neprokázaná' : who}</div>`;
+        });
         marker.bindPopup(
-          `<a href="/misto/${esc(pl.slug)}/"><strong>${esc(pl.name)} →</strong></a>${pl.years ? ` <span class="y">${pl.years[0]}–${pl.years[1]}</span>` : ''}<br>` +
-            `<span class="pl" style="--c:${esc(line.color)}">${head}</span><br>` +
-            (pl.hypothesis ? 'hypotéza – vazba zatím neprokázaná' : who),
-          { maxHeight: 260 }
+          `<a href="/misto/${esc(pl.slug)}/"><strong>${esc(pl.name)} →</strong></a>${pl.years ? ` <span class="y">${pl.years[0]}–${pl.years[1]}</span>` : ''}` +
+            sections.join(''),
+          { maxHeight: 300 }
         );
-        marker.bindTooltip(`${esc(pl.name)} · ${esc(line.name)}${count ? ` (${count})` : ''}`);
-        (groups[ln.k] ??= L.layerGroup().addTo(map)).addLayer(marker);
-        bounds.push(pos);
-      });
-    }
+        marker.bindTooltip(`${esc(pl.name)}${count ? ` (${count})` : ''} · ${shown.map((ln: { k: number }) => esc((lines[ln.k] ?? lines[0]).name)).join(', ')}`);
+        layer.addLayer(marker);
+      }
+    };
+    draw();
     if (bounds.length) map.fitBounds(L.latLngBounds(bounds), { padding: [20, 20], maxZoom: 11 });
     else map.setView([49.8, 15.5], 7);
     el.parentElement?.querySelectorAll<HTMLInputElement>('.fmap-legend input').forEach((cb) =>
       cb.addEventListener('change', () => {
-        const g = groups[cb.dataset.line!];
-        if (g) cb.checked ? g.addTo(map) : g.remove();
+        if (cb.checked) visible.add(cb.dataset.line!);
+        else visible.delete(cb.dataset.line!);
+        draw();
       })
     );
   }
@@ -106,5 +121,7 @@ const payload = JSON.stringify({ places: site.places, lines, names, compact });
   .fmap-legend .dot { width: 0.8rem; height: 0.8rem; border-radius: 50%; border: 1px solid #3b2e22; }
   .leaflet-popup-content { font-size: 0.85rem; line-height: 1.4; }
   .leaflet-popup-content .y { color: #6e6153; }
-  .leaflet-popup-content .pl { border-left: 4px solid var(--c); padding-left: 0.35rem; }
+  .leaflet-popup-content .pl { border-left: 4px solid var(--c); padding-left: 0.35rem; margin-top: 0.4rem; }
+  .fmap-pin { background: none; border: 0; }
+  .fmap-pin span { display: block; border-radius: 50%; border: 1px solid #3b2e22; box-sizing: border-box; }
 </style>

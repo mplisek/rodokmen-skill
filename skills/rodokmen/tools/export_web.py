@@ -78,6 +78,19 @@ def strip_comments(md):
 STAVY_OTAZEK = ("otevřené", "hypotéza", "vyřešeno")
 
 
+def text_pro_misto(text):
+    """Údaj osoby bez poznámek, podle kterých by se osoba přiřadila k obci, kde nežila: text v závorkách
+    („(kniha narozených Libice 727)“, „(Libice nad Doubravou)“, „(rok potvrzuje náhrobek v Libici)“) a okres
+    („okres Kutná Hora“, „okr. Havlíčkův Brod“); u sňatku původ partnera, u „rodiče …“ celý údaj."""
+    for _ in range(2):   # i vnořené závorky
+        text = re.sub(r"\([^()]*\)", " ", text)
+    if text.lstrip().startswith("×"):   # sňatek: místo svatby ano, původ partnera („× Marie Tesařová z Chlumu“) ne
+        text = re.sub(r"\s(?:z|ze)\s.*$", " ", text)
+    if re.match(r"\s*rodiče\b", text):   # „rodiče podle schématu: … ze Stružince“ – obec rodičů, ne osoby
+        return ""
+    return re.sub(r"\b(?:okres|okr\.|okresu|okresní)\s+\w+(?:\s+(?:Brod|Hora|Mýto|Králové|Labem|Boleslav|Kostelec|Město|Ves))?", " ", text)
+
+
 def issue_rows(issues, slug_of, rod_of):
     """ISSUES pro stránku „Co hledáme“. Položka je dict(k=<číslo předka nebo zkratka z RODINA>, otazka="…",
     stav="otevřené|hypotéza|vyřešeno", text="…"), nebo starší dvojice (otázka, „Otevřené: …“ / „Hypotéza: …“ /
@@ -828,7 +841,7 @@ def main():
         if "lat" not in e:
             continue
         rx = re.compile(e.get("re") or re.escape(name))
-        hits = [p for p in people.values() if not p.get("extra") and rx.search(" ".join(p["facts"]))]
+        hits = [p for p in people.values() if not p.get("extra") and any(rx.search(text_pro_misto(f)) for f in p["facts"])]
         byline = {}
         for p in sorted(hits, key=lambda p: p["k"]):
             byline.setdefault(p["line"] or 0, []).append(p["slug"])
@@ -839,9 +852,9 @@ def main():
         yrs = [int(y) for p in hits for y in re.findall(r"\b1[4-9]\d\d\b", p["y"] or "")]
         slug = slugify(name)
         timeline = [] if e.get("hypoteza") else [
-            dict(slug=p["slug"], line=p["line"] or 0, life=life(p["y"]), events=[place_event(f) for f in p["facts"] if rx.search(f)])
+            dict(slug=p["slug"], line=p["line"] or 0, life=life(p["y"]), events=[place_event(f) for f in p["facts"] if rx.search(text_pro_misto(f))])
             for p in hits]
-        for p in hits + [p for p in people.values() if p.get("extra") and rx.search(" ".join(p["facts"]))]:
+        for p in hits + [p for p in people.values() if p.get("extra") and any(rx.search(text_pro_misto(f)) for f in p["facts"])]:
             p.setdefault("places", []).append(dict(slug=slug, name=name))   # příbuzní mimo linii: jen odkaz, mapa beze změny
         places.append(dict(name=name, slug=slug, lat=e["lat"], lon=e["lon"], lines=[dict(k=k, people=v) for k, v in sorted(byline.items())],
                            years=[min(yrs), max(yrs)] if yrs else None, hypothesis=bool(e.get("hypoteza")), timeline=timeline))
