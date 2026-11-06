@@ -22,6 +22,11 @@ DATA = os.path.join(ROOT, "data")
 WEB = os.path.join(ROOT, "web")
 VYREZY = os.path.join(ROOT, "vyrezy")      # výřezy zápisů a dokumentů (asi 1800 px) – zobrazují se na webu
 ZDROJE = os.path.join(ROOT, "zdroje")      # tytéž výřezy v plném rozlišení (proklik)
+# Obrázky pro web se při exportu zmenší a překódují (méně přenesených dat – na Netlify se platí za GB). Upravené verze
+# se ukládají do pracovni/.web_obrazky/, aby je další export (i každý přístup zvlášť) nemusel kódovat znovu.
+WEB_OBRAZKY = os.path.join(ROOT, "pracovni", ".web_obrazky")
+UPRAVA_OBRAZKU = "1: img max 1400 px (s plným rozlišením) q80, zdroje q82, progresivní JPEG bez metadat"   # změna = vše znovu
+JPEG_WEB = ["+profile", "!icc,*", "+set", "comment", "-interlace", "JPEG", "-sampling-factor", "4:2:0"]
 
 LINE_COLORS = {8: "#EFB45F", 9: "#F09A78", 10: "#E58AA6", 11: "#B99AE0",
                12: "#86B8E8", 13: "#6FCBB9", 14: "#9CD17A", 15: "#D3D46A"}
@@ -263,8 +268,21 @@ def draw_boxes(src, dst, boxes, small):
     cmd = [magick_bin(), src, "-fill", "none", "-stroke", "#d7302a", "-strokewidth", str(sw)]
     for x0, y0, x1, y1 in boxes:
         cmd += ["-draw", f"rectangle {x0 * W:.0f},{y0 * H:.0f},{x1 * W:.0f},{y1 * H:.0f}"]
-    subprocess.run(cmd + ["-quality", "90", dst], check=True)
+    subprocess.run(cmd + JPEG_WEB + ["-quality", "82", dst], check=True)
     return True
+
+
+def obrazek_pro_web(src, dst, sub, zmensit):
+    """Obrázek do webu: img (na stránce) nejvýš 1400 px, když je k němu plné rozlišení (`zmensit`), jinak jen překódovat;
+    zdroje (proklik v plném rozlišení) bez zmenšení. Bez ImageMagicku, nebo když by byl výsledek větší, kopie originálu."""
+    m = magick_bin()
+    if not m:
+        shutil.copy2(src, dst)
+        return
+    cmd = [m, src] + (["-resize", "1400x1400>"] if zmensit else []) + JPEG_WEB + ["-quality", "80" if sub == "img" else "82", dst]
+    if subprocess.run(cmd, capture_output=True).returncode or not os.path.exists(dst) \
+            or os.path.getsize(dst) >= os.path.getsize(src):
+        shutil.copy2(src, dst)
 
 
 def write(path, text):
@@ -903,24 +921,34 @@ def main():
     hl_mtime = os.path.getmtime(zv) if os.path.exists(zv) else 0
     for sub, src_dir in (("img", VYREZY), ("zdroje", ZDROJE)):
         dst_dir = os.path.join(WEB, "public", sub)
+        cache_dir = os.path.join(WEB_OBRAZKY, sub)
         if pristup:   # web pro jeden přístup: jen jeho obrázky (ze sestavení jiného přístupu nic nezůstane)
             shutil.rmtree(dst_dir, ignore_errors=True)
+        znacka = os.path.join(cache_dir, ".uprava")
+        nova_uprava = not os.path.exists(znacka) or open(znacka, encoding="utf-8").read() != UPRAVA_OBRAZKU
+        if nova_uprava:   # jiné nastavení úpravy (nebo první export s úpravou): staré verze pryč
+            shutil.rmtree(cache_dir, ignore_errors=True)
+            shutil.rmtree(dst_dir, ignore_errors=True)
+        os.makedirs(cache_dir, exist_ok=True)
         os.makedirs(dst_dir, exist_ok=True)
+        if nova_uprava:
+            with open(znacka, "w", encoding="utf-8") as f:
+                f.write(UPRAVA_OBRAZKU)
         for key in list(recs) + [d["img"] for d in docs_cfg] + ([cfg["uvod"]["foto"]] if cfg.get("uvod", {}).get("foto") else []):
             src = os.path.join(src_dir, key + ".jpg")
             dst = os.path.join(dst_dir, key + ".jpg")
+            hotovy = os.path.join(cache_dir, key + ".jpg")   # upravená verze v pracovni/.web_obrazky/
             if not os.path.exists(src):
                 continue
             boxes = hl.get(key, {}).get("boxes", [])
-            stale = not os.path.exists(dst) or os.path.getmtime(src) > os.path.getmtime(dst) \
-                or (sub == "zdroje" and boxes and hl_mtime > os.path.getmtime(dst))
-            if not stale:
-                continue
-            if sub == "zdroje" and boxes and draw_boxes(src, dst, boxes, os.path.join(VYREZY, key + ".jpg")):
+            stale = not os.path.exists(hotovy) or os.path.getmtime(src) > os.path.getmtime(hotovy) \
+                or (sub == "zdroje" and boxes and hl_mtime > os.path.getmtime(hotovy))
+            if stale:
+                if not (sub == "zdroje" and boxes and draw_boxes(src, hotovy, boxes, os.path.join(VYREZY, key + ".jpg"))):
+                    obrazek_pro_web(src, hotovy, sub, sub == "img" and os.path.exists(os.path.join(ZDROJE, key + ".jpg")))
                 copied += 1
-                continue
-            shutil.copy2(src, dst)
-            copied += 1
+            if stale or not os.path.exists(dst) or os.path.getmtime(hotovy) > os.path.getmtime(dst):
+                shutil.copy2(hotovy, dst)
     if pristup:
         print(f"přístup {pristup['id']} ({pristup['nazev']}): " + (f"výchozí osoba {people[slugs[1]]['name']}" if prevod is not None else "vše"))
     print(f"{len(people)} osob, {len(families)} rodin, {len(records)} zápisů, {len(lines)} rodů, {len(places)} míst; "

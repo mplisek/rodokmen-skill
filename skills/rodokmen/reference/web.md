@@ -139,6 +139,11 @@ stránkách). V menu je, jen když nějaký dokument existuje; text vybízí rod
    Přihlášení zajišťuje Netlify Edge Function `web/netlify/edge-functions/brana.js` (generuje ji export).
 Další aktualizace = jen `npm run nasadit`. Tarif zdarma má měsíční kredity a každé nasazení je spotřebovává –
 nenasazuj po každé drobné změně, ale až na požádání uživatele (třeba po skončení kola hledání). Vlastní doménu lze nastavit v administraci Netlify.
+Ostré nasazení (`--prod`) stojí 15 kreditů (zdarma je 300 měsíčně; po vyčerpání Netlify pozastaví **všechny** weby účtu),
+provoz rodinného webu jen jednotky (2 kredity za 10 000 požadavků, 20 za GB dat – proto export obrázky pro web zmenšuje
+a překóduje, mezipaměť `pracovni/.web_obrazky/`). Na **zkoušení** (testovací web, nová verze skillu) nasazuj náhled bez
+`--prod`, ten kredity nestojí: `npx -y netlify-cli@latest deploy --dir=dist --no-build --alias test` → adresa
+`https://test--<web>.netlify.app`; brána i poznámky tam běží stejně. Testovací web zapiš do `CLAUDE.md` projektu.
 
 **Pozor:** „Netlify Drop“ (přetažení složky v prohlížeči) neumí Edge Functions → web by byl bez přihlášení. Nepoužívat.
 

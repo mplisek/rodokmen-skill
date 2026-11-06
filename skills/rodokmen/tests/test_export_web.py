@@ -4,6 +4,7 @@ Integrační část založí ukázkový projekt (novy_projekt.py --ukazka), dopl
 Síť ani Node.js nepotřebuje; ImageMagick je volitelný (bez něj se výřezy kopírují bez rámečků).
 """
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -166,6 +167,32 @@ class ExportUkazky(unittest.TestCase):
         self.assertIn(f"<title>{self.podle_k[16]['name']} ", svg)               # nad ní otec
         self.assertEqual((gen / f"fan_{self.koren['slug']}.svg").read_bytes(), (gen / "fan.svg").read_bytes())
         self.assertIsNone(self.lide["josef-hruby-1855"]["fan"])         # bez známých rodičů vějíř není
+
+
+@unittest.skipUnless(ew.magick_bin(), "chybí ImageMagick")
+class ObrazkyProWeb(unittest.TestCase):
+    """Export obrázky do webu zmenší a překóduje (méně přenesených dat) a upravené verze si pamatuje v pracovni/."""
+
+    def test_zmenseni_preklad_a_mezipamet(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "ukazka"
+            self.assertEqual(novy_projekt(p, "--ukazka").returncode, 0)
+            klic = "ukazka_krest_jan_novak_1890"
+            # větší výřez než 1400 px, ať je co zmenšovat (výřezy ukázky jsou malé)
+            for sub in ("vyrezy", "zdroje"):
+                subprocess.run([ew.magick_bin(), str(p / sub / f"{klic}.jpg"), "-resize", "2400x2400", "-quality", "95",
+                                str(p / sub / f"{klic}.jpg")], check=True)
+            spust(p, "export_web.py")
+            web_img, zdroj = p / "web" / "public" / "img" / f"{klic}.jpg", p / "web" / "public" / "zdroje" / f"{klic}.jpg"
+            self.assertLessEqual(max(ew.size(str(web_img))), 1400)                       # na stránce nejvýš 1400 px
+            self.assertEqual(max(ew.size(str(zdroj))), 2400)                             # plné rozlišení zůstane
+            self.assertLess(zdroj.stat().st_size, (p / "zdroje" / f"{klic}.jpg").stat().st_size)   # jen překódované
+            hotovy = p / "pracovni" / ".web_obrazky" / "img" / f"{klic}.jpg"
+            self.assertTrue(hotovy.exists())
+            cas = hotovy.stat().st_mtime
+            r = spust(p, "export_web.py")                                              # podruhé z mezipaměti
+            self.assertIn("zkopírováno 0 obrázků", r.stdout)
+            self.assertEqual(hotovy.stat().st_mtime, cas)
 
 
 class Poznamky(unittest.TestCase):

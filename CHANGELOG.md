@@ -10,6 +10,17 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
+## Nevydáno
+
+### Nové
+- Obrázky pro web se při exportu zmenší a překódují: na stránce nejvýš 1400 px (je-li k zápisu plné rozlišení),
+  progresivní JPEG bez metadat, plné rozlišení v kvalitě 82. Na skutečném projektu asi o polovinu méně dat u obrázků
+  na stránkách a o čtvrtinu u plného rozlišení – méně přenesených dat a kreditů na Netlify. Upravené verze jsou
+  v `pracovni/.web_obrazky/`, další export je bere odtud. Bez ImageMagicku se jen kopíruje jako dřív.
+
+### Návody
+- Kredity na Netlify: ostré nasazení 15 kreditů, náhled (bez `--prod`, `--alias test`) zdarma – na zkoušení.
+
 ## 0.8.2-fork.1 – 6. 11. 2026
 
 Fork na originálu 0.8.2 (Porta fontium podle far a 10 s mezi dotazy, FamilySearch do mezipaměti, `--kontrast`,
