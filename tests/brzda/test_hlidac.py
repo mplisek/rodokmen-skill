@@ -26,7 +26,9 @@ elif os.name == "nt" and os.path.isfile(r"C:\Program Files\Git\usr\bin\bash.exe"
     SHELLY["Git Bash"] = [r"C:\Program Files\Git\usr\bin\bash.exe", "-c", PRIKAZ]
 elif shutil.which("bash"):
     SHELLY["bash"] = [shutil.which("bash"), "-c", PRIKAZ]
-if shutil.which("pwsh") and "args" not in HOOK:
+# PowerShell jen na Windows: na Linuxu a macOS Claude Code hooky spouští v sh, ne v PowerShellu – a pwsh, který
+# tam bývá nainstalovaný (runner GitHub Actions), by shellový tvar hooku ("python3" -I -c …, bez &) neuměl spustit
+if os.name == "nt" and shutil.which("pwsh") and "args" not in HOOK:
     SHELLY["PowerShell"] = [shutil.which("pwsh"), "-NoProfile", "-Command", PRIKAZ]
 
 POM = tempfile.mkdtemp(prefix="test_hlidac_")
