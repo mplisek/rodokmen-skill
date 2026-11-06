@@ -382,5 +382,6 @@ text i tak nečitelný, udělej z plného rozlišení výřez (`x0,y0,x1,y1`), n
 | `slusne.py <skript.py> / curl … / bash x.sh / stav` | brzda proti zablokování archivem – vlastní skripty a curl spouštěj přes ni |
 | `mailto.py <koncept.md> [--gmail] [--outlook] [--seznam]` | koncept žádosti → odkaz, který otevře hotový e-mail (nic neodesílá) |
 | `kontrola.py` | kontrola dat; hlásí i citlivé údaje na webu, časovou návaznost (narození, sňatky, úmrtí) a kdy psát příběh |
+| `smoke_test.py [nástroj]` | když nástroj selže: jedním dotazem ověří síťové nástroje (OK / CHYBA = portál se změnil / NEDOSTUPNÉ / ZASTAVENO brzdou) |
 | `export_web.py` | data → web (volá ho `npm run data`) |
 | `fan_chart.py vystupy/` | vějíř předků jako plakát k tisku |

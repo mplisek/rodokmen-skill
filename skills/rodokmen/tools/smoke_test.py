@@ -5,12 +5,17 @@ Použití (z kořene projektu):
   smoke_test.py                  -> vyzkouší všechny nástroje jedním bezpečným dotazem (hledání, žádné stahování snímků)
   smoke_test.py mza arolsen      -> jen vybrané (názvy viz `--seznam`)
   smoke_test.py --seznam         -> vypíše názvy a dotazy bez spuštění
-Výstup: OK | CHYBA | NEDOSTUPNÉ (portál neodpovídá – síť, výpadek, blokace; nepovažuje se za chybu nástroje) | PŘESKOČENO.
-CHYBA znamená, že portál odpověděl, ale nástroj nenašel očekávaný obsah – portál se nejspíš změnil a návod v `portaly.md` je třeba
-ověřit a opravit. Návratový kód je 1 jen při CHYBĚ. Mezi dotazy jsou pauzy; nástroj `litomerice` dělá několik požadavků na stránky
-portálu, který po ~100 rychlých požadavcích blokuje – nespouštěj test v rychlém sledu.
+Výstup: OK | CHYBA | NEDOSTUPNÉ | ZASTAVENO | PŘESKOČENO.
+  CHYBA      portál odpověděl, ale nástroj nenašel očekávaný obsah – portál se nejspíš změnil, nástroj i návod v `portaly.md` je třeba opravit
+  NEDOSTUPNÉ portál neodpovídá (síť, výpadek, blokace) – nepovažuje se za chybu nástroje
+  ZASTAVENO  brzda `slusne.py` web zastavila (archiv dal najevo, že ho zatěžujeme); nic se neopakuje, řeš `slusne.py stav`
+  PŘESKOČENO nástroj v této verzi skillu není, chybí bash, nebo nástroj čeká na souhlas uživatele s podmínkami portálu
+Návratový kód je 1 jen při CHYBĚ. Test jde stejnými cestami jako nástroje (brzda: 1 dotaz za 2 s, ARON a ZA Opava pomaleji),
+mezi nástroji jsou pauzy; `litomerice` dělá několik požadavků na stránky portálu, který po ~100
+rychlých požadavcích blokuje – nespouštěj test v rychlém sledu. Souhlas s podmínkami portálů nepotvrzuje a nic za uživatele nezapisuje.
 """
 import os, shutil, subprocess, sys, time
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -18,7 +23,7 @@ for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (
 HERE = os.path.dirname(os.path.abspath(__file__))
 PY = [sys.executable, "-I", "-X", "utf8"]
 
-# (název, [nástroj, argumenty…], očekávaný text ve výstupu, „volitelné“ = NEDOSTUPNÉ i při jiné chybě sítě je v pořádku)
+# (název, [nástroj, argumenty…], očekávaný text ve výstupu, volitelné: jakákoli chyba nástroje se bere jako NEDOSTUPNÉ)
 TESTY = [
     ("aron", ["aron_search.py", "Holice"], "count", False),
     ("portafontium", ["portafontium.py", "fara", "Dolní Bělá"], "dolni-bela", False),
@@ -41,25 +46,36 @@ SIT = ("urlopen error", "timed out", "Connection", "connection", "Name or servic
        "Server Exception", "blokac", "ověření v prohlížeči")
 
 
-def spust(nazev, prikaz, ocek, volitelne):
+def vyhodnot(kod, vystup, chyby, ocek, volitelne, dt="0 s"):
+    """(stav, popis) podle návratového kódu a výstupu nástroje. Kód 3 = brzda zastavila web, kód 4 = chybí souhlas uživatele."""
+    posledni = ((vystup or "") + "\n" + (chyby or "")).strip().splitlines()
+    posledni = (posledni or ["bez výstupu"])[-1][:140]
+    if kod == 3:
+        return "ZASTAVENO", posledni
+    if kod == 4:
+        return "PŘESKOČENO", "čeká na souhlas uživatele s podmínkami portálu (viz `souhlas` u nástroje)"
+    if kod == 0 and ocek in (vystup or ""):
+        return "OK", dt
+    if any(s in (vystup or "") + (chyby or "") for s in SIT) or volitelne:
+        return "NEDOSTUPNÉ", posledni
+    return "CHYBA", f"{dt}; očekáváno „{ocek}“; poslední řádek: {posledni}"
+
+
+def spust(prikaz, ocek, volitelne):
     if prikaz[0] == "@bash":
         if not shutil.which("bash"):
             return "PŘESKOČENO", "bash není k dispozici"
-        cmd = ["bash", os.path.join(HERE, prikaz[1]), *prikaz[2:]]
+        skript, cmd = prikaz[1], ["bash", os.path.join(HERE, prikaz[1]), *prikaz[2:]]
     else:
-        cmd = [*PY, os.path.join(HERE, prikaz[0]), *prikaz[1:]]
+        skript, cmd = prikaz[0], [*PY, os.path.join(HERE, prikaz[0]), *prikaz[1:]]
+    if not os.path.exists(os.path.join(HERE, skript)):
+        return "PŘESKOČENO", f"nástroj {skript} v této verzi skillu není"
     t0 = time.time()
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=150, cwd=os.path.dirname(HERE))
     except subprocess.TimeoutExpired:
         return "NEDOSTUPNÉ", "časový limit 150 s"
-    vystup = (r.stdout or "") + "\n" + (r.stderr or "")
-    dt = f"{time.time() - t0:.0f} s"
-    if r.returncode == 0 and ocek in (r.stdout or ""):
-        return "OK", dt
-    if any(s in vystup for s in SIT) or volitelne:
-        return "NEDOSTUPNÉ", (vystup.strip().splitlines() or ["bez výstupu"])[-1][:140]
-    return "CHYBA", f"{dt}; očekáváno „{ocek}“; poslední řádek: " + (vystup.strip().splitlines() or ["bez výstupu"])[-1][:160]
+    return vyhodnot(r.returncode, r.stdout, r.stderr, ocek, volitelne, f"{time.time() - t0:.0f} s")
 
 
 def main():
@@ -68,16 +84,16 @@ def main():
         for n, p, o, v in TESTY:
             print(f"{n:14} {' '.join(p)[:100]}")
         return 0
-    vyber = [t for t in TESTY if not a or t[0] in a]
     nezname = [x for x in a if x not in {t[0] for t in TESTY}]
     if nezname:
         sys.exit("Neznámé nástroje: " + ", ".join(nezname) + " (viz --seznam)")
+    vyber = [t for t in TESTY if not a or t[0] in a]
     chyby = 0
     for i, (n, p, o, v) in enumerate(vyber):
-        stav, popis = spust(n, p, o, v)
+        stav, popis = spust(p, o, v)
         chyby += stav == "CHYBA"
         print(f"{stav:11} {n:14} {popis}", flush=True)
-        if i < len(vyber) - 1:
+        if i < len(vyber) - 1 and stav not in ("PŘESKOČENO", "ZASTAVENO"):
             time.sleep(1.5)   # pauza mezi portály
     print(f"\nHotovo: {len(vyber)} nástrojů, chyb {chyby}.")
     return 1 if chyby else 0
