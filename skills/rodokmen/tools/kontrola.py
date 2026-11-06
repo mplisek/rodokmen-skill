@@ -87,6 +87,62 @@ def slova_obce(fakty):
     return list(dict.fromkeys(OBEC_RE.findall(" ".join(fakty))))[:4]
 
 
+def _md_bez_poznamek(name):
+    path = os.path.join(DATA, name)
+    return re.sub(r"<!--.*?-->", "", open(path, encoding="utf-8").read(), flags=re.S) if os.path.exists(path) else ""
+
+
+def co_hledame(ns, P, LINES):
+    """Stránka „Co hledáme“: ISSUES (otevřené otázky), otazky_pro_rodinu.md (oddíly podle rodů) a archivni_dotazy.md
+    (oddíly podle archivů). Hlídá tvar, data zápisu, zodpovězené otázky a rody bez LINES."""
+    warn, R, SAME = [], ns.get("RODINA", {}), ns.get("SAME", {})
+    for n, i in enumerate(ns.get("ISSUES", []), 1):
+        if isinstance(i, dict):
+            k = i.get("k")
+            if not i.get("otazka"):
+                warn.append(f"ISSUES {n}: chybí „otazka“")
+            if i.get("stav", "otevřené") not in ("otevřené", "hypotéza", "vyřešeno"):
+                warn.append(f"ISSUES {n}: stav „{i.get('stav')}“ – má být otevřené, hypotéza nebo vyřešeno")
+            if k is not None and SAME.get(k, k) not in P and k not in R:
+                warn.append(f"ISSUES {n} ({i.get('otazka', '')[:40]}): osoba k={k!r} není v P ani v RODINA")
+            text = str(i.get("text", ""))
+        elif isinstance(i, (tuple, list)):
+            text = str(i[1]) if len(i) > 1 else ""
+            if not re.match(r"(Vyřešeno|Hypotéza|Otevřené)\s*:", text):
+                warn.append(f"ISSUES {n} ({str(i[0])[:40]}): převeď na dict(k=…, otazka=…, stav=…, text=…) – "
+                            "web ji jinak neumí zařadit k rodu ani poznat stav (reference/data.md)")
+        else:
+            text = ""
+        if len(text) > 400:
+            warn.append(f"ISSUES {n}: text má {len(text)} znaků – na webu ho čte rodina, zkrať na pár vět "
+                        "(signatury a snímky patří do research_log.md)")
+    jmena = {k: v[0] for k, v in LINES.items()}
+    kmen = lambda t: re.sub(r"[^a-z]", "", unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode().lower())[:5]
+    for name, druh in (("otazky_pro_rodinu.md", "rod"), ("archivni_dotazy.md", "archiv")):
+        md = _md_bez_poznamek(name)
+        if not md:
+            continue
+        if re.search(r"\(zapsáno [^)]*\)|deník č\.", md):
+            warn.append(f"{name}: datum zápisu nebo číslo deníku („zapsáno …“, „deník č.“) jde na web – smaž ho, "
+                        "pořadí určuje rod nebo archiv, ne datum")
+        if re.search(r"(?mi)^\s*(?:[-*]|\d+\.).*\b(ODPOVĚZENO|zodpovězeno|vyřešeno)\b", md):
+            warn.append(f"{name}: obsahuje zodpovězenou položku – smaž ji, odpověď patří do udaje_od_rodiny.md "
+                        "nebo research_log.md")
+        nadpisy = re.findall(r"(?m)^## +(.+)$", md)
+        if druh == "rod":
+            nezname = [h for h in nadpisy if not any(kmen(h.split()[0]) == kmen(j.split()[0]) for j in jmena.values())
+                       and not re.match(r"(?i)(dokumenty|obecn|celá rodina|ostatní)", h)]
+            if nezname:
+                warn.append(f"{name}: oddíl {', '.join(f'„{h}“' for h in nezname[:4])} není rod z LINES – web ho nezařadí; "
+                            "oddíly = názvy rodů (8–15), nahoře „Dokumenty doma“ a „Obecně“")
+        elif nadpisy:
+            podle_osob = [h for h in nadpisy if not re.search(r"(?i)archiv|SOA|SOkA|AHMP|ZA |MZA|úřad|fara|muzeum|knihovn", h)]
+            if podle_osob:
+                warn.append(f"{name}: oddíl {', '.join(f'„{h}“' for h in podle_osob[:3])} nevypadá jako archiv ani úřad – "
+                            "oddíly mají být podle archivů (SOA Zámrsk, Matriční úřad …), rod a osobu napiš do odrážky")
+    return warn
+
+
 def main():
     err, warn = [], []
     ns = {}
@@ -221,6 +277,8 @@ def main():
     if chybi:   # bez LINES web neukáže rody ani barvy ve vějíři
         warn.append(f"LINES: chybí rod pro {', '.join(chybi)}"
                     " – jakmile znáš pradědečky a prababičky (8–15), vyplň v data/osoby.py LINES (reference/data.md)")
+
+    warn += co_hledame(ns, P, LINES)
 
     # Časová návaznost: stejná pravidla ukazuje web na stránce Časová osa; ověřený údaj se odškrtne polem overeno.
     for k in sorted(k for k in P if isinstance(k, int)):
@@ -365,7 +423,8 @@ def main():
                     return True
                 i = text.find(s, i + 1)
         return False
-    texty = [("ISSUES", i if isinstance(i, str) else " ".join(i)) for i in ns.get("ISSUES", [])]
+    texty = [("ISSUES", i if isinstance(i, str) else " ".join(str(v) for v in (i.values() if isinstance(i, dict) else i)))
+             for i in ns.get("ISSUES", [])]
     for k, p in P.items():
         text = " ".join(p.get("f", [])) + " " + p.get("note", "")
         roky = [int(y) for y in re.findall(r"\b1[5-9]\d\d|20\d\d\b", p.get("y", "") + " " + text)]
@@ -377,7 +436,7 @@ def main():
         if isinstance(cause, dict):
             text = " ".join(str(cause.get(f, "")) for f in ("puvodni", "cesky", "poznamka"))
             texty.append((f"příčina úmrtí {z.get('klic')}", text + " " + str(z.get("datum", ""))))
-    for f in ("zajimavosti.md", "pribeh.md"):
+    for f in ("zajimavosti.md", "pribeh.md", "otazky_pro_rodinu.md", "archivni_dotazy.md"):
         path = os.path.join(DATA, f)
         if os.path.exists(path):
             obsah = open(path, encoding="utf-8").read()

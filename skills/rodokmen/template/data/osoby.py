@@ -52,9 +52,12 @@ SIDE = [
 PARTNERI = [
 ]
 
-# Rozpory a otevřené otázky (na web do „Co hledáme“) jako dvojice (otázka, odpověď). Odpověď začněte
-# „Vyřešeno: …“ (na webu se skryje), „Hypotéza: …“ nebo „Otevřené: …“. Jde na web – nic citlivého.
-# ("Kdy se narodil Jan Novák?", "Otevřené: rodina říká 1850, v Holicích 1848–1852 nenalezen.")
+# Otevřené otázky a rozpory v datech (na web do „Co hledáme“ → Otevřené otázky, seřazené podle rodů):
+# dict(k=<číslo předka nebo zkratka z RODINA>, otazka="…", stav="otevřené" | "hypotéza" | "vyřešeno", text="…")
+# Krátce a srozumitelně pro rodinu: co nevíme a co by to rozhodlo; bez signatur, čísel snímků a dat zápisu
+# (ty patří do research_log.md). Vyřešené se na webu skryjí – časem je smaž. Jde na web – nic citlivého.
+# Co může vědět rodina, patří do otazky_pro_rodinu.md, zápis, který není online, do archivni_dotazy.md.
+# dict(k=16, otazka="Kdy se narodil Jan Novák?", stav="otevřené", text="Rodina říká 1850, v Holicích 1848–1852 nenalezen.")
 ISSUES = [
 ]
 

@@ -75,6 +75,56 @@ def strip_comments(md):
     return re.sub(r"<!--.*?-->\n?", "", md, flags=re.S)
 
 
+STAVY_OTAZEK = ("otevřené", "hypotéza", "vyřešeno")
+
+
+def issue_rows(issues, slug_of, rod_of):
+    """ISSUES pro stránku „Co hledáme“. Položka je dict(k=<číslo předka nebo zkratka z RODINA>, otazka="…",
+    stav="otevřené|hypotéza|vyřešeno", text="…"), nebo starší dvojice (otázka, „Otevřené: …“ / „Hypotéza: …“ /
+    „Vyřešeno: …“). slug_of(k) → stránka osoby, rod_of(k) → slug rodu (nebo None)."""
+    out = []
+    for i in issues:
+        if isinstance(i, dict):
+            d = dict(i)
+        elif isinstance(i, str):
+            d = dict(otazka=i)
+        else:
+            d = dict(otazka=i[0], text=i[1] if len(i) > 1 else "")
+        text, stav = (d.get("text") or "").strip(), (d.get("stav") or "").strip().lower()
+        m = re.match(r"(Vyřešeno|Hypotéza|Otevřené)\s*:\s*", text, re.I)
+        if m:   # stav na začátku textu (starší tvar)
+            stav, text = stav or m.group(1).lower(), text[m.end():]
+        k = d.get("k")
+        out.append(dict(title=d.get("otazka") or "", text=text, stav=stav if stav in STAVY_OTAZEK else "otevřené",
+                        person=slug_of(k) if k is not None else None, rod=rod_of(k) if k is not None else None))
+    return out
+
+
+def _bez_diakritiky(t):
+    return unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode().lower()
+
+
+def rod_nadpisu(nadpis, lines):
+    """Rod (dict z lines), ke kterému patří nadpis oddílu („Plíškové (Horní Vestec)“, „Culkovi“), nebo None."""
+    slova = re.findall(r"\w+", _bez_diakritiky(nadpis))
+    for l in sorted(lines.values(), key=lambda l: l["k"]):
+        jmeno = re.findall(r"\w+", _bez_diakritiky(l["name"]))
+        if jmeno and slova and slova[0][:5] == jmeno[0][:5]:   # stejný kmen příjmení: Culkové / Culkovi
+            return l
+    return None
+
+
+def podle_rodu(md, lines):
+    """Markdown s oddíly „## <rod>“: oddíly rodů seřadí podle čísla rodu (8–15), ostatní (dokumenty doma, obecné)
+    nechá na začátku v původním pořadí. Úvod před prvním oddílem zůstane nahoře."""
+    casti = re.split(r"(?m)^(?=## )", md)
+    uvod, oddily = ("", casti) if casti[0].startswith("## ") else (casti[0], casti[1:])
+    rod = lambda o: rod_nadpisu(o.splitlines()[0][3:], lines)
+    ostatni = [o for o in oddily if not rod(o)]
+    rody = sorted((o for o in oddily if rod(o)), key=lambda o: rod(o)["k"])
+    return uvod + "".join(o if o.endswith("\n") else o + "\n" for o in ostatni + rody)
+
+
 def story_frontmatter(path, slug, require_rod=True):
     """Načte omezené skalární frontmatter pro příběhy bez další Python závislosti."""
     text = open(path, encoding="utf-8").read()
@@ -889,18 +939,32 @@ def main():
             os.remove(env["RODOKMEN_OSOBY"])
     shutil.copyfile(os.path.join(gen_dir, "fan.svg"), os.path.join(gen_dir, f"fan_{slugs[1]}.svg"))   # i /vejir/<výchozí osoba>/
 
+    rody_k = {l["k"]: l["slug"] for l in lines.values()}
+
+    def slug_otazky(k):   # stránka osoby u otázky (číslo předka, i alias ze SAME, nebo zkratka z RODINA)
+        k = SAME.get(k, k) if isinstance(k, int) else k
+        return slugs.get(k) if isinstance(k, int) else rslug.get(k)
+
+    def rod_otazky(k):    # rod (8–15) předka u otázky; u bližších předků a příbuzných z RODINA žádný
+        k = SAME.get(k, k) if isinstance(k, int) else k
+        return rody_k.get(line_of(k)) if isinstance(k, int) and k >= 8 else None
+
     site = dict(config=public_cfg, places=places, root=slugs[1], aliases={a: slugs[a] for a in SAME}, people=people,
                 families=families, others=others, records=records, lines=lines,
-                issues=[dict(title=i, text="") if isinstance(i, str) else dict(title=i[0], text=i[1]) for i in ISSUES], stats=stats, hypotheses=hypotheses,
+                issues=issue_rows(ISSUES, slug_otazky, rod_otazky), stats=stats, hypotheses=hypotheses,
                 docs=[dict(img=d["img"], caption=d["popis"], people=[slugs.get(k) or rslug[k] for k in d.get("osoby", []) if k in slugs or k in rslug])
                       for d in docs_cfg if os.path.exists(os.path.join(VYREZY, d["img"] + ".jpg"))],
                 timeline=timeline_data(P, SAME, slugs, people, line_of))
 
     write(os.path.join(WEB, "src", "data", "site.json"), json.dumps(site, ensure_ascii=False, indent=1))
-    for src, dst in (("archivni_dotazy.md", "dotazy.md"), ("research_log.md", "denik.md"), ("zajimavosti.md", "zajimavosti.md")):
+    for src, dst in (("archivni_dotazy.md", "dotazy.md"), ("otazky_pro_rodinu.md", "otazky.md"),
+                     ("research_log.md", "denik.md"), ("zajimavosti.md", "zajimavosti.md")):
         path = os.path.join(DATA, src)
         text = open(path, encoding="utf-8").read() if os.path.exists(path) and texty else ""
-        write(os.path.join(gen_dir, dst), strip_comments(re.sub(r"^# .*\n", "", text, count=1)))
+        text = strip_comments(re.sub(r"^# .*\n", "", text, count=1))
+        if src == "otazky_pro_rodinu.md":   # otázky pro rodinu podle rodů (8–15), obecné oddíly nahoře
+            text = podle_rodu(text, lines)
+        write(os.path.join(gen_dir, dst), text)
     shutil.rmtree(os.path.join(gen_dir, "pribehy"), ignore_errors=True)
     if multi_stories:
         for story in stories:

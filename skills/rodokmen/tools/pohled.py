@@ -194,8 +194,12 @@ def pohled(ns, koreny, texty=False, rody=None):
                      if m(pr.get("a")) is not None and m(pr.get("b")) is not None]
     hypotezy = [dict(h, rod=kde[norm(h["rod"])]) for h in ns["HYPOTEZY"]
                 if texty and isinstance(h, dict) and norm(h.get("rod")) in kde]
+    # otázky s osobou (dict s k): jen ty, jejichž osoba v pohledu je, s jejím novým číslem; bez osoby zůstanou všechny
+    s_osobou = lambda i: isinstance(i, dict) and i.get("k") is not None
+    issues = [dict(i, k=m(i["k"])) if s_osobou(i) else i for i in ns["ISSUES"]
+              if not s_osobou(i) or m(i["k"]) is not None] if texty else []
     nove = dict(ns, P=nove_p, RODINA=nove_r, SAME=same, LINES=lines, SIDE=side, PARTNERI=nove_partneri,
-                ISSUES=list(ns["ISSUES"]) if texty else [], HYPOTEZY=hypotezy)
+                ISSUES=issues, HYPOTEZY=hypotezy)
     nove["_zapisy"] = ({r for p in list(nove_p.values()) + list(nove_r.values()) for r in p.get("r", [])}
                        | {r for s in side for r in s.get("r", [])})
     return nove, prevod

@@ -1,21 +1,67 @@
 ---
+// „Co hledáme“ – tři části: otázky pro rodinu (data/otazky_pro_rodinu.md, oddíly podle rodů), otevřené otázky
+// (ISSUES v data/osoby.py, podle rodů) a prameny mimo online matriky (data/archivni_dotazy.md, oddíly podle archivů).
 import Base from '../layouts/Base.astro';
-import { issues, config } from '../lib/data.js';
-import { Content as Dotazy } from '../generated/dotazy.md';
+import PersonLink from '../components/PersonLink.astro';
+import { issues, lines, config } from '../lib/data.js';
+import { Content as Otazky, rawContent as otazkyText } from '../generated/otazky.md';
+import { Content as Dotazy, rawContent as dotazyText } from '../generated/dotazy.md';
+
+const STAV = { 'otevřené': ['Otevřené', 'st-unk'], 'hypotéza': ['Hypotéza', 'st-prob'] };
+const otevrene = issues.filter((i) => i.stav !== 'vyřešeno');
+const rody = Object.values(lines).sort((a, b) => a.k - b.k);
+// nejdřív otázky bez rodu (bližší předci, celá rodina), pak rody 8–15
+const skupiny = [
+  { nadpis: 'Bližší předci a celá rodina', barva: null, polozky: otevrene.filter((i) => !i.rod || !lines[i.rod]) },
+  ...rody.map((l) => ({ nadpis: `Rod ${l.name}`, barva: l.color, polozky: otevrene.filter((i) => i.rod === l.slug) })),
+].filter((s) => s.polozky.length);
+const maOtazky = otazkyText().trim().length > 0;
+const maDotazy = dotazyText().trim().length > 0;
+const kontakt = config.kontakt?.email;
 ---
 <Base title="Co hledáme">
   <h1>Co ještě hledáme</h1>
-  <p class="lead">Otevřené otázky a hypotézy. Pokud o něčem z toho víte z rodinné paměti nebo dokumentů, ozvěte se{config.kontakt?.email ? <> na <a href={`mailto:${config.kontakt.email}`}>{config.kontakt.email}</a></> : ' autorovi rodokmenu'}.</p>
-  <h2>Otevřené otázky</h2>
-  <div class="grid2">
-    {issues.filter((i) => !i.text.startsWith('Vyřešeno')).map((i) => (
-      <div class="card">
-        <h3>{i.title}</h3>
-        <p class="small"><span class={`chip ${i.text.startsWith('Vyřešeno') ? 'st-doc' : i.text.startsWith('Hypotéza') ? 'st-prob' : 'st-unk'}`}>{i.text.split(':')[0]}</span> {i.text.slice(i.text.indexOf(':') + 1)}</p>
-      </div>
-    ))}
-  </div>
-  <h2>Prameny mimo online matriky</h2>
-  <div class="prose small"><Dotazy /></div>
+  <p class="lead">Co o rodině zatím nevíme. Pokud o něčem z toho víte z rodinné paměti nebo máte doma dokumenty, ozvěte se{kontakt ? <> na <a href={`mailto:${kontakt}`}>{kontakt}</a></> : ' autorovi rodokmenu'}.</p>
+
+  {maOtazky && (
+    <section class="hledame-cast">
+      <h2>Otázky pro rodinu</h2>
+      <div class="prose hledame-md"><Otazky /></div>
+    </section>
+  )}
+
+  <section class="hledame-cast">
+    <h2>Otevřené otázky</h2>
+    {skupiny.length ? skupiny.map((s) => (
+      <>
+        <h3>{s.barva && <span class="dot" style={`background:${s.barva}`}></span>}{s.nadpis}</h3>
+        <div class="grid2">
+          {s.polozky.map((i) => (
+            <div class="card">
+              <h4>{i.title}</h4>
+              <p class="small"><span class={`chip ${STAV[i.stav][1]}`}>{STAV[i.stav][0]}</span> {i.text}</p>
+              {i.person && <p class="small muted">Osoba: <PersonLink slug={i.person} /></p>}
+            </div>
+          ))}
+        </div>
+      </>
+    )) : <p class="muted">Žádné otevřené otázky.</p>}
+  </section>
+
+  {maDotazy && (
+    <section class="hledame-cast">
+      <h2>Prameny mimo online matriky</h2>
+      <div class="prose small hledame-md"><Dotazy /></div>
+    </section>
+  )}
   <p><a href="/denik/">Výzkumný deník – všechna hledání včetně neúspěšných →</a></p>
 </Base>
+
+<style>
+  .hledame-cast { margin-top: 2rem; }
+  .hledame-cast h3 { display: flex; align-items: center; gap: 0.45rem; }
+  .dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; display: inline-block; }
+  .card h4 { margin: 0 0 0.4rem; font-size: 1rem; }
+  .hledame-md :global(h2) { font-size: 1.15rem; border: 0; margin: 1.4rem 0 0.4rem; }
+  .hledame-md :global(li) { margin: 0.25rem 0; }
+</style>

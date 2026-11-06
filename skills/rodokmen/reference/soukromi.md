@@ -18,7 +18,7 @@ s poznámkami zapnutými (a jen ze svého přístupu); nevhodnou smaž `npm run 
 
 ## Před zveřejněním webu projdi s uživatelem
 `python3 -I tools/kontrola.py` hlásí `CITLIVÉ` u textů z posledních ~100 let (sebevražda, nemoc, rozvod, dluhy, nemanželské
-dítě…), které jdou na web – v poznámkách osob, ve „Co hledáme“ (`ISSUES`), u bočních příbuzných, v příčinách úmrtí, v zajímavostech,
+dítě…), které jdou na web – v poznámkách osob, ve „Co hledáme“ (`ISSUES`, otázky pro rodinu, prameny mimo matriky), u bočních příbuzných, v příčinách úmrtí, v zajímavostech,
 v `data/pribeh.md` i ve všech `data/pribehy/*.md`.
 Co uživatel na webu schválí, zapiš úryvkem do `web.json` → `citlive_schvaleno` (`web.md`).
 Databáze obětí holocaustu (`obeti.py`) a vojenské ztráty jsou citlivé: jména obětí na web jen se souhlasem rodiny.

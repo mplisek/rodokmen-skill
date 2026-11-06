@@ -67,7 +67,10 @@ P = {
   „Další děti“ (s odkazem na poznámku); nevlastní sourozence ne – nevíme, po kterém rodiči jsou.
   Nedoloženou samostatnou rodinu nepřipojuj do hlavního stromu; jako `SIDE` ji veď jen jako výslovně označenou stopu
   u konkrétního možného příbuzného. Jinak ji ponech odděleně v deníku.
-- `ISSUES` – dvojice `("Otázka", "Vyřešeno: … / Hypotéza: … / Otevřené: …")` → stránka „Co hledáme“ (vyřešené se skryjí).
+- `ISSUES` – otevřené otázky a rozpory v datech: `dict(k=16, otazka="Kdo byli rodiče Františka Nováka?", stav="otevřené",
+  text="Rodina uvádí…, rozhodne křest nebo sňatek 1889.")` (`stav`: `otevřené` / `hypotéza` / `vyřešeno`; `k` = číslo
+  předka nebo zkratka z RODINA, podle něj web otázku zařadí k rodu a odkáže na osobu). Na stránku „Co hledáme“ → Otevřené
+  otázky; vyřešené se skryjí (časem je smaž). Starší dvojice `("Otázka", "Otevřené: …")` dál fungují, jen bez rodu.
   Jde na web – nepiš sem citlivé věci (příčiny úmrtí, rodinné spory) bez souhlasu.
 - `HYPOTEZY` – `dict(rod=8, nadpis="…", text="…", polozky=[("jméno", "text")], zaznamy=[klíče])` → stránka rodu.
 - `SAME = {350: 140}` – předek, který je v rodokmenu dvakrát (alias → hlavní číslo; alias v `P` může mít `f=["TÁŽ OSOBA jako 140"]`).
@@ -174,7 +177,16 @@ Viz `web.md`.
   `title`, `lead` a číselným `rod` (8–15); web vytvoří rozcestník `/pribehy/` a stránky `/pribehy/<slug>/`.
   Jak psát: `pribehy.md`.
 - Poznámky pro Clauda v markdownu piš jako `<!-- … -->` – na web nejdou.
-- `archivni_dotazy.md`, `udaje_od_rodiny.md` – volný text.
+- `udaje_od_rodiny.md` – volný text (kdo co řekl, `st="fam"`).
+- **Stránka „Co hledáme“ má tři části** – každá věc patří tam, kde se dá vyřešit, a jen jednou:
+  - `otazky_pro_rodinu.md` → **Otázky pro rodinu** (co může vědět jen rodina). Oddíl `## Dokumenty doma` nahoře, pak
+    `## <rod>` se stejným názvem jako v `LINES` (web je seřadí podle čísla rodu), jedna otázka na odrážku.
+  - `ISSUES` → **Otevřené otázky** (rozpor nebo mezera v datech), viz výše.
+  - `archivni_dotazy.md` → **Prameny mimo online matriky** (co je jen v archivu nebo na úřadě). Oddíl = archiv
+    nebo úřad (`## SOA Zámrsk`, `## Matriční úřad Holice`), v odrážce `**Rod – osoba (k):** co hledáme – proč není online`.
+  - Krátké věty pro rodinu, bez dat zápisu („zapsáno …“), čísel deníku a snímků (ty jsou v `research_log.md`).
+    Vyřešené a zodpovězené smaž – výsledek do dat, `udaje_od_rodiny.md` nebo deníku. Pracovní poznámky do `<!-- … -->`.
+    Jde na web: o žijících jen jméno a rok. `kontrola.py` hlídá tvar, data zápisu, zodpovězené položky a citlivé údaje.
 
 ## Odkazy na osoby (slug)
 Slug = jméno bez diakritiky + rok, např. `jan-novak-1890`; při kolizi přidá číslo osoby. Přesné slugy po `npm run data`

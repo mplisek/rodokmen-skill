@@ -291,10 +291,15 @@ SIDE = [
 ]
 
 ISSUES = [
- ("Odkud přišel Jakub Novák do Ostřetína?", "Otevřené: jeho křest je starší než ostřetínské matriky (1690); zkusit soupis poddaných 1651 a berní rulu."),
- ("Kdo byl otec Rozálie Křížové (1879)?", "Otevřené: v matrice Proseče je zapsána jako nemanželská, otec neuveden ani dodatečně."),
- ("Kdy se narodil Václav Hrubý (1841)?", "Hypotéza: podle věku v zápisu úmrtí 1841; ve Vysokém Mýtě 1839–1843 zatím nenalezen."),
- ("Byl mlýn ve Slatiňanech Kučerův už před rokem 1773?", "Otevřené: gruntovní knihy panství Slatiňany (SOA Zámrsk) – do archivu."),
+ dict(k=1024, otazka="Odkud přišel Jakub Novák do Ostřetína?", stav="otevřené",
+      text="Narodil se dřív, než začínají ostřetínské matriky (1690). Pomoci může soupis poddaných 1651 a berní rula."),
+ dict(k=29, otazka="Kdo byl otec Rozálie Křížové?", stav="otevřené",
+      text="V matrice je zapsaná jako nemanželská, otec není uvedený ani dodatečně."),
+ dict(k=44, otazka="Kdy se narodil Václav Hrubý?", stav="hypotéza",
+      text="Rok 1841 je spočítaný z věku při úmrtí; ve Vysokém Mýtě 1839–1843 jsme křest zatím nenašli."),
+ dict(k=208, otazka="Patřil mlýn ve Slatiňanech Kučerům už před rokem 1773?", stav="otevřené",
+      text="Rozhodnou gruntovní knihy panství Slatiňany – jsou jen v archivu."),
+ dict(otazka="Kde se vzali rodiče Františky Kučerové?", stav="vyřešeno", text="Ve Slatiňanech 1898 (na webu se nezobrazí)."),
 ]
 
 HYPOTEZY = [

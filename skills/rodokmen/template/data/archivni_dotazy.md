@@ -1,13 +1,17 @@
 # Prameny mimo online matriky
 
-Co by šlo zjistit jen v badatelně archivu nebo na matričním úřadě (a proč). Doplňujte průběžně.
+Zápisy a knihy, které nejsou online – jsou jen v archivu nebo na matričním úřadě. Oddíl = jeden archiv nebo úřad
+(na jeden archiv pak stačí jedna žádost, viz zadosti.md); v oddílu rod a osoba, co hledáme a proč to není online.
 
-<!-- Vzor záznamu (smaž nebo přepiš):
-## Příchod do <obec> po válce – <jméno>
-- Co hledat: osídlenecké spisy, evidenci obyvatel a spisy MNV <obec> 1945–1950 (kdo se kdy přistěhoval, odkud, na jaký dům)
-- Kde: Státní okresní archiv <okres> (fondy „Místní národní výbor <obec>“, „Okresní národní výbor“, „Okresní osídlenecký úřad“); reemigranty též Národní archiv
-  (fond Ministerstvo práce a sociální péče, inv. č. 655, sign. 3521) a archiv Ministerstva zemědělství
-- Co o osobě víme: jméno, rok narození, odkud přišla (zem, obec), rok příchodu, číslo domu
-- Narození/sňatek v cizině: Zvláštní matrika (ÚMČ Brno-střed), pokud šlo o občana ČSR
-- Stav: nezasláno / zasláno <datum> / odpověď
+<!-- Pro Clauda (na web nejde): krátké věty bez dat zápisu („zapsáno …“) a čísel deníku; signatury jen tam, kde je archiv
+potřebuje (číslo knihy, inventární číslo). Nalezené smaž a výsledek zapiš do research_log.md. Vzor:
+## SOA Zámrsk
+- **Novákové – Jan Novák (16):** křest 1872 v Holicích – kniha narozených 1860–1880 není naskenovaná.
+- **Králové – Anna Králová (21):** sňatek asi 1895 v Holicích – oddací knihy po 1890 nejsou online.
+
+## Matriční úřad Holice
+- **Novákové – Josef Novák (4):** narození 1930 – je mladší než 100 let, výpis vydá jen matriční úřad (s doložením příbuzenství).
+
+## SOkA Chrudim
+- **Kučerovi – mlýn Slatiňany čp. 5:** gruntovní kniha panství Slatiňany (držitelé mlýna před 1773).
 -->

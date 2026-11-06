@@ -13,6 +13,8 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 ## Nevydáno
 
 ### Nové
+- Stránka **Co hledáme** má tři části: **Otázky pro rodinu** (`data/otazky_pro_rodinu.md`, nově i na webu) a **Otevřené otázky** (`ISSUES`) seřazené podle rodů, **Prameny mimo online matriky** (`archivni_dotazy.md`) podle archivů. `ISSUES` má nový tvar `dict(k=…, otazka=…, stav=…, text=…)` – otázka se zařadí k rodu a odkáže na osobu, stav je štítek (dřív se ukazoval kus textu do první dvojtečky); starší dvojice dál fungují.
+- `kontrola.py` hlídá „Co hledáme“: otázky ve starém tvaru, oddíly, které nejsou rod nebo archiv, data zápisu („zapsáno …“), zodpovězené položky a citlivé údaje i v otázkách pro rodinu a v pramenech.
 - Obrázky pro web se při exportu zmenší a překódují: na stránce nejvýš 1400 px (je-li k zápisu plné rozlišení),
   progresivní JPEG bez metadat, plné rozlišení v kvalitě 82. Na skutečném projektu asi o polovinu méně dat u obrázků
   na stránkách a o čtvrtinu u plného rozlišení – méně přenesených dat a kreditů na Netlify. Upravené verze jsou

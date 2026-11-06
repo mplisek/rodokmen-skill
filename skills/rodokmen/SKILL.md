@@ -260,7 +260,8 @@ Co jde jen přes úřad nebo badatelnu (mladší zápisy, pozemkové knihy, evid
 
 ### Kdy přestat
 Linie končí, když matriky mlčí (nemanželské dítě bez otce, shořelé knihy, chybějící svazky) nebo když jsi
-v 17. století. Zapiš to do `ISSUES`/`archivni_dotazy.md` a jdi na jinou větev. Průběžně aktualizuj `data/STAV.md`
+v 17. století. Zapiš to do „Co hledáme“ – rozpor do `ISSUES`, co může vědět rodina do `otazky_pro_rodinu.md`, co je jen
+v archivu do `archivni_dotazy.md` (každou věc jen jednou, krátce, bez data zápisu; `reference/data.md`) – a jdi na jinou větev. Průběžně aktualizuj `data/STAV.md`
 („Rozpracováno“), aby šlo kdykoli navázat.
 
 ## Fáze 3 – Zajímavosti a příběhy rodů
@@ -291,7 +292,7 @@ Podrobně `reference/web.md`. Ve zkratce:
    Po každém větším kole hledání zkontroluj i texty úvodu ve `web.json` (`uvod`, `zajimavosti_na_uvodu`) –
    zastarávají („nejstarší předek je…“, počty generací).
 4. Před zveřejněním si vezmi `reference/soukromi.md` a projdi s uživatelem, co na webu bude (žijící lidé!).
-   Na web jde i „Co hledáme“ (`ISSUES`), poznámky osob, deník a všechny soubory `data/pribehy/*.md`. Hlášky `CITLIVÉ` z `kontrola.py` vyřeš s uživatelem;
+   Na web jde i „Co hledáme“ (`ISSUES`, `otazky_pro_rodinu.md`, `archivni_dotazy.md`), poznámky osob, deník a všechny soubory `data/pribehy/*.md`. Hlášky `CITLIVÉ` z `kontrola.py` vyřeš s uživatelem;
    co na webu nechat smí, zapiš úryvkem textu do `web.json` → `citlive_schvaleno` (pak se už nehlásí).
 5. Čte-li web víc rodin (manželé, sourozenci s rodinami), nabídni **přístupy**: každá rodina vlastní odpověď a jen svá
    větev od své výchozí osoby (`web.json` → `pristupy`, `reference/web.md` „Více přístupů“). Náhled každého přístupu
@@ -342,7 +343,8 @@ Nedělej to pořád. Postup:
 | `data/zaznamy.json`, `data/svazky.json` | zápisy z matrik a svazky, ze kterých jsou |
 | `data/prepisy.json`, `data/zvyrazneni.json` | přepisy s překlady, rámečky čteného místa |
 | `data/research_log.md` | deník všech hledání |
-| `data/udaje_od_rodiny.md`, `data/archivni_dotazy.md` | co víme od rodiny; co jen v archivu |
+| `data/udaje_od_rodiny.md` | co víme od rodiny |
+| `data/otazky_pro_rodinu.md`, `ISSUES`, `data/archivni_dotazy.md` | „Co hledáme“: otázky pro rodinu (podle rodů), otevřené otázky (podle rodů), prameny mimo online matriky (podle archivů) – `reference/data.md` |
 | `data/zadosti.md` | poslané žádosti archivům a úřadům a jejich stav (nejde na web) |
 | `data/zajimavosti.md`, `data/pribeh.md`, `data/pribehy/*.md`, `data/web.json`, `data/dokumenty.json`, `data/mista.json`, `data/pozvanky.json` | texty a nastavení webu, rodinné fotky, místa na mapě, osobní odkazy (jen otisky) |
 | `vyrezy/`, `zdroje/` | výřezy zápisů a dokumentů (web / plné rozlišení), název = klíč + `.jpg` |
