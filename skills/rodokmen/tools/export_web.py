@@ -75,6 +75,12 @@ def strip_comments(md):
     return re.sub(r"<!--.*?-->\n?", "", md, flags=re.S)
 
 
+def hvezdicky_narozeni(md):
+    """„* 1890“ (narozen) uprostřed řádku markdown bere jako začátek kurzívy – uvnitř tučného „**Jan (* 1890):**“
+    pak rozbije formát. Hvězdičku před číslem (ne na začátku řádku, ne u **) ošetří zpětným lomítkem."""
+    return re.sub(r"(?m)(?<!^)(?<![*\\])\*(?!\*)(?= ?\d)", r"\\*", md)
+
+
 STAVY_OTAZEK = ("otevřené", "hypotéza", "vyřešeno")
 
 
@@ -974,7 +980,7 @@ def main():
                      ("research_log.md", "denik.md"), ("zajimavosti.md", "zajimavosti.md")):
         path = os.path.join(DATA, src)
         text = open(path, encoding="utf-8").read() if os.path.exists(path) and texty else ""
-        text = strip_comments(re.sub(r"^# .*\n", "", text, count=1))
+        text = hvezdicky_narozeni(strip_comments(re.sub(r"^# .*\n", "", text, count=1)))
         if src == "otazky_pro_rodinu.md":   # otázky pro rodinu podle rodů (8–15), obecné oddíly nahoře
             text = podle_rodu(text, lines)
         write(os.path.join(gen_dir, dst), text)

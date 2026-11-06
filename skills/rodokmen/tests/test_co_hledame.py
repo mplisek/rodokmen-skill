@@ -25,6 +25,10 @@ class Funkce(unittest.TestCase):
         self.assertEqual((r[2]["stav"], r[2]["text"]), ("otevřené", "bez stavu"))
         self.assertEqual(r[3]["title"], "D?")
 
+    def test_hvezdicka_narozeni_nerozbije_tucne(self):
+        self.assertEqual(ew.hvezdicky_narozeni("- **Jan Novák (* 1890):** křest"), "- **Jan Novák (\\* 1890):** křest")
+        self.assertEqual(ew.hvezdicky_narozeni("* bod seznamu\n**1890**"), "* bod seznamu\n**1890**")
+
     def test_rod_nadpisu_podle_kmene(self):
         self.assertEqual(ew.rod_nadpisu("Novákovi (Holice)", LINES)["k"], 8)
         self.assertEqual(ew.rod_nadpisu("Hrubí", LINES)["k"], 11)
