@@ -1,5 +1,4 @@
-"""Testy drobných oprav: roky ve vějíři a na webu (years), brzda po čekání na slot (slusne.pockej),
-CITLIVÉ v hypotézách a deníku a ISSUES bez stavu (kontrola.py).
+"""Testy drobných oprav: roky ve vějíři a na webu (years), CITLIVÉ v hypotézách a deníku a ISSUES bez stavu (kontrola.py).
 
 Z kořene repozitáře:
   python3 -I tests/drobne/test_drobne.py
@@ -39,30 +38,8 @@ for modul, slozka in (("export_web", TOOLS), ("fan_chart", os.path.join(vejir, "
                      ("1820 – po 1852", "1820–po 1852"), ("asi 1795 – asi 1850", "≈1795–≈1850"), ("1820 – 1890", "1820–1890")):
         ok(f"{modul}.years({y!r})", years(y) == cekam, f"vyšlo {years(y)!r}, čekal jsem {cekam!r}")
 
-# 2) brzda: dotaz čeká na slot, mezitím jiné vlákno web zastaví → dotaz neodejde
-sl = nacti("slusne")
-host = "digi.archives.cz"   # limit 4 s mezi dotazy
-sl.pockej(host, obrazek=False)   # první dotaz projde hned, další čeká ~4 s
-vysledek = []
-
-
-def druhy():
-    try:
-        sl.pockej(host, obrazek=False)
-        vysledek.append("odešel")
-    except sl.Zastaveno:
-        vysledek.append("zastaven")
-
-
-t = threading.Thread(target=druhy)
-t.start()
-time.sleep(0.5)
-try:
-    sl.zastav(host, "test: 429 během čekání")
-except sl.Zastaveno:
-    pass
-t.join(10)
-ok("brzda: zastavení během čekání na slot", vysledek == ["zastaven"], f"druhý dotaz: {vysledek}")
+# 2) brzda: oprava „zastavení během čekání na slot“ z PR #140 ve forku NENÍ – po čekání brala znovu zámek, dotazy
+#    pak odcházely ve shlucích (zátěžový test brzdy: 0,02 s od sebe); bez zámku zase občas selhal přístup ke stavu.
 
 # 3) kontrola: citlivé slovo v hypotéze a v deníku, ISSUES bez stavu
 d = tempfile.mkdtemp(prefix="drobne_kontrola_")

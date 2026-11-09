@@ -43,8 +43,6 @@ Fork na originálu 0.9.2 (zveřejnění na Cloudflare, kontrola nové verze prot
 
 ### Opravy
 - Roky: „1889 – před 1936“ se ukáže celé (dřív „1889–?“), nejisté úmrtí „1901 (?)“ jako „1901?“ (PR #140).
-- Brzda: dotaz, který čekal na slot, znovu zkontroluje, jestli mezitím jiný proces nedostal 429/503, a odpoví
-  zastavením místo odeslání na archiv, který právě odmítá (PR #140).
 - `kontrola.py` hlídá citlivé údaje i v hypotézách a v deníku (u deníku podle okolí nálezu, ne celého řádku;
   sloupec s datem hledání se nepočítá jako rok události) (PR #140).
 - Mapa: osoba se nezařadí k obci její matky („roz. Nováková z Bašnic“, „a Rosiny, dcery sedláka … z Hovězí“),
