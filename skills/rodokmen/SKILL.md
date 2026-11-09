@@ -111,6 +111,10 @@ Cíl: znát co nejvíc o 3–4 generacích nazpět, než sáhneš do matrik.
 - **Rodinný strom jako soubor GEDCOM** (`.ged`, export z MyHeritage/Geni/FamilySearch): `python3 -I tools/ged_import.py
   dokumenty/strom.ged "Jméno Příjmení"` vypíše předky s čísly, všechny události a poznámky a **frontu zápisů**
   (nejmladší známá událost u každého předka, a jestli už je v archivu). `--osoby` dá kostru pro `osoby.py`.
+  Předtím spusť `python3 -I tools/graf.py strom dokumenty/strom.ged "Jméno Příjmení"`. Cizí stromy mívají
+  dvojníky (táž osoba dvakrát, třeba u obou manželek otce) a chronologicky nemožné vazby (matce by bylo 6 let).
+  Nástroj je vypíše, u dítěte ve dvou rodinách ukáže, kterou bere `ged_import.py` a která je podle dat možná,
+  a u předka, který je v rodokmenu víckrát, navrhne `SAME`. Všechno ověř v matrice.
   Jméno nemusí být jedinečné: spusť nejprve výpis osob bez jména a kořen vyber podle GEDCOM ID (např. `@I42@`),
   ne jen podle shody jména. Import je podklad k posouzení, ne automatické přidání: počet osob ve vstupním stromu
   není počet nových osob projektu.
@@ -386,6 +390,7 @@ text i tak nečitelný, udělej z plného rozlišení výřez (`x0,y0,x1,y1`), n
 | `matricula_dl.sh`, `matricula_batch.sh` | snímky z Matriculy (Rakousko…), URL se bere z prohlížeče |
 | `anno.py`, `anno_snap.py`, `kramerius.py` | noviny: ANNO (rakouské; `--ztraty` = seznamy ztrát 1914–1919), Kramerius (české) |
 | `ged_import.py strom.ged "Jméno"` | předci z rodinného stromu (GEDCOM) + fronta zápisů |
+| `graf.py strom strom.ged ["Jméno"]`, `graf.py predci` | rodina jako graf: dvojníci, dítě ve dvou rodinách, cykly, věk rodičů, předek víckrát (návrh `SAME`); `predci` hlásí i `kontrola.py` |
 | `ftb_export.py strom.ftb out.ged ["Jméno" rok linie.md [Photos/]]` | záloha z MyHeritage (.ftb) → GEDCOM + přímá linie s původem údajů |
 | `arolsen.py souhlas` / `hledat "Příjmení Jméno rok" [filtry]` / `karta <id> out.jpg` | Arolsen Archives: vězni, oběti, nuceně nasazení, vysídlení; **souhlas s prohlášením portálu potvrzuje uživatel sám** (`!python3 -I tools/arolsen.py souhlas`), Claude ho nepotvrzuje |
 | `mauthausen.py hledat "Novak" [--stran N]` | zemřelí v koncentračním táboře Mauthausen a pobočkách (Raum der Namen): datum a místo narození a úmrtí |

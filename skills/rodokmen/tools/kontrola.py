@@ -502,6 +502,14 @@ def main():
             warn.append(f"rod {jmeno} má už {n} generací – je čas napsat příběh rodu "
                         f"(data/pribeh.md, reference/pribehy.md); koncept nejdřív ukaž uživateli v chatu")
 
+    try:   # rodina jako graf (tools/graf.py): věk rodičů 2k a 2k+1, stejná osoba na dvou číslech bez SAME
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import graf
+        # věk rodičů a úmrtí rodiče před narozením už hlídá chronologie.py (jde potlačit polem overeno); z graf.py jen dvojníci
+        warn += [w for w in graf.predci(P, SAME) if "nejspíš tatáž jako" in w]
+    except ImportError:
+        pass
+
     log = os.path.join(DATA, "research_log.md")
     rows, duplicate_ids = research_log_stats(log)
     if duplicate_ids:

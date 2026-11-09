@@ -15,6 +15,10 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 Fork na originálu 0.9.2 (zveřejnění na Cloudflare, kontrola nové verze proti GitHubu – viz níže) a navíc:
 
 ### Nové
+- **Kontrola rodiny jako grafu** (`tools/graf.py`, PR #135): `graf.py strom strom.ged ["Jméno"]` před importem cizího
+  stromu najde dvojníky (Jan = Johann), dítě ve dvou rodinách, cykly a nemožné věky a navrhne `SAME` pro předka na víc
+  číslech. `kontrola.py` z něj přebírá jen hlášení o stejné osobě na dvou číslech; věk rodičů a úmrtí rodiče před
+  narozením dál hlídá časová kontrola (jde u ní potlačit polem `overeno`).
 - Kontrola nové verze skillu (`verze.py`, z originálu 0.9.1) se ptá GitHubu forku a rozumí verzím `X.Y.Z-fork.N`
   (`0.9.2-fork.1` je až za `0.9.2` originálu); stejně pojistka proti aktualizaci projektu starším skillem.
 - Zveřejnění na Cloudflare (originál 0.9.0) je ve forku zatím jen pro jednoduchý web s jednou rodinnou otázkou.
