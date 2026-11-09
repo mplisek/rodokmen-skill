@@ -1,6 +1,10 @@
 ---
 name: rodokmen
-description: "Průvodce tvorbou rodokmenu z českých matrik a rodinného webu pro lidi bez zkušeností s genealogií i programováním. Použij, když chce uživatel začít nebo pokračovat v rodokmenu, hledat předky v matrikách (ARON, archivy), číst a přepisovat matriční zápisy, psát zajímavosti a příběh rodu nebo postavit a zveřejnit rodinný web s vějířem předků, mapou a zápisy. Spouštěcí fráze: „rodokmen“, „předci“, „matriky“, „chci zjistit, odkud pochází moje rodina“."
+description: >-
+  Průvodce tvorbou rodokmenu z českých matrik a rodinného webu pro lidi bez zkušeností s genealogií i programováním.
+  Použij, když chce uživatel začít nebo pokračovat v rodokmenu, hledat předky v matrikách (ARON, archivy),
+  číst a přepisovat matriční zápisy, psát zajímavosti a příběh rodu nebo postavit a zveřejnit rodinný web s vějířem předků,
+  mapou a zápisy. Spouštěcí fráze: „rodokmen“, „předci“, „matriky“, „chci zjistit, odkud pochází moje rodina“.
 ---
 
 # Rodokmen z matrik + rodinný web
@@ -27,8 +31,13 @@ Najdeš v ní `tools/` (nástroje), `template/` (šablona projektu a webu) a `re
 ## Na začátku každé konverzace
 1. Jsi ve složce projektu? (`data/STAV.md` existuje.) → Přečti `data/STAV.md`, konec `data/research_log.md`
    a pokračuj podle sekce „Rozpracováno“. Krátce uživateli shrň, kde jste skončili.
-   **Verze:** porovnej soubor `.skill_verze` v projektu se `SKILL_DIR/VERZE`. Chybí-li, nebo se liší, řekni jednou větou,
-   že je nová verze skillu, a nabídni aktualizaci projektu: `python3 -I SKILL_DIR/tools/novy_projekt.py <složka projektu>`
+   **Verze:** spusť `python3 -I SKILL_DIR/tools/verze.py <složka projektu>` (porovná projekt, nainstalovaný skill
+   a nejnovější vydání na GitHubu; GitHubu se ptá nejvýš jednou denně). Podle posledního řádku:
+   `NOVA_VERZE_SKILLU` → řekni jednou větou, že vyšla nová verze, a poraď, jak aktualizovat skill (vypíše jak); projekt
+   aktualizuj až z nového skillu (po restartu), nikdy ne z klonu GitHubu. `PROJEKT_NOVEJSI` → projekt neaktualizuj,
+   jen poraď aktualizovat skill. `SKILL_NEZJISTEN` (kopie nástroje v projektu nenašla nainstalovaný skill) → spusť
+   kontrolu znovu ze `SKILL_DIR`. `AKTUALIZUJ_PROJEKT` → nabídni aktualizaci projektu:
+   `python3 -I SKILL_DIR/tools/novy_projekt.py <složka projektu>`
    (data zůstanou, vlastní úpravy webu a `tools/` se sloučí s novou šablonou), pak ve `web/` `npm ci` s kompatibilní verzí Node.js (stejnou i pro build). Po souhlasu
    ji udělej a výpis projdi s uživatelem: u souborů ke kontrole a zálohovaných úprav porovnej, co změnila šablona
    a co uživatel, navrhni sloučení a po souhlasu ho udělej (postup `reference/web.md`). Odmítne-li, připomeň to až příště.
@@ -302,9 +311,13 @@ Podrobně `reference/web.md`. Ve zkratce:
    co z nich zapracovat (ověř v matrice, jako každý údaj od rodiny), a po jeho souhlasu je označ `-- --vyrizeno <id>`.
 
 ## Fáze 5 – Zveřejnění (volitelné, jen se souhlasem)
-Výchozí cesta je **Netlify** (zdarma): `npm run nasadit`. Přihlášení k Netlify a první propojení webu jsou interaktivní –
-dej je uživateli jako `! npx netlify-cli login` atd. (postup v `reference/web.md`). Pokročilá varianta: vlastní server (Docker/CapRover).
+Výchozí cesta je **Cloudflare** (zdarma, nasazování bez limitu): přihlášení `npx -y wrangler@4 login` (uživatel jen
+klikne v prohlížeči na Allow), název adresy do `web.json` (`cloudflare.nazev`) a `npm run nasadit-cloudflare` – postup
+v `reference/web.md`. Kdo už má web na Netlify, pokračuje `npm run nasadit`. Pokročilá varianta: vlastní server (Docker/CapRover).
 Nic nezveřejňuj bez výslovného souhlasu uživatele.
+Po zveřejnění **nenasazuj po každém kole** (Netlify zdarma vystačí jen na zhruba 20 nasazení měsíčně, u Cloudflare to
+zbytečně zdržuje). Mezi tím obnovuj jen náhled (`npm run data && npm run build`) a nasazuj na pokyn uživatele nebo
+jednou na konci sezení.
 
 ## Poznámky pro správce skillu
 Skill se zlepšuje podle zkušeností lidí, kteří ho používají. Proto **průběžně zapisuj do `data/poznamky_pro_skill.md`**

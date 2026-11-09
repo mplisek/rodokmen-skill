@@ -509,6 +509,7 @@ def login_files(cfg, otisky, odkazy=None, pristupy=None, klice=None):
         if odkazy:
             print("POZOR: nginx.conf (Docker/CapRover) osobní odkazy neumí – pustí jen přes odpovědi přístupů. "
                   "Osobní odkazy fungují na Netlify (npm run nasadit).")
+        cloudflare_files(cfg, "", False, "přístupy")
         return True
     for k in klice.values():
         if k["pristup"] not in (None, "vse"):
@@ -541,6 +542,7 @@ def login_files(cfg, otisky, odkazy=None, pristupy=None, klice=None):
         sys.exit("CHYBA: web/nginx.sablona.conf má v mapě $cookie_rodokmen jiný default než jediné „default 0;“. "
                  + AKTUALIZUJTE)
     write(os.path.join(WEB, "nginx.conf"), nginx)
+    cloudflare_files(cfg, digest, not gated, "osobní odkazy" if odkazy else "")
     return gated
 
 
@@ -553,6 +555,43 @@ def deploy_error(cfg, otisky, odkazy=False):
             "web by byl otevřený komukoli.\n"
             "Nastavte prihlaseni.odpoved, nebo přidejte odkaz: python3 -I tools/pozvanky.py pridej \"Jméno\". "
             "Otevřený web jen výslovně (když to opravdu chcete) přes prihlaseni.otevreny: true.")
+
+
+def cloudflare_files(cfg, digest, otevreny, duvod_ne=""):
+    """Brána pro Cloudflare (web/cloudflare/worker.js) a web/wrangler.jsonc pro `npm run nasadit-cloudflare`.
+    `otevreny` = web bez přihlášení. Brána pro Cloudflare umí jen jednu rodinnou otázku: s přístupy nebo osobními odkazy
+    (`duvod_ne`) se nevyrobí a nasazení na Cloudflare skončí chybou – jinak by pustila jen jednu odpověď, nebo (bez otázky)
+    dokonce web otevřela. Přístupy, odkazy a poznámky jsou zatím jen na Netlify."""
+    tpl = os.path.join(WEB, "cloudflare", "worker.sablona.js")
+    if duvod_ne:
+        for f in (os.path.join(WEB, "cloudflare", "worker.js"), os.path.join(WEB, "wrangler.jsonc")):
+            if os.path.exists(f):
+                os.remove(f)
+        if cfg.get("cloudflare"):
+            print(f"POZOR: Cloudflare (npm run nasadit-cloudflare) zatím neumí {duvod_ne} – nasazuj na Netlify (npm run nasadit).")
+        return
+    if not os.path.exists(tpl):
+        return
+    # cloudflare.nazev = subdoména účtu (adresa https://rodokmen.<nazev>.workers.dev), zakládá ji nasadit_cloudflare.mjs
+    name = ((cfg.get("cloudflare") or {}).get("nazev") or "").strip()
+    if name and not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,48}[a-z0-9])?", name):
+        sys.exit(f"CHYBA: cloudflare.nazev v data/web.json „{name}“ nejde použít – jen malá písmena bez diakritiky, "
+                 "číslice a pomlčky (nejvýš 50 znaků), např. „novakovi“.")
+    worker = (open(tpl, encoding="utf-8").read().replace("{{HASH}}", digest)
+              .replace("{{OTEVRENY}}", "true" if otevreny else "false"))
+    write(os.path.join(WEB, "cloudflare", "worker.js"), worker)
+    wrangler = {
+        "name": "rodokmen",
+        "main": "cloudflare/worker.js",
+        "compatibility_date": "2026-10-01",
+        "workers_dev": True,      # adresa https://rodokmen.<subdoména>.workers.dev
+        "preview_urls": False,    # bez zvláštních adres pro jednotlivé verze
+        "assets": {"directory": "./dist", "binding": "ASSETS", "run_worker_first": True,
+                   "not_found_handling": "404-page"},
+    }
+    write(os.path.join(WEB, "wrangler.jsonc"),
+          "// Vyrábí tools/export_web.py – ručně neupravovat. Nasazení: npm run nasadit-cloudflare.\n"
+          + json.dumps(wrangler, ensure_ascii=False, indent=2) + "\n")
 
 
 def main():

@@ -2,6 +2,7 @@
 import hashlib
 import json
 import re
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -80,6 +81,53 @@ class PozvankyPristupy(unittest.TestCase):
         self.assertIn("vede na přístup marie", spust(self.p, "pozvanky.py", "pristup", "p1", "marie").stdout)
         spust(self.p, "export_web.py")
         self.assertEqual(self.mapa("edge-functions/brana.js", "KLICE")[sha(teta)], "marie")
+
+
+class CloudflareBezPristupu(unittest.TestCase):
+    """Brána pro Cloudflare umí jen jednu rodinnou otázku: s přístupy nebo osobními odkazy se nevyrobí."""
+
+    def projekt(self, tmp, web_json_upravy, odkaz=False):
+        p = Path(tmp) / "ukazka"
+        self.assertEqual(novy_projekt(p, "--ukazka").returncode, 0)
+        cfg_path = p / "data" / "web.json"
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+        cfg.update(web_json_upravy)
+        cfg_path.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+        if odkaz:
+            spust(p, "pozvanky.py", "pridej", "Teta")
+        return p
+
+    def test_s_otazkou_bez_odkazu_se_brana_vyrobi(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = self.projekt(tmp, {"prihlaseni": {"otazka": "Pes?", "odpoved": "rex"}})
+            spust(p, "export_web.py")
+            worker = (p / "web" / "cloudflare" / "worker.js").read_text(encoding="utf-8")
+            self.assertIn("OTEVRENY = false", worker)
+            self.assertTrue((p / "web" / "wrangler.jsonc").exists())
+
+    def test_jen_odkazy_bez_otazky_nesmi_otevrit_web(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = self.projekt(tmp, {"prihlaseni": {"otazka": "", "odpoved": ""}, "cloudflare": {"nazev": "novakovi"}}, odkaz=True)
+            r = spust(p, "export_web.py")
+            self.assertFalse((p / "web" / "cloudflare" / "worker.js").exists())      # ne worker s OTEVRENY = true
+            self.assertFalse((p / "web" / "wrangler.jsonc").exists())
+            self.assertIn("Cloudflare", r.stdout)
+            self.assertIn("osobní odkazy", r.stdout)
+            self.assertTrue((p / "web" / "netlify" / "edge-functions" / "brana.js").exists())   # Netlify brána je
+            # nasazení na Cloudflare skončí srozumitelnou chybou (node je ve forku povinný pro web)
+            r = subprocess.run(["node", "scripts/nasadit_cloudflare.mjs"], cwd=p / "web", capture_output=True, text=True)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn("neumí osobní odkazy", r.stderr)
+
+    def test_pristupy_brana_pro_cloudflare_neni(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = self.projekt(tmp, {"prihlaseni": {"otazka": "Pes?", "odpoved": "rex"}, "pristupy": PRISTUPY})
+            spust(p, "export_web.py", "--pristup", "marie")
+            spust(p, "export_web.py")
+            self.assertFalse((p / "web" / "cloudflare" / "worker.js").exists())
+            r = subprocess.run(["node", "scripts/nasadit_cloudflare.mjs"], cwd=p / "web", capture_output=True, text=True)
+            self.assertNotEqual(r.returncode, 0)
+            self.assertIn("neumí přístupy", r.stderr)
 
 
 if __name__ == "__main__":

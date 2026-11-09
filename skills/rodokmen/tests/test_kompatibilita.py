@@ -28,7 +28,7 @@ class Kompatibilita(unittest.TestCase):
         bez = []
         for f in sorted(TOOLS.glob("*.py")):
             t = f.read_text(encoding="utf-8")
-            if f.name in ("slusne.py", "smoke_test.py", "hlidac_site.py"):
+            if f.name in ("slusne.py", "smoke_test.py", "hlidac_site.py", "verze.py"):   # verze.py se ptá jen GitHubu, nejvýš 1× denně
                 continue
             if re.search(r"urllib\.request|http\.client|urlopen", t) and "import slusne" not in t:
                 bez.append(f.name)

@@ -59,16 +59,20 @@ jobs:
           python -X utf8 -I tests/pozvanky/test_pozvanky.py
           python -X utf8 -I tests/pozvanky/test_prihlaseni.py
           node --test tests/pozvanky/brana.test.mjs tests/pozvanky/brana_pristupy.test.mjs
+          python -X utf8 -I tests/web/test_cloudflare.py skills/rodokmen
+          python -X utf8 -I tests/web/test_nginx.py skills/rodokmen
+          python -X utf8 -I tests/brzda/test_hook_windows.py skills/rodokmen
+          python -X utf8 -I tests/verze/test_verze.py skills/rodokmen
           if [ "$RUNNER_OS" = Linux ]; then python -X utf8 -I tests/vyrez/test_kontrast.py $T; fi   # ImageMagick jen na Linuxu
 
-      - name: Ukázkový web – založení a kontrola dat
+      - name: Ukázkový web - založení a kontrola dat
         shell: bash
         run: |
           python -X utf8 skills/rodokmen/tools/novy_projekt.py "$RUNNER_TEMP/ukazka" --ukazka
           cd "$RUNNER_TEMP/ukazka"
           python -X utf8 tools/kontrola.py
 
-      - name: Ukázkový web – testy, data a build
+      - name: Ukázkový web - testy, data a build
         shell: bash
         working-directory: ${{ runner.temp }}/ukazka/web
         run: |
@@ -79,7 +83,7 @@ jobs:
           node scripts/over_css.mjs
           python -X utf8 "$GITHUB_WORKSPACE/skills/rodokmen/tests/over_odkazy.py" dist
 
-      - name: Ukázkový web s více přístupy – samostatná verze pro každý přístup
+      - name: Ukázkový web s více přístupy - samostatná verze pro každý přístup
         shell: bash
         working-directory: ${{ runner.temp }}/ukazka/web
         run: |

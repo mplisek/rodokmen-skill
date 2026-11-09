@@ -10,9 +10,16 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
-## Nevydáno
+## 0.9.2-fork.1 – 9. 11. 2026
+
+Fork na originálu 0.9.2 (zveřejnění na Cloudflare, kontrola nové verze proti GitHubu – viz níže) a navíc:
 
 ### Nové
+- Kontrola nové verze skillu (`verze.py`, z originálu 0.9.1) se ptá GitHubu forku a rozumí verzím `X.Y.Z-fork.N`
+  (`0.9.2-fork.1` je až za `0.9.2` originálu); stejně pojistka proti aktualizaci projektu starším skillem.
+- Zveřejnění na Cloudflare (originál 0.9.0) je ve forku zatím jen pro jednoduchý web s jednou rodinnou otázkou.
+  S přístupy nebo osobními odkazy se brána pro Cloudflare nevyrobí a `npm run nasadit-cloudflare` řekne proč (jinak
+  by pustila jen jednu odpověď, u webu jen s odkazy dokonce všechny). Přístupy, odkazy a poznámky jsou jen na Netlify.
 - Stránka **Zápisy z matrik** je rozdělená podle události: křest / narození, sňatek, úmrtí (a biřmování, soupisy obyvatel, jiné prameny, jsou-li). Rejstřík už není samostatný druh: položka rejstříku je u své události se štítkem „rejstřík“ (`"rejstrik": true`, `druh` = událost); starší `"druh": "I"` web převede sám a `kontrola.py` ho připomene.
 - Stránka **Co hledáme** má tři části: **Otázky pro rodinu** (`data/otazky_pro_rodinu.md`, nově i na webu) a **Otevřené otázky** (`ISSUES`) seřazené podle rodů, **Prameny mimo online matriky** (`archivni_dotazy.md`) podle archivů. `ISSUES` má nový tvar `dict(k=…, otazka=…, stav=…, text=…)` – otázka se zařadí k rodu a odkáže na osobu, stav je štítek (dřív se ukazoval kus textu do první dvojtečky); starší dvojice dál fungují.
 - `kontrola.py` hlídá „Co hledáme“: otázky ve starém tvaru, oddíly, které nejsou rod nebo archiv, data zápisu („zapsáno …“), zodpovězené položky a citlivé údaje i v otázkách pro rodinu a v pramenech.
@@ -35,6 +42,59 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 - Mapa: jedna tečka za místo, s víc rody rozdělená jejich barvami (dřív samostatné tečky posunuté o ~700 m, při
   přiblížení vypadaly jako další místa v polích). Osoba se k obci přiřadí jen podle skutečného údaje – ne podle
   poznámky v závorce („kniha narozených Libice…“), okresu („okr. Havlíčkův Brod“) ani původu partnera u sňatku.
+
+## 0.9.2 – 7. 11. 2026
+
+**Opravy**
+- Kontrola nové verze z 0.9.1 u některých lidí neproběhla: hlídač sítě ji zablokoval (teď pustí skript, který se ptá
+  jen GitHubu) a kopie nástroje v projektu nenašla nainstalovaný skill (teď ho najde, a když ne, netvrdí „aktuální“).
+  U ručně nakopírovaného skillu radí stáhnout novou verzi z GitHubu místo příkazů pro plugin (#136).
+- Windows: hlídač sítě se po aktualizaci projektu nemusel spustit – v nastavení byl jen příkaz `python`, který
+  v prostředí Claude Code může vést na nefunkční zástupce z Microsoft Store. Teď je tam vždy plná cesta k Pythonu.
+- `npm install` ve `web/` už nehlásí závažnou zranitelnost (knihovna `undici`, používá ji jen sestavení webu).
+
+**Návody**
+- MZA Brno: snímky přes Playwright, ne vestavěný prohlížeč Claude desktop (dostává 403 i po pauze). Bílý snímek
+  s chybou 403 je blokace, ne pomalé načítání – Claude přestane a řekne to (#147).
+
+Děkuji všem za rychlá hlášení e-mailem i na GitHubu.
+
+## 0.9.1 – 6. 11. 2026
+
+**Nové**
+- Kontrola nové verze i proti GitHubu: Claude na začátku konverzace zjistí, jestli nevyšla novější verze, než je
+  nainstalovaná (nejvýš jednou denně), a poradí, jak skill aktualizovat. Dřív to poznal, jen když se kopie skillu
+  aktualizovala sama, a to se u některých instalací děje se zpožděním hodin až dnů (#98).
+
+**Opravy**
+- Aktualizace projektu odmítne starší kopii skillu, než ze které projekt vznikl – projekt se tak nevrátí ke staré verzi.
+
+## 0.9.0 – 6. 11. 2026
+
+Hlavní novinka: **rodinný web se nově zveřejňuje na Cloudflare.** Nasazování i přenos jsou zdarma bez limitu,
+takže web jde aktualizovat kdykoli (bezplatný Netlify vystačí jen na zhruba 20 nasazení měsíčně).
+
+**Nové**
+- **Zveřejnění na Cloudflare (výchozí).** Uživatel si jen založí účet a v prohlížeči klikne na „Allow“, zbytek
+  udělá Claude: navrhne adresu podle rodu (`https://rodokmen.novakovi.workers.dev`), předem ověří, že je volná,
+  a web nasadí příkazem `npm run nasadit-cloudflare`. Rodinná otázka chrání stránky i fotky, kontrola po nasazení
+  počká, až se nová adresa rozšíří, a ověří, že web bez přihlášení ukáže otázku (#50, #67).
+- Kdo má web na Netlify, nic měnit nemusí – `npm run nasadit` funguje dál. Claude teď ale po zveřejnění nenasazuje
+  po každém kole, jen na pokyn nebo jednou na konci sezení, a hlášku „Forbidden“ vysvětlí jako vyčerpané kredity (#54).
+
+**Opravy**
+- Vlastní server (Docker, CapRover): nginx kvůli přihlašovací otázce vůbec nenastartoval (chyba 502), u otevřeného
+  webu padal na dvojí `default`. Image je nově `nginx:stable-alpine` (#56, #61).
+- Odpověď na přihlašovací otázku jen z azbuky nebo symbolů: nasazení teď řekne proč, místo „není odpověď“.
+- Hlavička `SKILL.md` je platný YAML – hlásil ji jako chybnou GitHub i GitHub Copilot (#131).
+- Indikační skici stabilního katastru: v budově je červeně číslo popisné a černě číslo stavební parcely, ne
+  naopak (#132).
+
+**Návody**
+- Vlastní server: úklid starého image po přestavbě, příprava webu bez Node.js, přihlášení jen přes https,
+  za reverse proxy subdoména místo podadresáře.
+
+Děkuji všem, kdo poslali poznámky a opravy – hlavně za zkušenosti s Cloudflare a Dockerem.
 
 ## 0.8.2-fork.1 – 6. 11. 2026
 

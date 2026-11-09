@@ -26,7 +26,7 @@ junction) mimo projekt a na místě záloh, složku místo souboru a cesty liš�
 Projekt bez .skill_sablona/ (ze starší verze) přepíše a původní verze změněných souborů uloží do
 pracovni/zaloha_<datum>/puvodni/.
 """
-import hashlib, json, os, shutil, subprocess, sys, tempfile, time
+import hashlib, json, os, re, shutil, subprocess, sys, tempfile, time
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -322,10 +322,10 @@ MATCHER = "Bash|PowerShell|Monitor"   # Monitor spouští příkaz v bashi stejn
 
 
 def _python_windows():
-    """Python pro hook na Windows: z PATH (projde i projekt sdílený přes OneDrive na dvou počítačích), jinak plná cesta.
-    Zástupce z Microsoft Store (WindowsApps) se nepočítá – bez nainstalovaného Pythonu jen otevře obchod."""
-    p = shutil.which("python")
-    return "python" if p and "windowsapps" not in p.lower() else sys.executable
+    """Python pro hook na Windows: vždy plná cesta k Pythonu, kterým běží aktualizace. Hooky Claude Code mají jiný PATH
+    a „python“ tam může vést na nefunkční zástupce z Microsoft Store – hlídač by se tiše nespustil. Projekt sdílený
+    přes OneDrive na dvou počítačích opraví aktualizace spuštěná na druhém počítači (hook se pokaždé přepíše)."""
+    return sys.executable
 
 
 def hook_hlidace():
@@ -370,6 +370,26 @@ def nastaveni(dst, hlidac):
     print("Hlídač sítě:", "zapnutý" if zapnuty else "vypnutý (zapnout: --hlidac)")
 
 
+def _verze(text):
+    m = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)(?:-fork\.(\d+))?", (text or "").strip())   # fork: 0.9.2-fork.1 = (0, 9, 2, 1)
+    return tuple(int(x or 0) for x in m.groups()) if m else None
+
+
+def zkontroluj_verzi(dst):
+    """Projekt založený novějším skillem neaktualizovat starší kopií skillu – vrátilo by ho to ke staré verzi."""
+    try:
+        with open(os.path.join(dst, ".skill_verze"), encoding="utf-8") as f:
+            projekt = f.read().strip()
+        with open(os.path.join(SKILL, "VERZE"), encoding="utf-8") as f:
+            skill = f.read().strip()
+    except OSError:
+        return
+    p, s = _verze(projekt), _verze(skill)
+    if p and s and p > s:
+        sys.exit(f"CHYBA: projekt je z verze skillu {projekt}, tento skill je starší ({skill}). Aktualizace by projekt vrátila\n"
+                 "ke starší verzi, proto nic neměním. Aktualizujte nejdřív skill (README, část Instalace) a pak to zkuste znovu.")
+
+
 def main():
     if len(sys.argv) < 2 or sys.argv[1].startswith("-"):
         sys.exit(__doc__)
@@ -379,6 +399,7 @@ def main():
         if not cesty:
             sys.exit(__doc__)
         sys.exit(0 if all([vyresit(dst, c) for c in cesty]) else 1)
+    zkontroluj_verzi(dst)
     demo = "--ukazka" in sys.argv
     os.makedirs(dst, exist_ok=True)
     # poznámky pro správce skillu jsou od 0.8.2-fork.2 v data/ (dřív v kořeni projektu): starý soubor přesunout
