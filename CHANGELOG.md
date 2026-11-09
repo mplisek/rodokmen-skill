@@ -42,6 +42,9 @@ Fork na originálu 0.9.2 (zveřejnění na Cloudflare, kontrola nové verze prot
 - Kredity na Netlify: ostré nasazení 15 kreditů, náhled (bez `--prod`, `--alias test`) zdarma – na zkoušení.
 
 ### Opravy
+- `kramerius.py` hledá jen veřejná díla (`dostupnost:public`). Text neveřejných stran server nevydá (HTTP 403) a brzda
+  to bere jako blokaci, takže zastavila celý Kramerius až na 8 hodin. `--vse` ukáže i neveřejná díla jen jako seznam
+  (PR #168).
 - Roky: „1889 – před 1936“ se ukáže celé (dřív „1889–?“), nejisté úmrtí „1901 (?)“ jako „1901?“ (PR #140).
 - `kontrola.py` hlídá citlivé údaje i v hypotézách a v deníku (u deníku podle okolí nálezu, ne celého řádku;
   sloupec s datem hledání se nepočítá jako rok události) (PR #140).

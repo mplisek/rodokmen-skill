@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """Kramerius – fulltextové hledání v digitálních knihovnách (API v5): noviny, ročenky, adresáře, seznamy ztrát.
 
-Použití: kramerius.py 'SOLR_DOTAZ' [počet] [--server https://adresa]
+Použití: kramerius.py 'SOLR_DOTAZ' [počet] [--vse] [--server https://adresa]
   např. kramerius.py 'text_ocr:"Jan Novák" AND datum_begin:[1860 TO 1920]'
+  Hledá jen veřejná díla (dostupnost:public): text neveřejných stran (autorská ochrana, zhruba díla po roce 1925) server
+  nevydá, vrátí HTTP 403 a brzda by pak zastavila celý Kramerius na hodiny. `--vse` ukáže i neveřejná díla, jen jako
+  seznam pro uživatele (otevře si je v ndk.cz se čtenářským účtem nebo v knihovně); jejich text nestahuj.
+  Nic nenašlo? Zkus `--vse`: neveřejný zdroj může existovat.
   Výchozí server je Národní knihovna (kramerius5.nkp.cz). `--server` zkusí jinou knihovnu se stejným rozhraním v5
   (např. Digitální studovnu Ministerstva obrany – seznamy ztrát 1914–1918; z prostředí skillu byla nedostupná, takže NEVYZKOUŠENO).
   Knihovny s rozhraním v7 (adresa …/search/api/client/v7.0) tento nástroj neumí.
@@ -26,13 +30,15 @@ if (s.scheme != "https" or s.username or s.password or s.port not in (None, 443)
         or not re.fullmatch(r"[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+", s.hostname or "")   # jen jména s tečkou (ne localhost)
         or re.fullmatch(r"[0-9.]+", s.hostname or "")):                               # ani IP adresy (interní sítě)
     sys.exit("--server musí být adresa knihovny s https:// a doménovým jménem (např. https://kramerius5.nkp.cz).")
+vse = "--vse" in a
+a = [x for x in a if x != "--vse"]
 if not a or a[0] in ("-h", "--help"):
     sys.exit(__doc__)
 q = a[0]
 rows = a[1] if len(a) > 1 else "30"
 if not (rows.isascii() and rows.isdigit()) or not 1 <= int(rows) <= 200:
     sys.exit("Počet výsledků musí být číslo 1–200.")
-p = {"q": f"({q}) AND fedora.model:page",   # závorky: jinak by „A OR B“ vrátilo i jiné typy dokumentů než stránky
+p = {"q": f"({q}) AND fedora.model:page" + ("" if vse else " AND dostupnost:public"),   # závorky: jinak by „A OR B“ vrátilo i jiné typy než stránky
       "fl": "PID,root_title,root_pid,datum_str,details,dostupnost", "rows": rows, "wt": "json",
      "hl": "true", "hl.fl": "text_ocr", "hl.fragsize": "250"}
 u = server + "/search/api/v5.0/search?" + urllib.parse.urlencode(p)
