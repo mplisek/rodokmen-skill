@@ -13,6 +13,14 @@ for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # python -I nepřidává složku skriptu do cesty
 import chronologie  # noqa: E402 – pravidla časové návaznosti (tools/chronologie.py)
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:   # stejná pravidla jako mapa na webu
+    from export_web import text_pro_misto, vlastni_text, zil_v
+except ImportError:   # projekt se starším nebo místně upraveným export_web.py: obce ze všech údajů jako dřív
+    def text_pro_misto(text): return text   # noqa: E704
+    def vlastni_text(fakty, muz): return " ".join(fakty)   # noqa: E704
+    def zil_v(text, rx): return bool(rx.search(text))   # noqa: E704
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 
@@ -315,12 +323,13 @@ def main():
         if m:
             warn.append(f"{kde} ({o['n']}): v n je příjmení po sňatku „{m.group(1)}“ – piš jen rodné příjmení "
                         "(neznámé: „(příjmení neznámé)“); příjmení po sňatku je vidět u manžela")
+    muz = lambda k, p: p.get("sex", "M") == "M" if k == 1 else k % 2 == 0   # noqa: E731
     bez_mista = [k for k, p in sorted(P.items()) if isinstance(k, int) and p.get("st") == "doc" and p.get("f")
-                 and not any(rx.search(" ".join(p["f"])) for rx in vzory)]
-    if bez_mista:   # mapa na webu ukáže jen obce z data/mista.json
-        ukazka = ", ".join(f"{k} {P[k].get('n', '?')}" + (f" [{', '.join(s)}]" if (s := slova_obce(P[k]["f"])) else "")
-                           for k in bez_mista[:3])
-        warn.append(f"mapa: {len(bez_mista)} doložených předků nemá v údajích žádnou obec z data/mista.json (např. {ukazka})"
+                 and not any(zil_v(vlastni_text([text_pro_misto(f) for f in p["f"]], muz(k, p)), rx) for rx in vzory)]
+    if bez_mista:   # mapa na webu ukáže jen obce z data/mista.json, kde osoba sama žila (ne obec matky, fara…)
+        seznam = ", ".join(f"{k} {P[k].get('n', '?')}" + (f" [{', '.join(s)}]" if (s := slova_obce(P[k]["f"])) else "")
+                           for k in bez_mista)   # všechny – ukázka tří schovala obce, které chyběly
+        warn.append(f"mapa: {len(bez_mista)} doložených předků nemá v údajích žádnou svou obec z data/mista.json ({seznam})"
                     " – přidej jejich obce: tools/mista.py pridej \"Obec\", pak tools/mista.py")
 
     def kmeny(s):   # první 4 písmena slov bez diakritiky; text v závorce se nepočítá

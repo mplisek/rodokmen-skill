@@ -38,6 +38,14 @@ Fork na originálu 0.9.2 (zveřejnění na Cloudflare, kontrola nové verze prot
 - Kredity na Netlify: ostré nasazení 15 kreditů, náhled (bez `--prod`, `--alias test`) zdarma – na zkoušení.
 
 ### Opravy
+- Roky: „1889 – před 1936“ se ukáže celé (dřív „1889–?“), nejisté úmrtí „1901 (?)“ jako „1901?“ (PR #140).
+- Brzda: dotaz, který čekal na slot, znovu zkontroluje, jestli mezitím jiný proces nedostal 429/503, a odpoví
+  zastavením místo odeslání na archiv, který právě odmítá (PR #140).
+- `kontrola.py` hlídá citlivé údaje i v hypotézách a v deníku (u deníku podle okolí nálezu, ne celého řádku;
+  sloupec s datem hledání se nepočítá jako rok události) (PR #140).
+- Mapa: osoba se nezařadí k obci její matky („roz. Nováková z Bašnic“, „a Rosiny, dcery sedláka … z Hovězí“),
+  u muže k obci nevěsty ve sňatku ani k obci fary, okresu a přívlastku („Chlum u Hořic“). `kontrola.py` používá
+  stejná pravidla a vypíše všechny předky bez vlastní obce, ne jen tři (PR #139).
 - Příběh rodu ukazuje jen rodinné dokumenty osob z toho rodu (dřív všechny, např. vysvědčení jiného rodu).
 - Mapa: jedna tečka za místo, s víc rody rozdělená jejich barvami (dřív samostatné tečky posunuté o ~700 m, při
   přiblížení vypadaly jako další místa v polích). Osoba se k obci přiřadí jen podle skutečného údaje – ne podle

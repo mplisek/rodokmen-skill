@@ -63,6 +63,8 @@ jobs:
           python -X utf8 -I tests/web/test_nginx.py skills/rodokmen
           python -X utf8 -I tests/brzda/test_hook_windows.py skills/rodokmen
           python -X utf8 -I tests/verze/test_verze.py skills/rodokmen
+          python -X utf8 -I tests/drobne/test_drobne.py
+          python -X utf8 -I tests/mapa/test_mapa.py
           if [ "$RUNNER_OS" = Linux ]; then python -X utf8 -I tests/vyrez/test_kontrast.py $T; fi   # ImageMagick jen na Linuxu
 
       - name: Ukázkový web - založení a kontrola dat
