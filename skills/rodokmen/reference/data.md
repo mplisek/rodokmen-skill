@@ -41,7 +41,8 @@ P = {
   na sousedním čísle (manžel 2k, manželka 2k+1, i přes `SAME`). U `doc` hlásí `čp.`, které není v žádném citovaném
   zápisu (`shrnuti`, přepis) jako číslo domu (`čp. 23`, `No 23`, `N. 23`, `[Dům] 23`, `z Ostřetína 23`; datum, věk ani
   číslo zápisu, strany či snímku neplatí); číslo převzaté odjinud označ ve faktu zdrojem: `* 1862 Ostřetín čp. 23 (podle stromu)`.
-- `r` klíče zápisů ze `zaznamy.json`. `st` viz `matriky.md`: `doc` přečteno v matrice, `prob` pravděpodobné,
+- `r` klíče zápisů ze `zaznamy.json`; přidávej je `python3 -I tools/zapis.py odkaz <číslo> <klíč> [<klíč> …]` (u `SIDE`
+  místo čísla část jména) – nástroj zachová zbytek souboru a ověří, že zápis existuje. `st` viz `matriky.md`: `doc` přečteno v matrice, `prob` pravděpodobné,
   `fam` od rodiny (i strom, který si rodina vede sama, např. GEDCOM z jejího MyHeritage), `mh` cizí strom z internetu, `unk`.
 - `vyz` (volitelné) – krátký popis, proč je předek významný (farář, starosta, legionář…); jde na stránku „Osobnosti“ nahoru.
   Bez něj stránka vybírá osobnosti sama podle slov ve faktech (`tools/osobnosti.py`).
@@ -169,7 +170,8 @@ zapíše `web/src/data/stavby.json`; na stránce Domy je u domu rozbalovací „
 bádání: `reference/stavby.md`.
 
 ## `dokumenty.json` – rodinné fotky a dokumenty na webu
-`[{"img": "foto_svatba_1919", "popis": "Svatba Jana a Josefy, Holice 1919.", "osoby": [8, 9]}]`
+`[{"img": "foto_svatba_1919", "popis": "Svatba Jana a Josefy, Holice 1919.", "osoby": [8, 9]}]` – `popis` je na webu
+vidět jako popisek, vyplň ho (stejně jako `t` u bočních příbuzných).
 Obrázek ulož přes `vyrez.py dokumenty/<sken>.jpg foto_svatba_1919` (vznikne `vyrezy/` i `zdroje/`).
 
 ## `web.json` – nastavení webu
@@ -201,3 +203,32 @@ Slug = jméno bez diakritiky + rok, např. `jan-novak-1890`; při kolizi přidá
 v `web/src/data/site.json` (`people`). Při přejmenování osoby se slug změní – oprav odkazy v textech.
 Při přečíslování předků promítni změny do `SIDE.k`, klíčů `LINES`, číselných odkazů v `web.json` i odkazů na osoby
 v příbězích; potom spusť kontrolu a znovu vytvoř web.
+
+## Import rodinného stromu (Fáze 1)
+- **GEDCOM** (`.ged`, export z MyHeritage/Geni/FamilySearch): `python3 -I tools/ged_import.py dokumenty/strom.ged "Jméno Příjmení"`
+  vypíše předky s čísly, všechny události a poznámky a **frontu zápisů** (nejmladší známá událost u každého předka,
+  a jestli už je v archivu). `--osoby` dá kostru pro `osoby.py`. Poznámky ve stromu bývají plné rodinných historek –
+  přečti je a vytěž do `udaje_od_rodiny.md`.
+- Starší strom z **Brother's Keeper** (kódování ANSI a česká data „SRPEN 1945“ nástroj převede sám): místa tam bývají
+  v 6. pádě („Táboře“) – do `osoby.py` je přepiš do 1. pádu. Kořenem takového stromu často nejsou uživatel, ale jeho
+  děti (oba rody) – výchozí osobu proto vyber jménem.
+- **Záloha stromu z MyHeritage** (ZIP se souborem `<strom>.ftb` a složkou `Photos/` – databáze, ne GEDCOM): rozbal do
+  vlastní složky v `dokumenty/` (bývá velká – dej ji do `.gitignore`), pak
+  `python3 -I tools/ftb_export.py <strom.ftb> dokumenty/strom.ged "Jméno Příjmení" <rok narození> pracovni/prima_linie.md <složka Photos>`.
+  Vznikne GEDCOM pro `ged_import.py` (bez adres, e-mailů a telefonů) a přehled přímé linie s **původem údajů** – u každé
+  osoby, ze kterých cizích stromů (Smart Match) či zdrojů její údaje přišly. Osoba bez cizí citace = `fam`, doložená jen
+  cizími stromy = `mh`. V přehledu jsou i připojené skeny (opisy matrik, parte, domovské listy) – přečti je, bývají to
+  nejcennější rodinné doklady.
+- **Před importem cizího stromu** spusť `python3 -I tools/graf.py strom dokumenty/strom.ged "Jméno Příjmení"`: cizí stromy
+  mívají dvojníky (táž osoba dvakrát, třeba u obou manželek otce) a chronologicky nemožné vazby (matce by bylo 6 let).
+  Nástroj je vypíše, u dítěte ve dvou rodinách ukáže, kterou bere `ged_import.py` a která je podle dat možná, a u předka,
+  který je v rodokmenu víckrát, navrhne `SAME`. Všechno ověř v matrice.
+- Jméno nemusí být jedinečné: spusť nejprve výpis osob bez jména a kořen vyber podle GEDCOM ID (např. `@I42@`), ne jen podle
+  shody jména. Import je podklad k posouzení, ne automatické přidání: počet osob ve vstupním stromu není počet nových
+  osob projektu. Nedoloženou samostatnou rodinu automaticky nepřipojuj do `P` ani `LINES`; jako `SIDE` ji veď jen jako
+  výslovně označenou stopu u konkrétního možného příbuzného, jinak ji ponech odděleně v deníku.
+- Soubor `.doc` od rodiny nejdřív zkontroluj lokálně: začíná-li RTF hlavičkou `{tf`, otevři nebo převeď ho ve Wordu
+  či LibreOffice. Nepoužívej online převodníky a originál ani pracovní převod neposílej na web. Originály ukládej do
+  `dokumenty/originaly/` (gitem ignorované), pracovní převody do `pracovni/`; na web patří jen schválené výřezy.
+- Údaje ze stromů (i Smart Match) jsou jen vodítko k zápisu – datum a číslo domu tě dovedou na stránku, ale **jména vždy
+  ověř v zápisu** (skutečná chyba: „sňatek“ ze Smart Match byl jiný pár ze stejného domu).

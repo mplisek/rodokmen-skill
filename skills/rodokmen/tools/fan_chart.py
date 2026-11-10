@@ -5,6 +5,8 @@ Použití: fan_chart.py <out_dir>                         (plakát: SVG + HTML s
                                                          (holé klikací SVG pro web – volá ho export_web.py; REF = Kekulé číslo z P
                                                           nebo klíč z RODINA = vějíř předků libovolné osoby, výchozí 1)"""
 import html, json, math, os, re, subprocess, sys
+if sys.argv[1:2] in (["-h"], ["--help"]):   # nápověda místo pádu
+    sys.exit(__doc__.strip())
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -24,7 +26,7 @@ CHROME = next((c for c in ("/Applications/Google Chrome.app/Contents/MacOS/Googl
 
 ns = {}
 # RODOKMEN_OSOBY: osoby z pohledu jednoho přístupu (export_web.py --pristup, tools/pohled.py); jinak data/osoby.py
-exec(open(os.environ.get("RODOKMEN_OSOBY") or os.path.join(ROOT, "data", "osoby.py"), encoding="utf-8").read(), ns)
+exec(open(os.environ.get("RODOKMEN_OSOBY") or os.path.join(ROOT, "data", "osoby.py"), encoding="utf-8-sig").read(), ns)
 P_ALL, R, LINES = ns["P"], ns.get("RODINA", {}), ns.get("LINES", {})
 
 
@@ -54,7 +56,7 @@ def walk(ref, n):
 
 
 walk(ROOT_REF, 1)
-WEBCFG = json.load(open(os.path.join(ROOT, "data", "web.json"), encoding="utf-8")) if os.path.exists(os.path.join(ROOT, "data", "web.json")) else {}
+WEBCFG = json.load(open(os.path.join(ROOT, "data", "web.json"), encoding="utf-8-sig")) if os.path.exists(os.path.join(ROOT, "data", "web.json")) else {}
 
 W, H = (4520, 4520) if WEB else (4600, 5650)
 CX, CY = (2260, 2260) if WEB else (W / 2, 2760)
@@ -234,7 +236,7 @@ for k in slots:
 known = [k for k in VLASTNI if k > 1 and not P[k]["n"].startswith("otec neuveden")]
 doc = [k for k in known if P[k].get("st") == "doc"]
 zpath = os.path.join(ROOT, "data", "zaznamy.json")
-recs = json.load(open(zpath, encoding="utf-8")) if os.path.exists(zpath) else []
+recs = json.load(open(zpath, encoding="utf-8-sig")) if os.path.exists(zpath) else []
 maxg = max(gen(k) for k in P)
 
 title = (f'<text x="{W / 2}" y="250" text-anchor="middle" font-family="Georgia, \'Times New Roman\', serif" font-size="128" fill="#3B2E22">{html.escape(WEBCFG.get("nazev", "Rodokmen"))}</text>'

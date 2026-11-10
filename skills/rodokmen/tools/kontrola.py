@@ -7,6 +7,8 @@ Hlídá i časovou návaznost narození, sňatků a úmrtí (pravidla v tools/ch
 Návratový kód 1, pokud jsou chyby.
 """
 import datetime, json, os, re, sys, unicodedata
+if sys.argv[1:2] in (["-h"], ["--help"]):   # nápověda místo pádu
+    sys.exit(__doc__.strip())
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -27,7 +29,7 @@ DATA = os.path.join(ROOT, "data")
 
 def jload(name, default):
     p = os.path.join(DATA, name)
-    return json.load(open(p, encoding="utf-8")) if os.path.exists(p) else default
+    return json.load(open(p, encoding="utf-8-sig")) if os.path.exists(p) else default
 
 
 def research_log_stats(path):
@@ -37,7 +39,7 @@ def research_log_stats(path):
     rows = 0
     if not os.path.exists(path):
         return rows, []
-    with open(path, encoding="utf-8") as f:
+    with open(path, encoding="utf-8-sig") as f:
         for line in f:
             match = identifier_re.match(line)
             if not match:
@@ -97,7 +99,7 @@ def slova_obce(fakty):
 
 def _md_bez_poznamek(name):
     path = os.path.join(DATA, name)
-    return re.sub(r"<!--.*?-->", "", open(path, encoding="utf-8").read(), flags=re.S) if os.path.exists(path) else ""
+    return re.sub(r"<!--.*?-->", "", open(path, encoding="utf-8-sig").read(), flags=re.S) if os.path.exists(path) else ""
 
 
 def co_hledame(ns, P, LINES):
@@ -155,7 +157,7 @@ def main():
     err, warn = [], []
     ns = {}
     try:
-        exec(open(os.path.join(DATA, "osoby.py"), encoding="utf-8").read(), ns)
+        exec(open(os.path.join(DATA, "osoby.py"), encoding="utf-8-sig").read(), ns)
     except Exception as e:  # noqa: BLE001
         sys.exit(f"CHYBA: data/osoby.py nejde načíst: {e}")
     P, SIDE, LINES, SAME = ns.get("P", {}), ns.get("SIDE", []), ns.get("LINES", {}), ns.get("SAME", {})
@@ -196,6 +198,8 @@ def main():
         for r in s.get("r", []):
             if r not in keys:
                 err.append(f"boční příbuzný '{s.get('n')}' cituje neexistující zápis '{r}'")
+        if not (s.get("t") or "").strip():
+            warn.append(f"boční příbuzný '{s.get('n')}' nemá text (t) – na webu bude jen jméno")
     R = ns.get("RODINA", {})
     PARTNERI = ns.get("PARTNERI", [])
     odkazy = ({v for o in R.values() for v in [o.get("otec"), o.get("matka"), *o.get("partner", [])] if isinstance(v, str)}
@@ -229,9 +233,21 @@ def main():
     for a, c in SAME.items():
         if c not in P:
             err.append(f"SAME: {a} -> {c}, ale osoba {c} neexistuje")
+        elif not P[c].get("n") or P[c]["n"] in ("?",) or P[c]["n"].startswith(("otec neuveden", "matka neuvedena")):
+            err.append(f"SAME: {a} -> {c}, ale osoba {c} je zástupná (bez jména) – alias musí ukazovat na skutečnou osobu")
     for k in LINES:
         if k not in range(8, 16):
             err.append(f"LINES: rod {k} – rody mají čísla 8 až 15 (pradědečci a prababičky)")
+    nazvy = {}
+    for k, v in sorted(LINES.items()):
+        nazvy.setdefault(str(v[0]).strip().lower(), []).append(k)
+    for n, ks in nazvy.items():
+        if len(ks) > 1:
+            err.append(f"LINES: rody {', '.join(map(str, ks))} mají stejný název „{LINES[ks[0]][0]}“ – rozliš je "
+                       "(např. „Novákové z Holic“ a „Novákové z Chrudimi“), web by je jinak nerozlišil")
+    for d in jload("dokumenty.json", []):
+        if isinstance(d, dict) and not (d.get("popis") or "").strip():
+            warn.append(f"dokument {d.get('img')} nemá popis – na webu bude bez popisku")
 
     cited = ({r for p in list(P.values()) + list(R.values()) for r in p.get("r", [])} | {r for s in SIDE for r in s.get("r", [])}
              | {r for h in ns.get("HYPOTEZY", []) if isinstance(h, dict) for r in h.get("zaznamy", [])})
@@ -461,21 +477,21 @@ def main():
     for f in ("zajimavosti.md", "pribeh.md", "otazky_pro_rodinu.md", "archivni_dotazy.md"):
         path = os.path.join(DATA, f)
         if os.path.exists(path):
-            obsah = open(path, encoding="utf-8").read()
+            obsah = open(path, encoding="utf-8-sig").read()
             texty += [(f, odst) for odst in re.split(r"\n\s*\n|\n(?=#)", obsah)]   # odstavce i oddíly „## …“
     story_dir = os.path.join(DATA, "pribehy")
     if os.path.isdir(story_dir):
         for name in sorted(os.listdir(story_dir)):
             if name.endswith(".md"):
                 path = os.path.join(story_dir, name)
-                obsah = open(path, encoding="utf-8").read()
+                obsah = open(path, encoding="utf-8-sig").read()
                 texty += [(f"pribehy/{name}", odst) for odst in re.split(r"\n\s*\n|\n(?=#)", obsah)]
     # na web jdou i hypotézy (stránky rodů) a deník
     texty += [(f"hypotéza {h.get('nadpis', '')}", h.get("nadpis", "") + " " + h.get("text", ""))
               for h in ns.get("HYPOTEZY", []) if isinstance(h, dict)]
     log = os.path.join(DATA, "research_log.md")
     if os.path.exists(log):
-        texty += [(f"deník ř. {l.split('|')[1].strip()}", l.split('|', 3)[3]) for l in open(log, encoding="utf-8")
+        texty += [(f"deník ř. {l.split('|')[1].strip()}", l.split('|', 3)[3]) for l in open(log, encoding="utf-8-sig")
                   if re.match(r"^\| \d+ \|", l)]   # bez sloupců č. a datum (datum hledání není rok události)
     for kde, text in texty:
         denik = kde.startswith("deník")   # řádek deníku míchá roky z různých století – rozhoduje jen okolí nálezu

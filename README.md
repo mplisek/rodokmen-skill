@@ -12,7 +12,7 @@ Vznikl při skutečném hledání předků jedné rodiny.
 **Autor původního skillu:** Jindřich Šaršon ([sarsonj/rodokmen-skill](https://github.com/sarsonj/rodokmen-skill)).
 
 > **Tohle je fork** – [mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skill). Vychází z originálu, přebírá
-> jeho novinky (naposledy verzi 0.9.2) a navíc obsahuje příspěvky, které v originále zatím nejsou (jsou tam jako otevřené
+> jeho novinky (naposledy verzi 0.10.0) a navíc obsahuje příspěvky, které v originále zatím nejsou (jsou tam jako otevřené
 > pull requesty): další archivy a nástroje (SOA Litoměřice, židovské matriky, oběti a vězni 2. sv. války, Encyklopedie
 > Brna, hledání v MZA Brno…), stromový graf, stránky Statistiky, Domy, Osobnosti, Časová osa a stránky míst, víc příběhů rodu,
 > vlastní stránky příbuzných mimo přímou linii, vějíř předků pro libovolnou osobu, vynucené soukromí žijících na webu,
@@ -20,7 +20,7 @@ Vznikl při skutečném hledání předků jedné rodiny.
 > skriptem a co jen v prohlížeči) fork dodržuje. Kdo přechází z originálu, najde postup v části
 > [Přechod z originálu](#přechod-z-originálu).
 
-**Aktuální verze: 0.9.2-fork.1 (vydána 9. 11. 2026).** Skill se průběžně vyvíjí – opravuji chyby a doplňuji postupy pro další archivy
+**Aktuální verze: 0.10.0-fork.1 (vydána 10. 11. 2026).** Skill se průběžně vyvíjí – opravuji chyby a doplňuji postupy pro další archivy
 podle toho, na co narazíte vy. Jak aktualizovat, najdete v části [Instalace](#instalace), přehled změn
 po verzích v [CHANGELOG.md](CHANGELOG.md).
 
@@ -75,7 +75,7 @@ s přepisem a překladem, „Co hledáme“ a deník hledání. **[Podívejte se
 AI se vyvíjí rychle a za pár měsíců může skill dávat lepší, nebo jen jiné výsledky. Proto je tu uvedeno, s čím byl
 vyzkoušený.
 
-- **Stav k 9. 11. 2026 (verze 0.9.2-fork.1):** Claude Code s hlavním modelem **Claude Opus 5.5**. Pomocníci, kteří hledají
+- **Stav k 10. 11. 2026 (verze 0.10.0-fork.1):** Claude Code s hlavním modelem **Claude Opus 5.5**. Pomocníci, kteří hledají
   a čtou matriky jako první, běží na **Claude Sonnet 5.5**. Každý jejich nález pak hlavní model ověřuje na snímku.
 - Vyzkoušeno na několika skutečných rodokmenech (největší má 243 předků v 11 generacích a 192 matričních zápisů).
   Výsledek se porovnával s větví, kterou jsme léta dělali ručně.
@@ -157,8 +157,8 @@ O mladší údaje se žádá na matričním úřadě. Claude vám řekne, kdy to
 ```
 skills/rodokmen/
   SKILL.md           průvodce pro Clauda (fáze, pravidla)
-  reference/         podrobné návody: čtení matrik, portály archivů, formát dat, web, soukromí,
-                     metodická příručka (playbook, anglicky)
+  reference/         podrobné návody: příprava počítače, čtení matrik, portály archivů, metodika
+                     (spojování záznamů, mrtvé body, prameny mimo ČR), formát dat, web, soukromí
   tools/             nástroje v Pythonu (ARON, výřezy, rámečky, mapa, kontrola dat, export do webu, vějíř)
   template/          šablona projektu: prázdná data, ukázková rodina, web (Astro)
 .claude-plugin/      instalace jako plugin
@@ -285,5 +285,3 @@ tady v repozitáři.
 
 ## Licence
 Skill je pod licencí [MIT](LICENSE): smíte ho volně používat, upravovat a šířit dál, jen zachovejte uvedení autora (Jindřich Šaršon).
-Výjimkou je metodická příručka `skills/rodokmen/reference/playbook.md`. Je to převzatá rešeršní zpráva bez uvedeného
-autora, licence MIT se na ni nevztahuje (podrobnosti na začátku souboru).

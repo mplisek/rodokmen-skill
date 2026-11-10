@@ -33,7 +33,7 @@ def vylepseni(m):
 
 def main():
     args = [a for a in sys.argv[1:] if a not in ("--vylepsit", "--kontrast")]
-    if len(args) < 3:
+    if len(args) < 3 or args[0] in ("-h", "--help"):   # nápověda místo pádu
         sys.exit(__doc__)
     f, box, pre = args[:3]
     vodorovne = len(args) > 3 and args[3] == "v"

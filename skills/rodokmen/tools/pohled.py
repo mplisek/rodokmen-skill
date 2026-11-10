@@ -33,7 +33,7 @@ def _slug(text):
 
 def norm_odpoved(text):
     """Stejná normalizace jako export_web.norm_answer a prihlaseni.html."""
-    t = unicodedata.normalize("NFD", text or "")
+    t = unicodedata.normalize("NFD", "" if text is None else str(text))   # číselná odpověď je v JSON číslo
     t = "".join(c for c in t if not unicodedata.combining(c)).lower()
     return re.sub(r"[^a-z0-9]", "", t)
 

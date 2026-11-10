@@ -10,17 +10,13 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
-## Nevydáno
+## 0.10.0-fork.1 – 10. 11. 2026
+
+Fork na originálu 0.10.0 (přepracované návody, brzda a hlídač, Cloudflare s vlastním názvem webu, opravy exportu a importu – viz níže; předchozí verze originálu 0.9.x je zahrnutá) a navíc:
 
 ### Nové
 - **Přístupy pro větve rodiny – fáze 1:** u přístupu objekt `prava` (`soukrome`, `texty`, `poznamky`; nevyplněné = false) a osobní odkazy přímo ve `web.json` (`pristupy[].odkazy`, převod `pozvanky.py prevest`); přístup může mít jen odkazy bez odpovědi. Ve verzi webu přístupu je jeho **přímá linie** (Statistiky, Rody, Mapa, Časová osa, Strom, Předci) a **rozšířená linie** (sourozenci výchozích osob i předků s větvemi, partneři a nově i rodiče partnerů); u osob příznak linie a vlastní větve. Menu ukazuje jen stránky s daty. Nový přehled `tools/pristupy.py` – kdo co vidí.
 - **Strom ukazuje jen přímou linii** (předky), i na webu bez přístupů; sourozenci a jejich rodiny jsou dál na stránkách osob.
-
-## 0.9.2-fork.1 – 9. 11. 2026
-
-Fork na originálu 0.9.2 (zveřejnění na Cloudflare, kontrola nové verze proti GitHubu – viz níže) a navíc:
-
-### Nové
 - **Kontrola rodiny jako grafu** (`tools/graf.py`, PR #135): `graf.py strom strom.ged ["Jméno"]` před importem cizího
   stromu najde dvojníky (Jan = Johann), dítě ve dvou rodinách, cykly a nemožné věky a navrhne `SAME` pro předka na víc
   číslech. `kontrola.py` z něj přebírá jen hlášení o stejné osobě na dvou číslech; věk rodičů a úmrtí rodiče před
@@ -45,6 +41,7 @@ Fork na originálu 0.9.2 (zveřejnění na Cloudflare, kontrola nové verze prot
   starý soubor přesune sama, a když jsou oba, jen upozorní.
 
 ### Návody
+- `SKILL.md` je zeštíhlený podle originálu (z 44 na 29 KB): postup u žádostí, import stromu a instalace jsou v `reference/`.
 - Kredity na Netlify: ostré nasazení 15 kreditů, náhled (bez `--prod`, `--alias test`) zdarma – na zkoušení.
 
 ### Opravy
@@ -61,6 +58,46 @@ Fork na originálu 0.9.2 (zveřejnění na Cloudflare, kontrola nové verze prot
 - Mapa: jedna tečka za místo, s víc rody rozdělená jejich barvami (dřív samostatné tečky posunuté o ~700 m, při
   přiblížení vypadaly jako další místa v polích). Osoba se k obci přiřadí jen podle skutečného údaje – ne podle
   poznámky v závorce („kniha narozených Libice…“), okresu („okr. Havlíčkův Brod“) ani původu partnera u sňatku.
+
+## 0.10.0 – 10. 11. 2026
+
+Hlavní novinka: **přepracované návody.** SKILL.md, který Claude čte v každém sezení, je o třetinu kratší – podrobnosti
+k instalaci a importu stromu jsou v samostatných návodech, které čte, až je potřebuje. Anglickou metodickou příručku
+nahradila česká `metodika.md`: spojování záznamů, ztotožnění osob, co dělat, když se hledání zasekne, a prameny
+na Slovensku, v Rakousku, Polsku, Německu a Maďarsku. Pravidla, na kterých stojí kvalita, zůstala beze změny.
+
+**Nové**
+- Dva rodokmeny na jednom účtu Cloudflare: název webu jde nastavit v `web.json` (`cloudflare.web`, výchozí zůstává
+  „rodokmen“). Nasazení nově nepřepíše web jiného projektu – když na účtu web stejného jména už je, zastaví se a poradí.
+- Úvodní stránka webu na mobilu ukazuje jen vějíř (dřív vějíř i rodokmen pod sebou).
+- Vějíř: přibližování kolečkem je úměrné posunu, takže na touchpadu notebooku už neskáče (#165).
+- `zapis.py odkaz` přidá k osobě v `osoby.py` odkaz na zápis bez rizika rozbitých uvozovek.
+- Staré mapy z archivu ČÚZK: návod na ostrý výřez vsi z indikační skici ve vysokém rozlišení.
+
+**Opravy**
+- Windows: zápis dat přes vstup (`zapis.py … -`) už tiše nerozbíjí češtinu; nasazení na Cloudflare funguje i ze složky
+  s mezerou v cestě a kontrola soukromí webu na Netlify konečně proběhne. Prosím o zpětnou vazbu, na Windows jsem to
+  zkoušel jen nepřímo.
+- Brzda proti zablokování archivem chytí i adresu bez `https://`, víc adres nebo rozsah `[1-200]` v jednom `curl`
+  a vlastní výpis stavového kódu – dřív tudy mohly odejít dávky dotazů a odmítnutí archivu nezastavilo další.
+- ZA Opava: snímky se stahují pomaleji a při odmítnutí se nástroj zastaví místo opakování – po několika snímcích
+  rychle za sebou archiv blokoval.
+- Hlídač sítě nezamítá nevinné příkazy (text v uvozovkách v commitu nebo poznámce, `grep` vedle Pythonu).
+- Export webu nespadne na zástupné osobě bez jména, na opakovaném předkovi odkazujícím na neznámou osobu, na dokumentu
+  bez popisu ani na číselné odpovědi na přihlašovací otázku; dva rody stejného jména se na webu objeví oba.
+- Import rodinného stromu (GEDCOM) zvládne soubory v UTF-16 a sdílené poznámky a nezasekne se na chybě ve stromu.
+- `mista.py pridej` s novým dotazem obec znovu vyhledá – oprava stejnojmenné obce na mapě (#167).
+- Matricula: prošlý odkaz už neuloží chybovou stránku jako snímek.
+- Soubory dat s neviditelnou značkou BOM z Windows (Poznámkový blok, PowerShell) už nástroje neshodí.
+- Nástroje na `--help` a bez argumentů vypíšou nápovědu místo pádu (#157).
+
+**Návody**
+- Matriční úřad: zápis starší 100 / 75 / 30 let vydá komukoli i ze svazku, který je ještě na úřadě; mladší jen rodina
+  (§ 25b zákona o matrikách). Na Slovensku platí jiná pravidla (#150).
+- Pozemkové knihy jsou online i u SOA Třeboň a ZA Opava; doplněný slovníček latinských a německých výrazů.
+- Starší projekt se zapnutým hlídačem sítě se o nové verzi dozví i tehdy, když hlídač kontrolu zamítne.
+
+Děkuji všem za podrobné poznámky z praxe a za hotové návrhy oprav.
 
 ## 0.9.2 – 7. 11. 2026
 

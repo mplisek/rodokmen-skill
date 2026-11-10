@@ -12,7 +12,7 @@ a překladem), stránka osoby, rodiny, „Co hledáme“, výzkumný deník, hle
 | příkaz | co dělá |
 |---|---|
 | `npm ci` | čistá instalace přesně podle `package-lock.json` |
-| `npm run data` | převede data do webu (vždy po změně dat; funkční Python 3 vyhledá `scripts/data.mjs`) |
+| `npm run data` | převede data do webu (vždy po změně dat; `scripts/data.mjs` si sám najde funkční Python 3) |
 | `npm run build` | sestaví web do `dist/` (s přístupy zvlášť verzi pro každý přístup, viz níže) |
 | `npm run nahled` | data + build + náhled na http://localhost:4321 (Ctrl+C ukončí); `-- --pristup <id>` = verze pro jeden přístup |
 | `npm run dev` | vývojový režim při úpravách vzhledu |
@@ -76,7 +76,7 @@ Pozor: takový web nemá přihlášení – je vidět z celé domácí sítě. V
     Když se zruší poslední odkaz a otázka není nastavená, web zůstane zamčený a nepustí nikoho (export upozorní).
     Přihlašovací stránka bez otázky jen vysvětlí, že se vstupuje odkazem, a podle `kontakt` poradí, jak získat nový.
     S otázkou ukáže formulář jako dřív a k němu větu, že osobní odkaz stačí otevřít.
-  Bez otázky i bez odkazu nasazení (`npm run nasadit`, `deploy-caprover`) skončí chybou; otevřený web jen výslovně
+  Bez otázky i bez odkazu nasazení (`npm run nasadit-cloudflare`, `nasadit`, `deploy-caprover`) skončí chybou; otevřený web jen výslovně
   přes `"otevreny": true` v `prihlaseni` (jen `true`, ne `"true"` ani `"ano"`; otevře web i s nastavenou otázkou).
   Je to lehká ochrana proti náhodným návštěvníkům, ne bankovní zabezpečení – citlivé věci na web nepatří.
 - `uvod.foto` = klíč obrázku ve `vyrezy/` (ulož přes `vyrez.py`).
@@ -129,14 +129,19 @@ stránkách). V menu je, jen když nějaký dokument existuje; text vybízí rod
      vypršel. Ať se uživatel v tom prohlížeči přihlásí na dash.cloudflare.com, pak spusť `wrangler login` znovu
      (nový odkaz). Odkaz bez otevření prohlížeče: `npx -y wrangler@4 login --browser=false`.
    - „Timed out waiting for authorization code“ = vypršely 2 minuty, spusť login znovu.
-3. **Adresa webu:** web poběží na `https://rodokmen.<název>.workers.dev`. Vymysli 2–3 názvy podle rodu (malá písmena
+3. **Adresa webu:** web poběží na `https://rodokmen.<název>.workers.dev` (`rodokmen` = název webu na účtu, `<název>` =
+   subdoména účtu). Vymysli 2–3 názvy podle rodu (malá písmena
    bez diakritiky, pomlčky: `novakovi`, `novakovi-holice`, `rod-novaku`), ověř je
    `cd web && node scripts/nasadit_cloudflare.mjs --volno novakovi novakovi-holice rod-novaku` (ptá se DNS Cloudflare,
    adresu tím „nevyplašíš“) a uživateli nabídni jen volné. Vybraný zapiš do `data/web.json` jako
    `"cloudflare": {"nazev": "novakovi"}`. Název je subdoména celého účtu Cloudflare (založí se při prvním nasazení,
    změnit jde jen v administraci); kdyby byl přece obsazený, nasazení zkusí variantu s číslem a řekne ji.
    **Má-li uživatel účet Cloudflare už dřív**, použije se jeho stávající subdoména a název z `web.json` se nepoužije –
-   adresu pak řekne až nasazení.
+   adresu pak řekne až nasazení. Subdoména je na účtu jen jedna a přes API ji změnit nejde (jen v administraci).
+   **Druhý rodokmen na stejném účtu** potřebuje jiný název webu, jinak by první web přepsal: zeptej se na něj (např.
+   `rodokmen-dvorakovi`), zapiš `"cloudflare": {"web": "rodokmen-dvorakovi"}` a ukaž celou adresu
+   `https://rodokmen-dvorakovi.<subdoména>.workers.dev`. Nasazení to samo hlídá: když web s tím názvem na účtu už je
+   a z téhle složky se ještě nenasazoval, skončí s radou (tentýž projekt z jiného počítače: `node scripts/nasadit_cloudflare.mjs --prepsat`).
 4. **Nasazení:** `cd web && npm run nasadit-cloudflare` (spusť sám). Vypíše adresu a sám spustí kontrolu
    `scripts/overit.mjs`. U nové adresy kontrola počká, až se rozšíří (pár minut); když ji počítač ještě nezná, řekne to
    a skončí bez chyby – pak ověř později `npm run overit`. Do té doby adresu v prohlížeči neotvírej: počítač nebo
@@ -337,5 +342,7 @@ nebo složku na místě zálohy skript odmítne s hláškou POZOR a soubory za n
    (ne jen starší stav šablony), nabídni jejich převzetí do nové verze.
 3. **Sloučeno:** prohlédni výsledek (`git diff`), jestli dává smysl.
 4. Ve `web/` se stejnou verzí Node.js `>=22.19.0` pro instalaci i build `npm ci`, `npm run data` a `npm run build`, pak `python3 -I tools/kontrola.py`.
-Starou šablonu přihlášení `export_web.py` odmítne s výzvou k aktualizaci.
+Starou šablonu přihlášení `export_web.py` odmítne s výzvou k aktualizaci, stejně jako šablonu bez osobních odkazů,
 když už nějaké jsou v `data/pozvanky.json`.
+5. Projekt z verze před 0.7.0-fork.1: `python3 -I tools/aron_img.py odkazy` najde odkazy na ARON, které otevírají knihu
+   na prvním snímku, `… odkazy --opravit` je opraví.

@@ -2,6 +2,16 @@
 
 Postup je v SKILL.md (Fáze 2, „Žádosti“). Tady jsou podrobnosti a tři vzory.
 
+## Postup (Claude)
+1. Nejdřív se podívej do `data/zadosti.md`, jestli už na totéž nečekáte. Na jeden archiv nanejvýš jedna otevřená
+   žádost (odpoví na všechno najednou, druhá žádost zdržuje první); další dotaz připiš k ní, nebo ho odlož.
+2. Adresu instituce ověř na jejím oficiálním webu. Koncept napiš do `pracovni/zadosti/<instituce>_<co>.md` (formát níže),
+   spusť `python3 -I tools/mailto.py <koncept.md>` a dej uživateli odkaz a text ke kontrole. Adresu a kontakty
+   uživatele piš jen do konceptu, nikdy do `data/`.
+3. **Nic sám neposílej.** Do `data/zadosti.md` přidej řádek se stavem „koncept“. Až uživatel řekne, že poslal,
+   doplň datum a „odesláno“.
+4. Když přijde odpověď: viz „Po odpovědi“ na konci.
+
 ## Kam s čím
 - **Matriční úřad** (obec s matrikou). Zákon č. 301/2000 Sb., o matrikách, rozlišuje dvě věci:
   - *Kde je kniha* (§ 23): úřad ji drží 100 let (narození), 75 let (manželství, partnerství i úmrtí) od posledního

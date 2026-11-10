@@ -28,7 +28,7 @@ Databáze obětí holocaustu (`obeti.py`) a vojenské ztráty jsou citlivé: jm�
 3. Přihlášení: otázka a odpověď (`web.json`) nastavená a dost těžká, nebo osobní odkazy
    (`tools/pozvanky.py seznam`) jen pro lidi, kteří je mají mít?
 4. Kontakt na webu – chce tam uživatel svůj e-mail?
-Teprve pak `npm run nasadit`.
+Teprve pak zveřejni (`npm run nasadit-cloudflare`, kdo má web na Netlify `npm run nasadit` – viz `web.md`).
 
 ## Placené a cizí služby (MyHeritage, Ancestry, Geni, FamilySearch)
 - Přihlášení, platby a předplatné řeší **jen uživatel**. Zkušební verze se po skončení automaticky platí – připomeň,

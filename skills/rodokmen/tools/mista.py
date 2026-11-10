@@ -18,6 +18,8 @@ stejného jména. Vystěhovalci (Chicago, Vídeň) varování dostanou taky, jen
 Položka může mít "hypoteza": true a "rod": <Kekulé 8–15> – pak se na mapě ukáže jako hypotéza bez osob.
 """
 import json, math, os, re, sys, time, urllib.parse, urllib.request
+if sys.argv[1:2] in (["-h"], ["--help"]):   # nápověda místo pádu
+    sys.exit(__doc__.strip())
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
 from soubory import zapis_json   # bezpečný zápis dat celého souboru naráz (tools/soubory.py)  # noqa: E402
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
@@ -100,12 +102,18 @@ def nejblizsi(name, cache):
 
 
 def main():
-    cache = json.load(open(OUT, encoding="utf-8")) if os.path.exists(OUT) else {}
+    cache = json.load(open(OUT, encoding="utf-8-sig")) if os.path.exists(OUT) else {}
     if len(sys.argv) > 2 and sys.argv[1] == "pridej":
         name = sys.argv[2]
         stem = re.escape(name.split()[0][:5]) if len(name.split()) == 1 else re.escape(name)
-        cache[name] = dict(cache.get(name, {}), re=sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] else stem,
-                           dotaz=sys.argv[4] if len(sys.argv) > 4 else f"{name}, Česko")
+        stare = cache.get(name, {})
+        dotaz = sys.argv[4] if len(sys.argv) > 4 else stare.get("dotaz", f"{name}, Česko")
+        cache[name] = dict(stare, re=sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] else stare.get("re", stem),
+                           dotaz=dotaz)
+        if "lat" in stare and dotaz != stare.get("dotaz", f"{name}, Česko"):   # jiný dotaz = oprava místa → hledat znovu
+            for k in ("lat", "lon", "osm"):
+                cache[name].pop(k, None)
+            print(f"přepočítávám: {name} (nový dotaz „{dotaz}“)")
     pozor, nove = [], []   # varování se vypíšou až pod seznamem, aby se v něm neztratila
     for name, e in cache.items():
         if "lat" not in e:
