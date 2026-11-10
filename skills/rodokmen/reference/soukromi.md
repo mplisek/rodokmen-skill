@@ -11,6 +11,8 @@
   `souhlas={"kdo": "Eva Nováková", "datum": "2026-11-10", "rozsah": ["udaje", "doklady"]}` (kdo souhlasil – osoba sama,
   u dětí rodič). Plné údaje se pak ukážou jen správci a přístupům s právem `soukrome`, u kterých je osoba ve **vlastní
   větvi** (`web.md`, „Více přístupů“); ostatní ji dál vidí jen jménem a rokem. `rozsah` bez `udaje` = údaje skryté.
+  Správce (přístup `vse` ve webu s přístupy) vidí vše i bez souhlasu; web **bez** přístupů čte celá rodina pod jednou
+  odpovědí, tam se žijící bez souhlasu ukážou jen jménem i správci.
 - **Ruční soukromí:** `soukrome=True` u osoby (i zemřelé) – údaje nad jméno a roky jen správci a přístupům s právem
   `soukrome`, které mají osobu ve vlastní větvi. Jednotlivý údaj stejně: v `f` text začínající `(soukromé) `
   (`"(soukromé) rozvod 1990"`); kdo smí, vidí ho bez značky, ostatním se vynechá (i z mapy a časové osy).

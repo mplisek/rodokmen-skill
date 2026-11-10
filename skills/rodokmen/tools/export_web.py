@@ -326,9 +326,11 @@ def ocisti_osobu(o, smi):
     return dict(o, f=[bez_znacky(x) for x in f if not soukromy_udaj(x) or smi])
 
 
-def skryt_osobu(o, smi):
+def skryt_osobu(o, smi, spravce=False):
     """Osoba (už očištěná ocisti_osobu) jen jménem a roky: žijící bez práva / vlastní větve / souhlasu, nebo ručně
-    soukrome=True a nesmí."""
+    soukrome=True a nesmí. Správce (přístup vse ve webu s přístupy) vidí vše."""
+    if spravce:
+        return False
     if zijici(o.get("y"), o.get("note"), o.get("f", [])):
         return not (smi and ma_souhlas(o))
     return bool(o.get("soukrome")) and not smi
@@ -738,6 +740,9 @@ def main():
     # (správce ho má), u osoby z vlastní větve přístupu (správce: všichni) a se zapsaným souhlasem (pole souhlas).
     # Ručně: soukrome=True u osoby (i zemřelé – jen jméno a roky) a údaj „(soukromé) …“ – obojí jen pro toho, kdo smí
     # soukromé údaje dané osoby (právo soukrome + vlastní větev).
+    # Správce = přístup vse ve webu s přístupy (jeho odpověď zná jen správce): vidí vše, i žijící bez souhlasu.
+    # Web bez přístupů čte celá rodina pod jednou odpovědí – tam platí souhlas jako u ostatních.
+    spravce = bool(pristup) and pristup["id"] == "vse"
     pravo_soukrome = pristup["prava"]["soukrome"] if pristup else True
     vlastni_set = ns.get("_vlastni")
 
@@ -747,13 +752,15 @@ def main():
     kanon = lambda k: ns["SAME"].get(k, k) if isinstance(k, int) else k   # noqa: E731
     ns = dict(ns, P={k: ocisti_osobu(o, smi_soukrome(kanon(k))) for k, o in ns["P"].items()},
               RODINA={oid: ocisti_osobu(o, smi_soukrome(oid)) for oid, o in ns["RODINA"].items()})
-    skryti_p = {k for k, o in ns["P"].items() if k not in ns["SAME"] and skryt_osobu(o, smi_soukrome(k))}
-    skryti_p |= {kanon(a) for a, o in ns["P"].items() if a in ns["SAME"] and o.get("soukrome") and not smi_soukrome(kanon(a))}
-    skryti_r = {oid for oid, o in ns["RODINA"].items() if skryt_osobu(o, smi_soukrome(oid))}
+    skryti_p = {k for k, o in ns["P"].items() if k not in ns["SAME"] and skryt_osobu(o, smi_soukrome(k), spravce)}
+    skryti_p |= {kanon(a) for a, o in ns["P"].items() if a in ns["SAME"] and o.get("soukrome") and not smi_soukrome(kanon(a))
+                 and not spravce}
+    skryti_r = {oid for oid, o in ns["RODINA"].items() if skryt_osobu(o, smi_soukrome(oid), spravce)}
     # doklady: osoba skrytá, nebo viditelná žijící bez souhlasu s doklady → doklad s ní se neukáže (soukromý)
     bez_dokladu = skryti_p | skryti_r | {
         r for r, o in list(ns["P"].items()) + list(ns["RODINA"].items())
-        if r not in ns["SAME"] and zijici(o.get("y"), o.get("note"), o.get("f", [])) and not souhlas_doklady(o)}
+        if r not in ns["SAME"] and zijici(o.get("y"), o.get("note"), o.get("f", [])) and not souhlas_doklady(o)
+        and not spravce}
 
     skryte_side = set()   # zápisy bočních příbuzných, kteří se neukážou
 
@@ -764,7 +771,7 @@ def main():
         t = s.get("t", "")
         if soukromy_udaj(t):
             t = bez_znacky(t) if smi_soukrome(kanon(s.get("k"))) else ""
-        if zijici(s.get("y"), t):
+        if zijici(s.get("y"), t) and not spravce:
             skryte_side.update(s.get("r", []))
             return dict(s, t="", r=[])
         return dict(s, t=t)
@@ -1261,6 +1268,11 @@ def main():
         any(norm_answer(p.get("odpoved", "") or "") for p in pristupy or [])
     login_state = (f"zapnuté (otázka {'ano' if question else 'ne'}, osobních odkazů {len(otisky)})" if gated
                    else "VYPNUTÉ (web je otevřený)")
+    if pristupy and not pristup:   # jednou za sestavení (správcovská data na konci build.mjs)
+        na_vse = sorted(z["id"] for z in load_klice(cfg_puvodni).values() if not z.get("pristup"))
+        if na_vse:
+            print(f"POZOR: osobní odkazy {', '.join(na_vse)} vedou na celý web (přístup vse = správce: vidí i žijící "
+                  "a soukromé údaje). Příbuzným dej odkaz k přístupu: python3 -I tools/pozvanky.py pristup <id> <přístup>")
 
     copied = 0
     zv = os.path.join(DATA, "zvyrazneni.json")

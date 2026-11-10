@@ -238,8 +238,9 @@ rodokmenu. Ve `web.json`:
   {"nazev": "Děti", "odpoved": "…", "koren": [2, 3]}
 ]
 ```
-- `prihlaseni.odpoved` je přístup správce (`vse`): vidí všechno a má všechna práva (když chybí, celý web vidí jen
-  správce v náhledu).
+- `prihlaseni.odpoved` je přístup správce (`vse`): vidí všechno a má všechna práva, i žijící bez souhlasu
+  a soukromé údaje (když chybí, celý web vidí jen správce v náhledu). Odpověď ani osobní odkaz na celý web proto
+  nedávej příbuzným – ti dostanou vlastní přístup. Export na odkazy vedoucí na `vse` upozorní.
 - **Vstup:** přístup má odpověď (`odpoved`), osobní odkazy (`odkazy`), nebo obojí – bez obojího export skončí chybou.
   Každá odpověď musí být **jiná** (podle ní web pozná, kdo se přihlásil). Odkazy zakládá `tools/pozvanky.py`
   (`pridej "Jméno" --pristup <id>`), ve `web.json` je u nich jen otisk klíče. Starší `data/pozvanky.json` převede

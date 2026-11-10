@@ -19,6 +19,7 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   toho, kdo smí soukromé údaje dané osoby. U skryté osoby zmizí i její zápisy z matrik, sňatek na stránce rodiny,
   boční příbuzní a doklady; doklad s žijícím bez souhlasu (`rozsah` s `doklady`) se neukáže. `kontrola.py` hlídá
   tvar souhlasu a značky, `pristupy.py` ukáže, koho přístup vidí s plnými údaji a kdo je ručně soukromý.
+  Správce (přístup `vse` ve webu s přístupy) vidí vše i bez souhlasu; export upozorní na osobní odkazy vedoucí na `vse`.
 
 ### Opravy
 - Časová osa u žijících neprozradí přesné datum narození (dosud bylo dopočitatelné z čísla pro graf).

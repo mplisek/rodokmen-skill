@@ -48,7 +48,7 @@ def main(argv):
         prava = ", ".join(k for k, v in p["prava"].items() if v) or "žádná"
         print(f"\n== {p['id']} ({p['nazev']}) – vstup: {vstup}; práva: {prava}")
         if not p["koren"]:
-            print("   bez kořene: vidí celý rodokmen")
+            print("   bez kořene: vidí celý rodokmen" + (" včetně žijících a soukromých údajů (správce)" if p["id"] == "vse" else ""))
             continue
         nove, prevod = pohled(ns, p["koren"], p["texty"], p.get("rody"))
         zpet = {v: k for k, v in prevod.items()}

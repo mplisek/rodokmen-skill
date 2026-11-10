@@ -250,6 +250,15 @@ class SoukromiMimoOsoby(unittest.TestCase):
             kral = next(x for x in s["people"].values() if x["name"] == "Václav Král")
             self.assertEqual((kral["facts"], kral["side"], kral["docs"], kral["note"]), ([], [], [], "Údaje jsou soukromé."))
 
+            # správce (přístup vse ve webu s přístupy) vidí vše, i žijící bez souhlasu a soukromé
+            spust(p, "export_web.py", "--pristup", "vse")
+            raw = site_json.read_text(encoding="utf-8")
+            s = json.loads(raw)
+            self.assertTrue(zapisy_krale(s))
+            self.assertIn("TAJNE-ZIVE-SIDE", raw)
+            petr = next(x for x in s["people"].values() if x["name"] == "Petr Novák")   # žijící bez souhlasu
+            self.assertTrue(petr["facts"])
+
 
 if __name__ == "__main__":
     unittest.main()
