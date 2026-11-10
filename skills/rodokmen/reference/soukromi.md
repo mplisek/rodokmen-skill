@@ -20,6 +20,10 @@
 - U skryté osoby zmizí i její zápisy z matrik (i sdílený zápis sňatku), sňatek na stránce rodiny, boční příbuzní
   (`SIDE`) a doklady. Doklad (`dokumenty.json`), na kterém je skrytá osoba nebo žijící bez souhlasu s `doklady`,
   se neukáže vůbec. Boční příbuzný v `SIDE`, který je žijící (`y` v posledních 100 letech), jen jménem.
+- **Rodná čísla na dokladech:** u dokladu zapiš `rc` (čí RČ na něm je – i rodiče a manželé). Na web až po úmrtním
+  listu každého z nich, nebo po začernění (`vyrez.py --zacernit`, `data.md`). Platí i pro správce. `kontrola.py`
+  upozorní na doklad (rodný, oddací, úmrtní list…) bez `rc`. Doklad s osobou z jiné větve přístup nevidí, ledaže ho
+  správce přidělí (`pristupy`).
 - **Volné texty** (příběh, zajímavosti, deník, „Co hledáme“, hypotézy) se podle osob nefiltrují a značka
   `(soukromé)` v nich neplatí – řídí je jen právo `texty`. O žijících v nich nepiš nic nad jméno.
 - Citlivé věci z nedávné minulosti (sebevraždy, věznění, nemoci) – zeptej se uživatele, jestli a jak je zmínit.

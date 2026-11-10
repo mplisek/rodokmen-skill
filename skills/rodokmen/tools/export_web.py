@@ -352,6 +352,31 @@ def souhlas_doklady(o):
     return ma_souhlas(o) and (o["souhlas"].get("rozsah") is None or "doklady" in o["souhlas"]["rozsah"])
 
 
+def rc_zverejnit(d, docs, osoba, same=None):
+    """Doklad s rodnými čísly (pole rc = osoby, jejichž RČ na něm je) jde na web, až je každá z nich doloženě mrtvá
+    (dokument s "druh": "umrtni_list" a touto osobou) nebo má RČ v obrázku začerněné (pole zacerneno, vyrez.py --zacernit).
+    osoba(ref) → záznam z osoby.py nebo None; reference v původním číslování (same = aliasy SAME)."""
+    kan = lambda r: (same or {}).get(r, r) if isinstance(r, int) else r   # noqa: E731
+    zacerneno = {kan(r) for r in d.get("zacerneno") or []}
+    for r in map(kan, d.get("rc") or []):
+        if r in zacerneno:
+            continue
+        o = osoba(r)
+        mrtva = o is not None and not zijici(o.get("y"), o.get("note"), o.get("f", []))
+        if not (mrtva and any(x.get("druh") == "umrtni_list" and r in {kan(y) for y in x.get("osoby", [])} for x in docs)):
+            return False
+    return True
+
+
+def dokument_pro_pristup(d, pid, viditelne, same=None):
+    """Doklad ve verzi webu přístupu pid: jen když ho správce přidělil (pole pristupy), nebo – bez výběru – když přístup
+    vidí všechny osoby na dokladu (jinak by obrázek prozradil cizí větev). viditelne(ref) v původním číslování."""
+    if "pristupy" in d:
+        return pid in (d.get("pristupy") or [])
+    kan = lambda r: (same or {}).get(r, r) if isinstance(r, int) else r   # noqa: E731
+    return all(viditelne(kan(r)) for r in d.get("osoby", []))
+
+
 def ocisti_osobu(o, smi):
     """Osoba bez údajů „(soukromé) …“, které daný přístup nesmí (smi = smí soukromé údaje této osoby); povolené bez značky."""
     f = o.get("f", [])
@@ -826,6 +851,18 @@ def main():
     if "--nasazeni" in sys.argv and not pristupy and deploy_error(cfg, otisky, odkazy):
         sys.exit(deploy_error(cfg, otisky, odkazy))
     docs_cfg = jload("dokumenty.json", [])
+    # Doklady (zadání kap. 7): s rodným číslem až po úmrtním listu nebo začernění (pro všechny, i správce); ve verzi
+    # přístupu jen přidělené (pristupy) nebo s osobami, které přístup vidí celé; soukrome jen tomu, kdo smí.
+    najdi = lambda r: ns_spravce["P"].get(r) if isinstance(r, int) else ns_spravce["RODINA"].get(r)   # noqa: E731
+    bez_rc = [d["img"] for d in docs_cfg if not rc_zverejnit(d, docs_cfg, najdi, puvodni_same)]
+    if bez_rc:
+        print(f"doklady s rodným číslem žijícího (bez úmrtního listu / začernění) se nezveřejní: {', '.join(bez_rc)}")
+    docs_cfg = [d for d in docs_cfg if d["img"] not in bez_rc]
+    if pristup and pristup["koren"]:
+        docs_cfg = [d for d in docs_cfg if dokument_pro_pristup(d, pristup["id"], lambda r: r in prevod, puvodni_same)]
+    docs_cfg = [d for d in docs_cfg if not d.get("soukrome") or all(
+        smi_soukrome(prevod.get(puvodni_same.get(o, o) if isinstance(o, int) else o) if prevod is not None else o)
+        for o in d.get("osoby", []))]
     recs = {r["key"]: r for r in record_rows()}
     if prevod is not None:   # jen zápisy a dokumenty viditelných osob
         recs = {k: v for k, v in recs.items() if k in ns["_zapisy"]}

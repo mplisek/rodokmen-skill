@@ -13,7 +13,7 @@ for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
 from pohled import nacti_pristupy, pohled  # noqa: E402
-from export_web import zijici, ocisti_osobu, skryt_osobu  # noqa: E402
+from export_web import zijici, ocisti_osobu, skryt_osobu, rc_zverejnit, dokument_pro_pristup  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -73,10 +73,10 @@ def main(argv):
               + (f" – {', '.join(jmeno(nk) for nk in plne)}" if plne else ""))
         if rucne:
             print(f"   soukromé (soukrome=True), jen jméno a roky: {', '.join(jmeno(nk) for nk in rucne)}")
-        viditelne = set(zpet.values())
-        dok = [d["img"] for d in docs if any((ns["SAME"].get(o, o) if isinstance(o, int) else o) in viditelne
-                                             for o in d.get("osoby", []))]
-        print(f"   dokumenty: {len(dok)} z {len(docs)}")
+        najdi = lambda r: ns["P"].get(r) if isinstance(r, int) else ns["RODINA"].get(r)   # noqa: E731
+        dok = [d["img"] for d in docs if rc_zverejnit(d, docs, najdi, ns["SAME"])
+               and dokument_pro_pristup(d, p["id"], lambda r: r in prevod, ns["SAME"])]   # bez soukromí osob (export)
+        print(f"   dokumenty: {len(dok)} z {len(docs)} (RČ a výběr přístupů; doklady se skrytými žijícími export ještě vynechá)")
         if detail:
             for nadpis, seznam in (("Přímá linie", prima), ("Rozšířená linie", rozs), ("Vlastní větev", sorted(vlastni, key=str))):
                 print(f"   -- {nadpis}:")

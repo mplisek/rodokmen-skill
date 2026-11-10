@@ -288,5 +288,62 @@ class RodyRecenze(unittest.TestCase):
             self.assertIn("Překlep", otazky)
 
 
+
+def _magick():
+    sys.path.insert(0, str(TOOLS))
+    import obraz
+    try:
+        return obraz.magick()
+    except SystemExit:
+        return None
+
+
+@unittest.skipUnless(_magick(), "chybí ImageMagick")
+class DokladyRC(unittest.TestCase):
+    """Fáze 4: doklad s rodným číslem žijícího až po úmrtním listu / začernění, přidělení přístupům, soukromý doklad."""
+
+    def test_doklady(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "ukazka"
+            self.assertEqual(novy_projekt(p, "--ukazka").returncode, 0)
+            docs = [{"img": "d_rc", "popis": "rodný list Evy", "osoby": [3], "rc": [3]},
+                    {"img": "d_rc_umrti", "popis": "oddací list", "osoby": [6], "rc": [6]},
+                    {"img": "d_umrtni", "popis": "úmrtní list", "osoby": [6], "druh": "umrtni_list", "rc": []},
+                    {"img": "d_rc_bez", "popis": "oddací list bez úmrtního", "osoby": [4], "rc": [4]},
+                    {"img": "d_zacern", "popis": "rodný list Evy začerněný", "osoby": [3], "rc": [3]},
+                    {"img": "d_vetve", "popis": "parte", "osoby": [4, 12]},
+                    {"img": "d_prid", "popis": "parte přidělené", "osoby": [4, 12], "pristupy": ["otec"]},
+                    {"img": "d_souk", "popis": "soukromé foto", "osoby": [8], "soukrome": True}]
+            for d in docs:
+                for sl in ("vyrezy", "zdroje"):
+                    subprocess.run([_magick(), "-size", "200x100", "xc:white", str(p / sl / (d["img"] + ".jpg"))], check=True)
+            (p / "data" / "dokumenty.json").write_text(json.dumps(docs, ensure_ascii=False), encoding="utf-8")
+            with open(p / "data" / "osoby.py", "a", encoding="utf-8") as f:   # Eva souhlasí i s doklady
+                f.write('\nP[3]["souhlas"] = {"kdo": "Eva", "datum": "2026-11-10"}\n')
+            cfg_path = p / "data" / "web.json"
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+            cfg["prihlaseni"]["odpoved"] = "spravce"
+            cfg["pristupy"] = [{"nazev": "Otec", "odpoved": "a", "koren": [2], "prava": {"soukrome": True}},
+                               {"nazev": "Deda", "odpoved": "b", "koren": [4], "prava": {"soukrome": True}}]
+            cfg_path.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+            r = spust(p, "vyrez.py", "--zacernit", "d_zacern", "0.1,0.1,0.5,0.3", "--osoby", "3")
+            self.assertIn("začerněno", r.stdout)
+            self.assertEqual(json.loads((p / "data" / "dokumenty.json").read_text(encoding="utf-8"))[4]["zacerneno"], [3])
+
+            def docs_site(*a):
+                out = spust(p, "export_web.py", *a).stdout
+                site = json.loads((p / "web" / "src" / "data" / "site.json").read_text(encoding="utf-8"))
+                return {d["img"] for d in site["docs"]}, out
+            vse, out = docs_site("--pristup", "vse")
+            self.assertEqual(vse, {"d_rc_umrti", "d_umrtni", "d_zacern", "d_vetve", "d_prid", "d_souk"})
+            self.assertIn("se nezveřejní: d_rc, d_rc_bez", out)               # RČ živé Evy, RČ bez úmrtního listu
+            otec, _ = docs_site("--pristup", "otec")                         # vidí 4, 6 (rodiče partnerky), ne 12
+            self.assertEqual(otec, {"d_rc_umrti", "d_umrtni", "d_zacern", "d_prid"})
+            deda, _ = docs_site("--pristup", "deda")                         # kořen 4: 8 předek, ne vlastní větev
+            self.assertNotIn("d_souk", deda)
+            self.assertNotIn("d_prid", deda)
+
+
 if __name__ == "__main__":
     unittest.main()

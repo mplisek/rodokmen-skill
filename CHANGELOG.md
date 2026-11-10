@@ -27,6 +27,11 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   tvar souhlasu a značky, `pristupy.py` ukáže, koho přístup vidí s plnými údaji a kdo je ručně soukromý.
   Správce (přístup `vse` ve webu s přístupy) vidí vše i bez souhlasu; export upozorní na osobní odkazy vedoucí na `vse`.
 
+- **Přístupy pro větve rodiny – fáze 4, dokumenty:** doklad s rodným číslem (`rc`) jde na web až po úmrtním listu
+  (`"druh": "umrtni_list"`) nebo začernění (`vyrez.py --zacernit <img> oblasti --osoby …` zapíše `zacerneno`) – pro
+  všechny, i správce. Ve verzi přístupu jen doklady, jejichž osoby přístup vidí celé, nebo ručně přidělené
+  (`pristupy`); `soukrome: true` jen tomu, kdo smí. `kontrola.py` hlídá `rc` u dokladů, osoby a přístupy.
+
 ### Opravy
 - Domy (`stavby.py`) u přístupu s jiným kořenem: osoby se párovaly podle čísel z jiného číslování; teď se převedou
   a osoby mimo přístup se vynechají.

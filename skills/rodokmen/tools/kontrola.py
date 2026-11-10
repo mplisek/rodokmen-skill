@@ -245,9 +245,26 @@ def main():
         if len(ks) > 1:
             err.append(f"LINES: rody {', '.join(map(str, ks))} mají stejný název „{LINES[ks[0]][0]}“ – rozliš je "
                        "(např. „Novákové z Holic“ a „Novákové z Chrudimi“), web by je jinak nerozlišil")
-    for d in jload("dokumenty.json", []):
-        if isinstance(d, dict) and not (d.get("popis") or "").strip():
+    docs_k = [d for d in jload("dokumenty.json", []) if isinstance(d, dict)]
+    from pohled import _slug as slug_pristupu   # stejné id přístupu jako export
+    ids_pristupu = {"vse"} | {slug_pristupu(p.get("nazev") or "") or f"pristup-{i}"
+                              for i, p in enumerate(jload("web.json", {}).get("pristupy") or [], 1) if isinstance(p, dict)}
+    for d in docs_k:
+        if not (d.get("popis") or "").strip():
             warn.append(f"dokument {d.get('img')} nemá popis – na webu bude bez popisku")
+        # doklady s rodnými čísly (reference/soukromi.md): rc, zacerneno, pristupy
+        for pole in ("rc", "zacerneno", "osoby"):
+            for r in d.get(pole) or []:
+                if not (r in P or r in R):
+                    err.append(f"dokument {d.get('img')}: {pole} – osoba {r!r} není v P ani v RODINA")
+        for pid in d.get("pristupy") or []:
+            if pid not in ids_pristupu:
+                err.append(f"dokument {d.get('img')}: pristupy – přístup „{pid}“ ve web.json není (jsou: {', '.join(sorted(ids_pristupu))})")
+        if "rc" not in d and (d.get("druh") in ("rodny_list", "oddaci_list", "umrtni_list", "domovsky_list", "obcansky")
+                              or re.search(r"rodn[ýé] list|oddací list|úmrtní list|rodné číslo|občansk", d.get("popis") or "", re.I)):
+            warn.append(f"dokument {d.get('img')}: doklad – vyplň \"rc\": [osoby, jejichž rodné číslo na něm je] (i prázdný "
+                        "seznam, když RČ nemá); doklad s RČ žijícího se zveřejní až po úmrtním listu nebo začernění "
+                        "(vyrez.py --zacernit)")
 
     cited = ({r for p in list(P.values()) + list(R.values()) for r in p.get("r", [])} | {r for s in SIDE for r in s.get("r", [])}
              | {r for h in ns.get("HYPOTEZY", []) if isinstance(h, dict) for r in h.get("zaznamy", [])})
