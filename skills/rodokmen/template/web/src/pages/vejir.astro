@@ -2,8 +2,15 @@
 import Base from '../layouts/Base.astro';
 import FanView from '../components/FanView.astro';
 import fan from '../generated/fan.svg?raw';
-import { root } from '../lib/data.js';
+import { root, people, pristup } from '../lib/data.js';
+// přepínač mezi výchozími osobami přístupu; stejná podmínka jako getStaticPaths ve vejir/[slug].astro (p.fan)
+const koreny = (pristup.koreny ?? []).map((s) => people[s]).filter(Boolean);
 ---
 <Base title="Vějíř předků" full>
+  {koreny.length > 1 && (
+    <p class="small" style="margin:.5rem 1rem">Vějíř: {koreny.map((p, i) => (
+      <>{i > 0 && ' | '}{i === 0 ? <a href="/vejir/">{p.name}</a> : p.fan ? <a href={`/vejir/${p.slug}/`}>{p.name}</a> : <span class="muted">{p.name}</span>}</>
+    ))}</p>
+  )}
   <FanView svg={fan} current={root.slug} />
 </Base>

@@ -1,11 +1,13 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Rod from '../../components/Rod.astro';
 import { docs, config, lineByK, href, stories } from '../../lib/data.js';
 import { Content, frontmatter } from '../../generated/pribeh.md';
 const line = lineByK[config.pribeh?.rod ?? 8];
 // dokumenty jen osob z rodu příběhu (rods z export_web.py); příběh bez rodu ukáže všechny
-const rodPribehu = Number(config.pribeh?.rod ?? 8) || null;
-const docsRodu = docs.filter((d) => !rodPribehu || !d.rods?.length || d.rods.includes(rodPribehu));
+const rodyPribehu = (config.pribeh?.rody ?? [config.pribeh?.rod ?? 8]).map(Number).filter(Boolean);
+const docsRodu = docs.filter((d) => !rodyPribehu.length || !d.rods?.length || d.rods.some((r) => rodyPribehu.includes(r)));
+const rodyStory = (s) => (s.rody ?? (s.rod ? [s.rod] : [])).map(Number).filter(Boolean);
 ---
 <Base title={config.maVicePribehu ? 'Rodinné příběhy' : frontmatter.title}>
   {config.maVicePribehu ? (
@@ -18,7 +20,7 @@ const docsRodu = docs.filter((d) => !rodPribehu || !d.rods?.length || d.rods.inc
           <a class="card card-link" href={`/pribehy/${story.slug}/`}>
             <h3>{story.title}</h3>
             {story.lead && <p class="small muted">{story.lead}</p>}
-            {lineByK[story.rod] && <p class="small muted">Rod {lineByK[story.rod].name}</p>}
+            {rodyStory(story).length > 0 && <p class="small">{rodyStory(story).map((k) => <Rod k={k} odkaz={false} />)}</p>}
           </a>
         ))}
       </div>

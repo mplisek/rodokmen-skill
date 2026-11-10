@@ -233,8 +233,10 @@ def _soubory_webu(root):
     return by_k, by_key, recs
 
 
-def sestav_export(D, P, RODINA, by_k, by_key, recs):
-    """Slovník dum → data stavby pro web: osoby přeložené na jména a adresy stránek, žijící bez podrobností, soukromé vynechané."""
+def sestav_export(D, P, RODINA, by_k, by_key, recs, prevod=None, same=None):
+    """Slovník dum → data stavby pro web: osoby přeložené na jména a adresy stránek, žijící bez podrobností, soukromé vynechané.
+    prevod (verze webu pro přístup, tools/pohled.py): číslo osoby z data/osoby.py → číslo nebo zkratka v přístupu;
+    osoba, kterou přístup nevidí, se vynechá."""
     out = {}
     for klic, s in D.items():
         if s.get("verejne") is False or not s.get("dum"):
@@ -243,10 +245,15 @@ def sestav_export(D, P, RODINA, by_k, by_key, recs):
         def kdo(it):
             os_ = it.get("os")
             o = osoba(os_, P, RODINA)
-            if isinstance(os_, int):
-                web = by_k.get(os_)
+            ref = os_
+            if prevod is not None and os_ not in (None, ""):
+                ref = prevod.get((same or {}).get(os_, os_))   # alias SAME → kanonické číslo
+                if ref is None:
+                    return None   # mimo přístup
+            if isinstance(ref, int):
+                web = by_k.get(ref)
             else:
-                web = by_key.get(os_) if os_ else None
+                web = by_key.get(ref) if ref else None
             jmeno = it.get("n") or (o or {}).get("n", "")
             # skrytá na webu (žijící bez souhlasu, soukrome=True – export_web.py) = bez podrobností
             return dict(name=jmeno, slug=(web or {}).get("slug"),
@@ -261,6 +268,8 @@ def sestav_export(D, P, RODINA, by_k, by_key, recs):
         drzitele = []
         for h in s.get("drzitele", []):
             w = kdo(h)
+            if w is None:
+                continue
             if rok(h.get("od")) and rok(h.get("od")) > ROK_SOUKROMI and not h.get("souhlas"):
                 continue   # dnešní majitelé jen se souhlasem
             drzitele.append(dict(name=w["name"], slug=w["slug"], od=h.get("od", ""), do=h.get("do", ""), jak=h.get("jak", ""),
@@ -270,6 +279,8 @@ def sestav_export(D, P, RODINA, by_k, by_key, recs):
         obyvatele = []
         for h in s.get("obyvatele", []):
             w = kdo(h)
+            if w is None:
+                continue
             obyvatele.append(dict(name=w["name"], slug=w["slug"], role=h.get("role", ""), st=h.get("st"),
                                   od=h.get("od", ""), do=h.get("do", ""),
                                   note="" if w["zije"] else h.get("note", ""), zapisy=[] if w["zije"] else zapisy(h)))
@@ -280,7 +291,7 @@ def sestav_export(D, P, RODINA, by_k, by_key, recs):
     return out
 
 
-def export(root=ROOT):
+def export(root=ROOT, prevod=None, same=None):
     """Zapíše web/src/data/stavby.json (vždy; bez data/stavby.py prázdné) a vrátí seznam upozornění."""
     out_path = os.path.join(root, "web", "src", "data", "stavby.json")
     if not os.path.exists(os.path.join(root, "data", "stavby.py")):
@@ -289,7 +300,7 @@ def export(root=ROOT):
     P, RODINA, D, _ = nacti_data(root)
     upoz = zkontroluj(D, P, RODINA, _zaznamy_klice(root), _adresy_id(root))
     by_k, by_key, recs = _soubory_webu(root)
-    stavby = sestav_export(D, P, RODINA, by_k, by_key, recs)
+    stavby = sestav_export(D, P, RODINA, by_k, by_key, recs, prevod, same)
     zapis_json(out_path, {"stavby": stavby}, indent=None)
     dj = os.path.join(root, "web", "src", "data", "domy.json")
     if os.path.exists(dj):   # stavba se ukáže jen u domu, který je na stránce Domy (domy.geojson)

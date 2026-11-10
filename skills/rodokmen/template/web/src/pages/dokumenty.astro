@@ -1,8 +1,15 @@
 ---
 // Všechny rodinné dokumenty a fotografie z data/dokumenty.json na jedné stránce (u osob jsou i na jejich stránkách).
 import Base from '../layouts/Base.astro';
-import { docs, people, config, href } from '../lib/data.js';
+import Rod from '../components/Rod.astro';
+import { docs, people, config, href, lineByK } from '../lib/data.js';
 const kontakt = config.kontakt ?? {};
+// oddíly po rodech (k 8–15); dokument s víc rody je jen v oddílu prvního rodu, bez rodu v oddílu Obecné
+const rodyDoc = (d) => (d.rods ?? []).map(Number).filter((k) => lineByK[k]).sort((a, b) => a - b);
+const oddily = [
+  ...Object.keys(lineByK).map(Number).sort((a, b) => a - b).map((k) => ({ k, docs: docs.filter((d) => rodyDoc(d)[0] === k) })),
+  { k: null, docs: docs.filter((d) => !rodyDoc(d).length) },
+].filter((o) => o.docs.length);
 ---
 <Base title="Dokumenty">
   <h1>Rodinné dokumenty a fotografie</h1>
@@ -11,17 +18,23 @@ const kontakt = config.kontakt ?? {};
       ? <>Pošlete fotku {kontakt.jmeno || 'autorovi rodokmenu'} na <a href={`mailto:${kontakt.email}`}>{kontakt.email}</a>.</>
       : 'Pošlete fotku autorovi rodokmenu.'}</p>
   {docs.length === 0 && <p>Zatím tu nic není.</p>}
-  <div class="docs">
-    {docs.map((d) => (
-      <figure>
-        <a href={`/img/${d.img}.jpg`} target="_blank" rel="noopener"><img src={`/img/${d.img}.jpg`} alt={d.caption} loading="lazy" /></a>
-        <figcaption>
-          {d.caption}
-          {d.people?.some((s) => people[s]) && (
-            <span class="small"><br />Osoby: {d.people.filter((s) => people[s]).map((s, i) => <>{i > 0 && ', '}<a href={href.person(s)}>{people[s].name}</a></>)}</span>
-          )}
-        </figcaption>
-      </figure>
-    ))}
-  </div>
+  {oddily.map((o) => (
+    <>
+      <h2>{o.k ? <Rod k={o.k} /> : 'Obecné'}</h2>
+      <div class="docs">
+        {o.docs.map((d) => (
+          <figure>
+            <a href={`/img/${d.img}.jpg`} target="_blank" rel="noopener"><img src={`/img/${d.img}.jpg`} alt={d.caption} loading="lazy" /></a>
+            <figcaption>
+              {d.caption}
+              {rodyDoc(d).length > 1 && <span class="small"><br />{rodyDoc(d).map((k) => <Rod k={k} />)}</span>}
+              {d.people?.some((s) => people[s]) && (
+                <span class="small"><br />Osoby: {d.people.filter((s) => people[s]).map((s, i) => <>{i > 0 && ', '}<a href={href.person(s)}>{people[s].name}</a></>)}</span>
+              )}
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </>
+  ))}
 </Base>

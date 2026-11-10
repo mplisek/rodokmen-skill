@@ -28,19 +28,23 @@
  "zajimavosti_na_uvodu": [
   {
    "nadpis": "158 let v jedné kovárně",
-   "text": "Pět generací Nováků v Holicích čp. 112, od roku 1786 do roku 1944."
+   "text": "Pět generací Nováků v Holicích čp. 112, od roku 1786 do roku 1944.",
+   "rody": [8]
   },
   {
    "nadpis": "Mlýn přes pět generací",
-   "text": "Kučerovi mleli ve Slatiňanech čp. 5 nejméně od roku 1773."
+   "text": "Kučerovi mleli ve Slatiňanech čp. 5 nejméně od roku 1773.",
+   "rody": [13]
   },
   {
    "nadpis": "Prababička, které bylo 94",
-   "text": "Karolína Kubátová z Luže zažila Rakousko-Uhersko, obě světové války i konec té druhé."
+   "text": "Karolína Kubátová z Luže zažila Rakousko-Uhersko, obě světové války i konec té druhé.",
+   "rody": [15]
   },
   {
    "nadpis": "Svatba na poslední chvíli",
-   "text": "Babička Marie Králová se narodila 114 dní po svatbě rodičů."
+   "text": "Babička Marie Králová se narodila 114 dní po svatbě rodičů.",
+   "rody": [10, 11]
   }
  ]
 }

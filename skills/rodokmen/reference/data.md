@@ -182,10 +182,12 @@ Viz `web.md`.
 - `research_log.md` – tabulka `| # | datum | zdroj | rozsah | hledáno | výsledek | citace |`, nové řádky na konec, i negativní.
   Web ji zobrazuje jako „Výzkumný deník“. První sloupec může mít číselné nebo textové ID (např. `BA-1`, `KA-1`,
   `STR-10`); při slučování deníků zachovej původní ID nebo je uprav tak, aby byla v celém výsledném deníku jedinečná.
-- `zajimavosti.md` – `## Nadpis` + text, odkazy `[Jméno](/osoba/<slug>/)`.
+- `zajimavosti.md` – `## Nadpis`, pod ním řádek `Rod: [Plíškové](/rod/pliskove/)` (rod, ke kterému zajímavost patří; víc
+  odkazů čárkou) + text, odkazy `[Jméno](/osoba/<slug>/)`. Zajímavost bez řádku `Rod:` je obecná (vidí ji každý přístup).
 - `pribeh.md` – původní jediný příběh: frontmatter `title`, `lead` + kapitoly `##`; pokud `data/pribehy/` neobsahuje
   Markdown příběhy, zůstává stránka `/pribehy/` zachována. Více příběhů ukládej jako `data/pribehy/<slug>.md` s frontmatter
-  `title`, `lead` a číselným `rod` (8–15); web vytvoří rozcestník `/pribehy/` a stránky `/pribehy/<slug>/`.
+  `title`, `lead` a číselným `rod` (8–15) nebo `rody: 8, 10` (víc rodů); bez rodu je příběh obecný text (u přístupů
+  jen s právem `texty`). Web vytvoří rozcestník `/pribehy/` a stránky `/pribehy/<slug>/`.
   Jak psát: `pribehy.md`.
 - Poznámky pro Clauda v markdownu piš jako `<!-- … -->` – na web nejdou.
 - `udaje_od_rodiny.md` – volný text (kdo co řekl, `st="fam"`).

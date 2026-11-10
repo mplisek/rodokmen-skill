@@ -13,6 +13,12 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 ## Nevydáno
 
 ### Nové
+- **Přístupy pro větve rodiny – fáze 3, rody a texty:** zajímavosti, karty na úvodu, příběhy, otázky pro rodinu
+  a prameny se k rodu vážou zakladatelem (číslo osoby z rodokmenu správce); větev je vidí, jen když má zakladatele
+  v přímé linii, a ukáže je pod svým názvem rodu. Zajímavost bez rodu vidí všichni, kartu na úvodu bez rodu jen přístup s právem texty. Úvod = společný + vlastní text
+  přístupu. Odkaz v textu na osobu jiné větve zastaví sestavení přístupu (CHYBA), chybějící názvy rodů přístupu hlásí
+  POZOR. Jednotný znak rodu (barevný kruh + název) na Zajímavostech, Co hledáme, Příbězích, Dokumentech (nově po
+  rodech) a na úvodu; přepínač vějíře u přístupu s víc výchozími osobami.
 - **Přístupy pro větve rodiny – fáze 2, soukromí osob:** žijící se zapsaným souhlasem (`souhlas={"kdo", "datum",
   "rozsah"}` u osoby) vidí s plnými údaji správce a přístupy s právem `soukrome`, které je mají ve vlastní větvi;
   ostatní dál jen jméno a rok narození. Ručně: `soukrome=True` u osoby (i zemřelé) a údaj `"(soukromé) …"` – jen pro
@@ -22,6 +28,8 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   Správce (přístup `vse` ve webu s přístupy) vidí vše i bez souhlasu; export upozorní na osobní odkazy vedoucí na `vse`.
 
 ### Opravy
+- Domy (`stavby.py`) u přístupu s jiným kořenem: osoby se párovaly podle čísel z jiného číslování; teď se převedou
+  a osoby mimo přístup se vynechají.
 - Časová osa u žijících neprozradí přesné datum narození (dosud bylo dopočitatelné z čísla pro graf).
 - Sňatek žijícího se už neukáže na stránce rodiny z údajů manžela či manželky; žijící boční příbuzní (`SIDE`)
   jen jménem.

@@ -3,6 +3,7 @@
 // (ISSUES v data/osoby.py, podle rodů) a prameny mimo online matriky (data/archivni_dotazy.md, oddíly podle archivů).
 import Base from '../layouts/Base.astro';
 import PersonLink from '../components/PersonLink.astro';
+import Rod from '../components/Rod.astro';
 import { issues, lines, config } from '../lib/data.js';
 import { Content as Otazky, rawContent as otazkyText } from '../generated/otazky.md';
 import { Content as Dotazy, rawContent as dotazyText } from '../generated/dotazy.md';
@@ -12,8 +13,8 @@ const otevrene = issues.filter((i) => i.stav !== 'vyřešeno');
 const rody = Object.values(lines).sort((a, b) => a.k - b.k);
 // nejdřív otázky bez rodu (bližší předci, celá rodina), pak rody 8–15
 const skupiny = [
-  { nadpis: 'Bližší předci a celá rodina', barva: null, polozky: otevrene.filter((i) => !i.rod || !lines[i.rod]) },
-  ...rody.map((l) => ({ nadpis: `Rod ${l.name}`, barva: l.color, polozky: otevrene.filter((i) => i.rod === l.slug) })),
+  { nadpis: 'Bližší předci a celá rodina', rod: null, polozky: otevrene.filter((i) => !i.rod || !lines[i.rod]) },
+  ...rody.map((l) => ({ nadpis: null, rod: l.slug, polozky: otevrene.filter((i) => i.rod === l.slug) })),
 ].filter((s) => s.polozky.length);
 const maOtazky = otazkyText().trim().length > 0;
 const maDotazy = dotazyText().trim().length > 0;
@@ -34,7 +35,7 @@ const kontakt = config.kontakt?.email;
     <h2>Otevřené otázky</h2>
     {skupiny.length ? skupiny.map((s) => (
       <>
-        <h3>{s.barva && <span class="dot" style={`background:${s.barva}`}></span>}{s.nadpis}</h3>
+        <h3>{s.rod ? <Rod slug={s.rod} /> : s.nadpis}</h3>
         <div class="grid2">
           {s.polozky.map((i) => (
             <div class="card">
@@ -60,7 +61,6 @@ const kontakt = config.kontakt?.email;
 <style>
   .hledame-cast { margin-top: 2rem; }
   .hledame-cast h3 { display: flex; align-items: center; gap: 0.45rem; }
-  .dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; display: inline-block; }
   .card h4 { margin: 0 0 0.4rem; font-size: 1rem; }
   .hledame-md :global(h2) { font-size: 1.15rem; border: 0; margin: 1.4rem 0 0.4rem; }
   .hledame-md :global(li) { margin: 0.25rem 0; }

@@ -76,7 +76,8 @@ Text příběhu…
 ```
 
 `slug` je název souboru z malých písmen bez diakritiky, číslic a pomlček (např. `prvni-rod`). Pole `rod` je číslo
-rodu 8–15; slouží k odkazu na příslušnou větev. Web vytvoří přehled na `/pribehy/`, samostatnou stránku
+rodu 8–15 (z rodokmenu správce); slouží k odkazu na příslušnou větev a u webu s přístupy určuje, které větve příběh
+uvidí (`web.md`, „Více přístupů“). Příběh o víc rodech: `rody: 8, 10`. Web vytvoří přehled na `/pribehy/`, samostatnou stránku
 `/pribehy/<slug>/`, odkaz v menu i tlačítko z úvodu. V `web.json` lze seznam a pořadí nastavit například
 `"pribehy": ["prvni-rod", "druhy-rod"]`; pokud je seznam prázdný, použijí se všechny soubory v abecedním pořadí.
 Je-li seznam vyplněný, musí obsahovat každý soubor právě jednou. Popisek položky menu a tlačítka lze dál nastavit

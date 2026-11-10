@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { docs, lineByK } from '../../lib/data.js';
+import Rod from '../../components/Rod.astro';
+import { docs, stories } from '../../lib/data.js';
 
 export async function getStaticPaths() {
   const storyModules = import.meta.glob('../../generated/pribehy/*.md');
@@ -16,15 +17,16 @@ export async function getStaticPaths() {
 }
 
 const { Content, frontmatter } = Astro.props;
-const line = lineByK[frontmatter.rod];
+const slugPribehu = Astro.params.slug;
+const story = stories.find((s) => s.slug === slugPribehu);
 // dokumenty jen osob z rodu příběhu (rods z export_web.py); příběh bez rodu ukáže všechny
-const rodPribehu = Number(frontmatter.rod) || null;
-const docsRodu = docs.filter((d) => !rodPribehu || !d.rods?.length || d.rods.includes(rodPribehu));
+const rodyPribehu = (story?.rody ?? (frontmatter.rod ? [frontmatter.rod] : [])).map(Number).filter(Boolean);
+const docsRodu = docs.filter((d) => !rodyPribehu.length || !d.rods?.length || d.rods.some((r) => rodyPribehu.includes(r)));
 ---
 <Base title={frontmatter.title}>
   <p class="crumbs">
     <a href="/pribehy/">všechny příběhy</a>
-    {line && <> · <a href={`/rod/${line.slug}/`}>rod {line.name}</a></>}
+    {rodyPribehu.map((k) => <> · <Rod k={k} /></>)}
   </p>
   <h1>{frontmatter.title}</h1>
   {frontmatter.lead && <p class="lead">{frontmatter.lead}</p>}

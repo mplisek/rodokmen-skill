@@ -1,0 +1,8 @@
+---
+// Jednotné zobrazení rodu: barevný kruh + název s odkazem na stránku rodu. Markup musí zůstat shodný s tím,
+// co export vkládá do Markdownu (styl .rod-znak v global.css). Neznámý rod = nic.
+import { lines, lineByK } from '../lib/data.js';
+const { k, slug, odkaz = true } = Astro.props;   // odkaz={false} uvnitř jiného odkazu (karta)
+const l = slug ? lines[slug] : lineByK[Number(k)];
+---
+{l && <span class="rod-znak"><span class="dot" style={`background:${l.color}`}></span>{odkaz ? <a href={`/rod/${l.slug}/`}>{l.name}</a> : <span>{l.name}</span>}</span>}

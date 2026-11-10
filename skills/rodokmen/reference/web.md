@@ -257,8 +257,20 @@ rodokmenu. Ve `web.json`:
     a **rodiče partnera** (sourozenci a další předci partnera ne); ostatní stránky (osoby, zápisy, dokumenty…);
   - **vlastní větev** – výchozí osoby, jejich potomci a partneři (rozsah práva `soukrome`).
   Osoby mimo rozšířenou linii ve verzi webu přístupu vůbec nejsou. Menu ukáže jen stránky, které v přístupu mají data.
-- Vlastní úvod a název webu: `"uvod": {…}`, `"nazev_webu": "…"`. Názvy rodů: `"rody"` (jinak z `LINES`
-  nebo z příjmení pradědečka / prababičky).
+- **Úvod:** společný úvod (`web.json` → `uvod`, jen s právem `texty`) a za ním vlastní text přístupu
+  (`pristupy[].uvod`, odstavce se připojí). Název webu přístupu: `"nazev_webu": "…"`.
+- **Názvy rodů přístupu:** `"rody": {"8": ["Plíškové", "popis z pohledu větve"], …}` – čísla 8–15 od prvního kořene
+  přístupu. Chybí-li, web použije příjmení pradědečka / prababičky a export to vypíše jako POZOR.
+- **Obsah podle rodů** (zakladatel rodu = číslo osoby z rodokmenu správce, např. 8): přístup ho vidí, když je
+  zakladatel v jeho přímé linii, a ukáže ho pod svým rodem.
+  - zajímavost: řádek `Rod: [Plíškové](/rod/pliskove/)` pod nadpisem (nebo `<!-- rody: 8 -->`); bez rodu ji vidí všichni;
+  - karta na úvodu: `"zajimavosti_na_uvodu": [{"nadpis": …, "text": …, "rody": [8]}]`; bez `rody` jen přístupy s právem `texty`;
+  - příběh: frontmatter `rod: 8` / `rody: 8, 10`; bez rodu jen přístupy s právem `texty`;
+  - otázky pro rodinu a prameny: oddíl `## <název rodu>` nebo odrážka s `<!-- rody: 8 -->`; ostatní jen s právem `texty`;
+  - deník, hypotézy a ostatní texty jen s právem `texty`.
+- **Odkaz na osobu, zápis nebo rodinu, kterou přístup nevidí**, v textu, který přístup vidí, zastaví sestavení
+  (CHYBA – text by prozradil jméno z jiné větve). Oprav: přidej zajímavosti / příběhu rod, odrážce `<!-- rody: N -->`.
+  Odkazy na rody (`/rod/<slug>/`) se přepíšou na rody přístupu samy.
 - **Kdo co vidí:** `python3 -I tools/pristupy.py` (souhrn za přístupy), `pristupy.py <id>` (seznam osob) – projdi ho
   před zveřejněním a pak každý přístup na testovacím webu.
 - `npm run build` sestaví **samostatnou verzi webu pro každý přístup** (`dist/_p/<id>/`, id vypíše

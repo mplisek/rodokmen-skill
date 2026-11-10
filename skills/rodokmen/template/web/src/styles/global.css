@@ -47,6 +47,10 @@ main.wide :is(.lead, .prose, .next-step) { max-width: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 1rem; }
 .chip { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; padding: 0.15rem 0.6rem; border-radius: 999px; background: var(--accent-soft); color: #5a4632; text-decoration: none; }
 .chip .dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; display: inline-block; }
+/* rod: barevný kruh + název (komponenta Rod.astro i Markdown z exportu); víc rodů vedle sebe odděluje mezera */
+.rod-znak { display: inline-flex; align-items: center; gap: 0.35rem; }
+.rod-znak .dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; display: inline-block; flex: none; }
+.rod-znak + .rod-znak { margin-left: 0.8rem; }
 .st-doc { background: #e3f0e3; color: var(--doc); }
 .st-prob, .st-mh { background: #f8ecd2; color: var(--prob); }
 .st-fam { background: #e6eef6; color: #3e6488; }

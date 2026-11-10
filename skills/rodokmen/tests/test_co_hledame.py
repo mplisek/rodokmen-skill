@@ -65,7 +65,9 @@ class Ukazka(unittest.TestCase):
         self.assertEqual((jakub["rod"], jakub["stav"]), ("novakove", "otevřené"))
         self.assertTrue(site["people"][jakub["person"]]["name"].startswith("Jakub Novák"))
         otazky = (self.p / "web" / "src" / "generated" / "otazky.md").read_text(encoding="utf-8")
-        poradi = [otazky.index(h) for h in ("## Dokumenty doma", "## Novákové", "## Hrubí", "## Kučerovi")]
+        # nadpisy oddílů rodů jsou znak rodu (barevný kruh + odkaz na rod), obecné oddíly nahoře
+        poradi = [otazky.index(h) for h in ("## Dokumenty doma", '/rod/novakove/">Novákové', '/rod/hrubi/">Hrubí',
+                                            '/rod/kucerovi/">Kučerovi')]
         self.assertEqual(poradi, sorted(poradi))
 
     def test_kontrola_hlida_tvar(self):

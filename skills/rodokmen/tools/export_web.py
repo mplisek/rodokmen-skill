@@ -203,9 +203,9 @@ def story_frontmatter(path, slug, require_rod=True):
     for line in match.group(1).splitlines():
         if not line.strip() or line.lstrip().startswith("#"):
             continue
-        item = re.fullmatch(r"(title|lead|rod):\s*(.*?)\s*", line)
+        item = re.fullmatch(r"(title|lead|rod|rody):\s*(.*?)\s*", line)
         if not item:
-            sys.exit(f"CHYBA: {path}: očekávám pouze skalární pole title, lead a rod.")
+            sys.exit(f"CHYBA: {path}: očekávám pouze skalární pole title, lead, rod a rody.")
         key, value = item.groups()
         if key in fields:
             sys.exit(f"CHYBA: {path}: pole {key} je uvedené vícekrát.")
@@ -221,18 +221,52 @@ def story_frontmatter(path, slug, require_rod=True):
                 sys.exit(f"CHYBA: {path}: neuzavřená hodnota {key}.")
             value = value[1:-1].replace("''", "'")
         fields[key] = value
-    for key in ("title", "lead") + (("rod",) if require_rod else ()):
+    rody = [int(x) for x in re.findall(r"\d+", fields.get("rody", ""))]   # rody: 8, 10 – zakladatelé rodů (víc rodů)
+    if "rody" in fields and not rody:
+        sys.exit(f"CHYBA: {path}: rody má být seznam čísel osob (zakladatelů rodů), např. „rody: 8, 10“.")
+    for key in ("title", "lead"):   # rod nepovinný: příběh bez rodu = obecný text (jen s právem texty)
         if key not in fields:
             sys.exit(f"CHYBA: {path}: ve frontmatter chybí pole {key}.")
     if not fields["title"].strip():
         sys.exit(f"CHYBA: {path}: title nesmí být prázdný.")
-    rod = fields.get("rod")
-    if require_rod and not re.fullmatch(r"(?:[8-9]|1[0-5])", rod or ""):
+    rod = fields.get("rod") or (str(rody[0]) if rody else None)
+    if require_rod and fields.get("rod") is not None and not re.fullmatch(r"(?:[8-9]|1[0-5])", fields["rod"]):
         sys.exit(f"CHYBA: {path}: rod musí být číslo 8 až 15.")
     if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", slug):
         sys.exit(f"CHYBA: {path}: název souboru musí být bezpečný slug z malých písmen, číslic a pomlček.")
     return dict(slug=slug, title=fields["title"], lead=fields["lead"],
-                rod=int(rod) if require_rod else None, text=text)
+                rod=int(rod) if require_rod and rod else None, zakladatele=rody or ([int(rod)] if require_rod and rod else []), text=text)
+
+
+RODY_KOMENTAR = re.compile(r"<!--\s*rody?\s*:\s*([\d,\s]+?)\s*-->")
+
+
+def zakladatele_v_textu(text):
+    """Čísla zakladatelů rodů z komentáře <!-- rody: 8, 10 --> v textu."""
+    return [int(x) for m in RODY_KOMENTAR.finditer(text) for x in re.findall(r"\d+", m.group(1))]
+
+
+def oddily_md(md):
+    """Markdown → (úvod před prvním oddílem „## “, [oddíly včetně nadpisu])."""
+    casti = re.split(r"(?m)^(?=## )", md)
+    return ("", casti) if casti[0].startswith("## ") else (casti[0], casti[1:])
+
+
+def polozky_oddilu(telo):
+    """Tělo oddílu → bloky: odrážka („- “/„* “) i s odsazeným pokračováním, jinak jednotlivé řádky."""
+    bloky, prazdny = [], False
+    for radek in telo.splitlines(keepends=True):
+        nova = re.match(r"\s{0,3}[-*] ", radek)
+        if bloky and bloky[-1][0] == "odrazka" and not nova and not radek.startswith("#") and (
+                not radek.strip()                                   # prázdný řádek: odrážka může pokračovat
+                or radek[:1] in (" ", "\t")                         # odsazené pokračování (i za prázdným řádkem)
+                or not prazdny):                                    # líné pokračování hned pod odrážkou
+            bloky[-1][1] += radek
+        else:
+            bloky.append(["odrazka" if nova else "radek", radek])
+        prazdny = not radek.strip()
+    return bloky
+
 
 
 def slugify(text):
@@ -709,7 +743,7 @@ def cloudflare_files(cfg, digest, otevreny, duvod_ne=""):
 
 
 def main():
-    ns = load_people()
+    ns = ns_spravce = load_people()
     if 1 not in ns["P"]:
         sys.exit("V data/osoby.py chybí výchozí osoba (číslo 1).")
     cfg = cfg_puvodni = jload("web.json", {})
@@ -727,15 +761,19 @@ def main():
             sys.exit(f"CHYBA: přístup „{pid}“ není ve web.json → pristupy (jsou: {', '.join(p['id'] for p in pristupy or []) or 'žádné'}).")
     texty = not pristup or pristup["texty"]   # příběh, zajímavosti, deník, „Co hledáme“ (píšou o celé rodině)
     puvodni_same = ns["SAME"]
+    lines_spravce = dict(ns["LINES"])   # rody v rodokmenu správce: na ně (zakladatelé, adresy /rod/…) odkazují texty
     if pristup and pristup["koren"]:
         ns, prevod = pohled(ns, pristup["koren"], texty, pristup.get("rody"))
         cfg = dict(cfg, nazev=pristup.get("nazev_webu", cfg.get("nazev")))
-        if "uvod" in pristup:
-            cfg["uvod"] = pristup["uvod"]
-        elif not texty:
+        # úvod = společný (web.json uvod, jen s právem texty) a za ním vlastní text přístupu (pristupy[].uvod)
+        spolecny = dict(cfg.get("uvod") or {}) if texty else {}
+        vlastni = dict(pristup.get("uvod") or {})
+        uvod = dict(spolecny, **{k: v for k, v in vlastni.items() if k != "odstavce"})
+        uvod["odstavce"] = list(spolecny.get("odstavce") or []) + list(vlastni.get("odstavce") or [])
+        if uvod.get("nadpis") or uvod["odstavce"]:
+            cfg["uvod"] = uvod
+        else:
             cfg.pop("uvod", None)
-        if not texty:
-            cfg.pop("zajimavosti_na_uvodu", None)
     # Soukromí osob (zadání kap. 4, 7): o žijících jen jméno a rok narození. Plné údaje jen tomu, kdo má právo soukrome
     # (správce ho má), u osoby z vlastní větve přístupu (správce: všichni) a se zapsaným souhlasem (pole souhlas).
     # Ručně: soukrome=True u osoby (i zemřelé – jen jméno a roky) a údaj „(soukromé) …“ – obojí jen pro toho, kdo smí
@@ -1075,6 +1113,127 @@ def main():
                                     root=slugs.get(k), people=[p["slug"] for _, p in members],
                                     gens={p["slug"]: gen(kk) for kk, p in members})
     lines = {s: l for s, l in lines.items() if l["root"]}
+    rod_k = {l["k"]: l for l in lines.values()}
+    # rody správce (adresa /rod/<slug>/ a název v nadpisech) → číslo rodu správce = zakladatel
+    rody_spravce, videno_s = {}, set()
+    for k_, (jm, _) in sorted(lines_spravce.items()):
+        ls_ = slugify(jm)
+        ls_ = f"{ls_}-{k_}" if ls_ in videno_s else ls_
+        videno_s.add(ls_)
+        rody_spravce[ls_] = dict(k=k_, slug=ls_, name=jm)
+
+    def rody_zakladatelu(zakladatele):
+        """Zakladatelé rodů (čísla osob z rodokmenu správce) → (vidí přístup obsah?, čísla rodů přístupu 8–15).
+        Vidí, když je některý zakladatel v přímé linii přístupu (kořen nebo předek)."""
+        vidi, out = False, set()
+        for z in zakladatele:
+            z = puvodni_same.get(z, z)
+            n = z if prevod is None else prevod.get(z)
+            if prevod is None and z not in P:
+                vidi = True   # celý web: obsah zůstane, jen bez znaku rodu
+                continue
+            if isinstance(n, int):
+                vidi = True
+                r = n >> (gen(n) - 3) if n >= 8 else n
+                while r < 8:   # bližší předek přístupu: jeho rod pokračuje po otci (otec otce…)
+                    r *= 2
+                if r in rod_k:
+                    out.add(r)
+            elif n is not None and (ns.get("_linie") or {}).get(n) == "prima":
+                vidi = True   # předek dalšího kořene: obsah ano, rod prvního kořene žádný
+        return vidi, sorted(out)
+
+    def znak_rodu(k):
+        l = rod_k.get(k)
+        return (f'<span class="rod-znak"><span class="dot" style="background:{l["color"]}"></span>'
+                f'<a href="/rod/{l["slug"]}/">{html.escape(l["name"])}</a></span>') if l else ""
+
+    def prepis_odkazy_rodu(md):
+        """Odkazy /rod/<slug správce>/ → rod přístupu; rod, který přístup nemá, jen jako text."""
+        def nahrad(m):
+            l = rody_spravce.get(m.group(2))
+            if not l or prevod is None:
+                return m.group(0)
+            vidi, rr = rody_zakladatelu([l["k"]])
+            text = rod_k[rr[0]]["name"] if vidi and rr and m.group(1).strip() == l["name"] else m.group(1)   # název rodu správce → přístupu
+            return f"[{text}](/rod/{rod_k[rr[0]]['slug']}/)" if vidi and rr else text
+        return re.sub(r"\[([^\]]*)\]\(/rod/([^/)\s]+)/?\)", nahrad, md)
+
+    def prepis_frontmatter_rodu(text, rod):
+        m = re.match(r"\A(---\r?\n)(.*?)(\r?\n---)", text, re.S)
+        if not m:
+            return text
+        fm = [x for x in m.group(2).splitlines() if not re.match(r"(rod|rody):", x)]
+        if rod:
+            fm.append(f"rod: {rod}")
+        return m.group(1) + "\n".join(fm) + m.group(3) + text[m.end():]
+
+    def filtr_zajimavosti(md):
+        """Oddíly zajímavostí: bez rodu vidí všichni; s rodem (řádek „Rod: [..](/rod/<slug>/)“ nebo <!-- rody: 8 -->)
+        jen přístup se zakladatelem v přímé linii – řádek Rod se přepíše na rody přístupu. Úvod jen s právem texty."""
+        uvod, oddily = oddily_md(md)
+        out = uvod if texty else ""
+        for o in oddily:
+            rod_radek = re.search(r"(?m)^Rod:\s*(.*)$", o)
+            zakl = zakladatele_v_textu(o)
+            if rod_radek:
+                zakl += [rody_spravce[x]["k"] for x in re.findall(r"/rod/([^/)\s]+)", rod_radek.group(1)) if x in rody_spravce]
+            if not zakl and not rod_radek:
+                out += o
+                continue
+            if not zakl:   # řádek Rod: bez platného odkazu na rod (překlep, chybí odkaz)
+                print(f"POZOR: zajímavost „{o.splitlines()[0][3:].strip()}“: řádek Rod: neodkazuje na rod (/rod/<slug>/ "
+                      "z LINES)" + (" – v přístupu se neukáže" if prevod is not None else ""))
+                if prevod is None:
+                    out += o
+                continue
+            vidi, rr = rody_zakladatelu(zakl)
+            if not vidi:
+                continue
+            znaky = " ".join(znak_rodu(k) for k in rr)
+            if rod_radek:
+                o = o[:rod_radek.start()] + (f"Rod: {znaky}" if znaky else "") + o[rod_radek.end():]
+            elif znaky:
+                hlava, _, telo = o.partition("\n")
+                o = f"{hlava}\n\n{znaky}\n{telo}"
+            out += o
+        return out
+
+    def filtr_oddilu(md, razeni_rodu):
+        """Otázky pro rodinu / prameny: oddíl „## <rod správce>“ jen přístupu se zakladatelem v přímé linii (nadpis = rod
+        přístupu), odrážka s <!-- rody: N --> podle zakladatele; oddíly a odrážky bez rodu jen s právem texty."""
+        uvod, oddily = oddily_md(md)
+        ostatni, rodove = [], []
+        for o in oddily:
+            hlava, _, telo = o.partition("\n")
+            l = rod_nadpisu(hlava[3:], rody_spravce)
+            vidi_oddil, rr = rody_zakladatelu([l["k"]]) if l else (texty, [])
+            if l and not vidi_oddil:
+                continue
+            zbyle = []
+            for druh, blok in polozky_oddilu(telo):
+                zakl = zakladatele_v_textu(blok)
+                if zakl:
+                    if rody_zakladatelu(zakl)[0]:
+                        zbyle.append(blok)
+                elif vidi_oddil:
+                    zbyle.append(blok)
+            if not any(b.strip() and not RODY_KOMENTAR.fullmatch(b.strip()) for b in zbyle):
+                continue
+            if l and rr:
+                hlava = "## " + " ".join(znak_rodu(k) for k in rr)
+            cast = hlava + "\n" + "".join(zbyle)
+            (rodove if l and rr and razeni_rodu else ostatni).append((rr[0] if rr else 0, cast))
+        rodove.sort(key=lambda x: x[0])
+        return (uvod if texty else "") + "".join(c if c.endswith("\n") else c + "\n" for _, c in ostatni + rodove)
+
+    # názvy rodů přístupu: bez nich web použije odvozené (příjmení) – správce je má doplnit (pristupy[].rody)
+    if pristup and pristup["koren"] and pristup["koren"][0] != 1:
+        chybi = [f"{l['k']} ({l['name']})" for l in sorted(lines.values(), key=lambda l: l["k"])
+                 if str(l["k"]) not in (pristup.get("rody") or {})]
+        if chybi:
+            print(f"POZOR: přístup {pristup['id']}: rody {', '.join(chybi)} nemají název ve web.json → "
+                  f"pristupy[].rody (názvy z pohledu této větve, např. \"8\": [\"Plíškové\", \"popis\"])")
     for p in people.values():
         p["lineSlug"] = next((l["slug"] for l in lines.values() if l["k"] == p["line"]), None)
 
@@ -1150,17 +1309,41 @@ def main():
                 item = re.fullmatch(r"(title|lead):\s*(.*?)\s*", line)
                 if item:
                     legacy_fields[item.group(1)] = item.group(2)
+        rod_l = (cfg.get("pribeh") or {}).get("rod")
+        rody_l = [int(x) for x in re.findall(r"\d+", re.search(r"(?m)^rody:(.*)$", legacy_match.group(1)).group(1))] \
+            if legacy_match and re.search(r"(?m)^rody:(.*)$", legacy_match.group(1)) else []
         stories = [dict(slug="", title=legacy_fields.get("title", "Příběh"),
-                        lead=legacy_fields.get("lead", ""), rod=cfg.get("pribeh", {}).get("rod"),
+                        lead=legacy_fields.get("lead", ""), rod=rod_l,
+                        zakladatele=rody_l or ([int(rod_l)] if isinstance(rod_l, int) or str(rod_l or "").isdigit() else []),
                         text=legacy_text)]
-    if not texty:
-        stories, multi_stories = [], False
+    # příběh s rodem vidí přístup se zakladatelem v přímé linii (i bez práva texty), příběh bez rodu jen s právem texty
+    vidi_story = []
+    for story in stories:
+        vidi, rody_story = rody_zakladatelu(story.get("zakladatele") or [])
+        if (vidi if story.get("zakladatele") else texty):
+            story = dict(story, rody=rody_story, rod=rody_story[0] if rody_story else None)
+            story["text"] = prepis_frontmatter_rodu(story["text"], story["rod"])
+            vidi_story.append(story)
+    stories = vidi_story
+    multi_stories = multi_stories and bool(stories)
     has_story = bool(stories)
     public_cfg = {k: v for k, v in cfg.items() if k not in ("prihlaseni", "pristupy")}   # odpovědi nikdy na web
     # poznámky ke stránkám (tlačítko „Připomínka“, /poznamky/): podle přístupu, jinak web.json „poznamky“
     vse = next((p for p in pristupy or [] if p["id"] == "vse"), None)
     public_cfg["poznamky"] = bool(pristup["poznamky"] if pristup else vse["poznamky"] if vse else cfg.get("poznamky"))
     public_cfg["maPribeh"] = has_story
+    if stories and isinstance(public_cfg.get("pribeh"), dict):
+        public_cfg["pribeh"] = dict(public_cfg["pribeh"], rod=stories[0]["rod"])   # číslo rodu z pohledu přístupu
+    # karty na úvodu: s rody (zakladatelé) jen přístupům, které je mají v přímé linii; ve výstupu slugy rodů přístupu
+    karty = []
+    for karta in public_cfg.get("zajimavosti_na_uvodu") or []:
+        zakl = [int(x) for x in karta.get("rody") or [] if str(x).isdigit()] if isinstance(karta, dict) else []
+        vidi, rody_karty = rody_zakladatelu(zakl)
+        if not (vidi if zakl else texty):   # karta bez rodu = obecný text (jen s právem texty)
+            continue
+        karty.append(dict(karta, rody=[rod_k[k]["slug"] for k in rody_karty]) if zakl else karta)
+    if "zajimavosti_na_uvodu" in public_cfg:
+        public_cfg["zajimavosti_na_uvodu"] = karty
     public_cfg["maVicePribehu"] = multi_stories
     public_cfg["pribehy"] = [story["slug"] for story in stories] if multi_stories else []
     # Vějíře pro web: hlavní (výchozí osoba, /vejir/) a vějíř předků každé další osoby, která má aspoň jednoho známého
@@ -1245,10 +1428,16 @@ def main():
     for src, dst in (("archivni_dotazy.md", "dotazy.md"), ("otazky_pro_rodinu.md", "otazky.md"),
                      ("research_log.md", "denik.md"), ("zajimavosti.md", "zajimavosti.md")):
         path = os.path.join(DATA, src)
-        text = open(path, encoding="utf-8-sig").read() if os.path.exists(path) and texty else ""
-        text = hvezdicky_narozeni(strip_comments(re.sub(r"^# .*\n", "", text, count=1)))
-        if src == "otazky_pro_rodinu.md":   # otázky pro rodinu podle rodů (8–15), obecné oddíly nahoře
-            text = podle_rodu(text, lines)
+        text = open(path, encoding="utf-8-sig").read() if os.path.exists(path) else ""
+        text = re.sub(r"^# .*\n", "", text, count=1)
+        # rody (zakladatelé) se čtou z komentářů – filtrovat před jejich odstraněním
+        if src == "zajimavosti.md":
+            text = filtr_zajimavosti(text)
+        elif src in ("otazky_pro_rodinu.md", "archivni_dotazy.md"):   # otázky podle rodů (8–15), obecné nahoře
+            text = filtr_oddilu(text, src == "otazky_pro_rodinu.md")
+        elif not texty:
+            text = ""
+        text = hvezdicky_narozeni(strip_comments(prepis_odkazy_rodu(text)))
         write(os.path.join(gen_dir, dst), text)
         generovane[dst] = bool(text.strip())
     site["stranky"] = stranky_s_daty(site, generovane, texty)
@@ -1256,12 +1445,12 @@ def main():
     shutil.rmtree(os.path.join(gen_dir, "pribehy"), ignore_errors=True)
     if multi_stories:
         for story in stories:
-            write(os.path.join(gen_dir, "pribehy", story["slug"] + ".md"), strip_comments(story["text"]))
+            write(os.path.join(gen_dir, "pribehy", story["slug"] + ".md"), strip_comments(prepis_odkazy_rodu(story["text"])))
     write(os.path.join(gen_dir, "pribehy.json"), json.dumps(
-        [{key: story[key] for key in ("slug", "title", "lead", "rod")} for story in stories if story["slug"]],
+        [{key: story.get(key) for key in ("slug", "title", "lead", "rod", "rody")} for story in stories if story["slug"]],
         ensure_ascii=False, indent=1))
     story = stories[0]["text"] if stories else "---\ntitle: Příběh\nlead: ''\n---\n"
-    write(os.path.join(gen_dir, "pribeh.md"), strip_comments(story))
+    write(os.path.join(gen_dir, "pribeh.md"), strip_comments(prepis_odkazy_rodu(story)))
 
     gated = login_files(cfg_puvodni, otisky, odkazy, pristupy, load_klice(cfg_puvodni))
     question = bool(norm_answer((cfg_puvodni.get("prihlaseni") or {}).get("odpoved", ""))) or \
@@ -1316,24 +1505,44 @@ def main():
 
     # odkazy v textech, které nikam nevedou (adresa osoby se změní třeba doplněním roku narození: jan-novak → jan-novak-1798)
     targets = dict(osoba=people, zdroj=recs, rod=lines, rodina=families)
-    texts = {f: open(os.path.join(gen_dir, f), encoding="utf-8-sig").read() for f in ("pribeh.md", "zajimavosti.md")}
+    texts = {f: open(os.path.join(gen_dir, f), encoding="utf-8-sig").read()
+             for f in ("pribeh.md", "zajimavosti.md", "otazky.md", "dotazy.md", "denik.md")}
     if multi_stories:
-        texts.update({f"pribehy/{story['slug']}.md": story["text"] for story in stories})
-    texts["web.json"] = json.dumps(cfg, ensure_ascii=False)
+        texts.update({f"pribehy/{story['slug']}.md": open(os.path.join(gen_dir, "pribehy", story["slug"] + ".md"),
+                                                          encoding="utf-8-sig").read() for story in stories})
+    texts["web.json"] = json.dumps(public_cfg, ensure_ascii=False)   # jen to, co jde do site.json
     texts["osoby.py (hypotézy)"] = json.dumps(hypotheses, ensure_ascii=False)
     targets["pribehy"] = {story["slug"] for story in stories if story["slug"]}
     broken = [(f, m.group(0)) for f, t in texts.items()
               for m in re.finditer(r"/(osoba|zdroj|rod|rodina|pribehy)/([^/\s)\"'#?<>\]]+)", t)
               if m.group(2) not in targets[m.group(1)]]
+    v_pristupu = bool(pristup) and bool(pristup["koren"])
+    # cíl ve webu správce existuje (osoba podle jména, zápis) → jde o jinou větev / skrytou osobu, ne o překlep
+    jmena_spravce = {slugify(o.get("n", "")) for o in list(ns_spravce["P"].values()) + list(ns_spravce["RODINA"].values())}
+    zapisy_spravce = {r["key"] for r in record_rows()}
+
+    def cizi(link):
+        druh, cil = link.strip("/").split("/", 1)
+        if druh == "osoba":
+            return any(j and (cil == j or cil.startswith(j + "-")) for j in jmena_spravce)
+        return druh in ("zdroj", "rodina") and (druh == "rodina" or cil in zapisy_spravce)
+    broken_cizi = [(f, link) for f, link in broken if v_pristupu and cizi(link)]
     for f, link in dict.fromkeys(broken):
-        print(f"POZOR: nefunkční odkaz {link}/ v {f} – oprav ho (adresy stránek jsou ve web/src/data/site.json)")
+        if (f, link) in broken_cizi:
+            print(f"CHYBA: přístup {pristup['id']}: odkaz {link}/ v {f} vede na stránku, kterou tento přístup nevidí "
+                  "(jiná větev nebo skrytá osoba) – text by prozradil jméno; vyřaď ho pro tento přístup "
+                  "(rod u zajímavosti / příběhu, <!-- rody: N --> u odrážky) nebo odkaz oprav")
+        else:
+            print(f"POZOR: nefunkční odkaz {link}/ v {f} – oprav ho (adresy stránek jsou ve web/src/data/site.json)")
+    if broken_cizi:
+        sys.exit(1)
 
     # stránky Statistiky a Domy se počítají z hotového site.json
     sys.path.insert(0, TOOLS)
     import statistiky, domy_export, stavby
     statistiky.main()
     domy_export.main()
-    upoz, n_staveb = stavby.export()   # data/stavby.py → web/src/data/stavby.json (u Domů: držitelé, obyvatelé, události)
+    upoz, n_staveb = stavby.export(prevod=prevod, same=puvodni_same)   # data/stavby.py → web/src/data/stavby.json (u Domů: držitelé, obyvatelé, události)
     stavby.tisk_upozorneni(upoz)
     if n_staveb:
         print(f"stavby: {n_staveb} staveb s dějinami na stránce Domy")

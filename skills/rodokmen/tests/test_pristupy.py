@@ -260,5 +260,33 @@ class SoukromiMimoOsoby(unittest.TestCase):
             self.assertTrue(petr["facts"])
 
 
+
+class RodyRecenze(unittest.TestCase):
+    """Fáze 3 (recenze): pokračování odrážky cizího rodu, odkaz v úvodu jiného přístupu, překlep v odkazu."""
+
+    def test_odrazka_uvod_preklep(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "ukazka"
+            self.assertEqual(novy_projekt(p, "--ukazka").returncode, 0)
+            oz = p / "data" / "otazky_pro_rodinu.md"
+            oz.write_text(oz.read_text(encoding="utf-8").replace(
+                "## Dokumenty doma\n", "## Dokumenty doma\n- Otázka dvanáctky <!-- rody: 12 -->\n\n"
+                "  Pokračování TAJNE_DVORAK.\n- Překlep [x](/osoba/qqq-neexistuje/).\n", 1), encoding="utf-8")
+            cfg_path = p / "data" / "web.json"
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+            cfg["prihlaseni"]["odpoved"] = "spravce"
+            cfg["pristupy"] = [{"nazev": "Otec", "odpoved": "a", "koren": [2], "prava": {"texty": True}},
+                               {"nazev": "Matka", "odpoved": "b", "koren": [3],
+                                "uvod": {"odstavce": ["Viz [děda](/osoba/antonin-dvorak-1899/)."]}}]
+            cfg_path.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+            r = spust(p, "export_web.py", "--pristup", "otec", check=False)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)          # úvod matky na web otce nejde
+            self.assertIn("POZOR: nefunkční odkaz /osoba/qqq-neexistuje/", r.stdout)   # překlep jen varování
+            otazky = (p / "web" / "src" / "generated" / "otazky.md").read_text(encoding="utf-8")
+            self.assertNotIn("TAJNE_DVORAK", otazky)
+            self.assertNotIn("Otázka dvanáctky", otazky)
+            self.assertIn("Překlep", otazky)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import { stats, lines, href, config, linesTitle } from '../lib/data.js';
 import fan from '../generated/fan.svg?raw';
+import Rod from '../components/Rod.astro';
 import FamilyMap from '../components/FamilyMap.astro';
 import site from '../data/site.json';
 import { frontmatter as pribeh } from '../generated/pribeh.md';
@@ -49,7 +50,12 @@ const defaultStoryButton = config.maVicePribehu ? 'Prohlédnout příběhy' : 'P
       <h2>Zajímavosti</h2>
       <div class="grid2">
         {cards.map((c) => (
-          <a class="card card-link" href="/zajimavosti/"><h3>{c.nadpis}</h3><p class="small muted">{c.text}</p></a>
+          c.rody?.length > 0 ? (
+            // odkaz na rod uvnitř odkazu karty by byl vnořený <a>, proto je odkazem jen nadpis
+            <div class="card"><h3><a href="/zajimavosti/">{c.nadpis}</a></h3><p class="small">{c.rody.map((s) => <Rod slug={s} />)}</p><p class="small muted">{c.text}</p></div>
+          ) : (
+            <a class="card card-link" href="/zajimavosti/"><h3>{c.nadpis}</h3><p class="small muted">{c.text}</p></a>
+          )
         ))}
       </div>
       <p><a href="/zajimavosti/">Všechny zajímavosti →</a></p>
