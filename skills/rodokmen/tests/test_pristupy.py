@@ -345,5 +345,30 @@ class DokladyRC(unittest.TestCase):
             self.assertNotIn("d_prid", deda)
 
 
+
+class AdresyOsob(unittest.TestCase):
+    """Adresa stránky osoby je stejná ve všech verzích webu (odkazy v textech), i u stejnojmenných osob."""
+
+    def test_stejne_adresy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "ukazka"
+            self.assertEqual(novy_projekt(p, "--ukazka").returncode, 0)
+            with open(p / "data" / "osoby.py", "a", encoding="utf-8") as f:   # dva stejnojmenní předci bez roku
+                f.write('\nP[24]["n"] = P[12]["n"]\nP[24]["y"] = ""\nP[12]["y"] = ""\n')
+            cfg_path = p / "data" / "web.json"
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+            cfg["prihlaseni"]["odpoved"] = "spravce"
+            cfg["pristupy"] = [{"nazev": "Matka", "odpoved": "b", "koren": [3]}]
+            cfg_path.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+            site_json = p / "web" / "src" / "data" / "site.json"
+            spust(p, "export_web.py")
+            spravce = {s: o["name"] for s, o in json.loads(site_json.read_text(encoding="utf-8"))["people"].items()}
+            spust(p, "export_web.py", "--pristup", "matka")
+            matka = {s: o["name"] for s, o in json.loads(site_json.read_text(encoding="utf-8"))["people"].items()}
+            self.assertTrue(set(matka) <= set(spravce), set(matka) - set(spravce))
+            self.assertTrue(all(spravce[s] == n for s, n in matka.items()))
+            self.assertEqual(sum(1 for n in matka.values() if n == spravce.get("antonin-dvorak")), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

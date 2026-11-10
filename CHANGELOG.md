@@ -37,6 +37,8 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   verze). Soukromá poznámka (`npm run poznamky -- --soukrome <id>`) jen pro větev autora a správce.
 
 ### Opravy
+- Adresa stránky stejnojmenné osoby (`vaclav-culek-144`) je stejná ve všech verzích webu – dřív ji verze přístupu
+  počítala z jiného číslování a odkazy z textů nefungovaly.
 - Domy (`stavby.py`) u přístupu s jiným kořenem: osoby se párovaly podle čísel z jiného číslování; teď se převedou
   a osoby mimo přístup se vynechají.
 - Časová osa u žijících neprozradí přesné datum narození (dosud bylo dopočitatelné z čísla pro graf).

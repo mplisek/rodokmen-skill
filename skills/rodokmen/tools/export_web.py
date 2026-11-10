@@ -451,6 +451,31 @@ def relation(k):
     return f"{'předek' if male else 'předkyně'} v {g}. generaci ({'pra' * (g - 2)}{base})"
 
 
+def adresy_osob(P, SAME, R):
+    """Adresy stránek osob: P (předci) → slug, RODINA → slug. Stejnojmenné odliší rok, jinak číslo / zkratka osoby."""
+    slugs, rslug, used = {}, {}, set()
+    for k in sorted(P):
+        p = P[k]
+        if placeholder(p) or k in SAME:
+            continue
+        yv = (p.get("y") or "").strip()
+        ys = [] if yv.startswith(("?", "†")) else re.findall(r"\d{4}", yv)   # rok úmrtí do adresy nedávat
+        s = slugify(p["n"] + (" " + ys[0] if ys else ""))
+        if s in used or not s:
+            s = f"{s}-{k}"
+        used.add(s)
+        slugs[k] = s
+    for oid, o in R.items():   # u příbuzných bývá jen úmrtí (zemřelé dítě „† 1879“) – rok odliší stejnojmenné
+        yv = (o.get("y") or "").strip()
+        ys = [] if yv.startswith("?") else re.findall(r"\d{4}", yv)
+        s = slugify(o["n"] + (" " + ys[0] if ys else ""))
+        if s in used or not s:
+            s = f"{s}-{slugify(oid)}"
+        used.add(s)
+        rslug[oid] = s
+    return slugs, rslug
+
+
 def placeholder(p):
     return chronologie.zastupna(p)
 
@@ -880,18 +905,13 @@ def main():
     recs = {k: v for k, v in recs.items() if k not in skryte_zapisy}   # zápisy skrytých osob (i sdílený sňatek) ne
     docs_cfg = [d for d in docs_cfg if not any(kanon(o) in bez_dokladu for o in d.get("osoby", []))]
 
-    slugs, used = {}, set()
-    for k in sorted(P):
-        p = P[k]
-        if placeholder(p) or k in SAME:
-            continue
-        yv = (p.get("y") or "").strip()
-        ys = [] if yv.startswith(("?", "†")) else re.findall(r"\d{4}", yv)   # rok úmrtí do adresy nedávat
-        s = slugify(p["n"] + (" " + ys[0] if ys else ""))
-        if s in used or not s:
-            s = f"{s}-{k}"
-        used.add(s)
-        slugs[k] = s
+    slugs, rslug_vse = adresy_osob(P, SAME, ns["RODINA"])
+    if prevod is not None:   # adresa osoby stejná ve všech verzích webu (odkazy v textech): podle rodokmenu správce
+        s_p, s_r = adresy_osob(ns_spravce["P"], ns_spravce["SAME"], ns_spravce["RODINA"])
+        puv, zpet = {**s_p, **s_r}, {v: k for k, v in prevod.items()}
+        slugs = {k: puv.get(zpet.get(k), s_) for k, s_ in slugs.items()}
+        rslug_vse = {o: puv.get(zpet.get(o), s_) for o, s_ in rslug_vse.items()}
+    used = set(slugs.values()) | set(rslug_vse.values())
     for a, c in list(SAME.items()):
         if c not in slugs:   # hlavní osoba je zástupná (bez jména) nebo chybí – alias nemá kam ukazovat
             print(f"POZOR: SAME {a} -> {c} – osoba {c} je zástupná nebo chybí, alias vynechávám (oprav data/osoby.py)")
@@ -951,15 +971,7 @@ def main():
     # RODINA: osoby mimo přímou linii pro stromový graf. Odkazy: "k12" = přímý předek, "o:zkratka" = osoba z RODINA,
     # "?12" = neznámý předek na místě 12 (sourozenci se tak poznají i bez známých rodičů).
     R = ns["RODINA"]
-    rslug = {}   # klíč z RODINA → adresa stránky osoby: jméno a první rok z y – u příbuzných bývá jen úmrtí
-    for oid, o in R.items():   # (zemřelé dítě „† 1879“), rok je pak jediné, co stejnojmenné odliší
-        yv = (o.get("y") or "").strip()
-        ys = [] if yv.startswith("?") else re.findall(r"\d{4}", yv)
-        s = slugify(o["n"] + (" " + ys[0] if ys else ""))
-        if s in used or not s:
-            s = f"{s}-{slugify(oid)}"
-        used.add(s)
-        rslug[oid] = s
+    rslug = rslug_vse   # klíč z RODINA → adresa stránky osoby (adresy_osob)
 
     def ref(v):
         if isinstance(v, int):
