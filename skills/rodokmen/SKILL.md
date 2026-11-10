@@ -401,7 +401,8 @@ text i tak nečitelný, udělej z plného rozlišení výřez (`x0,y0,x1,y1`), n
 | `ramecek.py <klíč> x0,y0,x1,y1` / `--stranka x0,y0,x1,y1` | rámeček čteného místa + kontrolní obrázek (zlomky výřezu, s `--stranka` celé stránky) |
 | `mista.py pridej "Obec"` / `mista.py` | místa pro mapu (souřadnice z OpenStreetMap) |
 | `brno_encyklopedie.py hledat "text"`, `detail osobnosti:<id>` | Encyklopedie dějin města Brna: osobnosti s adresami, povoláním a hrobem (brněnští předci) |
-| `pozvanky.py pridej "Jméno" [--pristup <id>]` / `seznam` / `prejmenuj p1 "…"` / `pristup p1 <id>` / `nova p1` / `zrus p1` | osobní odkazy na rodinný web (`web.md`) |
+| `pozvanky.py pridej "Jméno" [--pristup <id>]` / `seznam` / `prejmenuj p1 "…"` / `pristup p1 <id>` / `nova p1` / `zrus p1` / `prevest` | osobní odkazy na rodinný web (`web.md`) |
+| `pristupy.py [<id>]` | přehled přístupů k webu: kdo co vidí (přímá linie, rozšířená, vlastní větev, dokumenty) |
 | `zapis.py <soubor> <klíč> <vstup.json> [--sloucit]` | přidá / změní položku v `zaznamy`, `svazky`, `prepisy`… beze změny formátu |
 | `zapis.py --smazat <klíč>` | smaže zápis, který se ukázal jako omyl (zaznamy, prepisy, zvyrazneni; výřezy do `pracovni/smazano_…`) |
 | `slusne.py <skript.py> / curl … / bash x.sh / stav` | brzda proti zablokování archivem – vlastní skripty a curl spouštěj přes ni |

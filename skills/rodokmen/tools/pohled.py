@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
 """Přístupy k webu (data/web.json → „pristupy“) a pohled na rodokmen od jiné výchozí osoby.
 
-Každý přístup má vlastní odpověď na přihlašovací otázku a volitelně výchozí osoby („koren“). Přístup bez kořene vidí
-všechno (jako dosud). Přístup s kořenem vidí jen předky výchozích osob a jejich příbuzné (potomky předků a partnery);
-web se pro něj sestaví zvlášť, takže ostatní větve na serveru vůbec nejsou (export_web.py --pristup, scripts/build.mjs).
+Každý přístup má odpověď na přihlašovací otázku, osobní odkazy, nebo obojí, a volitelně výchozí osoby („koren“).
+Přístup bez kořene vidí všechno (jako dosud). Přístup s kořenem vidí jen svou rozšířenou linii; web se pro něj
+sestaví zvlášť, takže ostatní větve na serveru vůbec nejsou (export_web.py --pristup, scripts/build.mjs).
+- přímá linie = výchozí osoby + jejich předci (stránky Statistiky, Rody, Mapa, Časová osa, Strom, Předci),
+- rozšířená linie = přímá + potomci všech osob přímé linie (sourozenci výchozích osob i předků s větvemi)
+  + u každé z nich partner a rodiče partnera (dál ne),
+- vlastní větev = výchozí osoby + jejich potomci + partneři (rozsah práva „soukrome“).
 
     "prihlaseni": {"otazka": "…", "odpoved": "…"},             ← tahle odpověď vidí všechno (přístup „vse“)
     "pristupy": [
-      {"nazev": "Plíškovi", "odpoved": "…", "koren": [1]},
-      {"nazev": "Rodina Jany", "odpoved": "…", "koren": ["jana-nova"], "texty": false}
+      {"nazev": "Plíškovi", "odpoved": "…", "koren": [1], "prava": {"soukrome": true, "texty": true, "poznamky": true}},
+      {"nazev": "Rodina Jany", "koren": ["jana-nova"], "odkazy": [{"id": "p1", "jmeno": "Jana", "otisk": "<sha256>"}]}
     ]
-koren: čísla předků z P nebo zkratky z RODINA; první určuje číslování (vějíř, rody, předci), další se přidají jako
-příbuzní s vlastní stránkou a vějířem. texty: true = i příběh, zajímavosti, deník a „Co hledáme“ (jinak skryté –
-píšou o celé rodině). poznamky: true = tlačítko „Připomínka“ na stránkách a přehled /poznamky/ (jen Netlify;
-přístup vidí jen poznámky ze svého přístupu, „vse“ všechny). Volitelně „nazev_webu“ a „uvod“ (jako ve web.json) jen pro tento přístup a „rody“ – názvy rodů
+koren: čísla předků z P nebo zkratky z RODINA; první určuje číslování (vějíř, rody, předci, statistiky), další se
+přidají (sjednocení). prava (nevyplněné = false): texty = i texty bez vazby na osobu nebo rod (příběh, deník…),
+poznamky = tlačítko „Připomínka“ a přehled /poznamky/ (jen Netlify), soukrome = soukromé údaje vlastní větve.
+Starší zápis „texty“ / „poznamky“ přímo v přístupu platí jako v prava. odkazy = osobní odkazy (tools/pozvanky.py). Volitelně „nazev_webu“ a „uvod“ (jako ve web.json) jen pro tento přístup a „rody“ – názvy rodů
 nového stromu {"8": ["Dvořákové", "popis"], …}; bez nich se vezmou z LINES, nebo z příjmení pradědečka / prababičky.
-Předci partnerů (rodiče manžela sestry…) v pohledu nejsou – jen partner sám.
+Rodiče partnera v pohledu jsou (odkud pochází), sourozenci a další předci partnera ne.
 """
 import re
 import unicodedata
@@ -34,9 +38,37 @@ def norm_odpoved(text):
     return re.sub(r"[^a-z0-9]", "", t)
 
 
+PRAVA = ("soukrome", "texty", "poznamky")
+
+
+def _prava(p, vse=False):
+    """prava přístupu (nevyplněné = false); starší „texty“ / „poznamky“ přímo v přístupu platí jako v prava."""
+    if vse:
+        return {k: True for k in PRAVA}
+    pr = p.get("prava") if isinstance(p.get("prava"), dict) else {}
+    return {k: bool(pr.get(k, p.get(k, False))) for k in PRAVA}
+
+
+def odkazy_pristupu(p, nazev="?"):
+    """Platné osobní odkazy přístupu [{id, jmeno, otisk, …}]; zrušené („zruseno“) se přeskočí."""
+    seznam = p.get("odkazy") or []
+    if not isinstance(seznam, list) or not all(isinstance(o, dict) for o in seznam):
+        raise SystemExit(f"CHYBA: web.json → pristupy „{nazev}“: odkazy musí být seznam záznamů s id a otiskem.")
+    platne = []
+    for o in seznam:
+        if "zruseno" in o:
+            continue
+        if not re.fullmatch(r"[0-9a-f]{64}", str(o.get("otisk", ""))):
+            raise SystemExit(f"CHYBA: web.json → pristupy „{nazev}“: odkaz {o.get('id', '?')} má neplatný otisk "
+                             f"(nový: python3 -I tools/pozvanky.py nova {o.get('id', '<id>')}).")
+        platne.append(o)
+    return platne
+
+
 def nacti_pristupy(cfg):
-    """Seznam přístupů [{id, nazev, odpoved, koren, texty, …}], nebo None, když web.json „pristupy“ nemá.
-    Přístup „vse“ = prihlaseni.odpoved (vidí všechno). Chyby v nastavení ukončí export se srozumitelnou hláškou."""
+    """Seznam přístupů [{id, nazev, odpoved, odkazy, koren, prava, texty, poznamky, …}], nebo None, když web.json
+    „pristupy“ nemá. Přístup „vse“ = prihlaseni.odpoved (správce: vidí všechno, má všechna práva). Přístup potřebuje
+    odpověď, osobní odkaz, nebo obojí. Chyby v nastavení ukončí export se srozumitelnou hláškou."""
     seznam = cfg.get("pristupy")
     if not seznam:
         return None
@@ -47,19 +79,28 @@ def nacti_pristupy(cfg):
         raise SystemExit("CHYBA: web.json – otevřený web (prihlaseni.otevreny) a přístupy (pristupy) nejdou dohromady.")
     out = []
     if norm_odpoved(login.get("odpoved", "")):
-        poz = cfg["poznamky"] if "poznamky" in cfg else any(p.get("poznamky") for p in seznam)   # správce vidí přehled
-        out.append(dict(id="vse", nazev="všechno", odpoved=login["odpoved"], koren=[], texty=True, poznamky=bool(poz)))
+        poz = cfg["poznamky"] if "poznamky" in cfg else any(_prava(p)["poznamky"] for p in seznam)   # správce vidí přehled
+        out.append(dict(id="vse", nazev="všechno", odpoved=login["odpoved"], odkazy=[], koren=[], texty=True,
+                        poznamky=bool(poz), prava=dict(_prava({}, vse=True), poznamky=bool(poz))))
     for i, p in enumerate(seznam, 1):
         pid = _slug(p.get("nazev", "")) or f"pristup-{i}"
         if pid in ("vse", "_p") or any(x["id"] == pid for x in out):
             raise SystemExit(f"CHYBA: web.json → pristupy: název „{p.get('nazev')}“ se opakuje nebo je vyhrazený – zvol jiný.")
-        if not norm_odpoved(p.get("odpoved", "")):
-            raise SystemExit(f"CHYBA: web.json → pristupy „{p.get('nazev', pid)}“ nemá odpověď (odpoved).")
+        odkazy = odkazy_pristupu(p, p.get("nazev", pid))
+        if not norm_odpoved(p.get("odpoved", "")) and not odkazy:
+            raise SystemExit(f"CHYBA: web.json → pristupy „{p.get('nazev', pid)}“ nemá odpověď (odpoved) ani osobní "
+                             f"odkaz (odkazy) – nikdo by se na něj nedostal.")
         koren = p.get("koren") or []
         if not isinstance(koren, list) or not all(isinstance(k, (int, str)) and not isinstance(k, bool) for k in koren):
             raise SystemExit(f"CHYBA: web.json → pristupy „{p.get('nazev', pid)}“: koren musí být seznam čísel předků nebo zkratek z RODINA.")
-        out.append(dict(p, id=pid, koren=koren, texty=bool(p.get("texty")) or not koren, poznamky=bool(p.get("poznamky"))))
-    odpovedi = [norm_odpoved(p["odpoved"]) for p in out]
+        prava = _prava(p)
+        if not koren:   # přístup bez kořene vidí všechno, i texty (jako dosud)
+            prava["texty"] = True
+        out.append(dict(p, id=pid, koren=koren, odkazy=odkazy, prava=prava, texty=prava["texty"], poznamky=prava["poznamky"]))
+    otisky = [o["otisk"] for p in out for o in p.get("odkazy") or []]
+    if len(set(otisky)) != len(otisky):
+        raise SystemExit("CHYBA: web.json – stejný osobní odkaz (otisk) je u dvou přístupů; každý odkaz patří jen k jednomu.")
+    odpovedi = [norm_odpoved(p.get("odpoved", "")) for p in out if norm_odpoved(p.get("odpoved", ""))]
     if len(set(odpovedi)) != len(odpovedi):
         raise SystemExit("CHYBA: web.json – dva přístupy mají stejnou odpověď; každý přístup potřebuje jinou.")
     return out
@@ -124,35 +165,48 @@ def pohled(ns, koreny, texty=False, rody=None):
             dalsi.add(ref)
             zas += rodice(ref)
 
-    # 3) potomci všech viditelných předků (sourozenci předků, jejich děti…) a 4) partneři
+    # 3) přímá linie = výchozí osoby a jejich předci; k ní potomci všech jejích osob (sourozenci výchozích osob
+    #    i předků a jejich větve až k žijícím)
     vsichni = [k for k in P if norm(k) == k] + list(R)
     deti = {}
     for ref in vsichni:
         for r in rodice(ref):
             if r is not None:
                 deti.setdefault(r, []).append(ref)
-    vidi = predci | dalsi
-    zas = list(vidi)
-    while zas:
-        for d in deti.get(zas.pop(), []):
-            if d not in vidi:
-                vidi.add(d)
-                zas.append(d)
-    partneri = []
-    for pr in ns["PARTNERI"]:
-        partneri.append((norm(pr.get("a")), norm(pr.get("b"))))
+
+    def potomci(od):
+        out, zas = set(od), list(od)
+        while zas:
+            for d in deti.get(zas.pop(), []):
+                if d not in out:
+                    out.add(d)
+                    zas.append(d)
+        return out
+
+    prima = predci | dalsi
+    pokrevni = potomci(prima)
+    # 4) partneři (PARTNERI, partner v RODINA, rodiče společného dítěte) a rodiče partnera – dál ne
+    partner_of = {}
+    pary = [(norm(pr.get("a")), norm(pr.get("b"))) for pr in ns["PARTNERI"]]
     for oid, o in R.items():
-        partneri += [(oid, norm(v)) for v in o.get("partner", [])]
+        pary += [(oid, norm(v)) for v in o.get("partner", [])]
     for ref in vsichni:
-        f, m = rodice(ref)
-        if ref in vidi and f is not None and m is not None:
-            partneri.append((f, m))
-    for a, b in partneri:
-        if a is not None and b is not None and (a in vidi) != (b in vidi):
-            vidi.add(b if a in vidi else a)
+        f, mm = rodice(ref)
+        if f is not None and mm is not None:
+            pary.append((f, mm))
+    for a, b in pary:
+        if a is not None and b is not None and a != b:
+            partner_of.setdefault(a, set()).add(b)
+            partner_of.setdefault(b, set()).add(a)
+    partneri_vidi = {b for a in pokrevni for b in partner_of.get(a, ())} - pokrevni
+    rodice_partneru = {r for b in partneri_vidi for r in rodice(b) if r is not None} - pokrevni - partneri_vidi
+    vidi = pokrevni | partneri_vidi | rodice_partneru
+    vlastni_puv = potomci({norm(k) for k in koreny})
+    vlastni_puv |= {b for a in vlastni_puv for b in partner_of.get(a, ())}
 
     # 5) nové klíče a nové RODINA (zástupci „otec neuveden“ mimo strom předků nejsou osoby – vynechat)
     vidi = {ref for ref in vidi if ref in predci or not _zastupce(osoba(ref))}
+    prima &= vidi
     prevod = {ref: kde[ref] for ref in predci}
     for ref in vidi - predci:
         prevod[ref] = ref if isinstance(ref, str) else f"p{ref}"
@@ -200,6 +254,9 @@ def pohled(ns, koreny, texty=False, rody=None):
               if not s_osobou(i) or m(i["k"]) is not None] if texty else []
     nove = dict(ns, P=nove_p, RODINA=nove_r, SAME=same, LINES=lines, SIDE=side, PARTNERI=nove_partneri,
                 ISSUES=issues, HYPOTEZY=hypotezy)
+    # linie a vlastní větev v nových klíčích (export_web.py je přenese k osobám na web)
+    nove["_linie"] = {prevod[r]: ("prima" if r in prima else "rozsirena") for r in vidi}
+    nove["_vlastni"] = {prevod[r] for r in vlastni_puv & vidi}
     nove["_zapisy"] = ({r for p in list(nove_p.values()) + list(nove_r.values()) for r in p.get("r", [])}
                        | {r for s in side for r in s.get("r", [])})
     return nove, prevod

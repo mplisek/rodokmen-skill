@@ -112,6 +112,25 @@ def rody_osoby(ref, R, _videno=None):
     return out or set().union(set(), *(rody_osoby(p, R, videno) for p in o.get("partner", [])))
 
 
+def stranky_s_daty(site, generovane, texty):
+    """Které stránky mají v této verzi webu data (menu ukáže jen je): stránka → True/False."""
+    lide = site["people"].values()
+    predci = [p for p in lide if not p.get("extra") and p["k"] > 1]
+    domy_path = os.path.join(WEB, "src", "data", "domy.json")
+    try:
+        domy = bool(json.load(open(domy_path, encoding="utf-8")).get("domy")) if os.path.exists(domy_path) else False
+    except ValueError:
+        domy = False
+    return dict(
+        pribeh=bool(site["config"].get("maPribeh")), zajimavosti=generovane.get("zajimavosti.md", False),
+        statistiky=bool(predci), osobnosti=bool(predci), rody=bool(site["lines"]), mapa=bool(site["places"]),
+        domy=domy, vejir=bool(predci), osa=bool(site.get("timeline")), strom=len(site["people"]) > 1, predci=bool(predci),
+        zapisy=bool(site["records"]), dokumenty=bool(site["docs"]),
+        hledame=bool([i for i in site["issues"] if i.get("stav") != "vyřešeno"]) or generovane.get("otazky.md", False)
+        or generovane.get("dotazy.md", False),
+        poznamky=bool(site["config"].get("poznamky")))
+
+
 def text_pro_misto(text):
     """Údaj osoby bez poznámek, podle kterých by se osoba přiřadila k obci, kde nežila: text v závorkách
     („(kniha narozených Libice 727)“, „(Libice nad Doubravou)“, „(rok potvrzuje náhrobek v Libici)“) a okres
@@ -368,7 +387,7 @@ def timeline_data(P, SAME, slugs, people, line_of):
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
 from obraz import najdi_magick   # společný hledač ImageMagicku (tools/obraz.py)
-from pohled import nacti_pristupy, pohled   # noqa: E402 – přístupy k webu a pohled od jiné výchozí osoby (tools/pohled.py)
+from pohled import nacti_pristupy, pohled, _slug as slug_pristupu   # noqa: E402 – přístupy k webu a pohled od jiné výchozí osoby (tools/pohled.py)
 
 
 def magick_bin():
@@ -438,9 +457,19 @@ def poznamky_files(otisky, klice=None):
 AKTUALIZUJTE = "Aktualizujte projekt: python3 -I <skill>/tools/novy_projekt.py <složka projektu>"
 
 
-def load_otisky():
-    """Otisky klíčů osobních odkazů z data/pozvanky.json (tools/pozvanky.py); klíče samotné tam nejsou."""
-    otisky = []
+def _odkazy_web(cfg):
+    """Osobní odkazy přístupů z web.json (pristupy[].odkazy): [(záznam, id přístupu)], jen platné (bez „zruseno“)."""
+    out = []
+    for i, p in enumerate((cfg or {}).get("pristupy") or [], 1):
+        if isinstance(p, dict):
+            pid = slug_pristupu(p.get("nazev") or "") or f"pristup-{i}"   # stejné id jako tools/pohled.py
+            out += [(o, pid) for o in p.get("odkazy") or [] if isinstance(o, dict) and "zruseno" not in o and o.get("otisk")]
+    return out
+
+
+def load_otisky(cfg=None):
+    """Otisky klíčů osobních odkazů z web.json (pristupy[].odkazy) a starší data/pozvanky.json; klíče se nikam neukládají."""
+    otisky = [o["otisk"] for o, _ in _odkazy_web(cfg)]
     for z in jload("pozvanky.json", []):
         if "zruseno" in z:   # zrušený odkaz: záznam zůstává jen kvůli id
             continue
@@ -451,15 +480,18 @@ def load_otisky():
     return otisky
 
 
-def load_klice():
-    """Platné osobní odkazy: otisk klíče → {"id": "p1", "pristup": <id přístupu nebo None = celý web>} (fork: přístupy)."""
-    return {z["otisk"]: dict(id=z.get("id", "?"), pristup=z.get("pristup"))
-            for z in jload("pozvanky.json", []) if "zruseno" not in z and z.get("otisk")}
+def load_klice(cfg=None):
+    """Platné osobní odkazy: otisk klíče → {"id": "p1", "pristup": <id přístupu nebo None = celý web>}
+    – z web.json (pristupy[].odkazy) i ze staršího data/pozvanky.json."""
+    klice = {z["otisk"]: dict(id=z.get("id", "?"), pristup=z.get("pristup"))
+             for z in jload("pozvanky.json", []) if "zruseno" not in z and z.get("otisk")}
+    klice.update({o["otisk"]: dict(id=o.get("id", "?"), pristup=pid) for o, pid in _odkazy_web(cfg)})
+    return klice
 
 
-def ma_pozvanky():
-    """Má projekt osobní odkazy zavedené (data/pozvanky.json s aspoň jedním záznamem, i když jsou všechny zrušené)?"""
-    return bool(jload("pozvanky.json", []))
+def ma_pozvanky(cfg=None):
+    """Má projekt osobní odkazy zavedené (web.json nebo data/pozvanky.json s aspoň jedním záznamem, i zrušeným)?"""
+    return bool(jload("pozvanky.json", [])) or any(isinstance(p, dict) and p.get("odkazy") for p in (cfg or {}).get("pristupy") or [])
 
 
 def section(tpl, name, keep):
@@ -500,7 +532,8 @@ def login_files(cfg, otisky, odkazy=None, pristupy=None, klice=None):
     if contact.get("email"):
         hint = (f'Neznáte odpověď? Napište {html.escape(contact.get("jmeno") or "")} na '
                 f'<a href="mailto:{html.escape(contact["email"])}">{html.escape(contact["email"])}</a>.')
-    question = bool(answer) or bool(pristupy) or not odkazy   # bez otázky i odkazů (místní náhled) stránka jako dřív
+    # otázka, jen když na ni má kdo odpovědět (správce nebo přístup s odpovědí); bez otázky i odkazů stránka jako dřív
+    question = bool(answer) or any(norm_answer(p.get("odpoved", "") or "") for p in pristupy or []) or not odkazy
     tpl = section(section(section(tpl, "odkaz", bool(otisky)), "otazka", question), "odkazy", not question)
     page = (tpl.replace("{{NAZEV}}", html.escape(cfg.get("nazev", "Rodokmen")))
                .replace("{{UVOD}}", html.escape(login.get("uvod", "Tenhle web je jen pro rodinu a příbuzné.")))
@@ -518,7 +551,8 @@ def login_files(cfg, otisky, odkazy=None, pristupy=None, klice=None):
         brana_p = open(sablony[0], encoding="utf-8").read()
         if odkazy and "{{KLICE}}" not in brana_p:
             sys.exit("CHYBA: brána pro přístupy ve web/ ještě neumí osobní odkazy (data/pozvanky.json). " + AKTUALIZUJTE)
-        odpovedi = {hashlib.sha256(("rodokmen:" + norm_answer(p["odpoved"])).encode()).hexdigest(): p["id"] for p in pristupy}
+        odpovedi = {hashlib.sha256(("rodokmen:" + norm_answer(p["odpoved"])).encode()).hexdigest(): p["id"]
+                    for p in pristupy if norm_answer(p.get("odpoved", "") or "")}   # přístup jen s odkazy nemá odpověď
         ids = {p["id"]: p for p in pristupy}
         klice_p = {}
         for o in otisky:
@@ -655,7 +689,7 @@ def main():
     # web.json "puvodni_jmena": true → jméno osoby v původních tvarech ze zápisů (pole zap v osoby.py, „Nowakin / Nováková“);
     # jinak dnešní podoba n. Adresa stránky (slug) je vždy podle n.
     puvodni = lambda p: " / ".join(p["zap"]) if cfg.get("puvodni_jmena") and p.get("zap") else p["n"]
-    otisky, odkazy = load_otisky(), ma_pozvanky()
+    otisky, odkazy = load_otisky(cfg_puvodni), ma_pozvanky(cfg_puvodni)
     if "--nasazeni" in sys.argv and not pristupy and deploy_error(cfg, otisky, odkazy):
         sys.exit(deploy_error(cfg, otisky, odkazy))
     docs_cfg = jload("dokumenty.json", [])
@@ -937,17 +971,26 @@ def main():
     for p in people.values():
         p["lineSlug"] = next((l["slug"] for l in lines.values() if l["k"] == p["line"]), None)
 
+    # předci dalších výchozích osob přístupu (v RODINA, linie „prima“) patří na mapu taky – sjednocení kořenů
+    prima_extra = {rslug[o] for o, l in (ns.get("_linie") or {}).items() if l == "prima" and isinstance(o, str) and o in rslug}
     places = []
     for name, e in jload("mista.json", {}).items():
         if "lat" not in e:
             continue
         rx = re.compile(e.get("re") or re.escape(name))
-        hits = [p for p in people.values() if not p.get("extra") and zil_v(vlastni_text([text_pro_misto(f) for f in p["facts"]], p["sex"] == "M"), rx)]
+        hits = [p for p in people.values() if (not p.get("extra") or p["slug"] in prima_extra) and zil_v(vlastni_text([text_pro_misto(f) for f in p["facts"]], p["sex"] == "M"), rx)]
         byline = {}
         for p in sorted(hits, key=lambda p: p["k"]):
             byline.setdefault(p["line"] or 0, []).append(p["slug"])
-        if e.get("hypoteza"):
-            byline = {e.get("rod", 0): []}
+        if e.get("hypoteza"):   # hypotéza = text; u přístupu jen s právem texty a jen v rodu, který přístup má
+            rod_h = e.get("rod", 0)
+            if pristup and not texty:
+                continue
+            if prevod is not None:
+                rod_h = prevod.get(rod_h) if isinstance(rod_h, int) else None
+                if not isinstance(rod_h, int) or not 8 <= rod_h <= 15:
+                    continue
+            byline = {rod_h: []}
         if not byline:
             continue
         yrs = [int(y) for p in hits for y in re.findall(r"\b1[4-9]\d\d\b", p["y"] or "")]
@@ -1063,7 +1106,27 @@ def main():
         k = SAME.get(k, k) if isinstance(k, int) else k
         return rody_k.get(line_of(k)) if isinstance(k, int) and k >= 8 else None
 
-    site = dict(config=public_cfg, places=places, root=slugs[1], aliases={a: slugs[a] for a in SAME}, people=people,
+    # linie („prima“ = výchozí osoby a předci, „rozsirena“ = ostatní) a vlastní větev (tools/pohled.py); celý web
+    # (správce, projekt bez přístupů): předci = přímá, RODINA = rozšířená, všichni ve vlastní větvi
+    linie_ns, vlastni_ns = ns.get("_linie"), ns.get("_vlastni")
+    oid_slug = {s_: o_ for o_, s_ in rslug.items()}
+    for s_, p_ in people.items():
+        ref_ = oid_slug.get(s_) if p_.get("extra") else p_["k"]
+        p_["linie"] = (linie_ns or {}).get(ref_, "rozsirena" if p_.get("extra") else "prima") if linie_ns is not None \
+            else ("rozsirena" if p_.get("extra") else "prima")
+        p_["vlastni"] = (ref_ in vlastni_ns) if vlastni_ns is not None else True
+    prava_pristupu = dict(pristup["prava"]) if pristup else dict(soukrome=True, texty=True, poznamky=bool(public_cfg.get("poznamky")))
+    koreny_slugy = [slugs[1]]
+    if pristup and prevod is not None:
+        for k_ in pristup["koren"][1:]:
+            n_ = prevod.get(puvodni_same.get(k_, k_) if isinstance(k_, int) else k_)   # k_ je v původním číslování
+            s_ = slugs.get(n_) if isinstance(n_, int) else rslug.get(n_)
+            if s_ and s_ not in koreny_slugy:
+                koreny_slugy.append(s_)
+    site_pristup = dict(id=pristup["id"] if pristup else "vse", nazev=pristup["nazev"] if pristup else "všechno",
+                        koreny=koreny_slugy, prava=prava_pristupu)
+
+    site = dict(config=public_cfg, pristup=site_pristup, places=places, root=slugs[1], aliases={a: slugs[a] for a in SAME}, people=people,
                 families=families, others=others, records=records, lines=lines,
                 issues=issue_rows(ISSUES, slug_otazky, rod_otazky), stats=stats, hypotheses=hypotheses,
                 docs=[dict(img=d["img"], caption=d["popis"], people=[slugs.get(k) or rslug[k] for k in d.get("osoby", []) if k in slugs or k in rslug],
@@ -1071,7 +1134,7 @@ def main():
                       for d in docs_cfg if os.path.exists(os.path.join(VYREZY, d["img"] + ".jpg"))],
                 timeline=timeline_data(P, SAME, slugs, people, line_of))
 
-    write(os.path.join(WEB, "src", "data", "site.json"), json.dumps(site, ensure_ascii=False, indent=1))
+    generovane = {}
     for src, dst in (("archivni_dotazy.md", "dotazy.md"), ("otazky_pro_rodinu.md", "otazky.md"),
                      ("research_log.md", "denik.md"), ("zajimavosti.md", "zajimavosti.md")):
         path = os.path.join(DATA, src)
@@ -1080,6 +1143,9 @@ def main():
         if src == "otazky_pro_rodinu.md":   # otázky pro rodinu podle rodů (8–15), obecné oddíly nahoře
             text = podle_rodu(text, lines)
         write(os.path.join(gen_dir, dst), text)
+        generovane[dst] = bool(text.strip())
+    site["stranky"] = stranky_s_daty(site, generovane, texty)
+    write(os.path.join(WEB, "src", "data", "site.json"), json.dumps(site, ensure_ascii=False, indent=1))
     shutil.rmtree(os.path.join(gen_dir, "pribehy"), ignore_errors=True)
     if multi_stories:
         for story in stories:
@@ -1090,8 +1156,9 @@ def main():
     story = stories[0]["text"] if stories else "---\ntitle: Příběh\nlead: ''\n---\n"
     write(os.path.join(gen_dir, "pribeh.md"), strip_comments(story))
 
-    gated = login_files(cfg_puvodni, otisky, odkazy, pristupy, load_klice())
-    question = bool(pristupy) or bool(norm_answer((cfg_puvodni.get("prihlaseni") or {}).get("odpoved", "")))
+    gated = login_files(cfg_puvodni, otisky, odkazy, pristupy, load_klice(cfg_puvodni))
+    question = bool(norm_answer((cfg_puvodni.get("prihlaseni") or {}).get("odpoved", ""))) or \
+        any(norm_answer(p.get("odpoved", "") or "") for p in pristupy or [])
     login_state = (f"zapnuté (otázka {'ano' if question else 'ne'}, osobních odkazů {len(otisky)})" if gated
                    else "VYPNUTÉ (web je otevřený)")
 

@@ -222,35 +222,49 @@ zkus v `launch.json` `"runtimeExecutable": "node"` a `"runtimeArgs": ["web/node_
   jen přes ni, bez otázky nepustí nikoho. Export to při každém spuštění připomene hláškou POZOR.
 
 ## Více přístupů – každá větev rodiny vidí jen svou část
-Když web čte víc rodin (manželé, rodina sestry), může mít každá vlastní odpověď na přihlašovací otázku a vidět jen
-svou část rodokmenu. Ve `web.json`:
+Když web čte víc rodin (manželé, rodina sestry, větve sourozenců), dostane každá vlastní přístup a vidí jen svou část
+rodokmenu. Ve `web.json`:
 ```json
 "prihlaseni": {"otazka": "Rodinná otázka", "odpoved": "…"},
 "pristupy": [
-  {"nazev": "Plíškovi", "odpoved": "…", "koren": [1]},
-  {"nazev": "Rodina Jany", "odpoved": "…", "koren": ["jana-nova"], "rody": {"8": ["Novákové", "Kováři z Holic"]}},
-  {"nazev": "Děti", "odpoved": "…", "koren": [2, 3], "texty": true}
+  {"nazev": "Plíškovi", "odpoved": "…", "koren": [1], "prava": {"soukrome": true, "texty": true, "poznamky": true}},
+  {"nazev": "Rodina Jany", "koren": ["jana-nova"], "rody": {"8": ["Novákové", "Kováři z Holic"]},
+   "odkazy": [{"id": "p1", "jmeno": "Jana", "otisk": "…", "vytvoreno": "2026-11-10"}]},
+  {"nazev": "Děti", "odpoved": "…", "koren": [2, 3]}
 ]
 ```
-- `prihlaseni.odpoved` vidí všechno (přístup `vse`; když chybí, celý web vidí jen správce v náhledu). Každý přístup musí
-  mít **jinou** odpověď – podle ní web pozná, kdo se přihlásil. Otázka je jedna společná: formuluj ji obecně
-  („Jak se jmenuje náš rodinný pes?“ – každá rodina má jinou odpověď) nebo ji vynech a dej rodinám heslo.
-- `koren` = výchozí osoby (čísla z `P` nebo zkratky z `RODINA`). První určuje číslování: úvod, vějíř, rody a Předci jsou
-  od ní. Další se přidají s předky jako příbuzní (vlastní stránky a vějíře). Přístup bez `koren` vidí všechno.
-- Přístup s `koren` vidí předky výchozích osob, jejich potomky (sourozence předků, jejich rodiny až do dneška) a partnery –
-  **ne předky partnerů** (rodina manžela sestry). Zápisy, výřezy, dokumenty, mapa, Domy a Statistiky jen z těchto osob.
-- Texty o celé rodině (příběh, zajímavosti, deník, „Co hledáme“, hypotézy, úvod) přístup s `koren` nevidí, ledaže
-  `"texty": true`. Vlastní úvod a název webu: `"uvod": {…}`, `"nazev_webu": "…"`. Názvy rodů: `"rody"` (jinak z `LINES`
+- `prihlaseni.odpoved` je přístup správce (`vse`): vidí všechno a má všechna práva (když chybí, celý web vidí jen
+  správce v náhledu).
+- **Vstup:** přístup má odpověď (`odpoved`), osobní odkazy (`odkazy`), nebo obojí – bez obojího export skončí chybou.
+  Každá odpověď musí být **jiná** (podle ní web pozná, kdo se přihlásil). Odkazy zakládá `tools/pozvanky.py`
+  (`pridej "Jméno" --pristup <id>`), ve `web.json` je u nich jen otisk klíče. Starší `data/pozvanky.json` převede
+  `pozvanky.py prevest`; odkazy na celý web (bez přístupu) zůstávají v `data/pozvanky.json`.
+- **Práva** (`prava`, nevyplněné = `false`): `texty` = texty bez vazby na osobu nebo rod (příběh, zajímavosti,
+  deník, „Co hledáme“, hypotézy, úvod), `poznamky` = tlačítko Připomínka a přehled poznámek, `soukrome` = soukromé
+  údaje vlastní větve (připravuje se). Starší `"texty": true` / `"poznamky": true` přímo v přístupu platí jako v `prava`.
+  Přístup bez `koren` vidí všechno včetně textů.
+- **`koren`** = výchozí osoby (čísla z `P` nebo zkratky z `RODINA`); víc osob = sjednocení. První určuje číslování:
+  úvod, vějíř, rody, Předci a Statistiky jsou od ní.
+- **Kdo je ve verzi webu přístupu:**
+  - **přímá linie** – výchozí osoby a jejich předci; jen z nich jsou Statistiky, Rody, Mapa, Časová osa, Strom a Předci;
+  - **rozšířená linie** – navíc sourozenci výchozích osob i všech předků s větvemi až k žijícím, u každé osoby partner
+    a **rodiče partnera** (sourozenci a další předci partnera ne); ostatní stránky (osoby, zápisy, dokumenty…);
+  - **vlastní větev** – výchozí osoby, jejich potomci a partneři (rozsah práva `soukrome`).
+  Osoby mimo rozšířenou linii ve verzi webu přístupu vůbec nejsou. Menu ukáže jen stránky, které v přístupu mají data.
+- Vlastní úvod a název webu: `"uvod": {…}`, `"nazev_webu": "…"`. Názvy rodů: `"rody"` (jinak z `LINES`
   nebo z příjmení pradědečka / prababičky).
+- **Kdo co vidí:** `python3 -I tools/pristupy.py` (souhrn za přístupy), `pristupy.py <id>` (seznam osob) – projdi ho
+  před zveřejněním a pak každý přístup na testovacím webu.
 - `npm run build` sestaví **samostatnou verzi webu pro každý přístup** (`dist/_p/<id>/`, id vypíše
   `python3 -I tools/export_web.py --seznam-pristupu`). Brána (Netlify i nginx) podle přihlášení posílá jen tu verzi;
   ostatní větve na serveru pro daný přístup vůbec nejsou a cizí verze nejde otevřít ani přímou adresou. Build trvá
   déle (× počet přístupů). Náhled jednoho přístupu: `npm run nahled -- --pristup <id>`.
 - Před zveřejněním projdi s uživatelem náhled **každého** přístupu (`soukromi.md`) – co která rodina uvidí.
 - **Osobní odkazy s přístupy:** `pozvanky.py pridej "Teta Jana" --pristup <id>` – teta po otevření odkazu vidí jen
-  verzi webu pro ten přístup (stejně, jako by odpověděla jeho odpovědí); bez `--pristup` vede odkaz na celý web
-  (přístup `vse`, ten musí existovat – `prihlaseni.odpoved`). Změna: `pozvanky.py pristup p1 <id>`. Poznámky
-  fungují i pro příchozí přes odkaz (podle `poznamky` jejich přístupu).
+  verzi webu pro ten přístup (stejně, jako by odpověděla jeho odpovědí); odkaz se zapíše k přístupu do `web.json`.
+  Bez `--pristup` vede odkaz na celý web (přístup `vse`, ten musí existovat – `prihlaseni.odpoved`) a zůstane
+  v `data/pozvanky.json`. Změna: `pozvanky.py pristup p1 <id>`. Poznámky fungují i pro příchozí přes odkaz
+  (podle práva `poznamky` jejich přístupu).
 
 ## Poznámky ke stránkám (revize, připomínky, nápady) – jen Netlify
 `"poznamky": true` ve `web.json` (web bez přístupů) nebo u přístupu v `pristupy` zapne na každé stránce tlačítko

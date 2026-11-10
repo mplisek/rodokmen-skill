@@ -10,6 +10,12 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
+## Nevydáno
+
+### Nové
+- **Přístupy pro větve rodiny – fáze 1:** u přístupu objekt `prava` (`soukrome`, `texty`, `poznamky`; nevyplněné = false) a osobní odkazy přímo ve `web.json` (`pristupy[].odkazy`, převod `pozvanky.py prevest`); přístup může mít jen odkazy bez odpovědi. Ve verzi webu přístupu je jeho **přímá linie** (Statistiky, Rody, Mapa, Časová osa, Strom, Předci) a **rozšířená linie** (sourozenci výchozích osob i předků s větvemi, partneři a nově i rodiče partnerů); u osob příznak linie a vlastní větve. Menu ukazuje jen stránky s daty. Nový přehled `tools/pristupy.py` – kdo co vidí.
+- **Strom ukazuje jen přímou linii** (předky), i na webu bez přístupů; sourozenci a jejich rodiny jsou dál na stránkách osob.
+
 ## 0.9.2-fork.1 – 9. 11. 2026
 
 Fork na originálu 0.9.2 (zveřejnění na Cloudflare, kontrola nové verze proti GitHubu – viz níže) a navíc:

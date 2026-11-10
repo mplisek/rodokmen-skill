@@ -43,6 +43,20 @@ class Nastaveni(unittest.TestCase):
             with self.subTest(cfg=cfg), self.assertRaises(SystemExit):
                 ph.nacti_pristupy(cfg)
 
+    def test_odkazy_a_prava(self):
+        o1, o2 = hashlib.sha256(b"a").hexdigest(), hashlib.sha256(b"b").hexdigest()
+        # správce má poznámky, i když je přístup zapíná jen v novém zápisu „prava“
+        p = ph.nacti_pristupy({"prihlaseni": {"odpoved": "x"},
+                               "pristupy": [{"nazev": "A", "odpoved": "a", "koren": [3], "prava": {"poznamky": True}}]})
+        self.assertTrue(p[0]["poznamky"])
+        for cfg in ({"pristupy": [{"nazev": "A", "odkazy": [{"id": "p1", "otisk": o1, "zruseno": "2026-01-01"}]}]},   # jen zrušený
+                    {"pristupy": [{"nazev": "A", "odkazy": [{"id": "p1", "otisk": o1}]},                          # stejný otisk
+                                  {"nazev": "B", "odkazy": [{"id": "p2", "otisk": o1}]}]}):
+            with self.subTest(cfg=cfg), self.assertRaises(SystemExit):
+                ph.nacti_pristupy(cfg)
+        p = ph.nacti_pristupy({"pristupy": [{"nazev": "Włodek", "koren": [3], "odkazy": [{"id": "p1", "otisk": o2}]}]})
+        self.assertEqual(p[0]["id"], ph._slug("Włodek"))
+
 
 class Pohled(unittest.TestCase):
     def setUp(self):
@@ -57,9 +71,10 @@ class Pohled(unittest.TestCase):
         self.assertEqual(nove["P"][1]["n"], P[3]["n"])
         self.assertEqual(nove["P"][2]["n"], P[6]["n"])                 # otec matky = nový č. 2
         self.assertEqual(nove["P"][1]["sex"], "F")
-        otcovi = {k for k in P if k >= 4 and bin(k)[3] == "0"}
-        self.assertFalse(otcovi & set(prevod))                         # otcova větev (předci č. 2) chybí úplně
-        self.assertEqual(prevod[2], "p2")                              # otec jen jako manžel
+        otcovi = {k for k in P if k >= 8 and bin(k)[3] == "0"}
+        self.assertFalse(otcovi & set(prevod))                         # otcova větev od prarodičů otce chybí úplně
+        self.assertEqual(prevod[2], "p2")                              # otec jen jako manžel…
+        self.assertTrue({4, 5} <= set(prevod))                         # …a jeho rodiče (rodiče partnera, zadání)
         self.assertEqual(nove["RODINA"]["p1"]["otec"], "p2")           # syn: otec manžel, matka výchozí osoba
         self.assertEqual(nove["RODINA"]["p1"]["matka"], 1)
         self.assertEqual(nove["ISSUES"], [])                           # texty o celé rodině skryté
@@ -80,7 +95,8 @@ class Pohled(unittest.TestCase):
         self.assertEqual(nove["LINES"][8], ("Novákové z Holic", "popis"))
         _, prevod = ph.pohled(self.ns, ["marie-novakova"])
         self.assertIn(3, prevod)                                       # Eva jako manželka potomka předků ano…
-        self.assertFalse({k for k in P if k >= 6 and bin(k)[3] == "1"} & set(prevod))   # …její předci ne
+        self.assertTrue({6, 7} <= set(prevod))                          # …její rodiče (rodiče partnera) ano…
+        self.assertFalse({k for k in P if k >= 12 and bin(k)[3] == "1"} & set(prevod))  # …další její předci ne
 
     def test_vice_korenu_sjednoti(self):
         nove, _ = ph.pohled(self.ns, [2, 3])
@@ -154,6 +170,25 @@ class ExportPristupu(unittest.TestCase):
         spust(self.p, "export_web.py", "--pristup", "marie")
         site = json.loads((self.p / "web" / "src" / "data" / "site.json").read_text(encoding="utf-8"))
         self.assertFalse(site["config"]["poznamky"])
+
+
+class PrehledPristupu(unittest.TestCase):
+    """tools/pristupy.py: kdo co vidí (pomůcka k testům přístupů)."""
+
+    def test_souhrn_a_detail(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "ukazka"
+            self.assertEqual(novy_projekt(p, "--ukazka").returncode, 0)
+            cfg_path = p / "data" / "web.json"
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+            cfg["prihlaseni"]["odpoved"] = "spravce"
+            cfg["pristupy"] = [{"nazev": "Matka", "koren": [3], "odkazy": [{"id": "p1", "jmeno": "X",
+                                "otisk": hashlib.sha256(b"k").hexdigest()}], "prava": {"soukrome": True}}]
+            cfg_path.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+            out = spust(p, "pristupy.py").stdout
+            self.assertIn("== matka (Matka) – vstup: odkazy 1; práva: soukrome", out)
+            self.assertRegex(out, r"osob: \d+ \(přímá linie \d+, rozšířená \d+, vlastní větev \d+\)")
+            self.assertIn("-- Přímá linie:", spust(p, "pristupy.py", "matka").stdout)
 
 
 if __name__ == "__main__":

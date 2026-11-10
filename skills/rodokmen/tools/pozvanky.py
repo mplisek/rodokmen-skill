@@ -9,9 +9,11 @@
   python3 -I tools/pozvanky.py prejmenuj p1 "Jana Nováková"
   python3 -I tools/pozvanky.py nova p1                   náhrada ztraceného odkazu, starý přestane platit
   python3 -I tools/pozvanky.py zrus p1                   zrušení odkazu (záznam zůstane bez otisku, id se znovu nepoužije)
+  python3 -I tools/pozvanky.py prevest                   přesune odkazy přístupů ze staršího data/pozvanky.json do web.json
   (Windows: python -I -X utf8 …)
 
-V data/pozvanky.json je u každého odkazu jen otisk klíče (SHA-256), klíč sám se nikam neukládá.
+Odkazy na verzi webu pro přístup jsou ve web.json u přístupu (pristupy[].odkazy), odkazy na celý web v data/pozvanky.json.
+U každého odkazu je jen otisk klíče (SHA-256), klíč sám se nikam neukládá.
 Adresa odkazu je prihlaseni.adresa z data/web.json. Změny platí na webu až po nasazení (`npm run nasadit`):
 export vloží otisky do brány web/netlify/edge-functions/brana.js. Docker/CapRover osobní odkazy neumí.
 """
@@ -30,27 +32,75 @@ def otisk(klic):
     return hashlib.sha256(klic.encode()).hexdigest()
 
 
-def load(data_dir):
-    path = os.path.join(data_dir, SOUBOR)
+def _web(data_dir):
+    path = os.path.join(data_dir, "web.json")
     if not os.path.exists(path):
-        return []
+        return None, path
     with open(path, encoding="utf-8") as f:
-        return json.load(f)
+        return json.load(f), path
 
 
-def save(data_dir, odkazy):
-    """Celý soubor naráz přes dočasný soubor: při chybě zápisu zůstane původní."""
+def _id_pristupu(p, i):
+    from pohled import _slug   # stejné id jako export webu (tools/pohled.py)
+    return _slug(p.get("nazev", "")) or f"pristup-{i}"
+
+
+def load(data_dir):
+    """Všechny odkazy jako jeden seznam: z data/pozvanky.json (celý web, starší i přístupy) a z web.json
+    (pristupy[].odkazy, s doplněným „pristup“)."""
     path = os.path.join(data_dir, SOUBOR)
+    odkazy = []
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            odkazy = json.load(f)
+    cfg, _ = _web(data_dir)
+    for i, p in enumerate((cfg or {}).get("pristupy") or [], 1):
+        if isinstance(p, dict):
+            odkazy += [dict(o, pristup=_id_pristupu(p, i)) for o in p.get("odkazy") or [] if isinstance(o, dict)]
+    return odkazy
+
+
+def _zapis(path, data, indent):
+    """Celý soubor naráz přes dočasný soubor: při chybě zápisu zůstane původní."""
     tmp = path + ".tmp"
     try:
         with open(tmp, "w", encoding="utf-8", newline="\n") as f:
-            json.dump(odkazy, f, ensure_ascii=False, indent=1)
+            json.dump(data, f, ensure_ascii=False, indent=indent)
             f.write("\n")
         os.replace(tmp, path)
     except BaseException:
         if os.path.exists(tmp):
             os.remove(tmp)
         raise
+
+
+def save(data_dir, odkazy):
+    """Odkazy přístupů, které ve web.json existují, zapíše k přístupu (pristupy[].odkazy, bez pole „pristup“);
+    ostatní (celý web) do data/pozvanky.json."""
+    cfg, wpath = _web(data_dir)
+    ids = {}
+    for i, p in enumerate((cfg or {}).get("pristupy") or [], 1):
+        if isinstance(p, dict):
+            ids[_id_pristupu(p, i)] = p
+    do_webu = {pid: [] for pid in ids}
+    zbytek = []
+    for z in odkazy:
+        if z.get("pristup") in ids:
+            do_webu[z["pristup"]].append({k: v for k, v in z.items() if k != "pristup"})
+        else:
+            zbytek.append(z)
+    if ids:
+        for pid, p in ids.items():
+            if do_webu[pid]:
+                p["odkazy"] = do_webu[pid]
+            else:
+                p.pop("odkazy", None)
+        with open(wpath, encoding="utf-8") as f:
+            puvodni = f.read()
+        _zapis(wpath, cfg, 4 if '\n    "' in puvodni else 1)
+    path = os.path.join(data_dir, SOUBOR)
+    if zbytek or os.path.exists(path):
+        _zapis(path, zbytek, 1)
 
 
 def adresa(data_dir):
@@ -62,15 +112,18 @@ def adresa(data_dir):
 
 
 def pristupy(data_dir):
-    """Id přístupů z data/web.json → pristupy (fork), nebo None, když web přístupy nemá."""
+    """Id přístupů z data/web.json → pristupy, nebo None, když web přístupy nemá."""
     try:
-        with open(os.path.join(data_dir, "web.json"), encoding="utf-8") as f:
-            cfg = json.load(f)
-    except (OSError, ValueError):
+        cfg, _ = _web(data_dir)
+    except ValueError:
         return None
-    from pohled import nacti_pristupy   # stejné id jako export webu (tools/pohled.py)
-    seznam = nacti_pristupy(cfg)
-    return [p["id"] for p in seznam] if seznam else None
+    seznam = [_id_pristupu(p, i) for i, p in enumerate((cfg or {}).get("pristupy") or [], 1) if isinstance(p, dict)]
+    if not seznam:
+        return None
+    from pohled import norm_odpoved
+    if norm_odpoved(((cfg or {}).get("prihlaseni") or {}).get("odpoved", "")):
+        seznam.insert(0, "vse")   # správce: odkaz na celý web
+    return seznam
 
 
 def over_pristup(data_dir, pid):
@@ -94,12 +147,18 @@ def vypis_odkaz(data_dir, jmeno, klic):
 
 def main(argv, data_dir, today):
     cmd, args = (argv[0], argv[1:]) if argv else ("", [])
+    if cmd == "prevest" and not args:
+        odkazy = load(data_dir)
+        save(data_dir, odkazy)
+        n = sum(1 for z in odkazy if z.get("pristup"))
+        print(f"Odkazy přístupů jsou ve web.json ({n}), odkazy na celý web v data/pozvanky.json ({len(odkazy) - n}).")
+        return 0
     if cmd == "seznam" and not args:
         odkazy = [z for z in load(data_dir) if "zruseno" not in z]
         if not odkazy:
             print("Žádné odkazy. Nový: pozvanky.py pridej \"Jméno\"")
         for z in odkazy:
-            print(f"{z['id']:>4}  {z['vytvoreno']}  {z['jmeno']}" + (f"  (přístup {z['pristup']})" if z.get("pristup") else ""))
+            print(f"{z.get('id', '?'):>4}  {z.get('vytvoreno', '')}  {z.get('jmeno', '')}" + (f"  (přístup {z['pristup']})" if z.get("pristup") else ""))
         return 0
     pid = None
     if cmd == "pridej" and len(args) == 3 and args[1] == "--pristup":
@@ -111,7 +170,7 @@ def main(argv, data_dir, today):
     if cmd == "pridej" and len(args) == 1 and args[0].strip():
         odkazy = load(data_dir)
         klic = secrets.token_urlsafe(16)   # 128 bitů, 22 znaků
-        cisla = [int(z["id"][1:]) for z in odkazy]
+        cisla = [int(z["id"][1:]) for z in odkazy if str(z.get("id", ""))[1:].isdigit()]
         odkazy.append({"id": f"p{max(cisla, default=0) + 1}", "jmeno": args[0].strip(),
                        "otisk": otisk(klic), "vytvoreno": today, **({"pristup": pid} if pid and pid != "vse" else {})})
         save(data_dir, odkazy)

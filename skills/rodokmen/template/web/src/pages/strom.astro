@@ -1,6 +1,6 @@
 ---
-// Whole-family tree: direct ancestors (Kekulé numbers) plus everyone from RODINA (siblings, their partners, children,
-// partners' ancestors). One row per generation; every card can open its parents (▲), siblings and partners/children.
+// Family tree of the direct line: ancestors (Kekulé numbers) and ancestors of further root persons of the access
+// (linie "prima"); siblings and their branches are on person pages. One row per generation; every card can open its parents (▲), siblings and partners/children.
 // Lines may cross – that is expected in a family with intermarriages.
 import Base from '../layouts/Base.astro';
 import { people, others, byK, lineByK, records, href } from '../lib/data.js';
@@ -14,7 +14,8 @@ for (const p of Object.values(people).filter((x) => !x.extra)) {
     nt: p.side.filter((e) => !e.id).map((e) => ({ n: e.name, r: e.rel ?? 'příbuzný', y: e.years ?? '', t: e.text, z: recs(e.records) })),
   };
 }
-for (const o of others) {
+// Strom ukazuje přímou linii (výchozí osoby a předky, i předky dalších výchozích osob přístupu)
+for (const o of others.filter((x) => !x.slug || people[x.slug]?.linie !== 'rozsirena')) {
   nodes[o.id] = { n: o.name, y: o.years, sex: o.sex, o: 1, u: o.slug ? href.person(o.slug) : undefined, st: o.status, fa: o.father, mo: o.mother, pa: o.partners, f: o.facts, t: o.note, z: recs(o.records) };
 }
 const json = JSON.stringify(nodes).replace(/</g, '\\u003c');
@@ -33,7 +34,7 @@ const names = [...new Set(Object.values(nodes).map((p) => p.n))].sort((a, b) => 
       <button type="button" data-act="line">Přímá linie</button>
       <button type="button" data-act="fit">Celý</button>
     </span>
-    <span class="small muted fan-hint">▲ nad osobou ukáže rodiče, pod jménem sourozence a potomky. Kolečkem přibližujte, tažením posouvejte.</span>
+    <span class="small muted fan-hint">▲ nad osobou ukáže rodiče (přímá linie; sourozenci jsou na stránkách osob). Kolečkem přibližujte, tažením posouvejte.</span>
   </div>
   <div class="tree-stage">
     <div class="tree-canvas"><svg class="tree-lines"></svg></div>

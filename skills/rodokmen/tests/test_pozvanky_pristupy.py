@@ -67,20 +67,34 @@ class PozvankyPristupy(unittest.TestCase):
         self.assertIn('id="f"', login)
         self.assertIn("Máte osobní odkaz?", login)
 
+        # odkazy přístupů jsou ve web.json u přístupu (jen otisk), odkaz na celý web v data/pozvanky.json
+        cfg = json.loads((self.p / "data" / "web.json").read_text(encoding="utf-8"))
+        u_pristupu = {p["nazev"]: [o["jmeno"] for o in p.get("odkazy", [])] for p in cfg["pristupy"]}
+        self.assertEqual(u_pristupu, {"Matčina rodina": ["Teta Jana"], "Marie": ["Marie"]})
+        self.assertNotIn(teta, (self.p / "data" / "web.json").read_text(encoding="utf-8"))
+        poz = self.p / "data" / "pozvanky.json"
+        self.assertEqual([z["jmeno"] for z in json.loads(poz.read_text(encoding="utf-8"))], ["Strýc Karel"])
+
         # přístup, který ve web.json není: pozvanky.py ho odmítne, export taky (ruční úprava pozvanky.json)
         r = self.pridej("Cizí", "--pristup", "neexistuje", check=False)
         self.assertEqual(r.returncode, 1)
         self.assertIn("neexistuje", r.stderr)
-        poz = self.p / "data" / "pozvanky.json"
         data = json.loads(poz.read_text(encoding="utf-8"))
         data[0]["pristup"] = "zmizely"
         poz.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
         r = spust(self.p, "export_web.py", check=False)
         self.assertNotEqual(r.returncode, 0)
-        self.assertIn("pozvanky.py pristup p1", r.stdout + r.stderr)
+        self.assertIn("pozvanky.py pristup p2", r.stdout + r.stderr)
+        self.assertIn("vede na přístup marie", spust(self.p, "pozvanky.py", "pristup", "p2", "marie").stdout)
         self.assertIn("vede na přístup marie", spust(self.p, "pozvanky.py", "pristup", "p1", "marie").stdout)
         spust(self.p, "export_web.py")
         self.assertEqual(self.mapa("edge-functions/brana.js", "KLICE")[sha(teta)], "marie")
+        self.assertEqual(self.mapa("edge-functions/brana.js", "KLICE")[sha(stryc)], "marie")
+        # zpět na celý web (vse – správce má odpověď): odkaz se vrátí do data/pozvanky.json
+        self.assertIn("vede na celý web", spust(self.p, "pozvanky.py", "pristup", "p1", "vse").stdout)
+        self.assertIn("Teta Jana", poz.read_text(encoding="utf-8"))
+        spust(self.p, "export_web.py")
+        self.assertEqual(self.mapa("edge-functions/brana.js", "KLICE")[sha(teta)], "vse")
 
 
 class CloudflareBezPristupu(unittest.TestCase):
