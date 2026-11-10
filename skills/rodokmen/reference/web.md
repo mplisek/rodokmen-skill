@@ -245,8 +245,8 @@ rodokmenu. Ve `web.json`:
   (`pridej "Jméno" --pristup <id>`), ve `web.json` je u nich jen otisk klíče. Starší `data/pozvanky.json` převede
   `pozvanky.py prevest`; odkazy na celý web (bez přístupu) zůstávají v `data/pozvanky.json`.
 - **Práva** (`prava`, nevyplněné = `false`): `texty` = texty bez vazby na osobu nebo rod (příběh, zajímavosti,
-  deník, „Co hledáme“, hypotézy, úvod), `poznamky` = tlačítko Připomínka a přehled poznámek, `soukrome` = soukromé
-  údaje vlastní větve (připravuje se). Starší `"texty": true` / `"poznamky": true` přímo v přístupu platí jako v `prava`.
+  deník, „Co hledáme“, hypotézy, úvod), `poznamky` = tlačítko Připomínka a přehled poznámek, `soukrome` = plné údaje
+  žijících z vlastní větve, kteří mají zapsaný souhlas, a údaje označené jako soukromé (`soukromi.md`). Starší `"texty": true` / `"poznamky": true` přímo v přístupu platí jako v `prava`.
   Přístup bez `koren` vidí všechno včetně textů.
 - **`koren`** = výchozí osoby (čísla z `P` nebo zkratky z `RODINA`); víc osob = sjednocení. První určuje číslování:
   úvod, vějíř, rody, Předci a Statistiky jsou od ní.

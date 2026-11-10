@@ -7,6 +7,19 @@
   úmrtí (žádný rok úmrtí v `y`, žádný fakt „† …“) nechá jen jméno, rok narození a vazby – bez faktů, poznámky, zápisů,
   sňatku na stránce rodiny a bez místa na mapě. Platí pro `P` i `RODINA`; počet vypíše `npm run data`.
   Zemřelému s neznámým rokem úmrtí doplň do `f` „† po 1990“ (nebo do `y` rok úmrtí), jinak zůstane skrytý.
+- **Souhlas žijícího** (zapisuj jen s výslovným souhlasem dané osoby): u osoby v `P` i `RODINA`
+  `souhlas={"kdo": "Eva Nováková", "datum": "2026-11-10", "rozsah": ["udaje", "doklady"]}` (kdo souhlasil – osoba sama,
+  u dětí rodič). Plné údaje se pak ukážou jen správci a přístupům s právem `soukrome`, u kterých je osoba ve **vlastní
+  větvi** (`web.md`, „Více přístupů“); ostatní ji dál vidí jen jménem a rokem. `rozsah` bez `udaje` = údaje skryté.
+- **Ruční soukromí:** `soukrome=True` u osoby (i zemřelé) – údaje nad jméno a roky jen správci a přístupům s právem
+  `soukrome`, které mají osobu ve vlastní větvi. Jednotlivý údaj stejně: v `f` text začínající `(soukromé) `
+  (`"(soukromé) rozvod 1990"`); kdo smí, vidí ho bez značky, ostatním se vynechá (i z mapy a časové osy).
+  `kontrola.py` hlídá tvar souhlasu i značky. Kdo co uvidí: `python3 -I tools/pristupy.py`.
+- U skryté osoby zmizí i její zápisy z matrik (i sdílený zápis sňatku), sňatek na stránce rodiny, boční příbuzní
+  (`SIDE`) a doklady. Doklad (`dokumenty.json`), na kterém je skrytá osoba nebo žijící bez souhlasu s `doklady`,
+  se neukáže vůbec. Boční příbuzný v `SIDE`, který je žijící (`y` v posledních 100 letech), jen jménem.
+- **Volné texty** (příběh, zajímavosti, deník, „Co hledáme“, hypotézy) se podle osob nefiltrují a značka
+  `(soukromé)` v nich neplatí – řídí je jen právo `texty`. O žijících v nich nepiš nic nad jméno.
 - Citlivé věci z nedávné minulosti (sebevraždy, věznění, nemoci) – zeptej se uživatele, jestli a jak je zmínit.
 - Matriční údaje starší než lhůty jsou veřejné, ale ohleduplnost platí i pro ně (zbytečně nezesměšňovat).
 

@@ -191,5 +191,65 @@ class PrehledPristupu(unittest.TestCase):
             self.assertIn("-- Přímá linie:", spust(p, "pristupy.py", "matka").stdout)
 
 
+
+class KontrolaSoukromi(unittest.TestCase):
+    """kontrola.py: tvar souhlasu žijícího a značky soukromého údaje (soukromi.md)."""
+
+    def test_spatny_souhlas_a_znacka(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "ukazka"
+            self.assertEqual(novy_projekt(p, "--ukazka").returncode, 0)
+            with open(p / "data" / "osoby.py", "a", encoding="utf-8") as f:
+                f.write('\nP[3]["souhlas"] = {"kdo": "Eva"}\nP[2]["souhlas"] = {"kdo": "J", "datum": "2026-11-10", "rozsah": ["vse"]}\n'
+                        'P[6]["f"].append("(soukrome) rozvod")\nP[7]["f"].append("(soukromé) v pořádku")\n')
+            r = spust(p, "kontrola.py", check=False)
+            out = r.stdout + r.stderr
+            self.assertIn("osoba 3 (Eva Dvořáková): souhlas musí mít kdo a datum", out)
+            self.assertIn("osoba 2 (Josef Novák): souhlas – rozsah zná jen", out)
+            self.assertIn("soukromý údaj piš přesně", out)
+            self.assertNotIn("v pořádku“ se jinak", out)
+
+
+
+class SoukromiMimoOsoby(unittest.TestCase):
+    """Skrytá osoba neprozradí nic ani přes zápisy, časovou osu, rodinu (sňatek) nebo boční příbuzné (recenze fáze 2)."""
+
+    def test_bez_prava(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "ukazka"
+            self.assertEqual(novy_projekt(p, "--ukazka").returncode, 0)
+            with open(p / "data" / "osoby.py", "a", encoding="utf-8") as f:
+                f.write('\nP[10]["soukrome"] = True\nP[3]["f"][0] = "* 17. 8. 1955 Chrudim"\n'
+                        'P[3]["souhlas"] = {"kdo": "Eva", "datum": "2026-11-10"}\n'
+                        'SIDE.append({"k": 10, "n": "Bratr Testovací", "t": "TAJNE-SIDE", "v": "bratr"})\n'
+                        'SIDE.append({"k": 12, "n": "Dítě Testovací", "y": "* 2010", "t": "TAJNE-ZIVE-SIDE", "v": "dcera"})\n')
+            cfg_path = p / "data" / "web.json"
+            cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+            cfg["prihlaseni"]["odpoved"] = "spravce"
+            cfg["pristupy"] = [{"nazev": "Bez", "odpoved": "a", "koren": [1]}]
+            cfg_path.write_text(json.dumps(cfg, ensure_ascii=False), encoding="utf-8")
+            site_json = p / "web" / "src" / "data" / "site.json"
+            zapisy_krale = lambda s: [r["key"] for r in s["records"] if "vaclav_kral" in r["key"]]   # noqa: E731
+
+            spust(p, "export_web.py")                                    # správce: vše (Eva má souhlas)
+            s = json.loads(site_json.read_text(encoding="utf-8"))
+            self.assertTrue(zapisy_krale(s))
+            self.assertIn("TAJNE-SIDE", site_json.read_text(encoding="utf-8"))
+            self.assertNotIn("TAJNE-ZIVE-SIDE", site_json.read_text(encoding="utf-8"))   # žijící v SIDE nikdy
+
+            spust(p, "export_web.py", "--pristup", "bez")
+            raw = site_json.read_text(encoding="utf-8")
+            s = json.loads(raw)
+            self.assertEqual(zapisy_krale(s), [])                       # zápisy soukromé osoby pryč
+            self.assertNotIn("TAJNE-SIDE", raw)
+            self.assertNotIn("TAJNE-ZIVE-SIDE", raw)
+            eva = next(r for r in s["timeline"]["rows"] if r["name"] == "Eva Dvořáková")
+            self.assertEqual((eva["birth"]["from"], eva["birth"]["to"], eva["birth"]["text"]), (1955, 1955, "1955"))
+            rodina = next(f for f in s["families"].values() if (f.get("father") or "").startswith("vaclav-kral"))
+            self.assertEqual(rodina["marriage"], [])                    # sňatek ani z údajů manželky
+            kral = next(x for x in s["people"].values() if x["name"] == "Václav Král")
+            self.assertEqual((kral["facts"], kral["side"], kral["docs"], kral["note"]), ([], [], [], "Údaje jsou soukromé."))
+
+
 if __name__ == "__main__":
     unittest.main()

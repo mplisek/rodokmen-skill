@@ -13,6 +13,7 @@ for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
 from pohled import nacti_pristupy, pohled  # noqa: E402
+from export_web import zijici, ocisti_osobu, skryt_osobu  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -59,6 +60,19 @@ def main(argv):
         prima = [k for k, v in linie.items() if v == "prima"]
         rozs = [k for k, v in linie.items() if v == "rozsirena"]
         print(f"   osob: {len(linie)} (přímá linie {len(prima)}, rozšířená {len(rozs)}, vlastní větev {len(vlastni)})")
+
+        def osoba(nk):
+            return (nove["P"].get(nk) if isinstance(nk, int) else nove["RODINA"].get(nk)) or {}
+        def smi(nk):
+            return p["prava"]["soukrome"] and nk in vlastni
+        ocistene = {nk: ocisti_osobu(osoba(nk), smi(nk)) for nk in linie}   # stejně jako export_web.py
+        zive = [nk for nk, o in ocistene.items() if zijici(o.get("y"), o.get("note"), o.get("f", []))]
+        plne = [nk for nk in zive if not skryt_osobu(ocistene[nk], smi(nk))]
+        rucne = [nk for nk, o in ocistene.items() if nk not in zive and skryt_osobu(o, smi(nk))]
+        print(f"   žijících: {len(zive)}, s plnými údaji (právo soukrome + vlastní větev + souhlas): {len(plne)}"
+              + (f" – {', '.join(jmeno(nk) for nk in plne)}" if plne else ""))
+        if rucne:
+            print(f"   soukromé (soukrome=True), jen jméno a roky: {', '.join(jmeno(nk) for nk in rucne)}")
         viditelne = set(zpet.values())
         dok = [d["img"] for d in docs if any((ns["SAME"].get(o, o) if isinstance(o, int) else o) in viditelne
                                              for o in d.get("osoby", []))]

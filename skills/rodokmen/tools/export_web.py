@@ -291,6 +291,47 @@ def years(y):
 
 HRANICE_ZIJICI = datetime.date.today().year - 100   # stejná hranice jako u citlivých údajů v kontrola.py
 ZIJICI_POZN = "Žijící – údaje jen základní."
+SOUKROME_POZN = "Údaje jsou soukromé."
+SOUKROMY_UDAJ = "(soukromé)"   # údaj osoby „(soukromé) …“ vidí jen ten, kdo smí soukromé údaje dané osoby
+
+
+def soukromy_udaj(f):
+    return isinstance(f, str) and f.lstrip().lower().startswith(SOUKROMY_UDAJ)
+
+
+def bez_znacky(f):
+    return f.lstrip()[len(SOUKROMY_UDAJ):].lstrip() if soukromy_udaj(f) else f
+
+
+def ma_souhlas(o):
+    """Souhlas žijící osoby se zveřejněním jejích údajů (zadání kap. 7): souhlas={"kdo": …, "datum": …, "rozsah": [...]}
+    s datem; rozsah, je-li uvedený, musí obsahovat „udaje“."""
+    sh = o.get("souhlas")
+    if not isinstance(sh, dict) or not str(sh.get("datum") or "").strip() or not str(sh.get("kdo") or "").strip():
+        return False
+    rozsah = sh.get("rozsah")
+    return rozsah is None or "udaje" in rozsah
+
+
+def souhlas_doklady(o):
+    """Souhlas i s doklady (rozsah vynechaný = vše)."""
+    return ma_souhlas(o) and (o["souhlas"].get("rozsah") is None or "doklady" in o["souhlas"]["rozsah"])
+
+
+def ocisti_osobu(o, smi):
+    """Osoba bez údajů „(soukromé) …“, které daný přístup nesmí (smi = smí soukromé údaje této osoby); povolené bez značky."""
+    f = o.get("f", [])
+    if not any(soukromy_udaj(x) for x in f):
+        return o
+    return dict(o, f=[bez_znacky(x) for x in f if not soukromy_udaj(x) or smi])
+
+
+def skryt_osobu(o, smi):
+    """Osoba (už očištěná ocisti_osobu) jen jménem a roky: žijící bez práva / vlastní větve / souhlasu, nebo ručně
+    soukrome=True a nesmí."""
+    if zijici(o.get("y"), o.get("note"), o.get("f", [])):
+        return not (smi and ma_souhlas(o))
+    return bool(o.get("soukrome")) and not smi
 
 
 def zijici(y, note="", facts=()):
@@ -353,7 +394,7 @@ def placeholder(p):
     return chronologie.zastupna(p)
 
 
-def timeline_data(P, SAME, slugs, people, line_of):
+def timeline_data(P, SAME, slugs, people, line_of, skryti=None):
     """Časová osa: řádky v pořadí otec – dítě – matka, události jako intervaly v desetinných letech, varování."""
     dnes = datetime.date.today()
 
@@ -363,7 +404,8 @@ def timeline_data(P, SAME, slugs, people, line_of):
         return {"from": None if d.od == chronologie.MIN else round(chronologie.rok(d.od), 3),
                 "to": None if d.do == chronologie.MAX else round(chronologie.rok(d.do), 3), "text": d.text}
     # Soukromí: u žijících (viz skryj() v main) jen rok narození, bez data sňatku a bez varování o jejich datech
-    skryti = {k for k in slugs if k not in SAME and zijici(P[k].get("y"), P[k].get("note"), P[k].get("f", []))}
+    if skryti is None:
+        skryti = {k for k in slugs if k not in SAME and zijici(P[k].get("y"), P[k].get("note"), P[k].get("f", []))}
     warns = [v for v in chronologie.kontrola(P, SAME) if not ({v.k, *v.osoby} & skryti)]
     s_varovanim = {v.k for v in warns}
     ud = {k: chronologie.udalosti(P, k) for k in slugs if k not in SAME}
@@ -373,8 +415,9 @@ def timeline_data(P, SAME, slugs, people, line_of):
             continue
         p, u = P[k], ud[k]
         b = ev(u["narozeni"])
-        if k in skryti and b:
-            b["text"] = str(int(b["from"])) if b["from"] is not None else ""
+        if k in skryti and b:   # jen rok – ani from/to nesmí prozradit den
+            rok_b = int(b["from"]) if b["from"] is not None else None
+            b.update({"from": rok_b, "to": rok_b, "text": str(rok_b) if rok_b is not None else ""})
         manzel = {k, k ^ 1} & skryti if k > 1 else {k} & skryti   # sňatek rodičů žijícího: otec i matka (k ^ 1) mají stejný
         rows.append(dict(k=pos, slug=slugs[k], name=p["n"], line=line_of(pos), years=people[slugs[k]]["years"],
                          birth=b, marriage=None if manzel else ev(u["snatek"]), death=None if k in skryti else ev(u["umrti"]),
@@ -691,6 +734,44 @@ def main():
             cfg.pop("uvod", None)
         if not texty:
             cfg.pop("zajimavosti_na_uvodu", None)
+    # Soukromí osob (zadání kap. 4, 7): o žijících jen jméno a rok narození. Plné údaje jen tomu, kdo má právo soukrome
+    # (správce ho má), u osoby z vlastní větve přístupu (správce: všichni) a se zapsaným souhlasem (pole souhlas).
+    # Ručně: soukrome=True u osoby (i zemřelé – jen jméno a roky) a údaj „(soukromé) …“ – obojí jen pro toho, kdo smí
+    # soukromé údaje dané osoby (právo soukrome + vlastní větev).
+    pravo_soukrome = pristup["prava"]["soukrome"] if pristup else True
+    vlastni_set = ns.get("_vlastni")
+
+    def smi_soukrome(ref):
+        return pravo_soukrome and (vlastni_set is None or ref in vlastni_set)
+
+    kanon = lambda k: ns["SAME"].get(k, k) if isinstance(k, int) else k   # noqa: E731
+    ns = dict(ns, P={k: ocisti_osobu(o, smi_soukrome(kanon(k))) for k, o in ns["P"].items()},
+              RODINA={oid: ocisti_osobu(o, smi_soukrome(oid)) for oid, o in ns["RODINA"].items()})
+    skryti_p = {k for k, o in ns["P"].items() if k not in ns["SAME"] and skryt_osobu(o, smi_soukrome(k))}
+    skryti_p |= {kanon(a) for a, o in ns["P"].items() if a in ns["SAME"] and o.get("soukrome") and not smi_soukrome(kanon(a))}
+    skryti_r = {oid for oid, o in ns["RODINA"].items() if skryt_osobu(o, smi_soukrome(oid))}
+    # doklady: osoba skrytá, nebo viditelná žijící bez souhlasu s doklady → doklad s ní se neukáže (soukromý)
+    bez_dokladu = skryti_p | skryti_r | {
+        r for r, o in list(ns["P"].items()) + list(ns["RODINA"].items())
+        if r not in ns["SAME"] and zijici(o.get("y"), o.get("note"), o.get("f", [])) and not souhlas_doklady(o)}
+
+    skryte_side = set()   # zápisy bočních příbuzných, kteří se neukážou
+
+    def side_zaznam(s):   # boční příbuzný (SIDE): u skryté osoby nic, žijící jen jménem, „(soukromé) …“ podle osoby
+        if kanon(s.get("k")) in skryti_p:
+            skryte_side.update(s.get("r", []))
+            return None
+        t = s.get("t", "")
+        if soukromy_udaj(t):
+            t = bez_znacky(t) if smi_soukrome(kanon(s.get("k"))) else ""
+        if zijici(s.get("y"), t):
+            skryte_side.update(s.get("r", []))
+            return dict(s, t="", r=[])
+        return dict(s, t=t)
+    ns["SIDE"] = [x for x in map(side_zaznam, ns["SIDE"]) if x is not None]
+    skryte_zapisy = {r for k, o in ns["P"].items() if kanon(k) in skryti_p for r in o.get("r", [])} | \
+        {r for oid in skryti_r for r in ns["RODINA"][oid].get("r", [])} | skryte_side
+    pozn_skryti = lambda o: ZIJICI_POZN if zijici(o.get("y"), o.get("note"), o.get("f", [])) else SOUKROME_POZN
     P, LINES, SIDE, ISSUES = ns["P"], ns["LINES"], ns["SIDE"], ns["ISSUES"]
     SAME = ns["SAME"]                       # alias Kekulé → kanonické Kekulé (předek v rodokmenu vícekrát)
     # web.json "puvodni_jmena": true → jméno osoby v původních tvarech ze zápisů (pole zap v osoby.py, „Nowakin / Nováková“);
@@ -706,6 +787,8 @@ def main():
         docs_cfg = [dict(d, osoby=[prevod[o] for o in (puvodni_same.get(x, x) if isinstance(x, int) else x
                                                        for x in d.get("osoby", [])) if o in prevod]) for d in docs_cfg]
         docs_cfg = [d for d in docs_cfg if d["osoby"]]
+    recs = {k: v for k, v in recs.items() if k not in skryte_zapisy}   # zápisy skrytých osob (i sdílený sňatek) ne
+    docs_cfg = [d for d in docs_cfg if not any(kanon(o) in bez_dokladu for o in d.get("osoby", []))]
 
     slugs, used = {}, set()
     for k in sorted(P):
@@ -763,13 +846,13 @@ def main():
 
     # Soukromí: žijící (a narození v posledních 100 letech bez známého úmrtí) jen jménem, rokem narození a vazbami –
     # bez míst, dat, poznámek a zápisů. Na mapu, do Domů ani do Statistik se tak nedostanou (počítají se z faktů).
-    def skryj(p):
-        p["facts"], p["records"], p["note"] = [], [], ZIJICI_POZN
-        p["vyz"] = ""
+    def skryj(p, pozn=ZIJICI_POZN):
+        p["facts"], p["records"], p["note"], p["docs"], p["side"] = [], [], pozn, [], []
+        p["vyz"], p["skryto"] = "", True
     skryto = 0
     for k, p in P.items():
-        if k in slugs and k not in SAME and zijici(p.get("y"), p.get("note"), p.get("f", [])):
-            skryj(people[slugs[k]])
+        if k in slugs and k in skryti_p:
+            skryj(people[slugs[k]], pozn_skryti(p))
             skryto += 1
 
     def fakta(k):   # fakta a zápisy osoby už po skrytí žijících (pro stránky rodin)
@@ -800,8 +883,8 @@ def main():
                            st=o.get("st", ""), status=STATUS.get(o.get("st"), ""), father=ref(o.get("otec")),
                            mother=ref(o.get("matka")), partners=[x for x in map(ref, o.get("partner", [])) if x],
                            facts=o.get("f", []), note=o.get("note", ""), records=[r for r in o.get("r", []) if r in recs]))
-        if zijici(o.get("y"), o.get("note"), o.get("f", [])):
-            others[-1].update(facts=[], records=[], note=ZIJICI_POZN)
+        if oid in skryti_r:
+            others[-1].update(facts=[], records=[], note=pozn_skryti(o))
             skryto += 1
     # na stránce osoby a rodiny je ukázat jako příbuzné (dřív byli jen v SIDE)
     for pp in people.values():
@@ -877,7 +960,7 @@ def main():
     def partneri(a, b, text=""):
         if not (a in people and b in people) or a == b:
             return
-        if any(people[x]["note"] == ZIJICI_POZN for x in (a, b)):
+        if any(people[x]["note"] in (ZIJICI_POZN, SOUKROME_POZN) for x in (a, b)):
             text = ""   # u žijících ani rok a místo sňatku
         for x, y_ in ((a, b), (b, a)):
             hit = next((z for z in people[x]["partners"] if z["slug"] == y_), None)
@@ -927,6 +1010,8 @@ def main():
         surname = ((P[m]["n"].split() or [""])[-1] if m in P else "").strip("()?")
         mfacts = [x for x in fakta(f)["facts"] + fakta(m)["facts"] if x.startswith("×")]
         marriage = [x for x in mfacts if surname and surname[:5] in x] or mfacts
+        if SAME.get(f, f) in skryti_p or SAME.get(m, m) in skryti_p:
+            marriage = []   # sňatek skryté osoby (žijící, soukromá) ani z údajů manžela
         frec = fakta(f)["records"] + fakta(m)["records"]
         child_rec = [r for r in fakta(k)["records"] if r in recs and recs[r]["kind"] == "N"]
         rlist = [r for r in dict.fromkeys(frec) if r in recs and recs[r]["kind"] == "O"] + child_rec
@@ -1147,7 +1232,7 @@ def main():
                 docs=[dict(img=d["img"], caption=d.get("popis", ""), people=[slugs.get(k) or rslug[k] for k in d.get("osoby", []) if k in slugs or k in rslug],
                            rods=sorted(set().union(set(), *(rody_osoby(SAME.get(k, k) if isinstance(k, int) else k, R) for k in d.get("osoby", [])))))
                       for d in docs_cfg if os.path.exists(os.path.join(VYREZY, d["img"] + ".jpg"))],
-                timeline=timeline_data(P, SAME, slugs, people, line_of))
+                timeline=timeline_data(P, SAME, slugs, people, line_of, {k for k in skryti_p if k in slugs}))
 
     generovane = {}
     for src, dst in (("archivni_dotazy.md", "dotazy.md"), ("otazky_pro_rodinu.md", "otazky.md"),

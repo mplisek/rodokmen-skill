@@ -339,6 +339,21 @@ def main():
         if m:
             warn.append(f"{kde} ({o['n']}): v n je příjmení po sňatku „{m.group(1)}“ – piš jen rodné příjmení "
                         "(neznámé: „(příjmení neznámé)“); příjmení po sňatku je vidět u manžela")
+    # soukromí osob (reference/soukromi.md): souhlas žijícího se zveřejněním, ruční „soukrome“, údaj „(soukromé) …“
+    for kde, o in [(f"osoba {k}", p) for k, p in P.items()] + [(f"RODINA '{k}'", o) for k, o in ns.get("RODINA", {}).items()]:
+        sh = o.get("souhlas")
+        if sh is not None:
+            if not isinstance(sh, dict) or not str(sh.get("kdo") or "").strip() or not str(sh.get("datum") or "").strip():
+                err.append(f"{kde} ({o.get('n')}): souhlas musí mít kdo a datum – "
+                           "souhlas={'kdo': 'Jméno', 'datum': 'RRRR-MM-DD', 'rozsah': ['udaje', 'doklady']}; jinak neplatí")
+            elif not set(sh.get("rozsah") or []) <= {"udaje", "doklady"}:
+                err.append(f"{kde} ({o.get('n')}): souhlas – rozsah zná jen 'udaje' a 'doklady'")
+        if "soukrome" in o and not isinstance(o["soukrome"], bool):
+            err.append(f"{kde} ({o.get('n')}): soukrome má být True nebo False")
+        for f in o.get("f", []):
+            if isinstance(f, str) and re.match(r"\s*\(soukrom", f, re.I) and not re.match(r"\s*\(soukromé\) \S", f, re.I):
+                warn.append(f"{kde} ({o.get('n')}): soukromý údaj piš přesně „(soukromé) text“ – „{f[:40]}“ se jinak "
+                            "ukáže všem")
     muz = lambda k, p: p.get("sex", "M") == "M" if k == 1 else k % 2 == 0   # noqa: E731
     bez_mista = [k for k, p in sorted(P.items()) if isinstance(k, int) and p.get("st") == "doc" and p.get("f")
                  and not any(zil_v(vlastni_text([text_pro_misto(f) for f in p["f"]], muz(k, p)), rx) for rx in vzory)]

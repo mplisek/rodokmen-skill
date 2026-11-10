@@ -10,6 +10,21 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
+## Nevydáno
+
+### Nové
+- **Přístupy pro větve rodiny – fáze 2, soukromí osob:** žijící se zapsaným souhlasem (`souhlas={"kdo", "datum",
+  "rozsah"}` u osoby) vidí s plnými údaji správce a přístupy s právem `soukrome`, které je mají ve vlastní větvi;
+  ostatní dál jen jméno a rok narození. Ručně: `soukrome=True` u osoby (i zemřelé) a údaj `"(soukromé) …"` – jen pro
+  toho, kdo smí soukromé údaje dané osoby. U skryté osoby zmizí i její zápisy z matrik, sňatek na stránce rodiny,
+  boční příbuzní a doklady; doklad s žijícím bez souhlasu (`rozsah` s `doklady`) se neukáže. `kontrola.py` hlídá
+  tvar souhlasu a značky, `pristupy.py` ukáže, koho přístup vidí s plnými údaji a kdo je ručně soukromý.
+
+### Opravy
+- Časová osa u žijících neprozradí přesné datum narození (dosud bylo dopočitatelné z čísla pro graf).
+- Sňatek žijícího se už neukáže na stránce rodiny z údajů manžela či manželky; žijící boční příbuzní (`SIDE`)
+  jen jménem.
+
 ## 0.10.0-fork.1 – 10. 11. 2026
 
 Fork na originálu 0.10.0 (přepracované návody, brzda a hlídač, Cloudflare s vlastním názvem webu, opravy exportu a importu – viz níže; předchozí verze originálu 0.9.x je zahrnutá) a navíc:

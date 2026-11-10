@@ -59,7 +59,8 @@ P = {
   rozklikávací větve – od sourozence předka třeba až do 20. století. Každá osoba z RODINA má **vlastní stránku**
   (adresa: jméno a první rok z `y`) a u všech osob – předků i příbuzných – web stejně počítá **Děti**, **Sourozence**
   (i nevlastní) a **Manželství** z toho, kdo je čí otec a matka. Volitelné `v="manželka Václava Culka"` = vztah na
-  stránce osoby (jinak ho web odvodí: „sestra osoby Jan Novák“). Žijící jen jménem a rokem narození (web to vynutí sám).
+  stránce osoby (jinak ho web odvodí: „sestra osoby Jan Novák“). Žijící jen jménem a rokem narození (web to vynutí sám;
+  výjimka se souhlasem `souhlas={…}`, ruční `soukrome=True` a údaj `"(soukromé) …"` – `soukromi.md`).
 - `PARTNERI` (volitelné) – sňatky s podrobnostmi, i mezi předky (druhé manželství):
   `dict(a=44, b="rosalie-culkova", rok=1850, misto="Libice", konec="ovdověl 1860")`; `a`/`b` = číslo z `P` nebo zkratka
   z RODINA. Na stránce osoby v kartě Manželství („sňatek 1850, Libice, ovdověl 1860“); u žijících bez roku a místa. U předka v `P` lze zapsat `sour="hotovo"` / `"částečně"` (stav hledání sourozenců).

@@ -248,7 +248,9 @@ def sestav_export(D, P, RODINA, by_k, by_key, recs):
             else:
                 web = by_key.get(os_) if os_ else None
             jmeno = it.get("n") or (o or {}).get("n", "")
-            return dict(name=jmeno, slug=(web or {}).get("slug"), zije=zijici(o))
+            # skrytá na webu (žijící bez souhlasu, soukrome=True – export_web.py) = bez podrobností
+            return dict(name=jmeno, slug=(web or {}).get("slug"),
+                        zije=zijici(o) or bool((o or {}).get("soukrome")) or bool((web or {}).get("skryto")))
 
         def zapisy(it):
             return [dict(key=r, title=recs[r].get("title", r), date=recs[r].get("date", "")) for r in it.get("r", []) if r in recs]
