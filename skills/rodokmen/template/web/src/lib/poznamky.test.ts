@@ -4,8 +4,11 @@ import { cistyText, zkontroluj, datum, normStranka, vidiPoznamku, KDO_MAX, TEXT_
 
 test('poznámky napříč větvemi: jen ke stránkám, které přístup má; soukromé jen autorova větev a správce', () => {
   const stranky = new Set(['/', '/osoba/jan-novak-1890/']);
-  const cizi = { pristup: 'matka', stranka: '/osoba/jan-novak-1890' };
+  const cizi = { pristup: 'matka', stranka: '/osoba/jan-novak-1890', sdilet: true };
   assert.equal(normStranka('/osoba/x/index.html?y=1'), '/osoba/x/');
+  assert.equal(normStranka('/zdroj/k%C5%99est/'), '/zdroj/křest/');
+  assert.ok(!vidiPoznamku('otec', { ...cizi, sdilet: undefined }, stranky));               // starší poznámka (před sdílením)
+  assert.ok(!vidiPoznamku('otec', { ...cizi, pristup: 'vse' }, stranky));                  // poznámka správce
   assert.ok(vidiPoznamku('otec', cizi, stranky));                                         // společný předek
   assert.ok(!vidiPoznamku('otec', { ...cizi, stranka: '/osoba/cizi/' }, stranky));          // stránka jiné větve
   assert.ok(!vidiPoznamku('otec', { ...cizi, soukroma: true }, stranky));                   // soukromá

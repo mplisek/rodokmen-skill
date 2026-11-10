@@ -3,6 +3,7 @@
 // Zobrazí se jen, když má přístup zapnuté poznámky (web.json → "poznamky": true / pristupy[].poznamky).
 // Ukládá funkce /api/poznamky na Netlify (netlify/poznamky.sablona.mjs); text je vždy jen čistý text.
 import { KDO_MAX, TEXT_MAX } from '../lib/poznamky.mjs';
+import { pristup } from '../lib/data.js';
 ---
 <button type="button" class="pozn-btn" aria-haspopup="dialog">Připomínka <span class="pozn-pocet" hidden></span></button>
 <dialog class="pozn-dialog" aria-labelledby="pozn-nadpis">
@@ -17,6 +18,9 @@ import { KDO_MAX, TEXT_MAX } from '../lib/poznamky.mjs';
       <textarea name="text" rows="5" maxlength={TEXT_MAX} required></textarea>
     </label>
     <p class="small muted pozn-zbyva"></p>
+    {pristup.id !== 'vse' && (
+      <label class="small"><input type="checkbox" name="soukroma" /> Jen pro naši větev rodiny (ostatní větve ji neuvidí)</label>
+    )}
     <button type="submit">Odeslat</button>
     <p class="pozn-chyba" role="alert"></p>
   </form>
@@ -76,7 +80,7 @@ import { KDO_MAX, TEXT_MAX } from '../lib/poznamky.mjs';
     const odeslat = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
     odeslat.disabled = true;
     try {
-      const r = await fetch('/api/poznamky', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(v) });
+      const r = await fetch('/api/poznamky', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ ...v, soukroma: !!form.soukroma?.checked }) });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(data.chyba || 'Poznámku se nepodařilo uložit, zkuste to později.');
       form.text.value = '';

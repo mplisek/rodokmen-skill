@@ -21,6 +21,16 @@ async function pristupZCookie(cookie) {
   return Object.hasOwn(KLICE, h) ? KLICE[h] : undefined;
 }
 
+// teplá instance funkce si poznámky pamatuje 5 minut (každá stránka je načítá – bez toho stovky čtení úložiště)
+const CACHE = new Map();
+async function nactiBlob(store, jmeno, key) {
+  const c = CACHE.get(`${jmeno}:${key}`);
+  if (c && Date.now() - c.t < 300000) return c.v;
+  const v = await store.get(key, { type: 'json' });
+  CACHE.set(`${jmeno}:${key}`, { t: Date.now(), v });
+  return v;
+}
+
 const odpoved = (data, status = 200) => new Response(JSON.stringify(data), {
   status,
   headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-robots-tag': 'noindex' },
@@ -31,13 +41,14 @@ export default async (req, context) => {
   if (!pristup || !pristup.poznamky) return odpoved({ chyba: 'Poznámky nejsou pro tento přístup zapnuté.' }, 403);
   // náhled (adresa s „--“, např. test--web.netlify.app) má vlastní úložiště – zkušební poznámky se nepletou s ostrým webem
   const nahled = new URL(req.url).hostname.includes('--');
-  const store = getStore({ name: nahled ? 'poznamky-test' : 'poznamky', consistency: 'strong' });
+  const jmenoStore = nahled ? 'poznamky-test' : 'poznamky';
+  const store = getStore({ name: jmenoStore, consistency: 'strong' });
 
   if (req.method === 'GET') {
     const stranka = new URL(req.url).searchParams.get('stranka');
     const mojeStranky = STRANKY[pristup.id];
     const { blobs } = await store.list({ prefix: pristup.id === 'vse' || mojeStranky ? '' : `${pristup.id}/` });
-    const vse = (await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' }))))
+    const vse = (await Promise.all(blobs.map((b) => nactiBlob(store, jmenoStore, b.key))))
       .filter((p) => p && !p.smazano && (!stranka || p.stranka === stranka) && vidiPoznamku(pristup.id, p, mojeStranky))
       .sort((a, b) => (a.cas < b.cas ? 1 : -1))
       .map(({ cas, stranka: s, kdo, text, stav, pristup: p }) => ({ cas, stranka: s, kdo, text, stav, ...(pristup.id === 'vse' ? { pristup: p } : {}) }));
@@ -53,12 +64,15 @@ export default async (req, context) => {
     }
     const v = zkontroluj(data);
     if (v.chyba) return odpoved({ chyba: v.chyba }, 400);
-    if (pristup.id !== 'vse' && STRANKY[pristup.id] && !STRANKY[pristup.id].has(normStranka(v.stranka))) {
+    // web s přístupy: psát jen ke stránce své verze (chybí-li seznam přístupu, nikam – sestav web znovu: npm run build)
+    if (pristup.id !== 'vse' && Object.keys(STRANKY).length && !STRANKY[pristup.id]?.has(normStranka(v.stranka))) {
       return odpoved({ chyba: 'Tuto stránku váš přístup nemá.' }, 403);
     }
     const cas = new Date().toISOString();
     const id = `${pristup.id}/${cas.replace(/[:.]/g, '-')}-${crypto.randomUUID().slice(0, 8)}`;
-    const poznamka = { id, cas, stranka: v.stranka, kdo: v.kdo, text: v.text, pristup: pristup.id, stav: 'nova' };
+    const sdilet = data.soukroma !== true;   // „jen pro naši větev“ nezaškrtnuto → uvidí i jiné větve se stejnou stránkou
+    const poznamka = { id, cas, stranka: v.stranka, kdo: v.kdo, text: v.text, pristup: pristup.id, stav: 'nova', sdilet,
+                       ...(sdilet ? {} : { soukroma: true }) };
     await store.setJSON(id, poznamka);
     return odpoved({ cas, stranka: v.stranka, kdo: v.kdo, text: v.text, stav: 'nova' }, 201);
   }

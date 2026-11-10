@@ -14,7 +14,8 @@ Použití:
   vyrez.py --zacernit <klic> x0,y0,x1,y1 [x0,y0,x1,y1 …] [--osoby 12,anna]
       Začerní oblasti (zlomky šířky a výšky obrázku – rodná čísla) ve zdroje/<klic>.jpg i vyrezy/<klic>.jpg.
       --osoby = čí rodná čísla to jsou (čísla z P, zkratky z RODINA): zapíše je u dokumentu do data/dokumenty.json
-      → zacerneno; doklad pak smí na web i s RČ žijících (pole rc). Původní sken v dokumenty/ zůstane.
+      → zacerneno; doklad pak smí na web i s RČ žijících (pole rc). Oblasti uloží do → zacerneni a každý další
+      výřez téhož klíče je nakreslí znovu. Původní sken v dokumenty/ zůstane.
 
 Výřez dělejte velkoryse: celý zápis včetně hlavičky sloupců, okrajových poznámek a podpisů.
 Potřebuje ImageMagick (příkaz `magick`).
@@ -42,6 +43,28 @@ def vylepseni(m):
             + ["-contrast-stretch", "1%x50%", "-level", "5%,70%", "-unsharp", "0x1.2+1.2+0.02"])
 
 
+def _dokumenty():
+    path = os.path.join(ROOT, "data", "dokumenty.json")
+    return path, (json.load(open(path, encoding="utf-8")) if os.path.exists(path) else [])
+
+
+def kresli_zacerneni(MAGICK, key, oblasti):
+    """Černé obdélníky (zlomky obrázku) do zdroje/ i vyrezy/; metadata pryč (náhled v EXIF by RČ ukázal)."""
+    hotovo = []
+    for slozka in ("zdroje", "vyrezy"):
+        f = os.path.join(ROOT, slozka, key + ".jpg")
+        if not os.path.exists(f):
+            continue
+        w, h = (int(v) for v in subprocess.run([MAGICK, f, "-format", "%w %h", "info:"], capture_output=True, text=True,
+                                                check=True).stdout.split())
+        kresby = []
+        for x0, y0, x1, y1 in oblasti:
+            kresby += ["-draw", f"rectangle {int(x0 * w)},{int(y0 * h)} {round(x1 * w)},{round(y1 * h)}"]
+        subprocess.run([MAGICK, f, "-fill", "black", *kresby, "+profile", "!icc,*", "-quality", "90", f], check=True)
+        hotovo.append(f)
+    return hotovo
+
+
 def zacernit(argv):
     """vyrez.py --zacernit <klic> oblasti… [--osoby a,b]: černé obdélníky přes rodná čísla ve zdroje/ i vyrezy/."""
     osoby = []
@@ -57,31 +80,21 @@ def zacernit(argv):
         if not (0 <= x0 < x1 <= 1 and 0 <= y0 < y1 <= 1):
             sys.exit(f"Oblast {a} musí být zlomky 0..1 obrázku (x0 < x1, y0 < y1).")
         oblasti.append((x0, y0, x1, y1))
-    MAGICK = magick()
-    hotovo = []
-    for slozka in ("zdroje", "vyrezy"):
-        f = os.path.join(ROOT, slozka, key + ".jpg")
-        if not os.path.exists(f):
-            continue
-        w, h = (int(v) for v in subprocess.run([MAGICK, f, "-format", "%w %h", "info:"], capture_output=True, text=True,
-                                                check=True).stdout.split())
-        kresby = []
-        for x0, y0, x1, y1 in oblasti:
-            kresby += ["-draw", f"rectangle {int(x0 * w)},{int(y0 * h)} {round(x1 * w)},{round(y1 * h)}"]
-        subprocess.run([MAGICK, f, "-fill", "black", *kresby, "-quality", "90", f], check=True)
-        hotovo.append(f)
+    path, docs = _dokumenty()
+    d = next((x for x in docs if isinstance(x, dict) and x.get("img") == key), None)
+    if d is None:
+        sys.exit(f"Dokument {key} v data/dokumenty.json není – nejdřív ho zapiš (oblasti začernění se ukládají k němu, "
+                 "aby je nový výřez nesmazal).")
+    hotovo = kresli_zacerneni(magick(), key, oblasti)
     if not hotovo:
         sys.exit(f"Obrázek {key}.jpg není ve zdroje/ ani vyrezy/ (nejdřív vyrez.py <sken> {key}).")
+    d["zacerneni"] = [list(o) for o in dict.fromkeys(tuple(o) for o in list(d.get("zacerneni") or []) + oblasti)]
     if osoby:
-        path = os.path.join(ROOT, "data", "dokumenty.json")
-        docs = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else []
-        d = next((x for x in docs if x.get("img") == key), None)
-        if d is None:
-            sys.exit(f"Začerněno ({', '.join(hotovo)}), ale dokument {key} v data/dokumenty.json není – zacerneno nezapsáno.")
         d["zacerneno"] = list(dict.fromkeys(list(d.get("zacerneno") or []) + osoby))
-        with open(path, "w", encoding="utf-8", newline="\n") as fh:
-            json.dump(docs, fh, ensure_ascii=False, indent=1)
-            fh.write("\n")
+    with open(path + ".tmp", "w", encoding="utf-8", newline="\n") as fh:   # celý soubor naráz
+        json.dump(docs, fh, ensure_ascii=False, indent=1)
+        fh.write("\n")
+    os.replace(path + ".tmp", path)
     print("začerněno:", ", ".join(hotovo) + (f"; zacerneno u dokumentu: {osoby}" if osoby else "")
           + " – zkontroluj obrázek, že rodné číslo není čitelné")
 
@@ -118,6 +131,11 @@ def main():
     subprocess.run(cmd + ["+profile", "!icc,*", "+set", "comment", "-quality", "90", full], check=True)
     subprocess.run([MAGICK, full, "-resize", "1800x1800>", "-quality", "85", small], check=True)
     zapamatuj_oblast(key, oblast)
+    _, docs = _dokumenty()   # začernění rodných čísel (vyrez.py --zacernit) nakreslit znovu
+    d = next((x for x in docs if isinstance(x, dict) and x.get("img") == key and x.get("zacerneni")), None)
+    if d:
+        kresli_zacerneni(MAGICK, key, [tuple(o) for o in d["zacerneni"]])
+        print("znovu začerněno:", len(d["zacerneni"]), "oblastí (data/dokumenty.json → zacerneni) – zkontroluj, že sedí")
     print("uloženo:", full, "a", small, "(zvýšený kontrast – poznamenej to v přepisu)" if kontrast or vylepsit else "")
 
 

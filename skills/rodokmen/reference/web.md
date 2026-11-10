@@ -290,7 +290,7 @@ rodokmenu. Ve `web.json`:
 a pod ním poznámky k té stránce (datum, kdo, text – bez úprav). Přehled všech je na `/poznamky/` (v menu).
 - Ukládá je funkce `/api/poznamky` do **Netlify Blobs** (úložiště zdarma u webu, nic se nenastavuje). Funkci
   (`netlify/functions/poznamky.mjs`) vyrábí `npm run data` z `netlify/poznamky.sablona.mjs` – jen s otisky odpovědí.
-- Kdo vidí: přístup s právem `poznamky` poznámky svého přístupu a poznámky jiných větví ke stránkám, které sám má (společní předci); psát jde jen ke stránce, kterou přístup má. Přístup `vse` všechny (s názvem přístupu). Soukromou poznámku (`npm run poznamky -- --soukrome <id>`) vidí jen větev autora a správce. Seznam stránek každé verze zapíše `npm run build` (`netlify/stranky/`). Píše jen přihlášený.
+- Kdo vidí: přístup s právem `poznamky` poznámky svého přístupu a poznámky jiných větví ke stránkám, které sám má (společní předci) – jen poznámky psané po zavedení sdílení, bez zaškrtnutého „Jen pro naši větev“ a ne poznámky správce; psát jde jen ke stránce, kterou přístup má. Přístup `vse` všechny (s názvem přístupu). Soukromou poznámku (`npm run poznamky -- --soukrome <id>`) vidí jen větev autora a správce. Seznam stránek každé verze zapíše `npm run build` (`netlify/stranky/`). Píše jen přihlášený.
 - **K uživateli se dostanou** přehledem na webu a příkazem `npm run poznamky` (ve `web/`): stáhne nové do
   `data/poznamky.json` a vypíše nevyřízené. `-- --vyrizeno <id>` označí poznámku na webu jako vyřízenou,
   `-- --smazat <id>` ji smaže (nevhodná, omyl). Používá Netlify CLI jako nasazení; web nasazovaný z jiné složky:

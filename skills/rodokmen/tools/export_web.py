@@ -357,7 +357,7 @@ def rc_zverejnit(d, docs, osoba, same=None):
     (dokument s "druh": "umrtni_list" a touto osobou) nebo má RČ v obrázku začerněné (pole zacerneno, vyrez.py --zacernit).
     osoba(ref) → záznam z osoby.py nebo None; reference v původním číslování (same = aliasy SAME)."""
     kan = lambda r: (same or {}).get(r, r) if isinstance(r, int) else r   # noqa: E731
-    zacerneno = {kan(r) for r in d.get("zacerneno") or []}
+    zacerneno = {kan(r) for r in d.get("zacerneno") or []} if d.get("zacerneni") else set()   # oblasti z vyrez.py
     for r in map(kan, d.get("rc") or []):
         if r in zacerneno:
             continue
@@ -372,9 +372,9 @@ def dokument_pro_pristup(d, pid, viditelne, same=None):
     """Doklad ve verzi webu přístupu pid: jen když ho správce přidělil (pole pristupy), nebo – bez výběru – když přístup
     vidí všechny osoby na dokladu (jinak by obrázek prozradil cizí větev). viditelne(ref) v původním číslování."""
     if "pristupy" in d:
-        return pid in (d.get("pristupy") or [])
+        return isinstance(d["pristupy"], list) and pid in d["pristupy"]
     kan = lambda r: (same or {}).get(r, r) if isinstance(r, int) else r   # noqa: E731
-    return all(viditelne(kan(r)) for r in d.get("osoby", []))
+    return all(viditelne(kan(r)) for r in list(d.get("osoby", [])) + list(d.get("rc") or []))   # i jména z RČ
 
 
 def ocisti_osobu(o, smi):
@@ -893,6 +893,20 @@ def main():
     docs_cfg = [d for d in docs_cfg if d["img"] not in bez_rc]
     if pristup and pristup["koren"]:
         docs_cfg = [d for d in docs_cfg if dokument_pro_pristup(d, pristup["id"], lambda r: r in prevod, puvodni_same)]
+
+        def soukroma_mimo(d):   # přidělený doklad s osobou mimo přístup, která je žijící bez souhlasu nebo soukromá
+            for r in d.get("osoby", []):
+                r = puvodni_same.get(r, r) if isinstance(r, int) else r
+                o = najdi(r)
+                if r not in prevod and o and (o.get("soukrome") or (zijici(o.get("y"), o.get("note"), o.get("f", []))
+                                                                    and not souhlas_doklady(o))):
+                    return True
+            return False
+        mimo = [d["img"] for d in docs_cfg if "pristupy" in d and soukroma_mimo(d)]
+        if mimo:
+            print(f"POZOR: přístup {pristup['id']}: přidělené doklady {', '.join(mimo)} mají osobu z jiné větve, která je žijící "
+                  "bez souhlasu s doklady nebo soukromá – nezveřejní se")
+        docs_cfg = [d for d in docs_cfg if d["img"] not in mimo]
     docs_cfg = [d for d in docs_cfg if not d.get("soukrome") or all(
         smi_soukrome(prevod.get(puvodni_same.get(o, o) if isinstance(o, int) else o) if prevod is not None else o)
         for o in d.get("osoby", []))]
@@ -1538,7 +1552,11 @@ def main():
         if nova_uprava:
             with open(znacka, "w", encoding="utf-8") as f:
                 f.write(UPRAVA_OBRAZKU)
-        for key in list(recs) + [d["img"] for d in docs_cfg] + ([cfg["uvod"]["foto"]] if cfg.get("uvod", {}).get("foto") else []):
+        klice_obr = list(recs) + [d["img"] for d in docs_cfg] + ([cfg["uvod"]["foto"]] if cfg.get("uvod", {}).get("foto") else [])
+        for f in os.listdir(dst_dir):   # obrázek, který už na web nepatří (doklad s RČ, skrytá osoba), pryč
+            if f.lower().endswith(".jpg") and f[:-4] not in klice_obr:
+                os.remove(os.path.join(dst_dir, f))
+        for key in klice_obr:
             src = os.path.join(src_dir, key + ".jpg")
             dst = os.path.join(dst_dir, key + ".jpg")
             hotovy = os.path.join(cache_dir, key + ".jpg")   # upravená verze v pracovni/.web_obrazky/

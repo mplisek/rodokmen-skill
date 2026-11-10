@@ -179,7 +179,8 @@ Doklady s rodnými čísly a víc větvemi (`soukromi.md`):
 "zacerneno": ["anna"], "pristupy": ["vse", "pliskovi"], "soukrome": true}`
 - `rc` – čí rodné číslo na dokladu je (i rodiče, manželé); u dokladů vyplň vždy, i prázdné `[]`. Doklad jde na web,
   až je každý z nich mrtvý a má **úmrtní list** (dokument s `"druh": "umrtni_list"` a touto osobou), nebo je jeho
-  RČ **začerněné**: `vyrez.py --zacernit <img> x0,y0,x1,y1 --osoby anna` (zapíše `zacerneno`).
+  RČ **začerněné**: `vyrez.py --zacernit <img> x0,y0,x1,y1 --osoby anna` (zapíše `zacerneno` a oblasti do
+  `zacerneni`; nový výřez téhož klíče je nakreslí znovu; `zacerneno` bez `zacerneni` neplatí).
 - `pristupy` – ruční výběr přístupů (doklad s žijícími z víc větví); bez něj ho přístup vidí, jen když vidí všechny
   osoby na dokladu. `soukrome: true` – jen správce a přístupy s právem `soukrome`, které mají osoby ve vlastní větvi.
 

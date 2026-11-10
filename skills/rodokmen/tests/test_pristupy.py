@@ -344,6 +344,25 @@ class DokladyRC(unittest.TestCase):
             self.assertNotIn("d_souk", deda)
             self.assertNotIn("d_prid", deda)
 
+            # doklad s RČ dřív na webu: obrázek z public/ zmizí i na webu bez přístupů
+            self.assertFalse((p / "web" / "public" / "img" / "d_rc.jpg").exists())
+            (p / "web" / "public" / "img" / "d_rc.jpg").write_bytes(b"stary")
+            spust(p, "export_web.py")
+            self.assertFalse((p / "web" / "public" / "img" / "d_rc.jpg").exists())
+            # nový výřez téhož klíče začernění nakreslí znovu (oblasti jsou v dokumenty.json → zacerneni)
+            src = Path(tmp) / "sken.jpg"
+            subprocess.run([_magick(), "-size", "200x100", "xc:white", str(src)], check=True)
+            r = spust(p, "vyrez.py", str(src), "d_zacern")
+            self.assertIn("znovu začerněno", r.stdout)
+            px = subprocess.run([_magick(), str(p / "zdroje" / "d_zacern.jpg"), "-format", "%[pixel:p{50,15}]", "info:"],
+                                capture_output=True, text=True).stdout
+            self.assertIn("(0", px.replace(" ", "") if "srgb" in px else px)   # černý bod v začerněné oblasti
+            # zacerneno bez zaznamenaných oblastí neplatí (ručně dopsané)
+            dd = json.loads((p / "data" / "dokumenty.json").read_text(encoding="utf-8"))
+            dd[0]["zacerneno"] = [3]
+            (p / "data" / "dokumenty.json").write_text(json.dumps(dd, ensure_ascii=False), encoding="utf-8")
+            self.assertNotIn("d_rc", docs_site("--pristup", "vse")[0])
+
 
 
 class AdresyOsob(unittest.TestCase):
