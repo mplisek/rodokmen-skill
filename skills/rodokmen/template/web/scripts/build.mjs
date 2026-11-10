@@ -5,7 +5,7 @@
 // `npm run nahled` (= node scripts/build.mjs --nahled): data + jedna verze webu + náhled na http://localhost:4321.
 // Náhled verze pro jeden přístup: `npm run nahled -- --pristup <přístup>` (id přístupu vypíše npm run data).
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { npx as spustNpx, python } from "./python.mjs";
@@ -23,6 +23,20 @@ function exportuj(...a) {
   const r = python("export_web.py", a);
   if (r.status !== 0) process.exit(r.status ?? 1);
 }
+// stránky verze webu přístupu (pro poznámky napříč větvemi – netlify/poznamky.sablona.mjs, export_web.py je vloží)
+function zapisStranky(id, dir) {
+  const out = [];
+  const projdi = (d, cesta) => {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      if (e.isDirectory()) projdi(join(d, e.name), `${cesta}${e.name}/`);
+      else if (e.name === "index.html") out.push(cesta);
+    }
+  };
+  projdi(join(web, dir), "/");
+  mkdirSync(join(web, "netlify", "stranky"), { recursive: true });
+  writeFileSync(join(web, "netlify", "stranky", `${id}.json`), JSON.stringify(out.sort()));
+}
+
 function sestav(outDir) {
   npx("astro", "build", "--outDir", outDir);
   npx("pagefind", "--site", outDir);
@@ -48,10 +62,12 @@ if (nahled) {
   if (r.status !== 0) process.exit(r.status ?? 1);
   const ids = JSON.parse(r.stdout.trim().split("\n").pop());
   rmSync(join(web, "dist"), { recursive: true, force: true });
+  rmSync(join(web, "netlify", "stranky"), { recursive: true, force: true });
   for (const id of ids) {
     console.log(`\n=== Přístup ${id} ===`);
     exportuj("--pristup", id);
     sestav(join("dist", "_p", id));
+    zapisStranky(id, join("dist", "_p", id));
   }
   cpSync(join(web, "dist", "_p", ids[0], "prihlaseni.html"), join(web, "dist", "prihlaseni.html"));
   exportuj();   // web/src zpět na data celého rodokmenu (npm run dev, náhled)

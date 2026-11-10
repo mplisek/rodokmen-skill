@@ -32,6 +32,10 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   všechny, i správce. Ve verzi přístupu jen doklady, jejichž osoby přístup vidí celé, nebo ručně přidělené
   (`pristupy`); `soukrome: true` jen tomu, kdo smí. `kontrola.py` hlídá `rc` u dokladů, osoby a přístupy.
 
+- **Přístupy pro větve rodiny – fáze 5, poznámky:** přístup s právem `poznamky` vidí i poznámky jiných větví ke
+  stránkám, které sám má (společní předci), a píše jen ke svým stránkám (`npm run build` zapíše seznam stránek každé
+  verze). Soukromá poznámka (`npm run poznamky -- --soukrome <id>`) jen pro větev autora a správce.
+
 ### Opravy
 - Domy (`stavby.py`) u přístupu s jiným kořenem: osoby se párovaly podle čísel z jiného číslování; teď se převedou
   a osoby mimo přístup se vynechají.

@@ -557,7 +557,15 @@ def poznamky_files(otisky, klice=None):
     text = open(tpl, encoding="utf-8-sig").read()
     if klice and "{{KLICE}}" not in text:
         sys.exit("CHYBA: šablona poznámek ve web/ ještě neumí osobní odkazy. " + AKTUALIZUJTE)
-    write(out, text.replace("{{PRISTUPY}}", json.dumps(otisky, indent=2)).replace("{{KLICE}}", json.dumps(klice, indent=2, sort_keys=True)))
+    # stránky každé verze webu (scripts/build.mjs po sestavení přístupu): poznámky jiných větví jen k nim
+    stranky = {}
+    for f in glob.glob(os.path.join(WEB, "netlify", "stranky", "*.json")):
+        try:
+            stranky[os.path.splitext(os.path.basename(f))[0]] = json.load(open(f, encoding="utf-8"))
+        except (OSError, ValueError):
+            pass
+    write(out, text.replace("{{PRISTUPY}}", json.dumps(otisky, indent=2)).replace("{{KLICE}}", json.dumps(klice, indent=2, sort_keys=True))
+          .replace("{{STRANKY}}", json.dumps(stranky, sort_keys=True)))
 
 
 AKTUALIZUJTE = "Aktualizujte projekt: python3 -I <skill>/tools/novy_projekt.py <složka projektu>"

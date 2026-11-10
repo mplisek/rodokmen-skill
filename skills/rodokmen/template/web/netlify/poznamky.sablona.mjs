@@ -2,13 +2,15 @@
 // tools/export_web.py – ručně neupravovat. Ukládá do Netlify Blobs (úložiště „poznamky“, jedna položka = jedna poznámka).
 // Kdo smí číst a psát: přihlášený přístup s „poznamky“: true (v cookie otisk odpovědi nebo klíč z osobního odkazu,
 // stejně jako brána).
-// Každý přístup vidí jen poznámky ze svého přístupu, přístup „vse“ všechny. Měnit (vyřízeno, smazat) jen správce
-// v projektu: npm run poznamky (scripts/poznamky.mjs).
+// Přístup vidí poznámky ze svého přístupu a poznámky jiných větví ke stránkám, které sám má (společní předci),
+// kromě soukromých; přístup „vse“ všechny (vidiPoznamku v src/lib/poznamky.mjs). Psát jde jen ke stránce, kterou přístup
+// má. Měnit (vyřízeno, soukromá, smazat) jen správce v projektu: npm run poznamky (scripts/poznamky.mjs).
 import { getStore } from '@netlify/blobs';
-import { zkontroluj } from '../../src/lib/poznamky.mjs';
+import { zkontroluj, vidiPoznamku, normStranka } from '../../src/lib/poznamky.mjs';
 
 const PRISTUPY = {{PRISTUPY}};   // otisk odpovědi → { id, poznamky }
 const KLICE = {{KLICE}};         // otisk klíče z osobního odkazu (tools/pozvanky.py) → { id, poznamky }
+const STRANKY = Object.fromEntries(Object.entries({{STRANKY}}).map(([id, s]) => [id, new Set(s)]));   // id → stránky verze (build.mjs)
 
 async function pristupZCookie(cookie) {
   if (!cookie) return undefined;
@@ -33,9 +35,10 @@ export default async (req, context) => {
 
   if (req.method === 'GET') {
     const stranka = new URL(req.url).searchParams.get('stranka');
-    const { blobs } = await store.list({ prefix: pristup.id === 'vse' ? '' : `${pristup.id}/` });
+    const mojeStranky = STRANKY[pristup.id];
+    const { blobs } = await store.list({ prefix: pristup.id === 'vse' || mojeStranky ? '' : `${pristup.id}/` });
     const vse = (await Promise.all(blobs.map((b) => store.get(b.key, { type: 'json' }))))
-      .filter((p) => p && !p.smazano && (!stranka || p.stranka === stranka))
+      .filter((p) => p && !p.smazano && (!stranka || p.stranka === stranka) && vidiPoznamku(pristup.id, p, mojeStranky))
       .sort((a, b) => (a.cas < b.cas ? 1 : -1))
       .map(({ cas, stranka: s, kdo, text, stav, pristup: p }) => ({ cas, stranka: s, kdo, text, stav, ...(pristup.id === 'vse' ? { pristup: p } : {}) }));
     return odpoved(vse);
@@ -50,6 +53,9 @@ export default async (req, context) => {
     }
     const v = zkontroluj(data);
     if (v.chyba) return odpoved({ chyba: v.chyba }, 400);
+    if (pristup.id !== 'vse' && STRANKY[pristup.id] && !STRANKY[pristup.id].has(normStranka(v.stranka))) {
+      return odpoved({ chyba: 'Tuto stránku váš přístup nemá.' }, 403);
+    }
     const cas = new Date().toISOString();
     const id = `${pristup.id}/${cas.replace(/[:.]/g, '-')}-${crypto.randomUUID().slice(0, 8)}`;
     const poznamka = { id, cas, stranka: v.stranka, kdo: v.kdo, text: v.text, pristup: pristup.id, stav: 'nova' };

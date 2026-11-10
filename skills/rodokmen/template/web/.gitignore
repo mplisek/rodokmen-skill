@@ -14,6 +14,7 @@ public/prihlaseni.html
 nginx.conf
 netlify/edge-functions/
 netlify/functions/
+netlify/stranky/
 cloudflare/worker.js
 wrangler.jsonc
 .wrangler

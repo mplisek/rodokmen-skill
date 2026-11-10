@@ -5,6 +5,7 @@
 //   npm run poznamky                         stáhne nové poznámky a vypíše ty, které ještě nejsou vyřízené
 //   npm run poznamky -- --vyrizeno <id>      označí poznámku jako vyřízenou (na webu „vyřízeno“, zůstane v přehledu)
 //   npm run poznamky -- --smazat <id>        smaže poznámku (nevhodná, omyl) – z webu i z úložiště
+//   npm run poznamky -- --soukrome <id>      soukromá poznámka: uvidí ji jen větev autora a správce (ne ostatní větve)
 //   … --slozka <cesta>                       složka propojená s webem na Netlify, když to není web/
 //   … --test                                 poznámky z náhledu (test--<web>.netlify.app) do pracovni/poznamky_test.json
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -47,19 +48,21 @@ function zapis(poznamka) {   // blobs:set s obsahem ze souboru (JSON s uvozovkam
 const seznam = nacti();
 const vyrizeno = volba("--vyrizeno");
 const smazat = volba("--smazat");
+const soukrome = volba("--soukrome");
 
-if (vyrizeno || smazat) {
-  const id = vyrizeno || smazat;
+if (vyrizeno || smazat || soukrome) {
+  const id = vyrizeno || smazat || soukrome;
   const p = seznam.find((x) => x.id === id);
   if (!p) {
     console.error(`Poznámka ${id} v data/poznamky.json není – nejdřív npm run poznamky.`);
     process.exit(1);
   }
-  if (vyrizeno) {
-    p.stav = "vyrizena";
+  if (vyrizeno || soukrome) {
+    if (vyrizeno) p.stav = "vyrizena";
+    if (soukrome) p.soukroma = true;
     zapis(p);
     uloz(seznam);
-    console.log(`Vyřízeno: ${id}`);
+    console.log(`${vyrizeno ? "Vyřízeno" : "Soukromá (jen větev autora a správce)"}: ${id}`);
   } else {
     netlify("blobs:delete", STORE, id, "--force");
     uloz(seznam.filter((x) => x.id !== id));
@@ -83,6 +86,6 @@ uloz(seznam.filter((p) => klice.includes(p.id)));
 const otevrene = nacti().filter((p) => p.stav !== "vyrizena");
 console.log(`Poznámky z webu: ${klice.length} celkem, ${nove} nových${smazane.length ? `, ${smazane.length} smazaných jinde` : ""} → data/poznamky.json`);
 for (const p of otevrene) {
-  console.log(`\n[${p.id}] ${p.cas.slice(0, 16).replace("T", " ")} · ${p.stranka} · ${p.kdo || "bez podpisu"}${p.pristup && p.pristup !== "vse" ? ` · přístup ${p.pristup}` : ""}\n${p.text}`);
+  console.log(`\n[${p.id}] ${p.cas.slice(0, 16).replace("T", " ")} · ${p.stranka} · ${p.kdo || "bez podpisu"}${p.pristup && p.pristup !== "vse" ? ` · přístup ${p.pristup}` : ""}${p.soukroma ? " · soukromá" : ""}\n${p.text}`);
 }
 if (!otevrene.length) console.log("Žádné nevyřízené poznámky.");

@@ -1,6 +1,19 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cistyText, zkontroluj, datum, KDO_MAX, TEXT_MAX } from './poznamky.mjs';
+import { cistyText, zkontroluj, datum, normStranka, vidiPoznamku, KDO_MAX, TEXT_MAX } from './poznamky.mjs';
+
+test('poznámky napříč větvemi: jen ke stránkám, které přístup má; soukromé jen autorova větev a správce', () => {
+  const stranky = new Set(['/', '/osoba/jan-novak-1890/']);
+  const cizi = { pristup: 'matka', stranka: '/osoba/jan-novak-1890' };
+  assert.equal(normStranka('/osoba/x/index.html?y=1'), '/osoba/x/');
+  assert.ok(vidiPoznamku('otec', cizi, stranky));                                         // společný předek
+  assert.ok(!vidiPoznamku('otec', { ...cizi, stranka: '/osoba/cizi/' }, stranky));          // stránka jiné větve
+  assert.ok(!vidiPoznamku('otec', { ...cizi, soukroma: true }, stranky));                   // soukromá
+  assert.ok(vidiPoznamku('matka', { ...cizi, soukroma: true }, stranky));                   // autorova větev
+  assert.ok(vidiPoznamku('vse', { ...cizi, soukroma: true }, null));                        // správce
+  assert.ok(!vidiPoznamku('otec', cizi, null));                                             // bez seznamu jen vlastní
+  assert.ok(vidiPoznamku('otec', { pristup: 'otec', stranka: '/stara/' }, stranky));        // vlastní vždy
+});
 
 const ok = { kdo: 'Jana', text: 'Babička se jmenovala Marie.', stranka: '/osoba/jan-novak-1890/' };
 
