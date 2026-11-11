@@ -59,6 +59,22 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 - Sňatek žijícího se už neukáže na stránce rodiny z údajů manžela či manželky; žijící boční příbuzní (`SIDE`)
   jen jménem.
 
+## 0.10.0-fork.2 – 12. 11. 2026
+
+Fork na originálu 0.10.0 a navíc:
+
+### Nové
+- Návody: sčítání lidu jako zdroj domácností a sourozenců, ověření člověka (ALTCHA) v SOA Třeboň a adresa snímku rovnou
+  ve 100 %, krajské Krameriusy s OCR a pravidla pro pomocníky (prohlížeč, čtení ve 100 %, dočasné odkazy na nové osoby,
+  přehled výřezů před zápisem) (PR #189).
+
+### Opravy
+- Příkaz `svazek` u `aron_img.py`, `portafontium.py` a `ebadatelna.py` zapíše jen svou položku přes `zapis.py`; dřív přepsal
+  celý `data/svazky.json` (jiné odsazení a pořadí, v gitu změněný celý soubor) a přeformátoval ručně psané položky.
+  `portafontium.py svazek <kniha> vypis` položku jen vypíše (PR #189).
+- Brzda: krajské Krameriusy (JVK České Budějovice, SVK Plzeň) nejvýš 1 dotaz za 10 s (PR #189).
+- `anno_snap.py` nespadne na odpovědi bez `snippetPages` (PR #189).
+
 ## 0.10.0-fork.1 – 10. 11. 2026
 
 Fork na originálu 0.10.0 (přepracované návody, brzda a hlídač, Cloudflare s vlastním názvem webu, opravy exportu a importu – viz níže; předchozí verze originálu 0.9.x je zahrnutá) a navíc:

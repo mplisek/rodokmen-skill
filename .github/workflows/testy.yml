@@ -66,6 +66,7 @@ jobs:
           python -X utf8 -I tests/drobne/test_drobne.py
           python -X utf8 -I tests/mapa/test_mapa.py
           python -X utf8 -I tests/graf/test_graf.py skills/rodokmen/tools/graf.py
+          python -X utf8 -I tests/zapis/test_svazek.py skills/rodokmen/tools
           if [ "$RUNNER_OS" = Linux ]; then python -X utf8 -I tests/brzda/test_curl.py $T/slusne.py; fi   # na Windows 2 případy selhávají i u originálu
           if [ "$RUNNER_OS" = Linux ]; then python -X utf8 -I tests/vyrez/test_kontrast.py $T; fi   # ImageMagick jen na Linuxu
 
