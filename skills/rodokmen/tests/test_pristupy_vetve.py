@@ -74,7 +74,7 @@ ID = {"petr": "petrova-rodina", "stary": "stary-zapis", "nova": "nova-prava", "d
       "dva_obracene": "dva-koreny-obracene", "va": "vetev-a", "vb": "vetev-b"}
 
 STRANKY = {"pribeh", "zajimavosti", "statistiky", "osobnosti", "rody", "mapa", "domy", "vejir", "osa", "strom",
-           "predci", "zapisy", "dokumenty", "hledame", "poznamky"}
+           "predci", "jmena", "zapisy", "dokumenty", "hledame", "poznamky"}
 
 
 def sha(klic):

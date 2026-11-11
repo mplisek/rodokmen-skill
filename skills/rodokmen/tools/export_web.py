@@ -126,7 +126,7 @@ def stranky_s_daty(site, generovane, texty):
     return dict(
         pribeh=bool(site["config"].get("maPribeh")), zajimavosti=generovane.get("zajimavosti.md", False),
         statistiky=bool(predci), osobnosti=bool(predci), rody=bool(site["lines"]), mapa=bool(site["places"]),
-        domy=domy, vejir=bool(predci), osa=bool(site.get("timeline")), strom=len(site["people"]) > 1, predci=bool(predci),
+        domy=domy, vejir=bool(predci), osa=bool(site.get("timeline")), strom=len(site["people"]) > 1, predci=bool(predci), jmena=bool(predci),
         zapisy=bool(site["records"]), dokumenty=bool(site["docs"]),
         hledame=bool([i for i in site["issues"] if i.get("stav") != "vyřešeno"]) or generovane.get("otazky.md", False)
         or generovane.get("dotazy.md", False),

@@ -64,6 +64,9 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 Fork na originálu 0.10.0 a navíc:
 
 ### Nové
+- **Stránka Jména** (`/jmena/`, PR #182): jak často se která křestní jména v rodokmenu opakují, zvlášť mužská a ženská, s počty
+  po rodech a rozkliknutím na konkrétní lidi. U přístupů se počítají jen osoby, které přístup vidí; v menu je jen
+  tam, kde je co ukázat.
 - Návody: sčítání lidu jako zdroj domácností a sourozenců, ověření člověka (ALTCHA) v SOA Třeboň a adresa snímku rovnou
   ve 100 %, krajské Krameriusy s OCR a pravidla pro pomocníky (prohlížeč, čtení ve 100 %, dočasné odkazy na nové osoby,
   přehled výřezů před zápisem) (PR #189).
