@@ -13,6 +13,8 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 ## Nevydáno
 
 ### Nové
+- **Dokumenty rodiny mimo přímé předky (např. manželky) jsou na stránce Dokumenty v oddílu svého rodu** (podle rodokmenu správce),
+  ne v „Obecné“.
 - **Rody začínají dědečkem po mužské linii:** děd (osoba 4, 6) patří do rodu svého otce a je výchozí osobou rodu, u babiček (5, 7)
   rod začíná až u jejich rodičů. Stránka rodu to vysvětluje (u dědečkova rodu uvede, z jakých rodů pochází jeho manželka).
 - **Statistiky – ověřené matrikou, věk při sňatku, barvy rodů:** u každé generace je vidět, kolik předků známe a kolik z nich

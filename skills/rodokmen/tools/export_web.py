@@ -819,6 +819,7 @@ def main():
             sys.exit(f"CHYBA: přístup „{pid}“ není ve web.json → pristupy (jsou: {', '.join(p['id'] for p in pristupy or []) or 'žádné'}).")
     texty = not pristup or pristup["texty"]   # příběh, zajímavosti, deník, „Co hledáme“ (píšou o celé rodině)
     puvodni_same = ns["SAME"]
+    R_spravce = ns["RODINA"]   # původní RODINA (před pohledem přístupu): rody dokumentů mimo přímé předky
     lines_spravce = dict(ns["LINES"])   # rody v rodokmenu správce: na ně (zakladatelé, adresy /rod/…) odkazují texty
     if pristup and pristup["koren"]:
         ns, prevod = pohled(ns, pristup["koren"], texty, pristup.get("rody"))
@@ -913,7 +914,9 @@ def main():
     recs = {r["key"]: r for r in record_rows()}
     if prevod is not None:   # jen zápisy a dokumenty viditelných osob
         recs = {k: v for k, v in recs.items() if k in ns["_zapisy"]}
-        docs_cfg = [dict(d, osoby=[prevod[o] for o in (puvodni_same.get(x, x) if isinstance(x, int) else x
+        docs_cfg = [dict(d, rodiny=[lines_spravce[k][0] for k in sorted(set().union(set(), *(rody_osoby(puvodni_same.get(x, x) if isinstance(x, int) else x, R_spravce)
+                                                                                                for x in d.get("osoby", [])))) if k in lines_spravce],
+                         osoby=[prevod[o] for o in (puvodni_same.get(x, x) if isinstance(x, int) else x
                                                        for x in d.get("osoby", [])) if o in prevod]) for d in docs_cfg]
         docs_cfg = [d for d in docs_cfg if d["osoby"]]
     recs = {k: v for k, v in recs.items() if k not in skryte_zapisy}   # zápisy skrytých osob (i sdílený sňatek) ne
@@ -1494,7 +1497,7 @@ def main():
     site = dict(config=public_cfg, pristup=site_pristup, places=places, root=slugs[1], aliases={a: slugs[a] for a in SAME}, people=people,
                 families=families, others=others, records=records, lines=lines,
                 issues=issue_rows(ISSUES, slug_otazky, rod_otazky), stats=stats, hypotheses=hypotheses,
-                docs=[dict(img=d["img"], caption=d.get("popis", ""), people=[slugs.get(k) or rslug[k] for k in d.get("osoby", []) if k in slugs or k in rslug],
+                docs=[dict(img=d["img"], caption=d.get("popis", ""), families=d.get("rodiny", []), people=[slugs.get(k) or rslug[k] for k in d.get("osoby", []) if k in slugs or k in rslug],
                            rods=sorted(set().union(set(), *(rody_osoby(SAME.get(k, k) if isinstance(k, int) else k, R) for k in d.get("osoby", [])))))
                       for d in docs_cfg if os.path.exists(os.path.join(VYREZY, d["img"] + ".jpg"))],
                 timeline=timeline_data(P, SAME, slugs, people, line_of, {k for k in skryti_p if k in slugs}))

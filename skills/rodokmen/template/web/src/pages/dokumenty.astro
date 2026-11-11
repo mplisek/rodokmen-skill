@@ -4,11 +4,14 @@ import Base from '../layouts/Base.astro';
 import Rod from '../components/Rod.astro';
 import { docs, people, config, href, lineByK } from '../lib/data.js';
 const kontakt = config.kontakt ?? {};
-// oddíly po rodech (k 8–15); dokument s víc rody je jen v oddílu prvního rodu, bez rodu v oddílu Obecné
+// oddíly po rodech (k 8–15); dokument s víc rody je jen v oddílu prvního rodu; dokument bez rodu v této verzi webu (např. rodina
+// manželky mimo přímé předky) je v oddílu podle rodu v rodokmenu správce (families), teprve bez něj v oddílu Obecné
 const rodyDoc = (d) => (d.rods ?? []).map(Number).filter((k) => lineByK[k]).sort((a, b) => a - b);
 const oddily = [
   ...Object.keys(lineByK).map(Number).sort((a, b) => a - b).map((k) => ({ k, docs: docs.filter((d) => rodyDoc(d)[0] === k) })),
-  { k: null, docs: docs.filter((d) => !rodyDoc(d).length) },
+  ...[...new Set(docs.filter((d) => !rodyDoc(d).length && d.families?.length).map((d) => d.families[0]))]
+    .map((nazev) => ({ k: null, nazev, docs: docs.filter((d) => !rodyDoc(d).length && d.families?.[0] === nazev) })),
+  { k: null, docs: docs.filter((d) => !rodyDoc(d).length && !d.families?.length) },
 ].filter((o) => o.docs.length);
 ---
 <Base title="Dokumenty">
@@ -20,7 +23,7 @@ const oddily = [
   {docs.length === 0 && <p>Zatím tu nic není.</p>}
   {oddily.map((o) => (
     <>
-      <h2>{o.k ? <Rod k={o.k} /> : 'Obecné'}</h2>
+      <h2>{o.k ? <Rod k={o.k} /> : (o.nazev ?? 'Obecné')}</h2>
       <div class="docs">
         {o.docs.map((d) => (
           <figure>
