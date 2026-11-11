@@ -435,6 +435,50 @@ def zil_v(text, rx):
     return any(not MISTO_CIZI.search(text[:m.start()]) for m in rx.finditer(text))
 
 
+def full_dates(p):
+    """Data narození a úmrtí pro výpis předků: přesná („* 16. 7. 1903“, „† 10. 4. 1989“), měsíc („† 9/1855“)
+    i přibližná („* asi 1820“, „† před 9/1855“, „* 1810“). Bez „*“ vezme datum křtu („pokřtěn 2. 7. 1777“ i „* (křest) …“
+    z importu GEDCOM → „pokř. …“). Nejisté datum („16. (?) 4. 1882“, „(?)“ hned za ním, „nepotvrzeno“, „pravděpodobně * …“)
+    dostane značku „(?)“. Co ve faktech chybí, doplní zvlášť narození a zvlášť úmrtí z pole y ve stejném tvaru
+    („asi 1665 – 1729“ → „* asi 1665“ / „† 1729“; „? – před 1743“ → „† před 1743“; „– po 1921“ → „žil 1921“ jako years()).
+    Skryté osoby (žijící bez práva, soukromé) dostanou `dates` prázdné v `skryj()` – jen jméno a rok."""
+    q = r"(?:\s*\(\?\))?"   # otazník vložený do data
+    datum = (r"(?:\d{1,2}\." + q + r"\s*\d{1,2}\." + q + r"\s*\d{4}|\d{1,2}/\d{4}|\d{4})")
+    kvalif = r"(?:(?:asi|kolem|cca|před|po)\s+)?"
+    def najdi(znak):
+        for f in p.get("f", []):
+            m = re.match(r"\s*(pravděpodobně\s+)?" + znak + r"\s*(" + kvalif + datum + r")(?![\d./])", f)
+            if m:
+                d = re.sub(r"\s+", " ", m.group(2))
+                nejiste = "(?)" in d or m.group(1) or "nepotvrz" in f or f[m.end():].lstrip().startswith("(?)")
+                return re.sub(r"\s*\(\?\)", "", d) + (" (?)" if nejiste else "")
+        return None
+    nar = najdi(r"\*(?:\s*a\s+pokřtěn[a]?)?(?!\s*\(křest\))")
+    nar = f"* {nar}" if nar else None
+    if not nar:
+        krest = najdi(r"(?:(?:a\s+)?pokřtěn[a]?(?:\s+jako\s+\S+)?|\*\s*\(křest\))")
+        nar = f"pokř. {krest}" if krest else None
+    umr = najdi("†")
+    umr = f"† {umr}" if umr else None
+    if not (nar and umr):   # chybějící část doplnit z pole y („asi 1764“, „1752–1786“, „? – před 1743“, „– po 1921“)
+        y = re.sub(r"\s+", " ", str(p.get("y") or "")).strip()
+        m = re.match(r"^(.*?)\s*[–-]\s*(.*)$", y) if re.search(r"(?:^|\s|\d|\?)[–-]", y) else None
+        if m:
+            od, do = m.group(1).strip(), m.group(2).strip()
+        elif y.startswith("†") or re.match(r"po\b", y):
+            od, do = "", y
+        else:
+            od, do = y, ""
+        if not nar and re.search(r"\d", od) and od.strip("? ") :
+            nar = od if od[0] in "*†" else f"* {od}"
+        if not umr and re.search(r"\d", do):
+            if re.match(r"po\b", do):
+                umr = "žil " + re.findall(r"\d{4}", do)[-1]
+            else:
+                umr = do if do[0] in "*†" else f"† {do}"
+    return " – ".join(x for x in (nar, umr) if x)
+
+
 def gen(k):
     return k.bit_length() - 1
 
@@ -956,7 +1000,7 @@ def main():
             path.append(slugs.get(c))
             c //= 2
         people[slugs[k]] = dict(
-            k=k, slug=slugs[k], name=puvodni(p), modern=p["n"], zap=p.get("zap", []), y=p.get("y", ""), years=years(p.get("y")), st=p.get("st", "unk"),
+            k=k, slug=slugs[k], name=puvodni(p), modern=p["n"], zap=p.get("zap", []), y=p.get("y", ""), years=years(p.get("y")), dates=full_dates(p), st=p.get("st", "unk"),
             status=STATUS.get(p.get("st"), ""), gen=gen(k), sex="M" if k == 1 and p.get("sex", "M") == "M" or k > 1 and k % 2 == 0 else "F",
             rel=relation(k), line=line_of(k), facts=p.get("f", []), note=p.get("note", ""), vyz=p.get("vyz", ""), records=[r for r in p.get("r", []) if r in recs],
             father=slugs.get(2 * k), mother=slugs.get(2 * k + 1),
@@ -979,7 +1023,7 @@ def main():
     # bez míst, dat, poznámek a zápisů. Na mapu, do Domů ani do Statistik se tak nedostanou (počítají se z faktů).
     def skryj(p, pozn=ZIJICI_POZN):
         p["facts"], p["records"], p["note"], p["docs"], p["side"] = [], [], pozn, [], []
-        p["vyz"], p["skryto"] = "", True
+        p["vyz"], p["skryto"], p["dates"] = "", True, ""   # celá data žijících se nikdy nedostanou na web
     skryto = 0
     for k, p in P.items():
         if k in slugs and k in skryti_p:
@@ -1189,7 +1233,8 @@ def main():
             ls = f"{ls}-{k}"
         lines[ls] = dict(k=k, slug=ls, name=name, desc=desc, color=LINE_COLORS[k],
                                     root=slugs.get(k >> 1 if k % 4 == 0 and (k >> 1) in slugs else k), people=[p["slug"] for _, p in members],
-                                    gens={p["slug"]: gen(kk) for kk, p in members})
+                                    gens={p["slug"]: gen(kk) for kk, p in members},
+                                    ks={p["slug"]: kk for kk, p in members})   # číslo výskytu v rodu (alias ze SAME má jiné než hlavní osoba)
     lines = {s: l for s, l in lines.items() if l["root"]}
     rod_k = {l["k"]: l for l in lines.values()}
     # rody správce (adresa /rod/<slug>/ a název v nadpisech) → číslo rodu správce = zakladatel

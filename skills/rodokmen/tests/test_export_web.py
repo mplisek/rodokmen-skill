@@ -4,6 +4,7 @@ Integrační část založí ukázkový projekt (novy_projekt.py --ukazka), dopl
 Síť ani Node.js nepotřebuje; ImageMagick je volitelný (bez něj se výřezy kopírují bez rámečků).
 """
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -88,6 +89,15 @@ class ExportUkazky(unittest.TestCase):
             p = self.podle_k[k]
             self.assertEqual((p["facts"], p["records"], p["note"]), ([], [], ew.ZIJICI_POZN), p["name"])
         self.assertIn("soukromí:", self.vystup)
+
+    def test_cela_data_jen_u_zemrelych(self):
+        # PR #183: sloupec Život „celá data“ – žijící (skrytí) mají dates prázdné, ať se datum narození nedostane na web
+        for k in (1, 2, 3):
+            self.assertEqual(self.podle_k[k]["dates"], "", self.podle_k[k]["name"])
+        zemreli = [p for p in self.podle_k.values() if p["k"] > 3 and p["facts"]]
+        self.assertTrue(zemreli)
+        self.assertTrue(any(re.search(r"\d{4}", p["dates"]) for p in zemreli), [p["dates"] for p in zemreli][:5])
+        self.assertTrue(all(isinstance(p["dates"], str) for p in self.podle_k.values()))
 
     def test_zijici_z_rodiny_a_jejich_snatek_bez_udaju(self):
         tomas = self.lide[self.slug("Tomáš Novák")]

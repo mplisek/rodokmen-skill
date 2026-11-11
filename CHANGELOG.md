@@ -64,6 +64,9 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 Fork na originálu 0.10.0 a navíc:
 
 ### Nové
+- **Předci a stránka rodu:** sloupec „Život“ s přepínačem „jen roky / celá data“ (volba se pamatuje v prohlížeči) a pevné šířky
+  sloupců, aby při posouvání mezi generacemi neskákaly; na stránce rodu přibylo číslo předka (PR #183). Celá data se u žijících
+  nikdy nezobrazí (skrytá osoba má `dates` prázdné, jen jméno a rok).
 - **Stránka Jména** (`/jmena/`, PR #182): jak často se která křestní jména v rodokmenu opakují, zvlášť mužská a ženská, s počty
   po rodech a rozkliknutím na konkrétní lidi. U přístupů se počítají jen osoby, které přístup vidí; v menu je jen
   tam, kde je co ukázat.
