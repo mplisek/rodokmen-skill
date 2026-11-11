@@ -13,6 +13,10 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 ## Nevydáno
 
 ### Nové
+- **Statistiky – ověřené matrikou, věk při sňatku, barvy rodů:** u každé generace je vidět, kolik předků známe a kolik z nich
+  je doloženo matrikou; u svateb nejmladší/nejstarší nevěsta i ženich a dva sloupcové grafy „V kolika letech se vdávaly
+  ženy“ a „…ženili muži“ (pásma po dvou letech, seznam všech sňatků zrušen); u rodičů nejstarší a nejmladší otec;
+  graf „Jak dlouho žili“ má sloupce v barvě rodu. Opraveny chybějící mezery za větami a středník v textu o dožití.
 - **Přístupy pro větve rodiny – fáze 3, rody a texty:** zajímavosti, karty na úvodu, příběhy, otázky pro rodinu
   a prameny se k rodu vážou zakladatelem (číslo osoby z rodokmenu správce); větev je vidí, jen když má zakladatele
   v přímé linii, a ukáže je pod svým názvem rodu. Zajímavost bez rodu vidí všichni, kartu na úvodu bez rodu jen přístup s právem texty. Úvod = společný + vlastní text

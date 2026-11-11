@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import st from '../data/statistiky.json';
-import { root, href } from '../lib/data.js';
+import { root, href, lines } from '../lib/data.js';
 
 const p = st.prehled;
 const cz = (n) => (n == null ? '–' : String(n).replace('.', ','));
@@ -14,7 +14,9 @@ const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(
 const person = (r) => `<a href="${href.person(r.slug)}">${esc(r.name)}</a>`;
 const wedM = st.snatek_vek.M, wedF = st.snatek_vek.F;
 const allWed = [...wedM.list, ...wedF.list];
-const youngestBride = wedF.list[0], oldestGroom = wedM.list[wedM.list.length - 1];
+const youngestBride = wedF.list[0], oldestBride = wedF.list[wedF.list.length - 1];
+const youngestGroom = wedM.list[0], oldestGroom = wedM.list[wedM.list.length - 1];
+const rodColor = (r) => lines?.[r.rod]?.color || 'var(--accent)';
 ---
 <Base title="Statistiky">
   <h1>Rodokmen v číslech</h1>
@@ -28,13 +30,14 @@ const youngestBride = wedF.list[0], oldestGroom = wedM.list[wedM.list.length - 1
   </div>
 
   <h2>Kolik předků známe v každé generaci</h2>
-  <p class="muted">Každá generace má dvakrát víc předků než ta předchozí. Šedá část ukazuje, kolik jich ještě chybí.</p>
+  <p class="muted">Každá generace má dvakrát víc předků než ta předchozí. Šedá část ukazuje, kolik jich ještě chybí,
+    světlá část kolik jich známe a tmavá část kolik z nich je <b>doloženo matrikou</b>.</p>
   <div class="bars">
     {st.generace.map((g) => (
       <div class="bar-row">
         <span class="lbl">{g.gen === 0 ? (root.modern || root.name).split(' ')[0] : g.gen === 1 ? 'rodiče' : g.gen === 2 ? 'prarodiče' : `${g.gen}. generace`}</span>
-        <span class="bar"><span class="fill" style={`width:${pct(g.pocet, g.max)}%`}></span></span>
-        <span class="val">{g.pocet} z {g.max}</span>
+        <span class="bar"><span class="fill known" style={`width:${pct(g.pocet, g.max)}%`}><span class="fill" style={`width:${g.pocet ? Math.round((g.dolozeno / g.pocet) * 100) : 0}%`}></span></span></span>
+        <span class="val">{g.pocet} z {g.max}, z toho {g.dolozeno} matrikou</span>
       </div>
     ))}
   </div>
@@ -70,14 +73,12 @@ const youngestBride = wedF.list[0], oldestGroom = wedM.list[wedM.list.length - 1
   <div class="grid2">
     <div class="card">
       <h3>Věk při sňatku</h3>
-      <p>Ženichové v průměru <b>{cz(wedM.prumer)} let</b>, nevěsty <b>{cz(wedF.prumer)} let</b>
+      <p>Ženichové v průměru <b>{cz(wedM.prumer)} let</b>, nevěsty <b>{cz(wedF.prumer)} let</b>{' '}
         <span class="muted">({allWed.length} sňatků se známým věkem).</span></p>
       {youngestBride && <p>Nejmladší nevěsta: <Fragment set:html={person(youngestBride)} /> – {youngestBride.val} let.</p>}
+      {oldestBride && <p>Nejstarší nevěsta: <Fragment set:html={person(oldestBride)} /> – {oldestBride.val} let.</p>}
+      {youngestGroom && <p>Nejmladší ženich: <Fragment set:html={person(youngestGroom)} /> – {youngestGroom.val} let.</p>}
       {oldestGroom && <p>Nejstarší ženich: <Fragment set:html={person(oldestGroom)} /> – {oldestGroom.val} let.</p>}
-      <details><summary>Všichni ženichové a nevěsty</summary>
-        <p><strong>Ženichové:</strong> <Fragment set:html={wedM.list.map((r) => `${person(r)} (${r.val})`).join(', ')} /></p>
-        <p><strong>Nevěsty:</strong> <Fragment set:html={wedF.list.map((r) => `${person(r)} (${r.val})`).join(', ')} /></p>
-      </details>
     </div>
     <div class="card">
       <h3>V kterém měsíci se brali</h3>
@@ -92,6 +93,21 @@ const youngestBride = wedF.list[0], oldestGroom = wedM.list[wedM.list.length - 1
       <p class="muted small">V katolických venkovských farnostech se svatby obvykle konaly po sklizni (říjen, listopad)
         a v masopustu (leden, únor); v adventu a v postě se zpravidla neoddávalo a v létě byla práce na poli.</p>
     </div>
+    {[['F', 'V kolika letech se vdávaly ženy', 'Počet nevěst v daném věku při prvním sňatku.'], ['M', 'V kolika letech se ženili muži', 'Počet ženichů v daném věku při prvním sňatku.']].map(([s, title, note]) => (
+      <div class="card">
+        <h3>{title}</h3>
+        <div class="hcols">
+          {st.snatek_histogram[s].map((h) => (
+            <div class="hcol" title={`${h.name} let: ${h.count}`}>
+              <span class="hnum">{h.count || ''}</span>
+              <span class="hbar" style={`height:${pct(h.count, maxOf(st.snatek_histogram[s]))}%`}></span>
+              <span class="hlbl">{h.name}</span>
+            </div>
+          ))}
+        </div>
+        <p class="muted small">{note}</p>
+      </div>
+    ))}
   </div>
 
   <h2>Rodiče a děti</h2>
@@ -99,7 +115,11 @@ const youngestBride = wedF.list[0], oldestGroom = wedM.list[wedM.list.length - 1
     <div class="card">
       <h3>Věk rodičů při narození dítěte z rodokmenu</h3>
       <p>Otcové v průměru <b>{cz(st.rodice_vek.M.prumer)} let</b>, matky <b>{cz(st.rodice_vek.F.prumer)} let</b>.
-        {st.rodice_vek.M.prumer && st.rodice_vek.F.prumer && <>Jedna generace tak u nás trvá zhruba {Math.round((st.rodice_vek.M.prumer + st.rodice_vek.F.prumer) / 2)} let.</>}</p>
+        {st.rodice_vek.M.prumer && st.rodice_vek.F.prumer && <>{' '}Jedna generace tak u nás trvá zhruba {Math.round((st.rodice_vek.M.prumer + st.rodice_vek.F.prumer) / 2)} let.</>}</p>
+      {st.rodice_vek.M.nejstarsi && <p>Nejstarší otec: <Fragment set:html={person(st.rodice_vek.M.nejstarsi.parent)} /> – {st.rodice_vek.M.nejstarsi.val} let
+        (syn <Fragment set:html={person(st.rodice_vek.M.nejstarsi.child)} />).</p>}
+      {st.rodice_vek.M.nejmladsi && <p>Nejmladší otec: <Fragment set:html={person(st.rodice_vek.M.nejmladsi.parent)} /> – {st.rodice_vek.M.nejmladsi.val} let
+        (<Fragment set:html={person(st.rodice_vek.M.nejmladsi.child)} />).</p>}
       {st.rodice_vek.F.nejstarsi && <p>Nejstarší matka: <Fragment set:html={person(st.rodice_vek.F.nejstarsi.parent)} /> – {st.rodice_vek.F.nejstarsi.val} let
         (dcera <Fragment set:html={person(st.rodice_vek.F.nejstarsi.child)} />).</p>}
       {st.rodice_vek.F.nejmladsi && <p>Nejmladší matka: <Fragment set:html={person(st.rodice_vek.F.nejmladsi.parent)} /> – {st.rodice_vek.F.nejmladsi.val} let.</p>}
@@ -115,13 +135,13 @@ const youngestBride = wedF.list[0], oldestGroom = wedM.list[wedM.list.length - 1
   <h2>Jak dlouho žili</h2>
   {st.doziti.list.length ? (
     <>
-      <p>U {st.doziti.list.length} předků známe přesné datum narození i úmrtí; dožili se v průměru <b>{cz(st.doziti.prumer)} let</b>.
-        {st.doziti.list.length > 15 && <span class="muted">Nejdéle žijících patnáct:</span>}</p>
+      <p>U {st.doziti.list.length} předků známe přesné datum narození i úmrtí, dožili se v průměru <b>{cz(st.doziti.prumer)} let</b>.
+        {st.doziti.list.length > 15 && <>{' '}<span class="muted">Nejdéle žijících patnáct:</span></>}</p>
       <div class="bars">
         {st.doziti.list.slice(0, 15).map((r) => (
           <div class="bar-row">
             <span class="lbl" set:html={person(r)} />
-            <span class="bar"><span class="fill" style={`width:${pct(r.val, 100)}%`}></span></span>
+            <span class="bar"><span class="fill" style={`width:${pct(r.val, 100)}%;background:${rodColor(r)}`}></span></span>
             <span class="val">{r.val} let</span>
           </div>
         ))}
@@ -172,6 +192,12 @@ const youngestBride = wedF.list[0], oldestGroom = wedM.list[wedM.list.length - 1
   .bar-row { display: grid; grid-template-columns: minmax(7rem, 12rem) 1fr auto; gap: 0.6rem; align-items: center; font-size: 0.92rem; }
   .bar { background: var(--line); border-radius: 4px; height: 0.9rem; overflow: hidden; }
   .fill { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+  .fill.known { background: color-mix(in srgb, var(--accent) 38%, var(--line)); }
+  .hcols { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; height: 150px; align-items: end; }
+  .hcol { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; min-width: 0; }
+  .hbar { width: 100%; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; }
+  .hnum { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.15rem; }
+  .hlbl { font-size: 0.62rem; color: var(--muted); margin-top: 0.2rem; text-align: center; line-height: 1.1; }
   .val { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
   .stack { display: flex; border-radius: 6px; overflow: hidden; margin: 0.6rem 0 1rem; font-size: 0.8rem; color: #fff; }
   .seg { padding: 0.35rem 0.4rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }

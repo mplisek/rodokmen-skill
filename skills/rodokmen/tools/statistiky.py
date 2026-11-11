@@ -21,6 +21,8 @@ SITE = os.path.join(ROOT, "web", "src", "data", "site.json")
 OUT = os.path.join(ROOT, "web", "src", "data", "statistiky.json")
 
 DATE = r"(\d{1,2})\.\s*(?:\((\d{1,2})\.\?\)|(\d{1,2}))\.\s*(\d{4})"
+VEK_PASMA = [(0, 17, "do 17"), (18, 19, "18–19"), (20, 21, "20–21"), (22, 23, "22–23"), (24, 25, "24–25"), (26, 27, "26–27"),
+             (28, 29, "28–29"), (30, 34, "30–34"), (35, 39, "35–39"), (40, 200, "40 a víc")]
 MESICE = ["leden", "únor", "březen", "duben", "květen", "červen", "červenec", "srpen", "září", "říjen", "listopad", "prosinec"]
 
 # klíčové slovo (začátek slova, malými písmeny – „Kovář“ s velkým je příjmení) → (povolání, skupina);
@@ -79,6 +81,11 @@ def place_of(text):
     return rest or None
 
 
+def histogram(vals):
+    """Počty věků v pásmech VEK_PASMA (všechna pásma, i prázdná, ať jsou sloupce srovnatelné)."""
+    return [{"name": nm, "count": sum(1 for v in vals if lo <= v <= hi)} for lo, hi, nm in VEK_PASMA]
+
+
 def age(a, b):
     return b.year - a.year - ((b.month, b.day) < (a.month, a.day))
 
@@ -90,7 +97,7 @@ def main():
     bys = {p["slug"]: p for p in people}
 
     def ref(p, extra=None):
-        r = {"slug": p["slug"], "name": p["name"], "years": p.get("years", "")}   # s "puvodni_jmena" v původním tvaru
+        r = {"slug": p["slug"], "name": p["name"], "years": p.get("years", ""), "rod": p.get("lineSlug")}   # rod = barva sloupce v grafech
         if extra is not None:
             r["val"] = extra
         return r
@@ -216,13 +223,15 @@ def main():
             "prijmeni": len({(p.get("modern") or p["name"]).split()[-1].replace("ová", "") for p in anc}),
             "mist": len(places),
         },
-        "generace": [{"gen": g, "pocet": gens[g], "max": 2 ** g} for g in sorted(gens)],
+        "generace": [{"gen": g, "pocet": gens[g], "max": 2 ** g, "dolozeno": sum(1 for p in anc if p.get("gen", 0) == g and p.get("st") == "doc")}
+                     for g in sorted(gens)],
         "povolani": occ_list,
         "povolani_skupiny": [{"name": k, "count": v} for k, v in groups.most_common()],
         "mista": [{"name": k, "count": v} for k, v in places.most_common(15)],
         "doziti": {"list": life, "prumer": round(sum(r["val"] for r in life) / len(life), 1) if life else None},
         "snatek_vek": {s: {"list": sorted(v, key=lambda r: r["val"]), "prumer": round(sum(r["val"] for r in v) / len(v), 1) if v else None}
                        for s, v in wed_age.items()},
+        "snatek_histogram": {s: histogram([r["val"] for r in v]) for s, v in wed_age.items()},
         "snatek_mesice": [{"name": MESICE[m - 1], "count": months.get(m, 0)} for m in range(1, 13)],
         "rodice_vek": {s: {"prumer": round(sum(x["val"] for x in v) / len(v), 1) if v else None,
                            "nejmladsi": min(v, key=lambda x: x["val"]) if v else None,
