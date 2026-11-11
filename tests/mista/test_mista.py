@@ -164,7 +164,7 @@ for fakt, cekam in (("v Horních Počernicích", "Horních Počernicích"), ("z 
 d = tempfile.mkdtemp(prefix="kontrola_")
 os.makedirs(os.path.join(d, "tools"))
 os.makedirs(os.path.join(d, "data"))
-for _f in ("kontrola.py", "chronologie.py"):   # kontrola.py načítá pravidla časové návaznosti
+for _f in ("kontrola.py", "chronologie.py", "pohled.py"):   # kontrola.py načítá pravidla časové návaznosti a id přístupů
     shutil.copy(os.path.join(TOOLS, _f), os.path.join(d, "tools"))
 with open(os.path.join(d, "data", "osoby.py"), "w", encoding="utf-8", newline="\n") as f:
     f.write("P = {1: {'n': 'Jan Novák', 'st': 'doc', 'r': ['k'], 'f': ['* 3. 5. 1850 Přesece čp. 4', 'sedlák v Nové Vsi u Klikova',"

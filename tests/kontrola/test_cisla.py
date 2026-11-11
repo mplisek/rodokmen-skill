@@ -33,7 +33,8 @@ def kontrola(P, SAME=None, zaznamy=(), prepisy=None, ukazka=(), mista=None):
         zapis(os.path.join(tmp, "data", "prepisy.json"), json.dumps(prepisy or {}, ensure_ascii=False))
         os.makedirs(os.path.join(tmp, "tools"))
         shutil.copy(KONTROLA, os.path.join(tmp, "tools", "kontrola.py"))
-        shutil.copy(os.path.join(os.path.dirname(KONTROLA), "chronologie.py"), os.path.join(tmp, "tools"))   # pravidla časové návaznosti
+        for _m in ("chronologie.py", "pohled.py"):   # fork: pravidla časové návaznosti a id přístupů, které kontrola.py importuje
+            shutil.copy(os.path.join(os.path.dirname(KONTROLA), _m), os.path.join(tmp, "tools"))
         r = subprocess.run(PY + [os.path.join(tmp, "tools", "kontrola.py")], capture_output=True, text=True,
                            encoding="utf-8")
         return (f"NÁVRATOVÝ KÓD {r.returncode}\n" if r.returncode else "") + r.stdout + r.stderr

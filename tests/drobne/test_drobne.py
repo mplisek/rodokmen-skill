@@ -46,7 +46,7 @@ d = tempfile.mkdtemp(prefix="drobne_kontrola_")
 try:
     os.makedirs(os.path.join(d, "data"))
     os.makedirs(os.path.join(d, "tools"))
-    for n in ("kontrola.py", "export_web.py", "chronologie.py"):   # chronologie.py: pravidla návaznosti ve forku
+    for n in ("kontrola.py", "export_web.py", "chronologie.py", "obraz.py", "pohled.py"):   # fork: závislosti kontrola.py a export_web.py
         shutil.copy(os.path.join(TOOLS, n), os.path.join(d, "tools"))
     P = {1: dict(n="Petr Novák", st="doc", f=["* 1990"])}
     with open(os.path.join(d, "data", "osoby.py"), "w", encoding="utf-8") as f:
