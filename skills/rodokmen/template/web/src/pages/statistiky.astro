@@ -16,6 +16,10 @@ const wedM = st.snatek_vek.M, wedF = st.snatek_vek.F;
 const allWed = [...wedM.list, ...wedF.list];
 const youngestBride = wedF.list[0], oldestBride = wedF.list[wedF.list.length - 1];
 const youngestGroom = wedM.list[0], oldestGroom = wedM.list[wedM.list.length - 1];
+// jednotný řádek „Nejmladší matka: Jméno – 21 let (dcera Jméno).“ – ženy první, mladší dřív
+const kdo = (label, r, child) => `${label}: ${person(r)} – ${r.val} let${child ? ` (${child})` : ''}.`;
+const rv = st.rodice_vek;
+const dite = (x) => x && `${x.child_sex === 'F' ? 'dcera' : 'syn'} ${person(x.child)}`;
 const rodColor = (r) => lines?.[r.rod]?.color || 'var(--accent)';
 ---
 <Base title="Statistiky">
@@ -70,15 +74,15 @@ const rodColor = (r) => lines?.[r.rod]?.color || 'var(--accent)';
   </div>
 
   <h2>Svatby</h2>
-  <div class="grid2">
+  <div class="grid2x2">
     <div class="card">
       <h3>Věk při sňatku</h3>
       <p>Ženichové v průměru <b>{cz(wedM.prumer)} let</b>, nevěsty <b>{cz(wedF.prumer)} let</b>{' '}
         <span class="muted">({allWed.length} sňatků se známým věkem).</span></p>
-      {youngestBride && <p>Nejmladší nevěsta: <Fragment set:html={person(youngestBride)} /> – {youngestBride.val} let.</p>}
-      {oldestBride && <p>Nejstarší nevěsta: <Fragment set:html={person(oldestBride)} /> – {oldestBride.val} let.</p>}
-      {youngestGroom && <p>Nejmladší ženich: <Fragment set:html={person(youngestGroom)} /> – {youngestGroom.val} let.</p>}
-      {oldestGroom && <p>Nejstarší ženich: <Fragment set:html={person(oldestGroom)} /> – {oldestGroom.val} let.</p>}
+      {youngestBride && <p set:html={kdo('Nejmladší nevěsta', youngestBride)} />}
+      {oldestBride && <p set:html={kdo('Nejstarší nevěsta', oldestBride)} />}
+      {youngestGroom && <p set:html={kdo('Nejmladší ženich', youngestGroom)} />}
+      {oldestGroom && <p set:html={kdo('Nejstarší ženich', oldestGroom)} />}
     </div>
     <div class="card">
       <h3>V kterém měsíci se brali</h3>
@@ -116,13 +120,10 @@ const rodColor = (r) => lines?.[r.rod]?.color || 'var(--accent)';
       <h3>Věk rodičů při narození dítěte z rodokmenu</h3>
       <p>Otcové v průměru <b>{cz(st.rodice_vek.M.prumer)} let</b>, matky <b>{cz(st.rodice_vek.F.prumer)} let</b>.
         {st.rodice_vek.M.prumer && st.rodice_vek.F.prumer && <>{' '}Jedna generace tak u nás trvá zhruba {Math.round((st.rodice_vek.M.prumer + st.rodice_vek.F.prumer) / 2)} let.</>}</p>
-      {st.rodice_vek.M.nejstarsi && <p>Nejstarší otec: <Fragment set:html={person(st.rodice_vek.M.nejstarsi.parent)} /> – {st.rodice_vek.M.nejstarsi.val} let
-        (syn <Fragment set:html={person(st.rodice_vek.M.nejstarsi.child)} />).</p>}
-      {st.rodice_vek.M.nejmladsi && <p>Nejmladší otec: <Fragment set:html={person(st.rodice_vek.M.nejmladsi.parent)} /> – {st.rodice_vek.M.nejmladsi.val} let
-        (<Fragment set:html={person(st.rodice_vek.M.nejmladsi.child)} />).</p>}
-      {st.rodice_vek.F.nejstarsi && <p>Nejstarší matka: <Fragment set:html={person(st.rodice_vek.F.nejstarsi.parent)} /> – {st.rodice_vek.F.nejstarsi.val} let
-        (dcera <Fragment set:html={person(st.rodice_vek.F.nejstarsi.child)} />).</p>}
-      {st.rodice_vek.F.nejmladsi && <p>Nejmladší matka: <Fragment set:html={person(st.rodice_vek.F.nejmladsi.parent)} /> – {st.rodice_vek.F.nejmladsi.val} let.</p>}
+      {rv.F.nejmladsi && <p set:html={kdo('Nejmladší matka', { ...rv.F.nejmladsi.parent, val: rv.F.nejmladsi.val }, dite(rv.F.nejmladsi))} />}
+      {rv.F.nejstarsi && <p set:html={kdo('Nejstarší matka', { ...rv.F.nejstarsi.parent, val: rv.F.nejstarsi.val }, dite(rv.F.nejstarsi))} />}
+      {rv.M.nejmladsi && <p set:html={kdo('Nejmladší otec', { ...rv.M.nejmladsi.parent, val: rv.M.nejmladsi.val }, dite(rv.M.nejmladsi))} />}
+      {rv.M.nejstarsi && <p set:html={kdo('Nejstarší otec', { ...rv.M.nejstarsi.parent, val: rv.M.nejstarsi.val }, dite(rv.M.nejstarsi))} />}
     </div>
     {(st.nemanzelske.length > 0 || st.legitimace.length > 0) && <div class="card">
       <h3>Děti „před svatbou“</h3>
@@ -188,7 +189,7 @@ const rodColor = (r) => lines?.[r.rod]?.color || 'var(--accent)';
   .tile { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.8rem; text-align: center; }
   .tile b { display: block; font-family: var(--serif); font-size: 1.8rem; color: var(--accent); }
   .tile span { font-size: 0.85rem; color: var(--muted); }
-  .bars { display: grid; gap: 0.35rem; max-width: 46rem; }
+  .bars { display: grid; gap: 0.35rem; }
   .bar-row { display: grid; grid-template-columns: minmax(7rem, 12rem) 1fr auto; gap: 0.6rem; align-items: center; font-size: 0.92rem; }
   .bar { background: var(--line); border-radius: 4px; height: 0.9rem; overflow: hidden; }
   .fill { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
@@ -206,6 +207,8 @@ const rodColor = (r) => lines?.[r.rod]?.color || 'var(--accent)';
   .occ summary { cursor: pointer; }
   .occ p { font-size: 0.88rem; margin: 0.5rem 0 0; }
   .dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 0.4rem; }
+  .grid2x2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
+  @media (max-width: 700px) { .grid2x2 { grid-template-columns: minmax(0, 1fr); } }
   .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.8rem; }
   .months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; height: 120px; align-items: end; }
   .mcol { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; }

@@ -937,7 +937,11 @@ def main():
         aliases_of.setdefault(c, []).append(a)
 
     def line_of(k):
+        """Rod (8–15) = zakladatel v 3. generaci. Rod začíná u prarodiče po mužské linii (děd k = 4, 6 patří do rodu svého
+        otce, 8 resp. 12), u prarodičů ženského pohlaví (5, 7) rod začíná až u jejich rodičů (10, 11, 14, 15)."""
         g = gen(k)
+        if g == 2 and k % 2 == 0:
+            return 2 * k
         return k >> (g - 3) if g >= 3 else None
 
     people = {}
@@ -1181,7 +1185,7 @@ def main():
             print(f"POZOR: rody {lines[ls]['k']} a {k} mají stejný název „{name}“ – rozliš je v LINES (data/osoby.py)")
             ls = f"{ls}-{k}"
         lines[ls] = dict(k=k, slug=ls, name=name, desc=desc, color=LINE_COLORS[k],
-                                    root=slugs.get(k), people=[p["slug"] for _, p in members],
+                                    root=slugs.get(k >> 1 if k % 4 == 0 and (k >> 1) in slugs else k), people=[p["slug"] for _, p in members],
                                     gens={p["slug"]: gen(kk) for kk, p in members})
     lines = {s: l for s, l in lines.items() if l["root"]}
     rod_k = {l["k"]: l for l in lines.values()}
@@ -1465,7 +1469,7 @@ def main():
 
     def rod_otazky(k):    # rod (8–15) předka u otázky; u bližších předků a příbuzných z RODINA žádný
         k = SAME.get(k, k) if isinstance(k, int) else k
-        return rody_k.get(line_of(k)) if isinstance(k, int) and k >= 8 else None
+        return rody_k.get(line_of(k)) if isinstance(k, int) and k >= 4 else None
 
     # linie („prima“ = výchozí osoby a předci, „rozsirena“ = ostatní) a vlastní větev (tools/pohled.py); celý web
     # (správce, projekt bez přístupů): předci = přímá, RODINA = rozšířená, všichni ve vlastní větvi

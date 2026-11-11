@@ -151,7 +151,7 @@ def main():
         for par, sex in (("father", "M"), ("mother", "F")):
             s = p.get(par)
             if s and s in born:
-                gap[sex].append({"parent": ref(bys[s]), "child": ref(p), "val": age(born[s], born[p["slug"]])})
+                gap[sex].append({"parent": ref(bys[s]), "child": ref(p), "child_sex": p.get("sex"), "val": age(born[s], born[p["slug"]])})
 
     # povolání
     occ = defaultdict(list)

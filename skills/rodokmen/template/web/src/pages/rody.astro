@@ -6,7 +6,7 @@ const list = Object.values(lines).sort((a, b) => a.k - b.k);
 ---
 <Base title="Rody">
   <h1>{linesTitle(list.length)}</h1>
-  <p class="lead">Rodokmen se větví podle osmi pradědečků a prababiček – rodičů dědečků a babiček. Každý rod je jedna z těchto větví se všemi svými předky.</p>
+  <p class="lead">Rodokmen se větví do osmi rodů: po mužské linii začíná rod dědečkem, u babiček až jejich rodiči (pradědečkem a prababičkou). Každý rod je jedna z těchto větví se všemi svými předky.</p>
   {list.length === 0 && <p>Rody se ukážou, až budou v rodokmenu známí pradědečkové a prababičky.</p>}
   <h2>Po otci</h2>
   <div class="grid2">

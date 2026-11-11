@@ -38,7 +38,7 @@ main.wide { max-width: none; }
 main.wide :is(.lead, .prose, .next-step) { max-width: none; }
 .site-footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 2rem 1rem; border-top: 1px solid var(--line); }
 
-.lead { font-size: 1.1rem; color: var(--muted); max-width: 46rem; }
+.lead { font-size: 1.1rem; color: var(--muted); }
 .muted { color: var(--muted); }
 .small { font-size: 0.88rem; }
 .crumbs { font-size: 0.85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 0.2rem 0.4rem; }
@@ -107,7 +107,7 @@ th { font-weight: 600; color: #5a4632; background: #f6f0e6; }
 .stats strong { display: block; font: 1.8rem var(--serif); color: #3b2e22; }
 
 .line-card { border-top: 6px solid var(--c); }
-.prose { max-width: 46rem; }
+.prose { max-width: none; }
 .prose p { margin: 0.6rem 0; }
 .docs { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
 .docs figure { margin: 0; background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.6rem; }
@@ -224,7 +224,7 @@ main.full { max-width: none; padding: 0; }
 }
 
 /* "what next" box at the end of a page */
-.next-step { max-width: 46rem; margin: 2.5rem 0 1rem; padding: 1.1rem 1.3rem; background: var(--accent-soft); border-left: 4px solid #e0952f; border-radius: 8px; }
+.next-step { margin: 2.5rem 0 1rem; padding: 1.1rem 1.3rem; background: var(--accent-soft); border-left: 4px solid #e0952f; border-radius: 8px; }
 .next-step p { margin: 0.3rem 0; }
 .next-step .btn { margin: 0.4rem 0.4rem 0 0; }
 

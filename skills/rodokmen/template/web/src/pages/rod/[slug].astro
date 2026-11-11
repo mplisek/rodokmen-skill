@@ -11,7 +11,13 @@ export function getStaticPaths() {
 const l = lines[Astro.params.slug];
 const members = l.people.map((s) => ({ ...people[s], gen: l.gens[s] }));
 const gens = [...new Set(members.map((p) => p.gen))].sort((a, b) => a - b);
-const partnerLine = lineByK[l.k ^ 1];
+const root = people[l.root];
+// rod začíná dědečkem (výchozí osoba 2. generace) → jeho manželka patří do rodů svých rodičů; jinak do sousedního rodu páru 8–15
+const dedecek = root.gen === 2;
+const partnerLine = dedecek ? null : lineByK[l.k ^ 1];
+const wifeLines = dedecek && root.spouse
+  ? [...new Set([people[root.spouse].father, people[root.spouse].mother].map((s) => people[s]?.lineSlug).filter(Boolean))].map((s) => lines[s]).filter(Boolean)
+  : [];
 ---
 <Base title={`Rod ${l.name}`}>
   <p class="crumbs"><a href="/rody/">Rody</a></p>
@@ -22,8 +28,10 @@ const partnerLine = lineByK[l.k ^ 1];
       <>{people[l.root].sex === 'M' ? ' Jeho manželka ' : ' Její manžel '}<PersonLink slug={people[l.root].spouse} /> je výchozí osobou
         sousedního rodu <a href={href.line(partnerLine.slug)}>{partnerLine.name}</a>; jejich {people[people[l.root].child].sex === 'M' ? 'syn' : 'dcera'} <PersonLink slug={people[l.root].child} />.</>
     )}
+    {wifeLines.length > 0 && <>{' '}Jeho manželka <PersonLink slug={root.spouse} /> pochází z {wifeLines.length === 1 ? 'rodu' : 'rodů'}
+      {wifeLines.map((w, i) => <>{i ? ' a ' : ' '}<a href={href.line(w.slug)}>{w.name}</a></>)}.</>}
   </p>
-  <p class="small muted">Rodokmen je rozdělený do osmi rodů podle osmi pradědečků a prababiček – každý manželský pár proto patří do dvou sousedních rodů.</p>
+  <p class="small muted">Rodokmen je rozdělený do osmi rodů. U dědečků začíná rod dědečkem (po mužské linii), u babiček až jejich rodiči (pradědečkem a prababičkou) – manželský pár proto patří do dvou sousedních rodů.</p>
 
   {gens.map((g) => (
     <>
