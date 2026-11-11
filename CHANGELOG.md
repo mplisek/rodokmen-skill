@@ -10,7 +10,9 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
-## Nevydáno
+## 0.10.0-fork.2 – 12. 11. 2026
+
+Fork na originálu 0.10.0 a navíc:
 
 ### Nové
 - **Dokumenty rodiny mimo přímé předky (např. manželky) jsou na stránce Dokumenty v oddílu svého rodu** (podle rodokmenu správce),
@@ -47,23 +49,6 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 - **Přístupy pro větve rodiny – fáze 5, poznámky:** přístup s právem `poznamky` vidí i poznámky jiných větví ke
   stránkám, které sám má (společní předci), a píše jen ke svým stránkám (`npm run build` zapíše seznam stránek každé
   verze). Sdílí se jen nové poznámky; autor může zaškrtnout „Jen pro naši větev“, správce označit dodatečně (`npm run poznamky -- --soukrome <id>`). Poznámky správce ostatním větvím ne.
-
-### Opravy
-- Obrázek, který už na web nepatří (doklad s rodným číslem, skrytá osoba), export smaže z `public/` i na webu
-  bez přístupů.
-- Adresa stránky stejnojmenné osoby (`vaclav-culek-144`) je stejná ve všech verzích webu – dřív ji verze přístupu
-  počítala z jiného číslování a odkazy z textů nefungovaly.
-- Domy (`stavby.py`) u přístupu s jiným kořenem: osoby se párovaly podle čísel z jiného číslování; teď se převedou
-  a osoby mimo přístup se vynechají.
-- Časová osa u žijících neprozradí přesné datum narození (dosud bylo dopočitatelné z čísla pro graf).
-- Sňatek žijícího se už neukáže na stránce rodiny z údajů manžela či manželky; žijící boční příbuzní (`SIDE`)
-  jen jménem.
-
-## 0.10.0-fork.2 – 12. 11. 2026
-
-Fork na originálu 0.10.0 a navíc:
-
-### Nové
 - **Předci a stránka rodu:** sloupec „Život“ s přepínačem „jen roky / celá data“ (volba se pamatuje v prohlížeči) a pevné šířky
   sloupců, aby při posouvání mezi generacemi neskákaly; na stránce rodu přibylo číslo předka (PR #183). Celá data se u žijících
   nikdy nezobrazí (skrytá osoba má `dates` prázdné, jen jméno a rok).
@@ -75,6 +60,15 @@ Fork na originálu 0.10.0 a navíc:
   přehled výřezů před zápisem) (PR #189).
 
 ### Opravy
+- Obrázek, který už na web nepatří (doklad s rodným číslem, skrytá osoba), export smaže z `public/` i na webu
+  bez přístupů.
+- Adresa stránky stejnojmenné osoby (`vaclav-culek-144`) je stejná ve všech verzích webu – dřív ji verze přístupu
+  počítala z jiného číslování a odkazy z textů nefungovaly.
+- Domy (`stavby.py`) u přístupu s jiným kořenem: osoby se párovaly podle čísel z jiného číslování; teď se převedou
+  a osoby mimo přístup se vynechají.
+- Časová osa u žijících neprozradí přesné datum narození (dosud bylo dopočitatelné z čísla pro graf).
+- Sňatek žijícího se už neukáže na stránce rodiny z údajů manžela či manželky; žijící boční příbuzní (`SIDE`)
+  jen jménem.
 - Příkaz `svazek` u `aron_img.py`, `portafontium.py` a `ebadatelna.py` zapíše jen svou položku přes `zapis.py`; dřív přepsal
   celý `data/svazky.json` (jiné odsazení a pořadí, v gitu změněný celý soubor) a přeformátoval ručně psané položky.
   `portafontium.py svazek <kniha> vypis` položku jen vypíše (PR #189).
