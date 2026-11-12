@@ -10,6 +10,16 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
+## Nevydáno
+
+### Nové
+
+- **Noční a víkendový režim, fronty úkolů:** `tools/fronta.py` (úkoly na noc, k rozhodnutí, k bádání; slučování duplicit,
+  třídění podle priority, mazání hotových, zámek „bádání × úprava skillu“), konfigurace `data/rezim.json` (pracovní doba,
+  svátky, počet pomocníků), pravidla v `reference/nocni_rezim.md` a šablony zápisů v `reference/zapisy.md`.
+  `kontrola.py` hlásí údaje o procesu (pomocník, „ověřeno na snímku“…) v textech pro web.
+- **markdownlint:** `.markdownlint.yaml`, `.editorconfig` a kontrola `.md` v CI.
+
 ## 0.10.0-fork.2 – 12. 11. 2026
 
 Fork na originálu 0.10.0 a navíc:

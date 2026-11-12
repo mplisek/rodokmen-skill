@@ -28,7 +28,7 @@ Upřesnění = nový úkol, rozdělení = víc úkolů, přeřazení = `fronta.p
 ## Formát úkolu a pravidla zápisu
 
 ```text
-### U-0412 | P1 | os:57,114 | typ:křest | cíl:krest:115 | rodič:U-0398 | stav:otevřeno
+## U-0412 | P1 | os:57,114 | typ:křest | cíl:krest:115 | rodič:U-0398 | stav:otevřeno
 Text úkolu: co hledat, kde, co už je prohlédnuto.
 ```
 

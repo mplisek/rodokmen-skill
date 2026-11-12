@@ -15,7 +15,7 @@ Použití (z kořene projektu): python3 -I tools/fronta.py <příkaz> …
   dalsi <fronta> [--typ T]                další úkol ke zpracování (jen mimo pracovní dobu nebo s --vzdy); hlídá zámek
   zamek start <typ> | stop | stav         brzda: v jednom běhu buď bádání, nebo úprava skillu (nikdy obojí)
 
-Úkol v souboru: hlavička `### U-0412 | P1 | os:57,114 | typ:křest | cíl:krest:115 | rodič:U-0398 | stav:otevřeno`
+Úkol v souboru: hlavička `## U-0412 | P1 | os:57,114 | typ:křest | cíl:krest:115 | rodič:U-0398 | stav:otevřeno`
 a pod ní volný text. Priorita P1 = odemyká chybějícího předka, P2 = mění „prob“ na „doc“, P3 = ověřuje rodinný údaj.
 Pravidla: reference/nocni_rezim.md.
 """
@@ -34,7 +34,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 FRONTY = {"noc": "ukoly_na_noc.md", "rozhodnuti": "ukoly_k_rozhodnuti.md", "badani": "ukoly_k_badani.md",
           "dotazy": "archivni_dotazy.md", "rodina": "otazky_pro_rodinu.md"}
-HLAVICKA = re.compile(r"^### (U-\d+)\s*\|(.*)$")
+HLAVICKA = re.compile(r"^##+ (U-\d+)\s*\|(.*)$")
 STAVY = ("otevřeno", "odloženo", "probíhá")
 TYPY_RUN = {"bádání": "badani", "skill": "skill", "test": "skill", "údržba": "skill"}   # typ úkolu → druh běhu (brzda)
 VYCHOZI_REZIM = {"pracovni_dny": [1, 2, 3, 4, 5], "pracovni_od": "06:00", "pracovni_do": "22:00", "svatky": [],
@@ -62,10 +62,10 @@ class Ukol:
             if v:
                 pole.append(f"{k}:{v}")
         pole.append(f"stav:{self.stav}")
-        return "### " + " | ".join(pole)
+        return "## " + " | ".join(pole)
 
     def radky(self):
-        return [self.hlavicka()] + self.text.strip("\n").split("\n") + [""]
+        return [self.hlavicka(), ""] + self.text.strip("\n").split("\n") + [""]
 
 
 def parse_hlavicka(radek):
