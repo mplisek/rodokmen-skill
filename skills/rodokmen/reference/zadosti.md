@@ -3,6 +3,7 @@
 Postup je v SKILL.md (Fáze 2, „Žádosti“). Tady jsou podrobnosti a tři vzory.
 
 ## Postup (Claude)
+
 1. Nejdřív se podívej do `data/zadosti.md`, jestli už na totéž nečekáte. Na jeden archiv nanejvýš jedna otevřená
    žádost (odpoví na všechno najednou, druhá žádost zdržuje první); další dotaz připiš k ní, nebo ho odlož.
 2. Adresu instituce ověř na jejím oficiálním webu. Koncept napiš do `pracovni/zadosti/<instituce>_<co>.md` (formát níže),
@@ -13,6 +14,7 @@ Postup je v SKILL.md (Fáze 2, „Žádosti“). Tady jsou podrobnosti a tři vz
 4. Když přijde odpověď: viz „Po odpovědi“ na konci.
 
 ## Kam s čím
+
 - **Matriční úřad** (obec s matrikou). Zákon č. 301/2000 Sb., o matrikách, rozlišuje dvě věci:
   - *Kde je kniha* (§ 23): úřad ji drží 100 let (narození), 75 let (manželství, partnerství i úmrtí) od posledního
     zápisu ve svazku, pak ji předá státnímu oblastnímu archivu. Kniha úmrtí tedy bývá na úřadě i s 50 let starými zápisy.
@@ -30,6 +32,7 @@ Postup je v SKILL.md (Fáze 2, „Žádosti“). Tady jsou podrobnosti a tři vz
 - **Obec** (správce hřbitova): evidence hrobů, kdo je v hrobě uložen a kdy, kdo hrob platí. Často odpoví zdarma.
 
 ## Kanály
+
 - E-mail z odkazu `tools/mailto.py` stačí na dotaz a na rešerši. Žádost o matriční doklad bez podpisu může úřad
   vzít jen jako dotaz a požádat o podání jinak.
 - **Datová schránka** (zdarma pro každou osobu; podání z ní má stejné účinky jako podepsaná písemná žádost,
@@ -39,16 +42,19 @@ Postup je v SKILL.md (Fáze 2, „Žádosti“). Tady jsou podrobnosti a tři vz
 - Adresu instituce (e-mail podatelny nebo matriky, ID datové schránky) vždy ověř na jejím oficiálním webu.
 
 ## Koncept
+
 Soubor `pracovni/zadosti/<instituce>_<co>.md`. Víc žádostí v jednom souboru odděl řádkem `---`. Kontakty uživatele
 (adresa, telefon) patří jen sem, ne do `data/`.
 
-    ## Matriční úřad <obec> – úmrtí <jméno>
+```markdown
+## Matriční úřad <obec> – úmrtí <jméno>
 
-    **Komu:** matrika@<obec>.cz
-    **Předmět:** Žádost o kopii zápisu o úmrtí (<jméno>, † <rok>)
+**Komu:** matrika@<obec>.cz
+**Předmět:** Žádost o kopii zápisu o úmrtí (<jméno>, † <rok>)
 
-    Dobrý den,
-    …
+Dobrý den,
+…
+```
 
 Řádky `**Komu:**`, `**Kopie:**` (volitelně) a `**Předmět:**` patří hned pod nadpis; od prvního jiného řádku je
 všechno text e-mailu. Odstavec piš na jeden řádek. Pokračování odrážky odsaď dvěma mezerami. Nástroj zapíše odkazy
@@ -63,61 +69,69 @@ nebo ať uživatel text zkopíruje z konceptu.
 
 ## Vzor 1: matriční úřad, výpis nebo kopie zápisu
 
-    **Předmět:** Žádost o výpis ze zápisu o úmrtí (<jméno a příjmení>, † <datum>)
+```markdown
+**Předmět:** Žádost o výpis ze zápisu o úmrtí (<jméno a příjmení>, † <datum>)
 
-    Dobrý den,
+Dobrý den,
 
-    prosím o výpis nebo kopii zápisu o úmrtí pro rodinný rodokmen:
-    - <jméno a příjmení>, narozen(a) <datum> v <obec>, zemřel(a) <datum nebo rok> v <obec>, bydliště <obec čp.>
-    - manžel(ka): <jméno>, rodiče: <jména, pokud je znám>
+prosím o výpis nebo kopii zápisu o úmrtí pro rodinný rodokmen:
+- <jméno a příjmení>, narozen(a) <datum> v <obec>, zemřel(a) <datum nebo rok> v <obec>, bydliště <obec čp.>
+- manžel(ka): <jméno>, rodiče: <jména, pokud je znám>
 
-    Jsem <vnuk / pravnučka …> zemřelého. Příbuzenství dokládám přiloženými kopiemi: <můj rodný list>, <rodný list
-    otce / matky>, <…>.
+Jsem <vnuk / pravnučka …> zemřelého. Příbuzenství dokládám přiloženými kopiemi: <můj rodný list>, <rodný list
+otce / matky>, <…>.
 
-    Prosím o sdělení výše správního poplatku a způsobu platby. Pokud je potřeba žádost podat jinak (datovou schránkou,
-    s ověřeným podpisem), dejte mi prosím vědět.
+Prosím o sdělení výše správního poplatku a způsobu platby. Pokud je potřeba žádost podat jinak (datovou schránkou,
+s ověřeným podpisem), dejte mi prosím vědět.
 
-    Děkuji a přeji hezký den,
-    <jméno a příjmení>
-    <adresa, telefon>
+Děkuji a přeji hezký den,
+<jméno a příjmení>
+<adresa, telefon>
+```
 
 Odstavec o příbuzenství jen u zápisu mladšího než lhůty z § 25b (úmrtí 30 let, sňatek 75, narození 100); u staršího
 ho vynech. Pro sňatek stejně: „zápisu o uzavření manželství“, oba snoubenci, datum a místo sňatku.
 
 ## Vzor 2: archiv, rešerše
 
-    **Předmět:** Žádost o rešerši – pozemková kniha, <obec> čp. <N>
+```markdown
+**Předmět:** Žádost o rešerši – pozemková kniha, <obec> čp. <N>
 
-    Dobrý den,
+Dobrý den,
 
-    pro rodinný rodokmen hledám majitele domu čp. <N> v <obec> v letech <od>–<do>. Podle matrik tam žil <jméno>
-    (<povolání>, † <rok>).
+pro rodinný rodokmen hledám majitele domu čp. <N> v <obec> v letech <od>–<do>. Podle matrik tam žil <jméno>
+(<povolání>, † <rok>).
 
-    Prosím o sdělení, zda je pozemková kniha pro <katastrální území> ve vašem archivu a zda je možné udělat rešerši
-    zápisů k čp. <N>, případně jakou cenu a lhůtu mám čekat. Rád(a) také přijedu do badatelny.
+Prosím o sdělení, zda je pozemková kniha pro <katastrální území> ve vašem archivu a zda je možné udělat rešerši
+zápisů k čp. <N>, případně jakou cenu a lhůtu mám čekat. Rád(a) také přijedu do badatelny.
 
-    Děkuji,
-    <jméno a příjmení>
-    <adresa, telefon>
+Děkuji,
+<jméno a příjmení>
+<adresa, telefon>
+```
 
 ## Vzor 3: obec, evidence hrobů
 
-    **Předmět:** Dotaz do evidence hrobů – rodina <příjmení>
+```markdown
+**Předmět:** Dotaz do evidence hrobů – rodina <příjmení>
 
-    Dobrý den,
+Dobrý den,
 
-    pro rodinný rodokmen hledám hrob rodiny <příjmení> na hřbitově v <obec>. Pochováni tam mohou být:
-    - <jméno a příjmení>, † <rok>
-    - <jméno a příjmení>, † <rok>
+pro rodinný rodokmen hledám hrob rodiny <příjmení> na hřbitově v <obec>. Pochováni tam mohou být:
+- <jméno a příjmení>, † <rok>
+- <jméno a příjmení>, † <rok>
 
-    Prosím o sdělení, zda je v evidenci hrobů najdete, číslo hrobu a kdo je v něm uložen (jména a data uložení).
+Prosím o sdělení, zda je v evidenci hrobů najdete, číslo hrobu a kdo je v něm uložen (jména a data uložení).
 
-    Děkuji,
-    <jméno a příjmení>
-    <telefon>
+Děkuji,
+<jméno a příjmení>
+<telefon>
+```
 
 ## Po odpovědi
+
 Shrň uživateli, co přišlo. Ne každá odpověď žádost uzavírá:
+
 - Je potřeba ještě něco udělat (zaplatit rešerši nebo poplatek, doplnit doklady, podat žádost jinak, odpovědět na
   dotaz)? Žádost zůstává v Otevřených, do Stavu napiš další krok: „čeká na úhradu“, „doplnit doklady“,
   „odpověď – zpracovat“.

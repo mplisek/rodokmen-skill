@@ -4,12 +4,14 @@ Kvůli tomuhle rodina web čte. Tabulka jmen a dat nikoho nechytí, ale „prapr
 nebo „rod žil sto let v jednom domě“ ano. Nečekej s tím až na konec výzkumu.
 
 ## Zajímavosti („fun facts“) – sbírej průběžně
+
 Kdykoli při čtení zápisu narazíš na něco neobvyklého, **hned** to napiš do `data/zajimavosti.md` jako krátký odstavec
 a řekni to uživateli jako příběh. Po každém větším kole spusť `python3 -I tools/napady.py`. Nástroj projde data
 a vypíše náměty (svatby krátce před porodem, rod v jednom domě, sňatky příbuzných, dlouhověkost, epidemie…).
 Každý námět si ověř v zápisu, než ho napíšeš.
 
 Co bývá zajímavé (všechno z jednoho skutečného rodokmenu):
+
 | Typ | Příklad, jak to napsat |
 |---|---|
 | Svatby na poslední chvíli | tabulka: svatba – dítě – za kolik dní (spočítej přesně); „přesná trefa“: narozen 267 dní po svatbě – počat nejspíš o svatební noci |
@@ -34,6 +36,7 @@ Citlivé věci z 20. století (sebevraždy, nemoci, rozvody, nemanželské děti
 uživatele (`reference/soukromi.md`). `kontrola.py` je hlídá.
 
 ## Příběh hlavního rodu
+
 **Hlavní rod** je rod výchozí osoby (rodné příjmení, většinou rod č. 8 v `LINES`). Když uživatel chce jiný, nastav
 `web.json` → `pribeh.rod`. Příběh se jmenuje **„Příběh <rodu ve 2. pádě>“** (Příběh Novákových, Příběh Dvořáků).
 Má vlastní položku v menu a je hlavní věcí na úvodní stránce.
@@ -42,11 +45,13 @@ Má vlastní položku v menu a je hlavní věcí na úvodní stránce.
 jde později doplnit. `kontrola.py` na to upozorní. Uživateli to nabídni, i když dřív řekl „až bude víc dat“.
 
 **Postup:**
+
 1. Sesbírej materiál: fakta a poznámky osob hlavního rodu, `RODINA`, `SIDE`, zajímavosti, `udaje_od_rodiny.md`,
    rodinné paměti a dokumenty, novinové výstřižky.
 2. Napiš **koncept do chatu** a nech si ho schválit (délka, tón, co ano/ne). Pod koncept připiš, co je z matrik
    a co od rodiny, a co jsi vynechal jako citlivé. Teprve po schválení ho ulož.
 3. Ulož do `data/pribeh.md`:
+
    ```markdown
    ---
    title: Příběh Novákových
@@ -58,10 +63,12 @@ jde později doplnit. `kontrola.py` na to upozorní. Uživateli to nabídni, i k
    ## Kováři z čísla 112 (1777–1874)
    …
    ```
+
 4. Nastav `web.json` → `"pribeh": {"menu": "Příběh Novákových", "rod": 8, "tlacitko": "Přečíst příběh Novákových"}`
    a úvod (`uvod.nadpis`, 2–3 odstavce lákadla, fotka). Bez úvodu se na úvodní stránce ukáže aspoň název a `lead` příběhu.
 
 ## Více příběhů
+
 Když chce rodina samostatné příběhy pro několik větví nebo témat, ulož každý do `data/pribehy/<slug>.md`:
 
 ```markdown
@@ -91,6 +98,7 @@ Před zveřejněním zkontroluj soukromí **každého** souboru `data/pribehy/*.
 `tools/kontrola.py` hledá citlivý obsah ve všech těchto souborech; uživatel musí schválit každý zveřejňovaný údaj.
 
 **Jak má vypadat** (osvědčený tvar, asi 800–1500 slov):
+
 - Kapitoly po generacích, od nejstaršího předka k dnešku. Nadpis = člověk nebo jeho role + roky
   („Krejčí z Holic (asi 1756–1812)“, „Služka, která zachránila jméno“).
 - Každá kapitola 1–3 krátké odstavce: kde žil, čím se živil, svatba, děti, něco lidského (zápis, svědek, nehoda, stěhování).

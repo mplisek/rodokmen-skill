@@ -1,6 +1,7 @@
 # Jak číst matriky – praktický návod
 
 ## Druhy knih
+
 | Zkratka | Kniha | Co v ní je | Proč je cenná |
 |---|---|---|---|
 | **N** | narození (křty), *Liber natorum / baptisatorum*, *Geburtsbuch* | datum narození a křtu, dům (čp.), dítě, rodiče (od ~1784 i jejich rodiče a bydliště), kmotři, porodní bába | pohlaví, legitimita, rodiče matky → další generace |
@@ -14,6 +15,7 @@ berní rula 1654 (jen hospodáři), gruntovní/pozemkové knihy (kdo vlastnil kt
 vojenské záznamy, domovské listy, parte. Viz `portaly.md` a `metodika.md` (prameny mimo ČR).
 
 ## Lhůty (zákon 301/2000 Sb.)
+
 Do archivu (a tedy online) jde svazek, až od jeho **posledního** zápisu uplyne: narození **100 let**, sňatky **75**, úmrtí **30**.
 Mladší knihy jsou na matričním úřadě obce s rozšířenou působností / pověřeném úřadě. **Matriční úřad ale počítá lhůtu
 u každého zápisu zvlášť** (§ 25b zákona 301/2000 Sb.): zápis starší 100 / 75 / 30 let (narození / sňatek / úmrtí) vydá
@@ -29,6 +31,7 @@ snímky; svazek rovnou zapiš do `archivni_dotazy.md` i s místem uložení (tam
 zhruba po roce 1910 často online nebudou (kniha pokračuje za rok 1926, lhůta běží od posledního zápisu).
 
 ## Jak vypadá hledání v praxi
+
 1. **Obec → farnost.** Malé vesnice patřily k faře v sousední obci; popis svazku vyjmenovává všechny obce farnosti.
    Hledej obec v popisu svazku (`aron_search.py "Obec"`), ne jen v názvu – a hledej i podle obce, ne jen podle fary
    z pozdějšího zápisu: obec mohla mít vlastní matriku (filiální kostel, lokálie), i když list vydala mateřská fara.
@@ -73,10 +76,12 @@ zhruba po roce 1910 často online nebudou (kniha pokračuje za rok 1926, lhůta 
    nejdřív v katolické matrice, syna v evangelické.
 
 ## Knihy řazené po vsích (časté 1784–1900, všechny archivy)
+
 Venkovské fary vedly knihu často **po vsích**: každá ves má vlastní oddíl s vlastním stránkováním (foliací) a roky běží
 jen uvnitř oddílu. Oddíly nejdou podle let, pokračují vzadu („ad pag. 70“, „vide reliquos pag.“) a oddíl jedné vsi bývá
 až na konci knihy. Odhad snímku podle roku pak selže a „zápis tam není“ bývá omyl (skutečné chyby: prošel se jen oddíl
 vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–405).
+
 1. **Popis knihy první:** eBadatelna „Obecný popis“ (rozvržení stran po vsích), MZA „Části matriky“, ARON „územní
    rozsah“, Porta fontium `info`. Přechody vsí mezi farami mívají mezery – zápis z mezery hledej v obou farách.
    Popis bývá **neúplný**: eBadatelna rozvržení ořízne asi na 250 znaků (konec chybí i na webu archivu), u jiných knih
@@ -108,6 +113,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
    pokrývá** (skutečná chyba: sňatek „nenalezen“ ve dvou farách, přitom byl ve vesnické knize správné fary).
 
 ## Čtení písma
+
 - Kurentový rejstřík: stáhni plné rozlišení a rozřež stránku na čtvrtiny (sloupec jmen + data),
   `magick f.jpg -crop 1250x1650+X+Y +repage ctvrt.jpg`. **Dopisované řádky** se snadno přečtou špatně (Franziska × Heinrich,
   strana 131 × 151) – údaj z rejstříku vždy ověř v matrice.
@@ -137,6 +143,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
   daný rok (Velikonoce se mění).
 
 ### Slovníček (lat. / něm. → česky)
+
 | výraz | význam |
 |---|---|
 | *natus / geboren*, *baptisatus / getauft* | narozen, pokřtěn |
@@ -201,6 +208,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 | *mendicus*, *testamentum*, *mane / vespere* | žebrák, závěť, ráno / večer |
 
 ## Odhad roků
+
 - Věk při úmrtí/sňatku je často zaokrouhlený o ±2–5 let. Uváděj „asi 1756“ a hledej křest v širším okně.
   I přesné datum narození v oddacím zápisu mívá špatný měsíc: když křest v něm není, projdi celý rok ±1 a farnost
   matky (dítě se často narodilo u jejích rodičů).
@@ -210,6 +218,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
   (*obstetrix*, *Hebamme*) s rodištěm dítěte.
 
 ## Stavy údajů v datech
+
 | stav | kdy |
 |---|---|
 | `doc` | přečteno přímo na snímku zápisu, který osobu jednoznačně identifikuje |
@@ -219,6 +228,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 | `unk` | známe jen místo v rodokmenu |
 
 ## Typické pasti (ze skutečného výzkumu)
+
 - Písař spletl jméno dědečka (Josef místo Václava) – rozhodne více zápisů téže rodiny.
 - Dítě zapsané pod jiným křestním jménem, než jakým ho volala rodina (Františka → v rodině Anna).
 - Předek v dospělosti „Jan“ byl pokřtěn jako Václav: starší Václav zemřel a mladší dítě dostalo jeho jméno, v dospělosti
@@ -252,6 +262,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
   jiné dítě daného jména.
 
 ## Technické pasti (macOS, zsh) – napiš je i pomocníkům do zadání
+
 - Shell je zsh: `for a in "x y z"; do set -- $a` slova nerozdělí (v zsh `${=a}`); `ls F*` bez shody = chyba
   „no matches found“; `echo ====` je chyba (`=` na začátku slova). Složitější smyčky pouštěj přes `bash -c '…'`.
 - ImageMagick: seznam souborů předávej jako jednotlivé argumenty, ne jednou proměnnou s mezerami.
@@ -263,7 +274,9 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
   na webu by byl nečitelně malý. Celá stránka je v `zdroje/` a na portálu přes odkaz.
 
 ## Technické pasti (Windows) – napiš je i pomocníkům do zadání
+
 (Nahrazují první dva body macOS sekce; body o `overit.py` a výřezu platí i tady.)
+
 - `CERTIFICATE_VERIFY_FAILED` (Porta fontium, Kramerius NK, ANNO – certifikáty HARICA/GEANT): Windows doplňuje méně
   běžné kořenové certifikáty až při otevření webu v prohlížeči, Python to sám nespustí. Nástroje (brzda `slusne.py`)
   to zkusí samy jednou přes systémový `curl.exe`; když to nestačí, ať uživatel web jednou otevře v Edge nebo Chrome.

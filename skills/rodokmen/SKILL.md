@@ -20,6 +20,7 @@ Najdeš v ní `tools/` (nástroje), `template/` (šablona projektu a webu) a `re
 `web.md`, `soukromi.md`.
 
 ## Jak mluvit s uživatelem
+
 - **Česky, stručně, lidsky.** Žádný žargon bez vysvětlení (Kekulé, N/O/Z, apu…). Místo „commitnu“ řekni „uložím“.
 - Na každém konci kroku řekni: co jsi zjistil, co to znamená pro rodokmen a co navrhuješ dál (1–3 možnosti).
 - Ptej se jen na věci, které víš jen on (rodina, rozhodnutí, souhlas). Technické volby udělej sám.
@@ -32,6 +33,7 @@ Najdeš v ní `tools/` (nástroje), `template/` (šablona projektu a webu) a `re
 - Dnešní datum (do deníku, STAV.md) ber z příkazu `date`, ne z hlavy.
 
 ## Na začátku každé konverzace
+
 1. Jsi ve složce projektu? (`data/STAV.md` existuje.) → Přečti `data/STAV.md`, konec `data/research_log.md`
    a pokračuj podle sekce „Rozpracováno“. Krátce uživateli shrň, kde jste skončili.
    **Verze:** spusť `python3 -I SKILL_DIR/tools/verze.py <složka projektu>` a řiď se posledním řádkem:
@@ -48,6 +50,7 @@ Najdeš v ní `tools/` (nástroje), `template/` (šablona projektu a webu) a `re
 2. Projekt ještě není → **Fáze 0**.
 
 ## Fáze 0 – Příprava (jednou)
+
 **Než začneš, přečti `reference/instalace.md`** a postupuj podle něj: kontrola nástrojů (Python ≥ 3.9, Node ≥ 22.19.0, ImageMagick, git), certifikáty na
 macOS, Windows, prohlížeč pro archivy, založení projektu (`python3 -I SKILL_DIR/tools/novy_projekt.py <složka>`,
 volitelně `--ukazka` a `--hlidac`), `git init`, „Pro koho“ ve `STAV.md` a název webu.
@@ -55,7 +58,9 @@ volitelně `--ukazka` a `--hlidac`), `git init`, „Pro koho“ ve `STAV.md` a n
 a bez `-X utf8` se rozbije čeština), ImageMagick jen jako `magick`, nikdy `convert`.
 
 ## Fáze 1 – Rozhovor s rodinou (nejcennější hodina celého projektu)
+
 Cíl: znát co nejvíc o 3–4 generacích nazpět, než sáhneš do matrik.
+
 - Ptej se postupně (ne dotazníkem naráz): výchozí osoba (pro koho rodokmen je – on sám, partner, dítě?), rodiče,
   prarodiče, pradědečci: **jména, rodná příjmení žen, roky a místa narození, sňatky, úmrtí (a kde jsou pohřbeni), řemesla, domy (čísla popisná!)**.
 - Požádej o dokumenty: rodné a oddací listy, domovské listy, parte, fotky (i náhrobků), rodinné kroniky, paměti, staré dopisy,
@@ -73,10 +78,12 @@ Cíl: znát co nejvíc o 3–4 generacích nazpět, než sáhneš do matrik.
   osob, a nedoloženou rodinu nepřipojuj do `P` ani `LINES`.
 
 ## Fáze 2 – Matriky, generace po generaci
+
 Podrobný postup čtení: `reference/matriky.md`. Archivy: `reference/portaly.md`. Sporná ztotožnění, mrtvé body,
 prameny mimo ČR: `reference/metodika.md`.
 
 Základní smyčka pro každou osobu:
+
 1. **Vyber cíl a začni od nejmladšího zápisu.** Vezmi nejmladšího předka bez dokladu a hledej jeho **nejmladší
    známou událost**: úmrtí (ve 20. století uvádí datum a místo narození i rodiče), pak sňatek (rodiče a bydliště obou
    snoubenců), a teprve z nich křest. **Nikdy nehledej křest naslepo** po stovkách snímků bez rejstříku, když je známé
@@ -116,6 +123,7 @@ Základní smyčka pro každou osobu:
 7. Spusť `python3 -I tools/kontrola.py` a oprav chyby.
 
 Pravidla, která chrání kvalitu:
+
 - **Než něco ohlásíš jako nové, prohledej** `data/osoby.py`, `data/zaznamy.json` a `data/research_log.md`
   (jméno, místo, rok). Snadno „objevíš“ něco, co už v datech je.
 - **Zápis do dat:** `zaznamy`, `svazky`, `prepisy`, `dokumenty` přes `python3 -I tools/zapis.py <soubor> <klíč> pracovni/x.json`
@@ -145,9 +153,11 @@ Pravidla, která chrání kvalitu:
   Odpovědi pak zapracuj do dat a zapiš do deníku.
 
 ### Šetrně k archivům – brzda `tools/slusne.py`
+
 Archivy blokují IP adresu po sérii rychlých dotazů (MZA i celou síť na hodiny, ZA Opava na 30 minut). Blokaci
 nezpůsobují nástroje, ale rychlé dočasné skripty a smyčky `curl`. Nástroje v `tools/` mají brzdu samy: společný limit
 pro každý web pro všechny procesy na počítači.
+
 - **Síť jen přes brzdu, i u pomocníků:** vlastní skript `python3 -I tools/slusne.py pracovni/x.py …`, curl
   `python3 -I tools/slusne.py curl …` (jedna adresa na příkaz), shellový skript `python3 -I tools/slusne.py bash pracovni/x.sh`.
   Přímé `curl`/`wget` má projekt zakázané (`.claude/settings.json`); i místní náhled webu zkoušej přes `slusne.py curl`.
@@ -172,11 +182,13 @@ pro každý web pro všechny procesy na počítači.
   `~/.claude/settings.json` v `"env"` (README → Nastavení).
 
 ### Pomocníci (subagenti) – šetrně
+
 Na velké kolo (např. „projdi 5 svazků a najdi všechny Nováky“) můžeš pustit 2–4 pomocníky paralelně, každého na
 jinou větev nebo archiv (jedno kolo ≈ 15–25 nových předků). Stojí hodně kreditů – před velkým kolem řekni uživateli,
 co plánuješ a proč, a nech si to schválit. **Spouštěj je na levnějším modelu** (Agent s `model: "sonnet"`):
 hledání a první čtení zvládnou, ověření na snímku a zápis do dat děláš ty. Řekni to uživateli, ať ví, proč kredity
 tolik neubývají.
+
 - Přesné zadání: svazek, snímky, koho hledat, formát výsledku (klíč, snímek, souřadnice zápisu, přepis), technické
   pasti z `reference/matriky.md` a pravidla brzdy (síť jen přes `tools/slusne.py`, při hlášce „zastavený“ skončit
   a ohlásit). Ať u každého prošlého snímku napíše, co na něm skutečně přečetl (rok, první jméno), a zmíní i zjevně
@@ -196,18 +208,22 @@ tolik neubývají.
   zmenšení (třetina rozlišení) vznikají chybná čtení.
 
 ### Žádosti archivům, matričním úřadům a obcím
+
 Co jde jen přes úřad nebo badatelnu (mladší zápisy, pozemkové knihy, evidence hrobů), vyřeš žádostí: koncept do
 `pracovni/zadosti/`, `tools/mailto.py` z něj udělá odkaz na hotový e-mail, stav vedeš v `data/zadosti.md`. **Nic sám
 neposílej**; na jeden archiv nejvýš jedna otevřená žádost. Postup, vzory a kanály: `reference/zadosti.md`.
 
 ### Kdy přestat
+
 Linie končí, když matriky mlčí (nemanželské dítě bez otce, shořelé knihy, chybějící svazky) nebo když jsi
 v 17. století. Zapiš to do „Co hledáme“ – rozpor do `ISSUES`, co může vědět rodina do `otazky_pro_rodinu.md`, co je jen
 v archivu do `archivni_dotazy.md` (každou věc jen jednou, krátce; `reference/data.md`) – náhradní prameny: `metodika.md` →
 Mrtvé body. Pak jdi na jinou větev. Průběžně aktualizuj `data/STAV.md` („Rozpracováno“), aby šlo kdykoli navázat.
 
 ## Fáze 3 – Zajímavosti a příběhy rodů
+
 Podrobně `reference/pribehy.md`. Tohle rodina na webu čte nejradši – nenechávej to na konec.
+
 - **Zajímavosti** sbírej **průběžně** do `data/zajimavosti.md` a řekni je uživateli; po každém kole spusť
   `python3 -I tools/napady.py` (svatby krátce před porodem, rod v jednom domě, dlouhověkost, epidemie…), ověř a napiš,
   a `tools/osobnosti.py` (duchovní, umělci, funkcionáři, vojáci… s tipy, kde hledat víc; potvrzené označ v `osoby.py` polem `vyz`).
@@ -216,8 +232,10 @@ Podrobně `reference/pribehy.md`. Tohle rodina na webu čte nejradši – nenech
   ve všech příbězích.
 
 ## Fáze 4 – Web
+
 Podrobně `reference/web.md`. Ve zkratce:
-1. `cd web && npm ci` (Node.js ≥ 22.19.0), pak `npm run nahled` → http://localhost:4321 – ukaž uživateli. V cloudovém
+
+1. `cd web && npm ci` (Node.js ≥ 22.19.0), pak `npm run nahled` → <http://localhost:4321> – ukaž uživateli. V cloudovém
    prostředí (claude.ai) localhost neuvidí – pošli mu snímky stránek nebo nasaď náhled.
 2. Nastav `data/web.json`: název, úvod, kontakt a **přihlašovací otázku a odpověď** (web je jen pro rodinu).
 3. Po každé změně dat: `npm run data && npm run build`. Hlášky `POZOR: nefunkční odkaz` oprav hned. Po větším kole
@@ -235,6 +253,7 @@ Podrobně `reference/web.md`. Ve zkratce:
    `-- --vyrizeno <id>`.
 
 ## Fáze 5 – Zveřejnění (volitelné, jen se souhlasem)
+
 Výchozí je **Cloudflare** (zdarma, bez limitu nasazení; ve forku jen pro web s jednou rodinnou otázkou – s přístupy, osobními
 odkazy nebo poznámkami **Netlify**): `npx -y wrangler@4 login`, název adresy do `web.json`
 (`cloudflare.nazev`) a `npm run nasadit-cloudflare` – postup v `reference/web.md`. Kdo už má web na Netlify, pokračuje
@@ -242,20 +261,23 @@ odkazy nebo poznámkami **Netlify**): `npx -y wrangler@4 login`, název adresy d
 (Netlify zdarma vystačí asi na 20 nasazení měsíčně) – obnovuj jen náhled a nasazuj na pokyn nebo jednou na konci sezení.
 
 ## Poznámky pro správce skillu
+
 Skill se zlepšuje podle zkušeností lidí, kteří ho používají. **Průběžně zapisuj do `data/poznamky_pro_skill.md`** chyby nástrojů a webu (příkaz, co se stalo, jak jsi to obešel), nové archivy a postupy, které
 fungovaly, místa, kde návod mlčel nebo radil špatně, a co uživatel chtěl, ale skill to neuměl. Piš obecně a stručně –
 technický postup, ne údaje o rodině.
 **Ve vhodnou chvíli** (po zveřejnění webu, na konci velkého kola, když je v poznámkách něco podstatného; ne pořád)
 připomeň uživateli, že je může poslat správci skillu:
+
 1. Projdi poznámky a odstraň nebo zobecni osobní údaje.
 2. Vypiš je do chatu celé, jako jeden blok k zkopírování.
-3. Požádej uživatele, ať z nich založí issue u forku skillu na **https://github.com/mplisek/rodokmen-skill/issues**
+3. Požádej uživatele, ať z nich založí issue u forku skillu na **<https://github.com/mplisek/rodokmen-skill/issues>**
    (tento skill je fork originálu sarsonj/rodokmen-skill, poznámky patří správci forku) – správce užitečné změny rád
    zapracuje, aby je měli i ostatní; uživatel může připsat i vlastní postřehy.
 **Nic sám neposílej** (žádný e-mail, formulář ani issue). Až uživatel řekne, že poslal, zapiš do
 `data/poznamky_pro_skill.md` „odesláno <datum>“ a další poznámky piš pod tuto čáru.
 
 ## Co nikdy
+
 - Nestahuj hromadně z placených služeb (MyHeritage, Ancestry, Geni…) a neobcházej jejich ochranu –
   automatické procházení stovek záznamů vede k **zablokování účtu**. Čti jen to, co uživatel otevře, nebo co potřebuješ jednotlivě.
 - Nezadávej za uživatele hesla, platební údaje, neřeš CAPTCHA, nekupuj předplatné.
@@ -264,6 +286,7 @@ připomeň uživateli, že je může poslat správci skillu:
 - Nepřepisuj data bez zálohy v gitu; po větším kroku navrhni uložení (`git add -A && git commit -m "…"`).
 
 ## Soubory projektu
+
 `data/`: `STAV.md` (vstupní bod), `osoby.py` (předci, `LINES`, `RODINA`, `SIDE`, `ISSUES`, `HYPOTEZY`, `SAME`), `zaznamy.json`,
 `svazky.json`, `prepisy.json`, `zvyrazneni.json`, `research_log.md` (deník), `udaje_od_rodiny.md`, `otazky_pro_rodinu.md`,
 `archivni_dotazy.md`, `zadosti.md` (poslané žádosti, nejde na web), `zajimavosti.md`, `pribeh.md`, `pribehy/*.md`, `web.json`,
@@ -272,6 +295,7 @@ připomeň uživateli, že je může poslat správci skillu:
 rozlišení), `dokumenty/` (originály od rodiny), `pracovni/` (nejde na web), `data/poznamky_pro_skill.md`, `tools/` (kopie ze skillu – aktualizuje se celý projekt přes `novy_projekt.py`), `web/`.
 
 ## Nástroje (`tools/`, z kořene projektu `python3 -I tools/<nástroj>`, skripty `.sh` přes `bash`; přepínače vypíše `--help`)
+
 | Nástroj | K čemu |
 |---|---|
 | `aron_search.py`, `aron_img.py` | ARON (SOA Zámrsk): hledání svazků; snímek (úroveň `0` = plné rozlišení), trvalý odkaz, zápis svazku; `aron_img.py odkazy [--opravit]` opraví staré odkazy na první snímek |

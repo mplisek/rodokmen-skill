@@ -19,3 +19,6 @@ Testy: `python -X utf8 -m unittest discover -s skills/rodokmen/tests` (bez sít�
 na Linuxu i Windows spolu s buildem ukázkového webu, `.github/workflows/testy.yml`). Nová funkce nástroje = nový test
 v `skills/rodokmen/tests/` (dočasný projekt založí `pomocne.novy_projekt`). Před vydáním navíc
 `python -X utf8 skills/rodokmen/tools/smoke_test.py` proti živým portálům – z domácí sítě, ne z firemní (blokace, certifikáty).
+
+Markdown: `.markdownlint.yaml` a `.editorconfig` v kořeni; kontrola `npx -y markdownlint-cli2@0.18.1 "**/*.md" "!**/node_modules/**"`
+(v CI i před commitem, `--fix` jen s kontrolou `git diff`). MD037 je vypnuté kvůli „* 1890“ (narozen).

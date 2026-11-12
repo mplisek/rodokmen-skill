@@ -33,6 +33,10 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y imagemagick
 
+      - name: Kontrola markdownu (markdownlint, .markdownlint.yaml)
+        if: runner.os == 'Linux'
+        run: npx -y markdownlint-cli2@0.18.1 "**/*.md" "!**/node_modules/**"
+
       - name: Testy nástrojů
         run: python -X utf8 -m unittest discover -s skills/rodokmen/tests -v
 

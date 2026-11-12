@@ -8,6 +8,7 @@ Nápad na strukturu dat a přehled pramenů vznikl podle skillu **dejiny-domu** 
 odvozen od tohoto skillu). Ten je určený na jeden dům a celou ves; tady je dům jen jedna z podrobností rodokmenu.
 
 ## Co kde je
+
 | Co | Kde |
 |---|---|
 | poloha domu, jistota, výřez skici | `data/domy/` (výstup skillu **stare-adresy**, `adresy.json`, `domy.geojson`) |
@@ -19,7 +20,9 @@ Nástroj: `python3 -I tools/stavby.py kandidati` (náměty z rodokmenu), `kontro
 `export_web.py`). Na webu je to rozbalovací „Dějiny domu“ u domu na stránce **Domy**.
 
 ## Formát `data/stavby.py`
+
 Slovník `D`, klíč = **id adresy** z `data/domy/adresy.json` (`kremenice-2`). Hlavička souboru má vzor a krátký popis polí.
+
 ```python
 D = {
  "kremenice-2": dict(
@@ -34,6 +37,7 @@ D = {
  ),
 }
 ```
+
 - **`typ`**: `dum`, `statek`, `chalupa`, `hostinec`, `mlyn`, `kovarna`, `rychta`, `fara`, `skola`, `panstvi`, `kostel`, `kaple`, `jine`.
 - **`drzitele`** jsou jen **vlastníci**, jeden řádek = jeden držitel; `jak` = koupě, dědictví, přiženění, dražba, příděl.
   **`obyvatele`** jsou všichni, kdo v domě žili nebo pracovali (hostinský, výměnkář, čeleď, nájemník). Hostinský nemusí být
@@ -49,6 +53,7 @@ D = {
 - **`verejne=False`**: záznam na web nejde.
 
 ## Prameny podle doby (od dneška zpátky)
+
 Postup je stejný jako u matrik: z každého pramene vezmi číslo domu, jméno a odkaz na starší pramen.
 
 | Doba | Pramen | Co dá k domu |
@@ -70,6 +75,7 @@ Postup je stejný jako u matrik: z každého pramene vezmi číslo domu, jméno 
 Dostupnost online ověř vždy v portálu (`reference/portaly.md`); co není, patří do `otevrene` a `archivni_dotazy.md`.
 
 ## Postup krok za krokem
+
 1. **Vyber dům.** `python3 -I tools/stavby.py kandidati` vypíše domy zmíněné v `osoby.py` podle počtu lidí a řemesla
    (hostinský, mlynář, rychtář, panský zahradník…). Domy, které nejsou v `data/domy/adresy.json`, nejdřív nech geokódovat
    skillem stare-adresy (jinak se na stránce Domy neukážou).
@@ -85,6 +91,7 @@ Dostupnost online ověř vždy v portálu (`reference/portaly.md`); co není, pa
 7. **Deník.** Každé hledání (i neúspěšné) patří do `data/research_log.md`, jako u matrik.
 
 ## Soukromí
+
 - **Žijící lidé** a lidé z posledních ~100 let: jen jméno a role (stejná hranice jako u webu). `kontrola` hlásí `SOUKROMÍ`.
 - **Dnešní majitelé a držitelé po roce 1950** na web jen se souhlasem: pole `souhlas="e-mail 3. 11. 2026"`. Bez něj export
   záznam vynechá.

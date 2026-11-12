@@ -5,6 +5,7 @@ mimo ČR (Slovensko, Rakousko, Polsko, Německo, Maďarsko). Čtení matrik a sl
 z nich brát snímky: `portaly.md`, formát dat: `data.md`.
 
 ## Spojování záznamů – čím propojit generace
+
 - **Číslo popisné.** Jan Novák v čp. 12 v úmrtí 1820 (70 let) a Jan Novák v čp. 12 v oddacím zápisu 1788 = nejspíš
   tatáž usedlost. **Přečíslování** (po požáru, novou výstavbou, ve městech a předměstích) rozdělí ves; jeden dům mívá
   v čase dvě čísla. Pochybnost ověř na indikační skice stabilního katastru 1824–43 (`portaly.md` → Starší prameny).
@@ -37,6 +38,7 @@ z nich brát snímky: `portaly.md`, formát dat: `data.md`.
   sňatkem).
 
 ## Ztotožnění – kdy je to tatáž osoba
+
 - **Výchozí pravidlo:** dvě osoby stejného jména spoj jen podle **dvou nezávislých znaků** – číslo domu, oba rodiče,
   manžel(ka), stejný okruh kmotrů, přesné datum narození. Každý znak z jiného zápisu (jiný písař/oznamovatel).
   Jeden znak nebo jen jméno a doba = `prob` s `note` proč; rozpor do `ISSUES`.
@@ -52,7 +54,9 @@ z nich brát snímky: `portaly.md`, formát dat: `data.md`.
   (do `note` nebo do deníku). A napiš, jaký nový doklad by závěr vyvrátil.
 
 ## Chyby, na které si dát pozor
+
 (Doplněk k „Typickým pastem“ v `matriky.md`.)
+
 - **Dva muži stejného jména slití v jednoho** – poznáš podle dětí „téhož“ páru narozených 10 měsíců po sobě. Rozhodnou oddací zápisy obou a čísla domů.
 - **Otec nemanželského dítěte domyšlený** bez legitimační poznámky – hledej poznámku, pozdější sňatek matky, kmotry.
 - **Špatná fara kvůli reorganizaci far po 1784** (nové lokálie a fary) – ves v očekávané knize chybí; ověř rok
@@ -78,6 +82,7 @@ z nich brát snímky: `portaly.md`, formát dat: `data.md`.
 - **Dvojí započtení:** druhopis a originál nejsou dva nezávislé prameny – jeden je opis druhého.
 
 ## Mrtvé body – co zkusit, v tomto pořadí
+
 - **Před 1784 (staré matriky chybí nebo nestačí):** 1. starší společné knihy N/O/Z přečíst celé (nejen rejstřík)
   → 2. gruntovní knihy panství → 3. sirotčí knihy, svatební smlouvy → 4. tereziánský katastr (1713–57) → 5. soupis
   poddaných 1651, berní rula 1654 (Morava: lánové rejstříky 1669–79). Spojuje **grunt/dům a posloupnost držitelů**.
@@ -107,10 +112,12 @@ z nich brát snímky: `portaly.md`, formát dat: `data.md`.
 - **Změna jména, jazykové tvary:** všechny tvary osoby i místa (výše).
 
 ## Prameny mimo ČR
+
 Portály, které skill zná (Matricula, Geneteka, FamilySearch), a jak z nich brát snímky: `portaly.md`.
 Ostatní archivy jsou většinou jen na písemnou žádost – zapiš do `archivni_dotazy.md`.
 
 **Slovensko**
+
 - **Církevní matriky** (řkt., evangelické, reformované, židovské) od 1592, dnes ve státních archivech
   (Zbierka cirkevných matrík). Snímky a neúplný index (hlavně křty) na FamilySearch, zpravidla do ~1895.
 - **Civilní (štátne) matriky** od 1. 10. 1895 (uherský zákon), na matričním úřadě; do archivu až po 100 letech.
@@ -124,6 +131,7 @@ Ostatní archivy jsou většinou jen na písemnou žádost – zapiš do `archiv
 - Do 1918 Uhry – obce hledej i pod maďarským názvem (Helységnévtár).
 
 **Rakousko (i Vídeň, Burgenland)**
+
 - **Katolické matriky do 1938** v diecézních archivech, snímky na Matricule (Vídeň, Linec, St. Pölten, Štýrský
   Hradec, Tyrolsko, Korutany, Salcburk, Vorarlbersko). Burgenland (Eisenstadt) má vlastní portál matriken.at
   (zatím neúplný). Matricula nemá hledání podle jmen.
@@ -138,12 +146,14 @@ Ostatní archivy jsou většinou jen na písemnou žádost – zapiš do `archiv
   protokoly ohledání mrtvol (Totenbeschauprotokolle), pozůstalosti (Verlassenschaften), druhopisy starokatolických matrik.
 
 **Polsko (Těšínsko, Horní Slezsko, Halič)**
+
 - **Farní matriky (metryki)** v diecézních a státních archivech (AP), část snímků na Matricule a FamilySearch,
   index Geneteka.
 - **Civilní matriky (USC):** v pruském záboru od 1874, jednotně od dekretu 25. 9. 1945; do státního archivu (AP)
   po uplynutí lhůty. Katalog státních archivů: szukajwarchiwach.gov.pl (se skillem nevyzkoušeno).
 
 **Německo (sudetští Němci, pohraničí)**
+
 - **Standesamt** (civilní matriky) od 1. 1. 1876 (Prusko 1874) – pro rodiny, které přešly do Saska nebo Bavorska.
 - **Heimatortskartei Sudetendeutsche (HOK)** – kartotéka podle bydliště k 1. 9. 1939 s poválečnou adresou;
   dnes Bundesarchiv Bayreuth (fond B 530), jen písemnou žádostí. Tamtéž **spisy Lastenausgleich** (odškodnění
@@ -152,12 +162,15 @@ Ostatní archivy jsou většinou jen na písemnou žádost – zapiš do `archiv
   které tam posílají, neplatí.
 
 **Maďarsko (vedlo matriky i pro Slovensko do 1918)**
+
 - **Státní civilní matriky** od 1. 10. 1895; druhopisy do 31. 12. 1980 v župních archivech MNL, jinak matriční úřad
   (anyakönyvi hivatal).
 - **Církevní matriky** v církevních archivech – každý má vlastní lhůty (např. 90 let od založení knihy).
 
 ## Lhůty přístupu mimo ČR
+
 (ČR viz `matriky.md`.) Počty let narození / sňatky / úmrtí:
+
 | země | lhůta | počítá se od | poznámka |
 |---|---|---|---|
 | **Slovensko** | 100 / 100 / 100 | posledního zápisu | pak přechází do státního archivu; i úmrtí po ~1926 jsou na matričním úřadě |
@@ -170,6 +183,7 @@ Lhůty počítané od roku registru nebo uzavření knihy (DE, PL) se posouvají
 nemanželský původ, příčina smrti) u nedávno zemřelých nezveřejňuj – viz `soukromi.md`.
 
 ## Milníky vedení záznamů
+
 | rok | co se změnilo | co to znamená pro hledání |
 |---|---|---|
 | 1651 | soupis poddaných podle víry (Čechy) | celé rodiny s věkem; neúplný, bez rejstříku jmen |

@@ -5,7 +5,9 @@ Po změnách spusť `python3 -I tools/kontrola.py`. Ukázku vyplněných dat má
 Položky do JSON souborů přidávej a měň přes `python3 -I tools/zapis.py` (zachová formát souboru, viz SKILL.md).
 
 ## `osoby.py` – předci
+
 Kekulého čísla: 1 = výchozí osoba, otec osoby n = 2n, matka = 2n+1.
+
 | číslo | kdo |
 |---|---|
 | 1 | výchozí osoba (u ženy `sex="F"`) |
@@ -26,6 +28,7 @@ P = {
  33: dict(n="otec neuveden", st="unk", f=[], note="Nemanželský syn; otec v matrice není."),
 }
 ```
+
 - `n` jméno (ženy rodným příjmením, bez příjmení po sňatku – to je vidět u manžela; neznámé rodné příjmení
   `"Anna (příjmení neznámé)"`, ne `"Anna (Nováková)"`), `y` roky pro přehledy (`"* 1895"`, `"1890–1944"`, `"asi 1720–1785"`, `"1680 – před 1740"`,
   `"† 1940"` když známe jen úmrtí; nic nevíme → `""`).
@@ -81,12 +84,14 @@ P = {
   rodičů 2k a 2k+1 při narození dítěte k mimo 15–50 let u matky a 16–75 let u otce.
 
 ## `zaznamy.json` – zápisy
+
 ```json
 [{"klic": "holice_krest_jan_novak_1890", "svazek": "1a0b2337", "snimek": 57, "druh": "N",
   "datum": "14. 2. 1890", "nazev": "Křest Jana Nováka",
   "shrnuti": "Jan, syn Václava Nováka, kováře v Holicích čp. 112, a Barbory roz. Malé z Ostřetína.",
   "odkaz": "https://aron.vychodoceskearchivy.cz/apu/…/dao/…/file/…"}]
 ```
+
 - `klic`: malá písmena bez diakritiky, `obec_druh_kdo_rok` (druh: krest, snatek, umrti, index, scitani…). Je to i název obrázku.
 - `druh` = **událost**: `N` křest / narození, `O` sňatek (i ohlášky), `Z` úmrtí / pohřeb, `B` biřmování, `S` soupis
   obyvatel (sčítání lidu, soupis duší, soupis poddaných), `J` jiný pramen (policejní přihláška, pozemková kniha, parte…).
@@ -121,6 +126,7 @@ Původní výraz opiš doslova, nejistá místa označ `(?)` a zachovej sloupec 
 Pole je nepovinné kvůli starším datům. Když chybí, znamená to „zatím nezpracováno“, nikoli „bez rubriky“; web nic nedoplňuje. Pokud je vyplněné, zobrazí se u zápisu na stránce osoby i na detailu zápisu.
 
 ## `svazky.json`
+
 `{"1a0b2337": {"archiv": "SOA Zámrsk – Sbírka matrik…", "portal": "ARON", "svazek": "N Holice 1880–1900, sign. …",
 "popis": "obce", "url": "odkaz na svazek"}}` – u ARON zapisuje `aron_img.py <apu> svazek`.
 Doklad, který online není (rodný list od rodiny, kopie z badatelny), má svazek bez `portal` a `url`, např.
@@ -128,17 +134,21 @@ Doklad, který online není (rodný list od rodiny, kopie z badatelny), má svaz
 pak u jeho zápisů nechce odkaz na snímek.
 
 ## `prepisy.json`
+
 `{"<klic>": {"orig": "[Datum] 14. února 1890\n[Dům] 112\n[Otec] …", "cs": "Český překlad celou větou…"}}`
+
 - `orig` věrný přepis po sloupcích, `[Název sloupce]` v hranatých závorkách, nejisté „(?)“, nečitelné „[…]“, zkratky ponechat.
 - `cs` srozumitelný překlad pro rodinu; vysvětli staré pojmy (domkář, podruh).
 - Souhrn nalezený v předaných poznámkách není originál ani přepis. Bez snímku ponech `orig` nedoplněné a zdrojovou mezeru popiš.
 - Jiná pole web nezobrazí (třeba `preklad`) – `zapis.py prepisy` je odmítne a `kontrola.py` je ohlásí.
 
 ## `zvyrazneni.json`
+
 `{"<klic>": {"boxes": [[x0, y0, x1, y1]], "status": "ok", "note": ""}}` – zlomky šířky/výšky obrázku `vyrezy/<klic>.jpg`.
 Zapisuje `ramecek.py`. Rámeček má obepnout celý čtený zápis (ne jen jméno).
 
 ## `mista.json`
+
 `{"Holice": {"re": "Holic", "dotaz": "Holice, Česko", "lat": 50.066, "lon": 15.986}}` – `re` je regulární výraz hledaný
 ve faktech osob (kmen slova, aby sedělo skloňování: „Holic“ najde Holice i v Holicích). Spravuje `mista.py`.
 Pozor na kolize (Hradec Králové × Nový Hradec Králové – použij `(?<!Nový )Hradec`; krátká jména jako `\bBuku?\b`).
@@ -155,12 +165,14 @@ předků bez obce vypíše v hranatých závorkách slova z faktů, která vypad
 jen ji výraz `re` nechytí ve skloňovaném tvaru („v Přesece“ × `Přesek`) – uprav výraz (`Přese?[kc]`).
 
 ## `domy/` – domy předků na mapě (volitelné)
+
 `data/domy/domy.geojson` a `data/domy/vyrezy/` jsou výstup skillu **stare-adresy** (`mapa.py`, polohy domů „obec čp.“
 podle stabilního katastru). Export z nich udělá stránku `/domy/` a propojí domy s osobami a zápisy podle zmínek
 „Obec čp. N“ ve faktech, poznámkách, `SIDE` a souhrnech zápisů. Adresy, které na mapě chybí, zapíše do
 `data/domy/chybi.txt` – podklad pro další kolo geokódování. Bez `domy.geojson` se stránka v menu neukáže.
 
 ## `stavby.py` – dějiny významných domů (volitelné)
+
 `data/stavby.py` (slovník `D`, klíč = id adresy z `data/domy/adresy.json`): držitelé, obyvatelé, události, čísla
 popisná v čase a otevřené otázky k domům, které stojí za příběh (hostinec, mlýn, rychta, rodová usedlost, dům jiné
 větve). Poloha domu zůstává v `data/domy/`, stavba na ni odkazuje polem `dum`. Každá položka má stav `st`
@@ -171,12 +183,14 @@ zapíše `web/src/data/stavby.json`; na stránce Domy je u domu rozbalovací „
 bádání: `reference/stavby.md`.
 
 ## `dokumenty.json` – rodinné fotky a dokumenty na webu
+
 `[{"img": "foto_svatba_1919", "popis": "Svatba Jana a Josefy, Holice 1919.", "osoby": [8, 9]}]` – `popis` je na webu
 vidět jako popisek, vyplň ho (stejně jako `t` u bočních příbuzných).
 Obrázek ulož přes `vyrez.py dokumenty/<sken>.jpg foto_svatba_1919` (vznikne `vyrezy/` i `zdroje/`).
 Doklady s rodnými čísly a víc větvemi (`soukromi.md`):
 `{"img": "rodny_list_anna", "popis": "…", "osoby": ["anna", 1], "druh": "rodny_list", "rc": ["anna", 1],
 "zacerneno": ["anna"], "pristupy": ["vse", "pliskovi"], "soukrome": true}`
+
 - `rc` – čí rodné číslo na dokladu je (i rodiče, manželé); u dokladů vyplň vždy, i prázdné `[]`. Doklad jde na web,
   až je každý z nich mrtvý a má **úmrtní list** (dokument s `"druh": "umrtni_list"` a touto osobou), nebo je jeho
   RČ **začerněné**: `vyrez.py --zacernit <img> x0,y0,x1,y1 --osoby anna` (zapíše `zacerneno` a oblasti do
@@ -185,9 +199,11 @@ Doklady s rodnými čísly a víc větvemi (`soukromi.md`):
   osoby na dokladu. `soukrome: true` – jen správce a přístupy s právem `soukrome`, které mají osoby ve vlastní větvi.
 
 ## `web.json` – nastavení webu
+
 Viz `web.md`.
 
 ## Markdown poznámky
+
 - `research_log.md` – tabulka `| # | datum | zdroj | rozsah | hledáno | výsledek | citace |`, nové řádky na konec, i negativní.
   Web ji zobrazuje jako „Výzkumný deník“. První sloupec může mít číselné nebo textové ID (např. `BA-1`, `KA-1`,
   `STR-10`); při slučování deníků zachovej původní ID nebo je uprav tak, aby byla v celém výsledném deníku jedinečná.
@@ -211,12 +227,14 @@ Viz `web.md`.
     Jde na web: o žijících jen jméno a rok. `kontrola.py` hlídá tvar, data zápisu, zodpovězené položky a citlivé údaje.
 
 ## Odkazy na osoby (slug)
+
 Slug = jméno bez diakritiky + rok, např. `jan-novak-1890`; při kolizi přidá číslo osoby. Přesné slugy po `npm run data`
 v `web/src/data/site.json` (`people`). Při přejmenování osoby se slug změní – oprav odkazy v textech.
 Při přečíslování předků promítni změny do `SIDE.k`, klíčů `LINES`, číselných odkazů v `web.json` i odkazů na osoby
 v příbězích; potom spusť kontrolu a znovu vytvoř web.
 
 ## Import rodinného stromu (Fáze 1)
+
 - **GEDCOM** (`.ged`, export z MyHeritage/Geni/FamilySearch): `python3 -I tools/ged_import.py dokumenty/strom.ged "Jméno Příjmení"`
   vypíše předky s čísly, všechny události a poznámky a **frontu zápisů** (nejmladší známá událost u každého předka,
   a jestli už je v archivu). `--osoby` dá kostru pro `osoby.py`. Poznámky ve stromu bývají plné rodinných historek –
@@ -239,7 +257,8 @@ v příbězích; potom spusť kontrolu a znovu vytvoř web.
   shody jména. Import je podklad k posouzení, ne automatické přidání: počet osob ve vstupním stromu není počet nových
   osob projektu. Nedoloženou samostatnou rodinu automaticky nepřipojuj do `P` ani `LINES`; jako `SIDE` ji veď jen jako
   výslovně označenou stopu u konkrétního možného příbuzného, jinak ji ponech odděleně v deníku.
-- Soubor `.doc` od rodiny nejdřív zkontroluj lokálně: začíná-li RTF hlavičkou `{tf`, otevři nebo převeď ho ve Wordu
+- Soubor `.doc` od rodiny nejdřív zkontroluj lokálně: začíná-li RTF hlavičkou `{
+tf`, otevři nebo převeď ho ve Wordu
   či LibreOffice. Nepoužívej online převodníky a originál ani pracovní převod neposílej na web. Originály ukládej do
   `dokumenty/originaly/` (gitem ignorované), pracovní převody do `pracovni/`; na web patří jen schválené výřezy.
 - Údaje ze stromů (i Smart Match) jsou jen vodítko k zápisu – datum a číslo domu tě dovedou na stránku, ale **jména vždy

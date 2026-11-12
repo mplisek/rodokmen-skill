@@ -4,10 +4,12 @@ Tento soubor je vstupní bod. Po každém restartu (nová konverzace, zkrácený
 pak konec `research_log.md` a sekci „Rozpracováno“.
 
 ## Pro koho
+
 - Výchozí osoba: (doplnit – jméno, rok a místo narození)
 - Kdo s Claudem pracuje a jak chce komunikovat: (doplnit)
 
 ## Kde co je
+
 | Soubor | Obsah |
 |---|---|
 | `data/osoby.py` | Přímí předci podle Kekulého čísla + rody, boční příbuzní, otevřené otázky, hypotézy. |
@@ -27,6 +29,7 @@ pak konec `research_log.md` a sekci „Rozpracováno“.
 | `web/` | Rodinný web. `cd web && npm ci && npm run nahled` (data + sestavení + náhled); po změně dat stačí `npm run data && npm run build`. |
 
 ## Pravidla
+
 1. Než něco ohlásím jako nové, prohledám `osoby.py`, `zaznamy.json` a `research_log.md` (jméno, místo, rok).
 2. Údaj je „doloženo“ (doc) jen tehdy, když jsem ho přečetl přímo na snímku. Čtení od pomocníků ověřím sám.
 3. Každé hledání (i neúspěšné) zapíšu do `research_log.md`.
@@ -35,4 +38,5 @@ pak konec `research_log.md` a sekci „Rozpracováno“.
 6. Po změně dat spustím `python3 -I tools/kontrola.py`.
 
 ## Rozpracováno (aktualizovat průběžně)
+
 - (zatím nic)
