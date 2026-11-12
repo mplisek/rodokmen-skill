@@ -558,6 +558,25 @@ def main():
     except ImportError:
         pass
 
+    # údaje o procesu (kdo práci udělal, jak se ověřilo, čísla úkolů) v textech pro web – pravidla: reference/zapisy.md
+    proces = re.compile(r"pomocník|\bagent\w*|\bsonnet\b|\bClaude\b|(?:ověřen\w*|čten\w*|přečten\w*) (?:na|z) (?:snímk\w+|výřez\w+|výřezu)"
+                        r"|\bvlna \d|\bN\d{1,2}[a-z]\b|\bU-\d{4}\b|čtyř oči|nečteno mnou|mnou ověřen", re.I)
+    nalezy = []
+    for k, o in P.items():
+        for pole, text in [("f", x) for x in o.get("f", [])] + [("note", o.get("note", ""))]:
+            for m in proces.finditer(text or ""):
+                nalezy.append(f"osoba {k} ({pole}): „{m.group(0)}“")
+    for z in zaz.values() if isinstance(zaz, dict) else zaz:
+        for pole in ("nazev", "shrnuti"):
+            for m in proces.finditer(z.get(pole, "") or ""):
+                nalezy.append(f"zápis {z.get('klic', '?')} ({pole}): „{m.group(0)}“")
+    if nalezy:
+        warn.append(f"{len(nalezy)} výskytů údajů o procesu v textech pro web (kdo práci udělal, jak se ověřilo) – patří jen do front a deníku"
+                    f" (reference/zapisy.md); seznam: kontrola.py --proces")
+        if "--proces" in sys.argv:
+            for n in nalezy:
+                print("  proces:", n)
+
     log = os.path.join(DATA, "research_log.md")
     rows, duplicate_ids = research_log_stats(log)
     if duplicate_ids:
