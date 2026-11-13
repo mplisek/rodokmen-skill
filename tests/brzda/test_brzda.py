@@ -206,13 +206,11 @@ r = spust(["bash", sh2, A], e)
 check("slusne.py bash: 429 z curl ve skriptu zastaví další dotazy", not zaznamy(t0, "/api?po="),
       f"kód {r.returncode}, druhý curl {'NEodešel' if not zaznamy(t0, '/api?po=') else 'ODEŠEL'}")
 
-# 8) stránka „zablokováno“ s kódem 200 (ZA Opava) a limit 4 s pro archives.cz
+# 8) ZA Opava (archives.cz) od 0.10.1 skripty nepouští – brzda je odmítne hned, bez jediného dotazu na server
 e = stav("s8"); t0 = time.time()
-r = spust([OPAVA, f"http://digi.archives.cz:{PA}/api?o=1", f"http://digi.archives.cz:{PA}/api?o=2",
-           f"http://digi.archives.cz:{PA}/blocked", f"http://digi.archives.cz:{PA}/api?o=po"], e)
-z = rozestupy(zaznamy(t0, "/"))
-check("archives.cz: limit 4 s a stránka „zablokováno“ (200)", r.returncode == KOD and len(z) == 2 and all(x >= 3.9 for x in z),
-      f"kód {r.returncode}, rozestupy {z} s, po stránce „zablokováno“ už nic")
+r = spust([OPAVA, f"http://digi.archives.cz:{PA}/api?o=1", f"http://digi.archives.cz:{PA}/api?o=2"], e)
+check("archives.cz: skripty nepovoleny (jen prohlížeč), na server nic neodejde",
+      r.returncode == KOD and not zaznamy(t0, "/"), f"kód {r.returncode}, dotazů {len(zaznamy(t0, '/'))}")
 
 # 9) 3 nepovedená spojení za sebou (zavřený port na 127.0.0.4)
 e = stav("s9"); t0 = time.time()
