@@ -125,8 +125,25 @@ Rozhodnuto: `SKILL.md` (zrcadlo) zůstává česky a beze změny struktury; vedl
 - **Slučování:** je to náš soubor, originál ho nezná, žádné konflikty. Změny `SKILL.md` z originálu ho neovlivní; dotčená
   pravidla ohlásí `pravidla.py overit` (3.3).
 
-Otevřené: (a) Má `rules/` začínat jen pravidly, která už teď způsobila chybu (jistota, ztotožnění, „nenalezeno“, pomocníci),
-a rozšiřovat se podle potřeby?
+### 3.6 Rozsah vrstvy `rules/` (rozhodnuto)
+
+`rules/` **začíná jen pravidly, která už způsobila skutečnou chybu**, a rozšiřuje se podle potřeby (nová chyba nebo
+nová změna originálu = nové pravidlo). Počáteční sada, každá položka s doloženým případem v `matriky.md`, `metodika.md`
+nebo v naší práci:
+
+| Téma | Pravidlo (shrnutí) | Zdroj |
+|---|---|---|
+| Jistota | co je `doc`, `prob`, `fam`; „střední“ jistota od pomocníka na `doc` nestačí | `matriky.md` (Typické pasti), `SKILL.md` |
+| Ztotožnění | spojit osoby jen podle dvou nezávislých znaků; vyjmenovat ostatní kandidáty | `metodika.md` (Ztotožnění) |
+| „Nenalezeno“ | platí jen pro knihu, která ves pokrývá; index nenašel ≠ neexistuje; zapsat, co se prošlo | `matriky.md` (Knihy po vsích, Typické pasti) |
+| Struktura knihy | před závěrem zmapovat všechny oddíly; posun snímek–strana nikdy nedomýšlet | `matriky.md` (Jak vypadá hledání) |
+| Pomocníci | nikdy nepsat přepis, který neviděl; výřez, ze kterého četl; slepé druhé čtení | `matriky.md` (Velké kolo), `SKILL.md` |
+| Zápis dat | jen přes skripty, žádné `sed -i` ani ruční Python na `data/` | `SKILL.md`, `matriky.md` (Technické pasti) |
+| Procesní text | čísla úkolů, jména agentů a uživatelů, cesty nepatří do textů pro web | `zapisy.md`, kapitola 5 |
+| Archivní zákazy | co skriptem nesmí (`slusne.py`, `ZAKAZ`); při blokaci skončit | `portaly.md`, `slusne.py` |
+
+Rozšíření (přečíslování domů, místo původu, pasti kurentu a další) přibývají, až se projeví při bádání nebo při sloučení
+z originálu. Každé nové pravidlo projde `pravidla.py pokryti` a dostane otisk zdrojového oddílu (3.3).
 
 ## 4. Sada agentů
 
@@ -348,7 +365,7 @@ snímky potřebují údržbu při záměrné změně; chceme je, nebo jen strukt
 
 ## 8. Rozhodnutí, která potřebuju od vás
 
-1. **Vrstvy a hlídání změn** (3): schvaluje se varianta „zrcadlo + vlastní anglická pravidla s otisky“. Zbývá rozhodnout otázku (a) z 3.5. `SKILL.md` zůstává česky, vedle něj přibude tenký anglický skill pro agenty (3.5).
+1. **Vrstvy a hlídání změn** (3): schvaluje se varianta „zrcadlo + vlastní anglická pravidla s otisky“. `SKILL.md` zůstává česky, vedle něj přibude tenký anglický skill pro agenty (3.5).
 2. **Hlídač:** souhlasíte s bodem 0 (odstranit plošný zákaz `curl`/`wget`) a s úzkým hlídačem zápisů z 5.1?
 3. **Obrácení toku deníku** (JSONL zdroj, tabulka generovaná): souhlasíte s migrací stávajícího `research_log.md`?
 4. Značka rodu: *kruh + „Plíškové“*, bez slova „rod“?
