@@ -1,4 +1,4 @@
-# Návrh sady agentů, vynucování pravidel a testů (verze 0.2 k iteraci)
+# Návrh sady agentů, vynucování pravidel a testů (verze 0.3 k iteraci)
 
 Stav: **návrh k diskusi, nic z toho zatím není implementováno.** Celá analýza je česky. Až se návrh schválí, vzniknou
 z něj anglické soubory (agenti, instrukce, skilly, metodika pro model); návody k bádání a použití zůstávají česky
@@ -55,31 +55,61 @@ Princip, který z toho plyne a který chci jako závazný:
 6. **Hlídač jen pro vybrané věci** (kapitola 1.3 a 5.4).
 7. **Změna verze skillu v projektu spouští E2E** včetně kontroly pokrytí (kapitola 6).
 
-## 3. Jazyková politika (upravená podle zpětné vazby)
+## 3. Jazyk a vrstvy metodiky (varianta „zrcadlo + vlastní pravidla“)
 
-Dvě vrstvy:
+Rozhodnutí: **soubory přebírané z originálu se nedělí ani nepřekládají**, aby se dál slučovaly gitem. Nad nimi vznikne
+naše tenká anglická vrstva pravidel pro agenty a hlídá se, aby nezastarala. Důvody a srovnání variant jsou v historii
+diskuse (rozdělení souborů by mělo tiché ztráty při slučování; originál mění `matriky.md` zhruba třikrát týdně).
 
-| Vrstva | Jazyk | Co do ní patří |
-|---|---|---|
-| **Metodika pro model** (řídí chování) | **angličtina** | skilly (`SKILL.md`), instrukce (`CLAUDE.md`, pravidla pro agenty), definice agentů, rozhodovací pravidla (ztotožnění osob, jistota `doc/prob/fam`, pasti), šablony polí |
-| **Návody k bádání a použití** (jak bádat, portály, postupy) | **čeština** | dnešní `reference/*.md` (portály, matriky, instalace, web, zadosti …) a README |
-| **Výsledky bádání a web** | **čeština** | `data/`, deník, fronty (věcný text), veřejné otázky, stránky webu, zprávy uživateli |
+### 3.1 Vrstvy
 
-Pravidla:
+| Vrstva | Soubory | Jazyk | Původ | Slučování |
+|---|---|---|---|---|
+| **Zrcadlo originálu** | `SKILL.md`, `reference/*.md` (`matriky`, `metodika`, `portaly` …), README | česky, **beze změny struktury** | originál + naše úpravy | běžný `git merge upstream/main` |
+| **Pravidla pro agenty** | `rules/*.md`, definice agentů v `.claude/agents/`, instrukce (`CLAUDE.md`, pravidla orchestrátora) | **anglicky** | naše | nikdy automaticky z originálu |
+| **Výsledky a web** | `data/`, deník, fronty (věcný text), veřejné otázky, stránky webu, zprávy uživateli | česky | projekt | – |
 
-- **Co se přebírá z PR nebo z originálního repozitáře a patří do metodiky pro model, překládá se do angličtiny a ukládá
-  v angličtině** (původní český text se v repozitáři nenechává, zůstane odkaz na PR nebo commit). Návody k bádání a použití
-  z originálu zůstávají česky, tak jako dosud.
-- Identifikátory (klíče dat, názvy souborů, `doc/prob/fam`) se nepřekládají.
-- Agent odpovídá uživateli česky.
+Návody k bádání a použití zůstávají česky tam, kde jsou (zrcadlo). Agent odpovídá uživateli česky.
 
-Vynucení: `tools/jazyk.py` + `tests/jazyk/` kontroluje, že (a) soubory anglické vrstvy jsou anglicky, (b) návody, data a web
-jsou česky. Hranici mezi vrstvami určuje seznam cest v `analyza/jazyk-vrstvy.json` (návrh níže).
+### 3.2 Pravidla pro agenty (`rules/`)
 
-Otevřené: (a) **Kam patří dnešní `matriky.md` a `metodika.md`?** Jsou napůl návod, napůl pravidla pro model. Navrhuju je
-rozdělit: rozhodovací pravidla (ztotožnění, jistota, pasti, ověřování) do anglické vrstvy, postupy a příklady zůstanou
-česky v návodech. (b) `SKILL.md` má české spouštěcí fráze („rodokmen“, „předci“); navrhuju je nechat v `description`
-česky, protože podle nich se skill spouští, a zbytek psát anglicky.
+Krátká číslovaná pravidla, ne vyprávění. Každé má pole:
+
+```text
+id        stable key, e.g. R-ID-003
+when      situation in which the rule applies
+do        what the agent must do (imperative, one or two sentences)
+why       the failure it prevents (a real case if one exists)
+source    mirror file + section heading it derives from, or "fork" if it is our own rule
+checked   hash of that section's text at the time the rule was last reviewed
+```
+
+Obsahem jsou rozhodovací pravidla: jistota `doc/prob/fam`, ztotožnění osob, co znamená „nenalezeno“, struktura knihy, pravidla
+pro pomocníky, provozní pasti prostředí v krátkém tvaru. Vzniknou **extrakcí z dnešních návodů** (jednorázově, ručně
+kontrolovaně), ne nahrazením návodů.
+
+### 3.3 Hlídání změn originálu (proti driftu)
+
+- `rules/zdroje.json` vede pro každé pravidlo odkaz na zdrojový oddíl a **otisk (hash) normalizovaného textu oddílu**.
+- Skript `tools/pravidla.py`:
+  - `overit` porovná otisky se současnými soubory. Pro **změněný** nebo **zmizelý** oddíl vypíše pravidlo a skončí chybou;
+  - `potvrdit <id>` po revizi pravidla uloží nový otisk;
+  - `pokryti` vypíše oddíly zrcadla, které nemá žádné pravidlo (informativně: co je v návodu nového a pravidlo k tomu není).
+- **Po každém `git merge upstream/main`** (agent `upstream-sync`, 4.4) se spustí `pravidla.py overit`. Pro každou změnu vznikne
+  úkol „přezkoumat pravidlo R-… proti změně v originálu“ (priorita podle toho, zda je pravidlo bezpečnostní). Nic se neztratí
+  mlčky: oddíl je buď beze změny, nebo k němu existuje úkol.
+- `overit` je součástí brány E2E po aktualizaci verze (kapitola 6) a testu `tests/pravidla/`.
+- **Nová pravidla z originálu:** `upstream-sync` navrhne rozšíření `rules/` (překlad do EN, odkaz na PR nebo commit), schvaluje
+  uživatel. Vše, co přijde do `rules/`, je přeloženo do angličtiny a uloženo anglicky.
+
+### 3.4 Co se hlídá jazykově
+
+`tests/jazyk/`: `rules/` a definice agentů jsou anglicky; `data/` (věcné texty), deník a stránky webu jsou česky. **Zrcadlo se
+nekontroluje** (je smíšené záměrně).
+
+Otevřené: (a) `SKILL.md` je skill, který chceme anglicky, je ale v zrcadle (47 commitů originálu, 71 našich). Navrhuju ho
+nechat česky a použít tenký anglický skill/instrukci `rodokmen-agents` jen pro agenty. (b) Má `rules/` začínat jen u pravidel,
+která už teď způsobila chybu (jistota, ztotožnění, „nenalezeno“, pomocníci), a rozšiřovat se podle potřeby?
 
 ## 4. Sada agentů
 
@@ -142,10 +172,10 @@ zakázané vstupy, kdy je hotovo, maximum pokusů, kdy se ptát uživatele.
 ### 4.4 `upstream-sync`
 
 Krok 1 je **skript** `sync_report.py` (nové commity, verze, PR, issues, dotčené soubory a překryv s naším forkem; tu tabulku
-jsem dnes sestavoval ručně). Agent navrhne u každé položky převzít / upravit / vynechat a proč, schvaluje uživatel. Obsah
-metodiky pro model se překládá do angličtiny, návody zůstávají česky; mapování `odkaz na originál → místní soubor` je
-v `analyza/upstream-mapa.json`. U konfliktů dává přednost originálu tam, kde fork nic nepřidává. Sám nepushuje ani
-nevydává, předá zelenou větev orchestrátorovi.
+jsem dnes sestavoval ručně). Agent navrhne u každé položky převzít / upravit / vynechat a proč, schvaluje uživatel.
+Slučuje běžným `git merge` (zrcadlo se nedělí), pak spustí `pravidla.py overit` a **vytvoří úkoly k přezkoumání
+dotčených pravidel** (3.3). Co patří do `rules/`, překládá do angličtiny s odkazem na PR nebo commit. U konfliktů dává
+přednost originálu tam, kde fork nic nepřidává. Sám nepushuje ani nevydává, předá zelenou větev orchestrátorovi.
 
 ### 4.5 Úprava skillu a správa webu
 
@@ -270,7 +300,8 @@ Spouští se po každé aktualizaci projektu na novou verzi (`novy_projekt.py`, 
    - **Stránky:** trasy z `web/src/pages` a z vygenerovaných dat (osoba, místo, rod, příběh) proti registru
      `tests/e2e/stranky.json` (vzor trasy → test). Nová nebo změněná trasa bez testu = **selhání brány**.
    - **Nástroje:** každý `tools/*.py` má test (nebo záznam výjimky s důvodem).
-   - **Jazyk:** každý soubor je ve své vrstvě ve správném jazyce.
+   - **Jazyk:** `rules/` a agenti anglicky, data a web česky (zrcadlo se nekontroluje).
+   - **Pravidla:** `pravidla.py overit` – žádné pravidlo nesmí odkazovat na změněný nebo zmizelý oddíl bez potvrzené revize.
    - Při nepokrytí skript **sám vytvoří úkoly** do fronty „doplnit test pro `<trasa>`“ (typ `test`, priorita P2) a nabídne
      příkaz `doplň testy`, který je přidělí `test-author`.
 3. **E2E v prohlížeči** (Playwright, proti dočasné kopii webu mimo projekt kvůli zámku `dist`):
@@ -294,12 +325,13 @@ snímky potřebují údržbu při záměrné změně; chceme je, nebo jen strukt
 2. **Fáze B – web:** komponenta `Rod`, automatické značkování, oprava `hledame` a `denik`, úzký hlídač zápisů.
 3. **Fáze C – agenti:** definice v `.claude/agents/` (anglicky), `orchestrator` jako hlavní vlákno, pravidla jazyka.
 4. **Fáze D – E2E brána** po aktualizaci verze a její zapojení do `novy_projekt.py`.
-5. Průběžně: `upstream-sync` začne dělat zprávy hned (nízké riziko).
+5. **Fáze E – vrstva `rules/`:** jednorázová extrakce pravidel z `matriky.md` a `metodika.md`, `rules/zdroje.json`, `tools/pravidla.py`
+   (`overit`, `potvrdit`, `pokryti`), `tests/pravidla/`, zapojení do `upstream-sync` a E2E brány.
+6. Průběžně: `upstream-sync` začne dělat zprávy hned (nízké riziko).
 
 ## 8. Rozhodnutí, která potřebuju od vás
 
-1. **Hranice jazykových vrstev** (3, otevřená otázka a): rozdělit `matriky.md` a `metodika.md` na anglická rozhodovací
-   pravidla a české postupy?
+1. **Vrstvy a hlídání změn** (3): schvaluje se varianta „zrcadlo + vlastní anglická pravidla s otisky“. Zbývá rozhodnout otázky (a) a (b) z 3.4.
 2. **Hlídač:** souhlasíte s bodem 0 (odstranit plošný zákaz `curl`/`wget`) a s úzkým hlídačem zápisů z 5.1?
 3. **Obrácení toku deníku** (JSONL zdroj, tabulka generovaná): souhlasíte s migrací stávajícího `research_log.md`?
 4. Značka rodu: *kruh + „Plíškové“*, bez slova „rod“?
