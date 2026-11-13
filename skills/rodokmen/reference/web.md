@@ -15,7 +15,7 @@ a překladem), stránka osoby, rodiny, „Co hledáme“, výzkumný deník, hle
 | `npm ci` | čistá instalace přesně podle `package-lock.json` |
 | `npm run data` | převede data do webu (vždy po změně dat; `scripts/data.mjs` si sám najde funkční Python 3) |
 | `npm run build` | sestaví web do `dist/` (s přístupy zvlášť verzi pro každý přístup, viz níže) |
-| `npm run nahled` | data + build + náhled na <http://localhost:4321> (Ctrl+C ukončí); `-- --pristup <id>` = verze pro jeden přístup |
+| `npm run nahled` | data + build + náhled na <http://localhost:4321> (Ctrl+C ukončí); `-- --pristup <id>` = verze pro jeden přístup, `-- --port 4322` = jiný port. Náhled se spouští s `--ignore-lock`, takže jde vedle sebe pustit víc (Astro 7 jinak povolí jen jeden na projekt). Náhled, který jsi pustil sám na pozadí, po ukázce vypni |
 | `npm run dev` | vývojový režim při úpravách vzhledu |
 | `npm run nasadit-cloudflare` | data + build + nahrání na Cloudflare (výchozí) + kontrola |
 | `npm run nasadit` | data + build + nahrání na Netlify + kontrola |

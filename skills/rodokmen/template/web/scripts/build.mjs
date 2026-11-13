@@ -3,6 +3,7 @@
 // každá obsahuje jen větve svého přístupu; brána (Netlify / nginx) podle přihlášení pošle jen tu jeho.
 //
 // `npm run nahled` (= node scripts/build.mjs --nahled): data + jedna verze webu + náhled na http://localhost:4321.
+// Jiný port: `npm run nahled -- --port 4322` (druhý náhled vedle už běžícího).
 // Náhled verze pro jeden přístup: `npm run nahled -- --pristup <přístup>` (id přístupu vypíše npm run data).
 import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -14,6 +15,7 @@ const web = fileURLToPath(new URL("../", import.meta.url));
 const args = process.argv.slice(2);
 const nahled = args.includes("--nahled");
 const pristupArg = args.includes("--pristup") ? args[args.indexOf("--pristup") + 1] : null;
+const port = args.includes("--port") ? args[args.indexOf("--port") + 1] : null;   // npm run nahled -- --port 4322
 
 function npx(...a) {   // astro, pagefind z node_modules projektu
   const r = spustNpx(["--no-install", ...a], { cwd: web, stdio: "inherit" });
@@ -54,7 +56,9 @@ if (nahled) {
   const kontrola = spawnSync(process.execPath, [join(web, "scripts", "over_css.mjs")], { cwd: web, stdio: "inherit" });
   if (kontrola.status !== 0) process.exit(kontrola.status ?? 1);
   if (pristupArg) exportuj();   // zpět data celého rodokmenu (npm run dev)
-  npx("astro", "preview");
+  // --ignore-lock: Astro 7 jinak pustí jen jeden náhled na projekt (druhý – třeba uživatelův vedle toho, který Claude nechal
+  // běžet na pozadí – skončí chybou „Another astro preview server is already running“)
+  npx("astro", "preview", "--ignore-lock", ...(port ? ["--port", port] : []));
 } else if (!vicePristupu) {
   sestav("dist");
 } else {

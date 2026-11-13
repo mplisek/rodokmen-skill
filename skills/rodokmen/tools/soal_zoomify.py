@@ -42,6 +42,10 @@ def get(url):
                 slusne.zastav(host, f"HTTP {e.code} u snímku")
                 sys.exit(f"Archiv odmítl snímek (HTTP {e.code}) – web {host} je v brzdě zastavený. Dnes s ním přestaň "
                          "a zkus to jindy; snímky, které teď potřebuješ, ať uloží uživatel v prohlížeči.")
+            if e.code in (401, 404, 410):   # opakovat nemá smysl: server snímek nevydá (změněná cesta, nebo vydává jen prohlížeči)
+                sys.exit(f"Archiv snímek nevydal (HTTP {e.code}): {url[:100]}\n"
+                         "Server zřejmě nepovoluje stažení mimo prohlížeč, nebo se změnila cesta k obrázkům (ZA Opava od 12. 11. 2026). "
+                         "Nic neobcházej: čti snímek v prohlížeči a ulož ho (`reference/portaly.md` → ZA Opava).")
             time.sleep(1)
             err = e
         except Exception as e:

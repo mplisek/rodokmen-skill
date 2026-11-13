@@ -10,7 +10,9 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
-## Nevydáno
+## 0.10.0-fork.3 – 13. 11. 2026
+
+Fork na originálu 0.10.0 a navíc:
 
 ### Nové
 
@@ -19,6 +21,16 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   svátky, počet pomocníků), pravidla v `reference/nocni_rezim.md` a šablony zápisů v `reference/zapisy.md`.
   `kontrola.py` hlásí údaje o procesu (pomocník, „ověřeno na snímku“…) v textech pro web.
 - **markdownlint:** `.markdownlint.yaml`, `.editorconfig` a kontrola `.md` v CI.
+
+### Opravy
+- `npm run nahled` spouští náhled s `--ignore-lock` a umí `-- --port <číslo>`: Astro 7 jinak povolí jen jeden náhled na projekt a
+  druhý (třeba uživatelův vedle toho, který Claude nechal běžet na pozadí) skončil chybou „Another astro preview server
+  is already running“ (originál #186).
+- `soal_zoomify.py`: HTTP 404 (a 401, 410) skončí srozumitelnou hláškou bez opakování a bez tracebacku – ZA Opava od
+  12. 11. 2026 vydává obrázky jen prohlížeči. 403 se brzdě předávalo správně už dřív, přibyl test obou případů (originál #191).
+
+### Návody
+- ZA Opava: obrázkový server odmítá i skript, náhradní postup z dlaždic v prohlížeči (originál #191).
 
 ## 0.10.0-fork.2 – 12. 11. 2026
 

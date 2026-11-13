@@ -302,6 +302,15 @@ svazek, výstup JavaScriptu bez parametrů v Claude in Chrome).
   `python3 -I tools/soal_zoomify.py "<adresa>" 2 pracovni/x.jpg` (2 = čtvrtinové rozlišení na orientaci podle záhlaví
   stránek, 0 = plné jen u nalezeného zápisu). Obrázkový server images.archives.cz cookies nepotřebuje, ale po několika
   snímcích rychle za sebou vrací 403 – stahuj po jednom s pauzou a při 403 skonči (brzda web zastaví).
+  **Od 4. 11. 2026 server odmítá i skript samotný** (403 hned na první snímek, od 12. 11. 404 i na `ImageProperties.xml`,
+  které prohlížeč načte; cesta `…/zao/matriky/dao/images/…` neexistuje, prohlížeč dál používá `…/CZ-217000010/NAD-165/…`).
+  Nástroj 403 předá brzdě (kód 3), u 404 skončí hláškou bez opakování – obojí znamená: nic neobcházej a čti snímek **v prohlížeči**.
+  Náhradní postup (z hlášení uživatele, ověřený na ~10 snímcích za den): v kartě Claude in Chrome na stránce
+  `showZoomifySeparate?imageNumberSeparate=N&myEntityUuid=<entita>&myImageUuid=x` vytáhni cestu k obrázku z
+  `document.documentElement.innerHTML` (`dao/images/(\d+)/([0-9a-f-]{36})\.jpg`), dlaždice nejvyšší úrovně
+  `TileGroup<g>/<z>-x-y.jpg` načítej postupně přes `new Image()` (pauza ~250 ms; `g = floor((dlaždice nižších úrovní + y·sloupce + x) / 256)`),
+  slož je do `<canvas>` a ulož po pruzích (~680×510) nástrojem `zoom` se `save_to_disk` bez `scale`; pruhy spoj
+  `magick +append` a pak `vyrez.py`. Je to pracné – dělej to jen pro zápisy, které opravdu čteš.
 - **POZOR na blokování** (jen stránky aplikace, obrázky ne): rychlé dotazy → CAPTCHA, „operace vyhodnoceny jako
   nestandardní“ nebo „Access blocked“ na 30 minut; po desítkách dotazů za den vrací showZoomify „Server Exception“
   (denní limit – pokračuj až další den). Pauza aspoň 5 s mezi stránkami, žádné rychlé `fetch` hned po hledání,
