@@ -66,7 +66,7 @@ diskuse (rozdělení souborů by mělo tiché ztráty při slučování; origin�
 | Vrstva | Soubory | Jazyk | Původ | Slučování |
 |---|---|---|---|---|
 | **Zrcadlo originálu** | `SKILL.md`, `reference/*.md` (`matriky`, `metodika`, `portaly` …), README | česky, **beze změny struktury** | originál + naše úpravy | běžný `git merge upstream/main` |
-| **Pravidla pro agenty** | `rules/*.md`, definice agentů v `.claude/agents/`, instrukce (`CLAUDE.md`, pravidla orchestrátora) | **anglicky** | naše | nikdy automaticky z originálu |
+| **Pravidla pro agenty** | `rules/*.md`, tenký skill `skills/rodokmen-agents/SKILL.md`, definice agentů v `.claude/agents/`, instrukce (`CLAUDE.md`, pravidla orchestrátora) | **anglicky** | naše | nikdy automaticky z originálu |
 | **Výsledky a web** | `data/`, deník, fronty (věcný text), veřejné otázky, stránky webu, zprávy uživateli | česky | projekt | – |
 
 Návody k bádání a použití zůstávají česky tam, kde jsou (zrcadlo). Agent odpovídá uživateli česky.
@@ -107,9 +107,26 @@ kontrolovaně), ne nahrazením návodů.
 `tests/jazyk/`: `rules/` a definice agentů jsou anglicky; `data/` (věcné texty), deník a stránky webu jsou česky. **Zrcadlo se
 nekontroluje** (je smíšené záměrně).
 
-Otevřené: (a) `SKILL.md` je skill, který chceme anglicky, je ale v zrcadle (47 commitů originálu, 71 našich). Navrhuju ho
-nechat česky a použít tenký anglický skill/instrukci `rodokmen-agents` jen pro agenty. (b) Má `rules/` začínat jen u pravidel,
-která už teď způsobila chybu (jistota, ztotožnění, „nenalezeno“, pomocníci), a rozšiřovat se podle potřeby?
+### 3.5 Tenký anglický skill pro agenty (`rodokmen-agents`)
+
+Rozhodnuto: `SKILL.md` (zrcadlo) zůstává česky a beze změny struktury; vedle něj vznikne druhý, **tenký anglický skill**
+`skills/rodokmen-agents/SKILL.md`. Je určený jen agentům (orchestrátor a podagenti), uživatel ho nespouští.
+
+- **Obsah (nejvýš zhruba 120 řádků):** role a seznam agentů s odkazem na jejich definice, smlouvy vstupu a výstupu
+  (`pracovni/vysledky/<id>.json`, zadání opravy, karta rozhodnutí), jazyková politika, pravidla zápisu (jen přes skripty),
+  odkaz na `rules/` a na `kontext.py` (jak se pravidla vybírají podle tématu). **Neopakuje** obsah `SKILL.md` ani návodů,
+  jen na ně odkazuje (např. „archivní zákazy: `slusne.py`, `reference/portaly.md`“).
+- **Spouštění:** popis (`description`) anglicky, určený pro agenty; skill se agentům nahrává přes definici
+  (`skills:` v `.claude/agents/<jméno>.md`) a orchestrátor ho má vždy načtený. Český `SKILL.md` se tím nezmění ani nezpomalí.
+- **Jedna pravda:** když se pravidlo objeví v `rules/`, v tenkém skillu je jen odkaz na jeho `id`, nikdy kopie textu.
+- **Testy (`tests/agenti/`):** velikost skillu pod limitem; všechny odkazované soubory a `id` pravidel existují; popis a text
+  jsou anglicky; definice každého agenta odkazuje jen na existující skill a nástroje; žádný text z `SKILL.md` se v něm
+  neopakuje (kontrola shody řádků).
+- **Slučování:** je to náš soubor, originál ho nezná, žádné konflikty. Změny `SKILL.md` z originálu ho neovlivní; dotčená
+  pravidla ohlásí `pravidla.py overit` (3.3).
+
+Otevřené: (a) Má `rules/` začínat jen pravidly, která už teď způsobila chybu (jistota, ztotožnění, „nenalezeno“, pomocníci),
+a rozšiřovat se podle potřeby?
 
 ## 4. Sada agentů
 
@@ -325,13 +342,13 @@ snímky potřebují údržbu při záměrné změně; chceme je, nebo jen strukt
 2. **Fáze B – web:** komponenta `Rod`, automatické značkování, oprava `hledame` a `denik`, úzký hlídač zápisů.
 3. **Fáze C – agenti:** definice v `.claude/agents/` (anglicky), `orchestrator` jako hlavní vlákno, pravidla jazyka.
 4. **Fáze D – E2E brána** po aktualizaci verze a její zapojení do `novy_projekt.py`.
-5. **Fáze E – vrstva `rules/`:** jednorázová extrakce pravidel z `matriky.md` a `metodika.md`, `rules/zdroje.json`, `tools/pravidla.py`
-   (`overit`, `potvrdit`, `pokryti`), `tests/pravidla/`, zapojení do `upstream-sync` a E2E brány.
+5. **Fáze E – vrstva `rules/` a tenký skill:** jednorázová extrakce pravidel z `matriky.md` a `metodika.md`, `rules/zdroje.json`, `tools/pravidla.py`
+   (`overit`, `potvrdit`, `pokryti`), `tests/pravidla/`, skill `rodokmen-agents` + `tests/agenti/`, zapojení do `upstream-sync` a E2E brány.
 6. Průběžně: `upstream-sync` začne dělat zprávy hned (nízké riziko).
 
 ## 8. Rozhodnutí, která potřebuju od vás
 
-1. **Vrstvy a hlídání změn** (3): schvaluje se varianta „zrcadlo + vlastní anglická pravidla s otisky“. Zbývá rozhodnout otázky (a) a (b) z 3.4.
+1. **Vrstvy a hlídání změn** (3): schvaluje se varianta „zrcadlo + vlastní anglická pravidla s otisky“. Zbývá rozhodnout otázku (a) z 3.5. `SKILL.md` zůstává česky, vedle něj přibude tenký anglický skill pro agenty (3.5).
 2. **Hlídač:** souhlasíte s bodem 0 (odstranit plošný zákaz `curl`/`wget`) a s úzkým hlídačem zápisů z 5.1?
 3. **Obrácení toku deníku** (JSONL zdroj, tabulka generovaná): souhlasíte s migrací stávajícího `research_log.md`?
 4. Značka rodu: *kruh + „Plíškové“*, bez slova „rod“?
