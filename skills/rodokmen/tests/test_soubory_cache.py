@@ -88,7 +88,10 @@ class Zapis(unittest.TestCase):
                                str(vstup), *volby], cwd=self.p, capture_output=True, text=True, encoding="utf-8")
 
     def test_nahradi_jen_jednu_polozku(self):
-        self.assertEqual(self.zapis("a", {"svazek": "Á nové"}).returncode, 0)
+        r = self.zapis("a", {"svazek": "Á nové"})   # náhrada by ztratila pole „snimku“ → odmítne se (0.10.1)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("--prepsat", r.stdout + r.stderr)
+        self.assertEqual(self.zapis("a", {"svazek": "Á nové"}, "--prepsat").returncode, 0)
         text = self.svazky.read_text(encoding="utf-8")
         self.assertEqual(json.loads(text), {"a": {"svazek": "Á nové"}, "b": {"svazek": "B"}})
         self.assertIn('\n "b": {\n  "svazek": "B"\n }\n}', text)   # ostatní položky beze změny formátu

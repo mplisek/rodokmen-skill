@@ -89,6 +89,8 @@ def main():
         sys.exit(__doc__)
     key = sys.argv[1]
     magick()   # bez ImageMagicku skončit dřív, než se rámeček zapíše
+    if not os.path.exists(os.path.join(ROOT, "vyrezy", key + ".jpg")):   # rámeček se kreslí do výřezu – nejdřív výřez
+        sys.exit(f"Chybí výřez vyrezy/{key}.jpg – nejdřív ho udělej (tools/vyrez.py), pak rámeček. Nic jsem nezapsal.")
     data = json.load(open(PATH, encoding="utf-8-sig")) if os.path.exists(PATH) else {}
     if sys.argv[2] == "--nahled":
         print(preview(key, data.get(key, {}).get("boxes", [])))

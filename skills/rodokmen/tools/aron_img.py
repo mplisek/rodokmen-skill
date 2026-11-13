@@ -262,7 +262,7 @@ if __name__ == "__main__":
         polozka = dict(archiv=fond if rest else "", portal="ARON", svazek=rest or vol["name"],
                        popis=(vol.get("description") or "")[:300], snimku=len(tiles),
                        url=f"https://aron.vychodoceskearchivy.cz/apu/{vol['id']}")
-        zapis.zapis("svazky", apu[:8], polozka)
+        zapis.zapis("svazky", apu[:8], polozka, sloucit=True)   # dopsaná pole (obce…) zůstanou
         print(apu[:8], "->", polozka["svazek"])
         sys.exit(0)
     if sys.argv[2] == "link":

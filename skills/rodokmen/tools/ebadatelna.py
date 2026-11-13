@@ -362,7 +362,7 @@ def snimek(druh, xid, n, out, volby):
 
 def zapis_svazek(klic, zaznam):
     import zapis   # jen ta jedna položka, formát souboru zůstane (tools/zapis.py)
-    zapis.zapis("svazky", klic, zaznam)
+    zapis.zapis("svazky", klic, zaznam, sloucit=True)   # dopsaná pole zůstanou
     print(f"{klic} -> {zaznam['svazek']}")
 
 

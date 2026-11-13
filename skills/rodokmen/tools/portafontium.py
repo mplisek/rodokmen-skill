@@ -251,7 +251,7 @@ def svazek(kniha, jen_vypsat=False):
         print(klic, json.dumps(polozka, ensure_ascii=False, indent=1))
         return
     import zapis   # jen ta jedna položka, formát souboru zůstane (tools/zapis.py)
-    zapis.zapis("svazky", klic, polozka)
+    zapis.zapis("svazky", klic, polozka, sloucit=True)   # dopsaná pole zůstanou
     print(klic, "->", polozka["svazek"])
 
 

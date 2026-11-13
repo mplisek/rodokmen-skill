@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Snímek matriky ve formátu Zoomify (SOA Litoměřice, ZA Opava, Národní archiv) v plném rozlišení – bez prohlížeče a bez cookies.
+"""Snímek matriky ve formátu Zoomify (SOA Litoměřice, Národní archiv) v plném rozlišení – bez prohlížeče a bez cookies.
+
+ZA Opava (images.archives.cz) od listopadu 2026 nástroje nepouští (robots.txt, obrázky HTTP 403/404) – snímky
+odtud ukládej z prohlížeče snímků (reference/portaly.md, ZA Opava; nejlépe Playwright).
 
 Použití (z kořene projektu):
   soal_zoomify.py <cesta nebo adresa> <zmenseni> <vystup.jpg> [x0,y0,x1,y1]
@@ -8,13 +11,12 @@ Použití (z kořene projektu):
                 z prohlížeče: v digitální badatelně otevři snímek a v síťovém provozu najdi požadavek na
                 https://images.soalitomerice.cz/ximage/matriky/zoomify/cz/archives/CZ-214000010/matriky/<cesta>/ImageProperties.xml
                 (další snímky téže knihy mají stejnou cestu, liší se jen číslem obrázku)
-    adresa    = celá adresa obrázku začínající https:// (s „/ImageProperties.xml“ na konci i bez), např. ZA Opava:
-                https://images.archives.cz/ximage/matriky/zoomify/cz/archives/CZ-217000010/NAD-165/dao/images/<složka>/<uuid>.jpg
+    adresa    = celá adresa obrázku začínající https:// (s „/ImageProperties.xml“ na konci i bez), např.
+                https://images.soalitomerice.cz/ximage/matriky/zoomify/cz/archives/CZ-214000010/NAD-<číslo>/dao/images/<složka>/<uuid>.jpg
     zmenseni  = 0 plné rozlišení (na čtení a výřez), 1 poloviční (na orientaci), 2 čtvrtinové
     x0,y0,x1,y1 = volitelný výřez v relativních souřadnicích 0–1 (stáhne se celý snímek, uloží se jen výřez)
-POZOR: aplikace digi.soalitomerice.cz po ~100 rychlých požadavcích (digi.archives.cz v Opavě už po ~75) zablokuje
-přístup na 30 minut. Prohlížečem jen najdi knihu a cestu k obrázkům, snímky pak stahuj tímto nástrojem (obrázkový server
-neomezuje).
+POZOR: aplikace digi.soalitomerice.cz po ~100 rychlých požadavcích zablokuje přístup na 30 minut. Prohlížečem jen
+najdi knihu a cestu k obrázkům, snímky pak stahuj tímto nástrojem po jednom.
 """
 import math, os, re, shutil, subprocess, sys, tempfile, time, urllib.error, urllib.parse, urllib.request
 import concurrent.futures as cf
@@ -24,7 +26,7 @@ for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (
         _s.reconfigure(encoding="utf-8", errors="replace")
 
 BASE = "https://images.soalitomerice.cz/ximage/matriky/zoomify/cz/archives/CZ-214000010/matriky/"
-HOSTS = ("images.soalitomerice.cz", "images.archives.cz", "vademecum.nacr.cz")   # jen obrázkové servery archivů (snímky zpracovává ImageMagick)
+HOSTS = ("images.soalitomerice.cz", "vademecum.nacr.cz")   # jen obrázkové servery archivů (snímky zpracovává ImageMagick); ZA Opava ne (výše)
 
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
@@ -42,10 +44,10 @@ def get(url):
                 slusne.zastav(host, f"HTTP {e.code} u snímku")
                 sys.exit(f"Archiv odmítl snímek (HTTP {e.code}) – web {host} je v brzdě zastavený. Dnes s ním přestaň "
                          "a zkus to jindy; snímky, které teď potřebuješ, ať uloží uživatel v prohlížeči.")
-            if e.code in (401, 404, 410):   # opakovat nemá smysl: server snímek nevydá (změněná cesta, nebo vydává jen prohlížeči)
-                sys.exit(f"Archiv snímek nevydal (HTTP {e.code}): {url[:100]}\n"
-                         "Server zřejmě nepovoluje stažení mimo prohlížeč, nebo se změnila cesta k obrázkům (ZA Opava od 12. 11. 2026). "
-                         "Nic neobcházej: čti snímek v prohlížeči a ulož ho (`reference/portaly.md` → ZA Opava).")
+            if e.code == 404:   # neopakovat: špatná cesta, nebo archiv nástroj odmítá (prohlížeč ten snímek načte)
+                sys.exit(f"Snímek nenalezen (HTTP 404): {url[:160]}\nZkontroluj, že je to celá adresa obrázku z prohlížeče "
+                         "(cesty se mění, i přípona .JPG). Když ji prohlížeč načte a nástroj ne, archiv nástroj odmítá – "
+                         "skonči a snímek ulož z prohlížeče (reference/portaly.md).")
             time.sleep(1)
             err = e
         except Exception as e:
@@ -59,6 +61,9 @@ def main():
         sys.exit(__doc__)
     arg = sys.argv[1].strip().removesuffix("/ImageProperties.xml").strip("/")
     base = arg if arg.startswith("http") else BASE + arg
+    if urllib.parse.urlsplit(base).hostname in ("images.archives.cz", "digi.archives.cz"):
+        sys.exit("ZA Opava od listopadu 2026 nástroje nepouští (robots.txt, obrázky HTTP 403/404). Snímek ulož "
+                 "z prohlížeče snímků – Playwright složí dlaždice, které prohlížeč načetl (reference/portaly.md, ZA Opava).")
     if urllib.parse.urlsplit(base).scheme != "https" or urllib.parse.urlsplit(base).hostname not in HOSTS:
         sys.exit(f"Adresa musí být https:// na serveru archivu ({', '.join(HOSTS)}), ne {base[:80]}")
     red, out = int(sys.argv[2]), sys.argv[3]

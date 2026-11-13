@@ -192,7 +192,8 @@ tolik neubývají.
 - Přesné zadání: svazek, snímky, koho hledat, formát výsledku (klíč, snímek, souřadnice zápisu, přepis), technické
   pasti z `reference/matriky.md` a pravidla brzdy (síť jen přes `tools/slusne.py`, při hlášce „zastavený“ skončit
   a ohlásit). Ať u každého prošlého snímku napíše, co na něm skutečně přečetl (rok, první jméno), a zmíní i zjevně
-  související výskyty.
+  související výskyty. Rejstřík ať čte po sloupcích (`mapa_knihy.py … --sloupce`, `reference/matriky.md` → Čtení
+  písma) – jeho „v rejstříku není“ bez toho neber jako výsledek.
 - Pomocník píše jen do `pracovni/pom_<větev>/`, **do `data/` nikdy**. Zapisuješ ty; výstupy nemaž, dokud nejsou vytěžené.
 - **Jejich čtení vždy ověř sám na snímku** (`python3 -I tools/overit.py <snímek> x0,y0,x1,y1 pracovni/over`, zlomky
   0–1, rozdělí zápis na dvě čitelné poloviny), než ho zapíšeš jako `doc`. Uživateli to vysvětli správně: je to stejný
@@ -243,7 +244,8 @@ Podrobně `reference/pribehy.md`. Tohle rodina na webu čte nejradši – nenech
 
 Podrobně `reference/web.md`. Ve zkratce:
 
-1. `cd web && npm ci` (Node.js ≥ 22.19.0), pak `npm run nahled` → <http://localhost:4321> – ukaž uživateli. V cloudovém
+1. `cd web && npm ci` (Node.js ≥ 22.19.0), pak `npm run nahled` **na pozadí** (běží, dokud ho nezastavíš) →
+   <http://localhost:4321> – ukaž uživateli. Pouští-li si pak web sám (`npm run nahled`), svůj náhled předtím ukonči. V cloudovém
    prostředí (claude.ai) localhost neuvidí – pošli mu snímky stránek nebo nasaď náhled.
 2. Nastav `data/web.json`: název, úvod, kontakt a **přihlašovací otázku a odpověď** (web je jen pro rodinu).
 3. Po každé změně dat: `npm run data && npm run build`. Hlášky `POZOR: nefunkční odkaz` oprav hned. Po větším kole
@@ -311,7 +313,7 @@ rozlišení), `dokumenty/` (originály od rodiny), `pracovni/` (nejde na web), `
 | `ebadatelna.py` | SOA Praha: trvalý odkaz, náhled a výřez ze snímku uloženého z prohlížeče (stahovat nesmí) |
 | `ahmp_search.sh`, `ahmp_scan.py` | matriky Prahy (AHMP) |
 | `policie_prihlasky.py` | pražské policejní přihlášky 1850–1914 |
-| `soal_zoomify.py` | snímek SOA Litoměřice nebo ZA Opava (knihu najdi v prohlížeči) |
+| `soal_zoomify.py` | snímek SOA Litoměřice (knihu najdi v prohlížeči); ZA Opava jen v prohlížeči (`portaly.md`) |
 | `matricula_dl.sh`, `matricula_batch.sh` | snímky z Matriculy (Rakousko, Bavorsko, Polsko…) |
 | `anno.py`, `anno_snap.py`, `kramerius.py` | noviny: ANNO (rakouské, `--ztraty` = seznamy ztrát 1914–1919), Kramerius (české; jen veřejná díla, `--vse` ukáže i neveřejná) |
 | `obeti.py`, `arolsen.py`, `mauthausen.py` | oběti a vězni 2. sv. války (holocaust.cz, Arolsen, Mauthausen); u prvních dvou **souhlas s podmínkami portálu potvrzuje uživatel sám** (`!python3 -I tools/<nástroj>.py souhlas`), Claude ho nepotvrzuje |

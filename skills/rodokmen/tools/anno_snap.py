@@ -13,8 +13,11 @@ doc,q,out=sys.argv[1:4]; page=sys.argv[4] if len(sys.argv)>4 else None
 mode=sys.argv[5] if len(sys.argv)>5 else 'ctx'; w=sys.argv[6] if len(sys.argv)>6 else '1400'
 u='https://anno.onb.ac.at/anno-suche/rest/search/snippet?'+urllib.parse.urlencode({'documentId':doc,'query':q})
 d=json.load(urllib.request.urlopen(u,timeout=90))
-# u části titulů (např. abecední rejstříky seznamů ztrát) API výřezy stránek nevrací – bez „snippetPages“
-for sp in d.get('snippetPages') or []:
+stranky=d.get('snippetPages') or []
+if not stranky:   # dotaz v tomto čísle nemá shodu – srozumitelně místo KeyError
+    sys.exit(f'V čísle {doc} se „{q}“ nenašlo (ANNO nevrátilo žádnou stránku se shodou). Zkontroluj dotaz '
+             '(přesný tvar slova, OCR bývá chybné) nebo číslo novin z výsledků anno.py.')
+for sp in stranky:
     if page and str(sp['page'])!=page and sp['pageLabel']!=page: continue
     if not sp.get('snippets'): continue
     s=sp['snippets'][0]; url=s['imageURL']
@@ -30,5 +33,5 @@ for sp in d.get('snippetPages') or []:
     open(out,'wb').write(urllib.request.urlopen(url2,timeout=120).read())
     print('saved',out,'page',sp['page'],sp['openURL']); break
 else:
-    sys.exit(f"ANNO pro dokument {doc} a dotaz {q!r} nevrátil výřez stránky"+(f" {page}" if page else "")+
-             " – zkus jiný tvar dotazu nebo stránku otevři v prohlížeči (anno.onb.ac.at, adresa z anno.py).")
+    sys.exit(f'Shoda je jen na stránkách {", ".join(str(sp.get("pageLabel") or sp.get("page")) for sp in stranky)}, '
+             f'ne na stránce {page}.')

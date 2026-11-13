@@ -1,4 +1,4 @@
-"""soal_zoomify.get: 403/429/503 zastaví web v brzdě (kód 3), 404 skončí srozumitelnou hláškou bez opakování (bez sítě)."""
+"""soal_zoomify.get: 403/429/503 zastaví web v brzdě (kód 3), 404 skončí srozumitelnou hláškou bez opakování (bez sítě, SOA Litoměřice; Opava už nástroj nepouští)."""
 import os
 import subprocess
 import sys
@@ -19,7 +19,7 @@ def falesny(url, timeout=None):
 import soal_zoomify as z
 urllib.request.urlopen = falesny
 try:
-    z.get("https://images.archives.cz/ximage/a.jpg")
+    z.get("https://images.soalitomerice.cz/ximage/a.jpg")
 except SystemExit as e:
     print("KOD", e.code if isinstance(e.code, int) else "zprava", "POKUSU", len(pokusy))
     if not isinstance(e.code, int):
@@ -40,13 +40,13 @@ class SoalZoomify(unittest.TestCase):
     def test_403_zastavi_web_v_brzde(self):
         out, stav = spust(403)
         self.assertIn("KOD 3", out)                           # SystemExit z brzdy (kód 3)
-        self.assertIn("ZASTAVENO archives.cz", stav)
+        self.assertIn("ZASTAVENO images.soalitomerice.cz", stav)
 
     def test_404_srozumitelna_hlaska_bez_opakovani(self):
         out, stav = spust(404)
         self.assertIn("POKUSU 1", out)                       # bez opakování (dřív 3× a traceback)
-        self.assertIn("nevydal (HTTP 404)", out)
-        self.assertIn("v prohlížeči", out)
+        self.assertIn("Snímek nenalezen (HTTP 404)", out)
+        self.assertIn("z prohlížeče", out)
         self.assertNotIn("Traceback", out)
         self.assertNotIn("ZASTAVENO", stav)                  # 404 není blokace
 
