@@ -207,6 +207,14 @@ tolik neubývají.
   přednost nástrojům bez prohlížeče. Z prohlížeče ať čte a ukládá zápis přiblížený na 100 % – z přehledového
   zmenšení (třetina rozlišení) vznikají chybná čtení.
 
+### Noční a víkendový režim, fronty úkolů
+
+Úkoly, které jde dělat bez člověka, vedeš ve frontách (`data/ukoly_na_noc.md`, `ukoly_k_rozhodnuti.md`, `ukoly_k_badani.md`,
+`archivni_dotazy.md`, `otazky_pro_rodinu.md`) nástrojem `tools/fronta.py`. Běh bez člověka spouští uživatel mimo pracovní dobu
+(`data/rezim.json`); nikdy se neptá, rozhodnutí odkládá do `ukoly_k_rozhodnuti.md`. V jednom běhu jede buď bádání, nebo úprava
+skillu. **Pravidla, směrování, priority a kdo úkol dělá: `reference/nocni_rezim.md`; šablony zápisů a zakázané údaje o procesu
+na webu: `reference/zapisy.md`.**
+
 ### Žádosti archivům, matričním úřadům a obcím
 
 Co jde jen přes úřad nebo badatelnu (mladší zápisy, pozemkové knihy, evidence hrobů), vyřeš žádostí: koncept do

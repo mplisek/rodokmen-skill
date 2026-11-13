@@ -21,3 +21,4 @@ web/netlify/edge-functions/
 web/cloudflare/worker.js
 web/wrangler.jsonc
 web/.wrangler/
+data/.beh.json
