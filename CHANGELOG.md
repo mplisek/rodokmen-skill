@@ -23,6 +23,7 @@ Fork na originálu 0.10.0 a navíc:
 - **markdownlint:** `.markdownlint.yaml`, `.editorconfig` a kontrola `.md` v CI.
 
 ### Opravy
+
 - `npm run nahled` spouští náhled s `--ignore-lock` a umí `-- --port <číslo>`: Astro 7 jinak povolí jen jeden náhled na projekt a
   druhý (třeba uživatelův vedle toho, který Claude nechal běžet na pozadí) skončil chybou „Another astro preview server
   is already running“ (originál #186).
@@ -30,7 +31,12 @@ Fork na originálu 0.10.0 a navíc:
   12. 11. 2026 vydává obrázky jen prohlížeči. 403 se brzdě předávalo správně už dřív, přibyl test obou případů (originál #191).
 
 ### Návody
+
 - ZA Opava: obrázkový server odmítá i skript, náhradní postup z dlaždic v prohlížeči (originál #191).
+- Metodika z hlášení uživatelů (originál #167, #174, #177, #181, #188): přečíslování domů, smíšené knihy po vsích, dva páry
+  stejných jmen v obci, místo původu („ex <obec>“), pasti kurentu a čtení podivných příjmení, gruntovní knihy a kroniky,
+  evangelíci na Moravě, průměrná délka generace 30–35 let; portály: ARON MZA (pozemkové knihy zdarma), globální hledání
+  a rejstříky SOA Třeboň, Geneteka, FamilySearch pro Slovensko (filiální obce, „Image Restricted“), matriky.online.
 
 ## 0.10.0-fork.2 – 12. 11. 2026
 

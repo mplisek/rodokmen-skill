@@ -107,6 +107,17 @@ nástroj i tento návod. Test nic nestahuje a souhlas s podmínkami portálů za
   ```
 
   Souřadnice ber vždy z aktuálního snímku okna (po načtení stránky nebo `vp.reset()`), ne ze staršího.
+- **Globální hledání** (pole „Globální hledání…“ nahoře) prohledává i poznámky uživatelů u snímků a jmenný rejstřík sčítání
+  1921. Dotaz **v uvozovkách** („Jméno Příjmení“) vrátí dobrovolnické výpisy rodin s číslem knihy a snímku; bez uvozovek
+  desetitisíce výsledků. Dobrovolnický přepis je i dobré „druhé čtení“ už přečteného zápisu. Je to nápověda, zápis ověř na snímku.
+- **Místní rejstříky knih:** záložka „Rejstříky“ → u obce „rok → snímek“ zvlášť pro N, O, Z; u knih, kde má každá ves
+  vlastní oddíl, jsou čísla v rejstříku stránky v oddílu vsi. Ušetří desítky až stovky načtení.
+- **Sčítání lidu** (1890–1921) se otevírá jako matrika; dům = 1 snímek (1910 dva), číslo domu vpravo nahoře – skokem na
+  odhadnutý snímek a čtením hlavičky se rychle zkalibruje. Velkostatky mají vlastní osadu („… Zámek“), čeleď je tam. Soupisy
+  poddaných mají jména chalup – rychle ukážou, zda „příjmení“ není jen jméno chalupy.
+- **Odkazy:** krátký tvar `<kniha>/<n>` není vždy snímek n (u některých knih n−1 nebo n+2); spolehlivý je
+  `DA?menu=3&id=<kniha>&page=<snímek>`. Signál k zastavení je stránka „Příliš mnoho požadavků“; s rozestupem 10 s prošlo
+  za den asi 275 stránek bez odmítnutí.
 - Svazek do `svazky.json` přes `zapis.py` (Ostatní portály, krok 4, klíč `trebon_<kniha>`).
 - Některé fary mají knihy po vesnicích, které nejsou v seznamu knih místa (Vacov → Žár) – hledej podle titulků knih fary.
 - **Civilní matriky (1920–1945) lidí bez vyznání** jsou v knihách okresních úřadů (např. Tábor, kniha 12304) a mají
@@ -315,6 +326,7 @@ svazek, výstup JavaScriptu bez parametrů v Claude in Chrome).
   nestandardní“ nebo „Access blocked“ na 30 minut; po desítkách dotazů za den vrací showZoomify „Server Exception“
   (denní limit – pokračuj až další den). Pauza aspoň 5 s mezi stránkami, žádné rychlé `fetch` hned po hledání,
   stránky výsledků neprocházej za sebou a nepouštěj smyčky na pozadí ani dávky celých svazků.
+- **Rejstříky úmrtí** ZA Opava uvádějí u jména věk a datum – rychle odliší stejnojmenné.
 
 ## MZA Brno (jižní Morava, Acta Publica) – jen v prohlížeči
 
@@ -373,6 +385,14 @@ svazek, výstup JavaScriptu bez parametrů v Claude in Chrome).
   `…/digisada/detail/<id>` má stejný prohlížeč `viewer` jako matriky (postup výše). Snímek 1 je soupis s metadaty
   (rozpis čísel, poznámky typu „čp. 134 má 2 archy“), pak archy po domech. 1857 uvádí jen rok narození, 1869 a 1880
   místo i datum; sloupec dat narození bývá psaný svisle – při čtení přiblížený výřez otoč o 90°.
+- **ARON MZA – pozemkové knihy zdarma:** `https://www.mza.cz/aron`, fond **C 17 „MZA v Brně: Pozemkové knihy“** (strom po
+  panstvích → „Celé panství“ / „Jednotlivé obce“; hledání `…/aron/arch-desc?q=<obec> pozemková kniha`). Bez přihlášení
+  (na rozdíl od FamilySearch) a jsou tam i knihy, které na FamilySearch chybí. Pro Moravu je to první místo, kde gruntovní
+  knihy hledat. Je to **web MZA, takže jen prohlížeč a žádné skripty** – dlaždice jdou přes IIPImage a dotaz na celý obrázek
+  vrací 403. Čtení: přetáhni zápis do středu, 3–4× klikni na lupu „+“ v liště a ulož díly (`zoom` se `save_to_disk`, levá
+  a pravá půlka); při přechodu na další snímek se přiblížení ztratí. Vybledlý inkoust: `--kontrast` u `vyrez.py`.
+- **Badatelna MZA** (stav 11/2026): archiválie objedná jen podle přesné citace (fond, inv. č.), focení vlastním
+  fotoaparátem je zdarma, skeny stojí asi 25 Kč za stranu.
 
 ## Po válce přistěhovaní, reemigranti, přesídlení (osídlování pohraničí 1945–1950)
 
@@ -455,6 +475,11 @@ kde matriky hledat.
   často popisuje osídlení po 1945 (odkud kdo přišel) a rodiny po jménech.
 - **Digitální badatelna Národního archivu** (na.gov.cz → Badatelna → Digitální badatelna) zahrnuje též Knihy židovských familiantů, Desky zemské, Monasterium (listiny),
   Translokační plány židovských obydlí, Sbírku staničních kronik (železničáři) a Politické procesy 50. let; ve VadeMeCum je prohledá `vademecum.py hledat`.
+- **matriky.online** – rejstřík matrik napříč archivy (filtr původce, typ, roky; u nenaskenovaných „jen v badatelně“):
+  rychlý přehled, co od farnosti existuje. Pozor, výchozí filtr „rok do 1900“ skryje mladší svazky. Starší matrikyonline.cz
+  je jen zrcadlo vybraných zámrských svazků. Otevírej v prohlížeči (ne skriptem).
+- **Hřbitovní databáze** (BillionGraves, ceskehrbitovy.cz) dávají pro venkov málo; evidence hrobových míst je u správce
+  hřbitova, online jen „významné osobnosti“.
 
 ## Pražské policejní přihlášky 1850–1914 (Národní archiv) – `tools/policie_prihlasky.py`
 
@@ -521,6 +546,11 @@ Stav ověřený v říjnu 2026 ze zkušebního prostředí skillu: slovenské (a
 - Jednotlivý dotaz jde i bez prohlížeče: `https://geneteka.genealodzy.pl/api/getAct.php?draw=1&start=0&length=10&bdm=B&rid=B&w=12sl&search_lastname=<příjmení>&search_name=&search_lastname2=&search_name2=&from_date=1850&to_date=1900&exac=1`
   (`bdm`/`rid` B křty, S sňatky, D úmrtí; `w` vojvodství, např. 12sl slezské, 08op opolské) → JSON. Past: `recordsTotal` > 0
   a prázdné `data` – zkus jen jedno příjmení bez křestního jména a užší roky. Stránkování opakuje řádky.
+- Prázdná `data` při `recordsTotal` > 0 se stává i u malých výsledků (1–5): pomůže pauza 15–20 s a **širší rozsah let**
+  (1852–1854 místo 1853). Příjmení s diakritikou (Cieślar) API často nevrátí – hledej přes příjmení druhého snoubence bez
+  diakritiky. Index Istebné (slezské vojvodství) má u sňatků čísla domů, věk a často datum narození, užitečné pro Těšínsko.
+  Poznámky „Uwagi“ (čísla domů, věk, datum) jsou ve webovém rozhraní v atributu `title` řádku; index uvádí i rodiče
+  snoubenců, takže sourozence poznáš podle shodných rodičů a domu.
 - Skeny některých polských far jsou i na Matricule (výše) nebo FamilySearch (níže).
 
 ## FamilySearch (přes uživatelův přihlášený prohlížeč)
@@ -551,6 +581,13 @@ Stav ověřený v říjnu 2026 ze zkušebního prostředí skillu: slovenské (a
   4. **1900–1940:** doklady od rodiny (rodné listy dětí uvádějí i prarodiče), náhrobky a evidence hrobů (Košice:
      gisplan.kosice.sk; cintoriny.sk jen část obcí). Rusíni vedení po 1950 jako pravoslavní mají starší zápisy
      v řeckokatolických knihách.
+- **Filiální obec katalog nevede** („Farský úrad <obec>“ nic nenajde): hledej v rejstříku osob vzácné příjmení rodu
+  (`q.surname=…&q.anyPlace=Slovakia`), z výsledku vyčti faru a pak přes drobečkovou navigaci prohlížeče snímků otevři seznam
+  knih fary. „Event Place“ v indexu je fara, ne obec bydliště. Seznam knih je i u far, které katalog vypisuje neúplně.
+- **Neúplnost a past 403:** sňatky a úmrtí ve slovenských knihách často nejsou v indexu – listuj. Některé filmy téže fary
+  jsou „Image Restricted“ (403, „unavailable for online viewing“), starší film přitom může být volný: 403 u jednoho filmu
+  není blokace. Filmy se střídají s duplikáty „Correction“ (každý druhý snímek je tentýž), při listování je přeskakuj.
+  Index u Moravy je slabý, katalog má ale sčítání 1857–1921, pozemkové knihy a stabilní katastr (originály ZA Opava).
 - **Snímek do projektu (Playwright):** nástroje dostanou od FamilySearch 403, snímek vydá jen přihlášený prohlížeč.
   Uživatel se jednou přihlásí v okně Playwrightu (přihlášení zůstane). ARK snímku je v adrese prohlížeče
   (`/ark:/61903/3:1:…`) i ve výsledcích hledání. Nejdřív `python3 -I tools/cache.py najdi <adresa nebo ark>

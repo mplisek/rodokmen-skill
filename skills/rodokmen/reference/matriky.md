@@ -127,6 +127,14 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
   `overit.py … --kontrast`; jinak `magick x.jpg -colorspace Gray -contrast-stretch 2%x35% x_k.jpg`). Stránku
   **neprohlašuj za prázdnou a zápis za nenalezený**, dokud ji nezkusíš s kontrastem. Do webu pak dej kontrastní výřez
   a poznamenej to v přepisu. Zelený tón snímku: `magick x.jpg -channel G -separate -normalize x_k.jpg`.
+- **Pasti kurentu** (hlášení uživatelů): velké Č vypadá jako G, W jako St, S jako B/P/D, Z jako P (kolem 1830), malé r jako w;
+  ř se píše „rz“, z jako ʒ, „au“ je dnešní „ou“. Letopočty **1829 a 1839** se snadno spletou – rok ověř podle vizitační
+  poznámky na konci roku.
+- **Podivné příjmení:** porovnej tvar písmen se **jistými slovy téže ruky** (rozhodne, které ze dvou čtení je správné), ověř, že
+  příjmení existuje (kdejsme.cz), projdi sčítání 1890–1921 v obci (latinka) a hledej jméno se stejnou kostrou bez ohledu na první
+  písmeno. Jméno z rejstříku nebo gruntovní knihy vždy ověř v matričním zápisu, jinak vznikne falešný předek; písař také
+  může převzít jméno z řádku nad zápisem.
+- **Čtvrtinové náhledy** stačí na orientaci v knize, ale jména v nich přehlédneš – čti aspoň v polovičním rozlišení.
 - Do ~1780 latina nebo čeština, pak hodně němčina (kurent), od ~1860 často čeština, ve 20. století čeština.
 - Česká jména v němčině/latině: Johann/Joannes = Jan, Wenzel/Wenceslaus = Václav, Joseph = Josef, Franz/Franciscus = František,
   Maria = Marie, Anna, Katharina = Kateřina, Barbara = Barbora, Magdalena = Majdalena/Magdaléna, Theresia = Terezie,
@@ -216,6 +224,10 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 - „Vdovec“ u ženicha = hledej první manželství a děti z něj.
 - Při přepisu křtu ověř měsíc podle záhlaví příslušného sloupce a nepopleť číslo domu porodní báby
   (*obstetrix*, *Hebamme*) s rodištěm dítěte.
+- Skutečný průměr generace v rodokmenech bývá **30–35 let**, ne 20–25: u nezdokumentované generace počítej s tím
+  (a řekni to uživateli, který čeká kratší řetěz). Věk ve sňatcích kolem 1800 bývá o 3–5 let jiný než podle křtu;
+  při nesouladu rozhoduje dům a rodiče, ne věk.
+- Soupisy duší (*status animarum*) se psaly během roku, často v létě: věk „⅓ roku“ nedá spolehlivé datum narození.
 
 ## Stavy údajů v datech
 
@@ -260,6 +272,23 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 - Nemanželské dítě matky se stejným jménem: rodinný strom může „dosadit“ za rodiče prarodiče (nemanželská dcera
   svobodné matky vedená jako dcera matčina bratra). Rozhodne zápis o sňatku nebo úmrtí dítěte (uvádí matku) a to, zda je v matrice
   jiné dítě daného jména.
+- **Přečíslování domů:** kolem let 1805–1815 a 1857–1880 hledej v zápisech poznámky „starý / nový“ (*alt / neu*) a čísla
+  porovnávej jen v rámci jednoho číslování – stejné čp. před a po přečíslování je jiný dům. Farář často píše obě čísla, od
+  konce roku jen nové.
+- **Knihy smíšené po vsích:** kniha může být do určitého roku po datech pro celou farnost a pak po oddílech (městečko, vsi),
+  oddíly se v knize střídají a kniha může být špatně svázaná. Udělej si mapu knihy podle záhlaví oddílů, ušetří čas.
+- **Dva páry stejných jmen v jedné obci** (Ján × Katarína se stejně pojmenovanými dětmi) index slévá. Rozhodne přesné datum
+  křtu dopsané k pozdějšímu sňatku nebo úmrtí. Pozor na datum narození, které farář dopsal k úmrtí o desítky let později –
+  může patřit jmenovci.
+- **Místo původu:** „ex <obec>“ u matky v křtu dítěte nebo *locus originis* u úmrtí dovede do fary, kde je její křest.
+  U zkomoleného „ex“ zkus obě čtení; sňatek bývá ve farnosti rodičů nevěsty, ne tam, kam ukazuje zkomolené místo.
+  Osvědčené pořadí u slovenských rodin: úmrtí (dopsané datum a místo původu) → sňatek (věk) → křest.
+- **Hledání sňatku:** syn se žení ve farnosti nevěsty, otec může být z jiné. Když sňatek ve farnosti bydliště chybí, projdi
+  nejdřív sousední vsi téhož panství (poddaní se ženili hlavně uvnitř panství), nejlépe přes místní rejstřík. Úmrtí
+  v nemocnici je v knize farnosti nemocnice, ne vsi.
+- **Rejstříky vynechávají zápisy dopsané dodatečně** (konec strany, mimo pořadí): tvrdí-li jiný pramen, že úmrtí ve farnosti je,
+  projdi knihu po stranách. „Strana 77“ je folio 77 *recto* i *verso* – projdi obě a sousední rok. U sloupců narozen / oddán /
+  pohřben je poslední datum pohřeb a rok bývá jen ve sloupci křtů.
 
 ## Technické pasti (macOS, zsh) – napiš je i pomocníkům do zadání
 

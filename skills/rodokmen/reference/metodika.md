@@ -52,6 +52,16 @@ z nich brát snímky: `portaly.md`, formát dat: `data.md`.
 - **Vojáci:** dva znaky jsou **pluk a domovská obec** (z kmenového listu), ne jen místo narození.
 - Před zápisem „tatáž osoba“ vyjmenuj **ostatní kandidáty** stejného jména ve farnosti a u každého, proč nesedí
   (do `note` nebo do deníku). A napiš, jaký nový doklad by závěr vyvrátil.
+- **Gruntovní a pozemkové knihy:** vždy ověř nadpis gruntu na listu – čísla ve sloupci „Folio“ mohou být jen pořadí gruntů,
+  drobně připsané „N. 10 f. 252“ se snadno přehlédne a pozdější ruka může vést na jinou usedlost (dvakrát se četl špatný grunt).
+  První zápis v knize založené 1728 bývá přepis starší purkrechtní knihy („sub folio N“ míří tam).
+- **Kroniky obcí:** datace „(1728) 1924–1937“ znamená, že kronikář vypsal starší dějiny, často výpisy z gruntovních knih
+  s držiteli každého gruntu – nejlepší vstup pro zaniklé rody a stavení. Kapitola „z minulosti obce“ potvrdí rod doložený
+  v matrikách jen kusově a ukáže, že příjmení se stalo jménem domu.
+- **Rodinná pověst o slavném příbuzném:** začni kronikou (dějiny domu), pak sňatky. Vazba bývá přes přiženění a vdovy na
+  chalupě, ne pokrevní – řekni to rodině citlivě.
+- **Ověření příjmení v obci:** nejrychlejší je farní rejstřík (celé písmeno přes všechna léta, výskyty po vsích), pak kronika
+  a sčítání 1900 v domě, kde rod žil.
 
 ## Chyby, na které si dát pozor
 
@@ -80,6 +90,10 @@ z nich brát snímky: `portaly.md`, formát dat: `data.md`.
 - **Jméno poangličtěné v USA** – v českých knihách „neexistuje“; původní tvar dají lodní seznamy a naturalizace.
 - **Dítě vojáka „chybí“** – mohlo být zapsané ve vojenské matrice pluku, ne ve farní.
 - **Dvojí započtení:** druhopis a originál nejsou dva nezávislé prameny – jeden je opis druhého.
+- **Evangelíci na Moravě** se do 30. 1. 1849 povinně zapisovali i do římskokatolických matrik (jen ty měly úřední platnost) –
+  hledej i tam; katolické rejstříky oddaných obsahují i evangelíky. **Evangelické knihy zemřelých po 1850** uvádějí datum
+  a místo narození, což pomůže, když křest nejde najít. Rejstříky evangelických sňatků ve 20. století mívají na konci svazku
+  rejstřík po letech s číslem folia.
 
 ## Mrtvé body – co zkusit, v tomto pořadí
 
