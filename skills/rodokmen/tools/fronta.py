@@ -304,7 +304,7 @@ def main(argv=None):
     if a.cmd == "seznam":
         for f in ([a.fronta] if a.fronta else FRONTY):
             for u in data[f][1]:
-                print(f"{f:10} {u.hlavicka()[4:]}  {u.text.strip().splitlines()[0][:90] if u.text.strip() else ''}")
+                print(f"{f:10} {u.hlavicka()[3:]}  {u.text.strip().splitlines()[0][:90] if u.text.strip() else ''}")
         return 0
     if a.cmd == "trid":
         for f, (uv, uk) in data.items():
@@ -323,7 +323,7 @@ def main(argv=None):
             z = cti_zamek()
             if z and z["typ"] != druh:
                 continue
-            print(u.hlavicka()[4:] + "\n" + u.text)
+            print(u.hlavicka()[3:] + "\n" + u.text)
             return 0
         print("žádný úkol")
         return 3
