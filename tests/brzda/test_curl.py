@@ -73,7 +73,7 @@ over("hodnota -o („out.jpg“) není druhá adresa", k == 0 and len(v) == 1, f
 k, out, err, v = curl("-sSLo", "pracovni/x.jpg", "https://img.example.cz/x.jpg")
 over("sloučené -sSLo bere další argument jako soubor", k == 0 and len(v) == 1, f"kód {k}")
 
-k, out, err, v = curl("-s", "-o", "x.jpg", "-w", "%{http_code}", "https://digi.archives.cz/da/x", kod="429", stav="b")
+k, out, err, v = curl("-s", "-o", "x.jpg", "-w", "%{http_code}", "https://aron.vychodoceskearchivy.cz/da/x", kod="429", stav="b")
 over("vlastní -w: výstup uživateli zůstane", out == "429", repr(out))
 over("vlastní -w: 429 web zastaví", k == 3 and "zastaven" in err, f"kód {k}")
 k2, _, err2, v2 = curl("-s", "https://digi.archives.cz/da/y", stav="b")
