@@ -1,7 +1,8 @@
 ---
 import Base from '../layouts/Base.astro';
 import PersonLink from '../components/PersonLink.astro';
-import { people, lineByK, genName, statusClass } from '../lib/data.js';
+import Rod from '../components/Rod.astro';
+import { people, genName, statusClass } from '../lib/data.js';
 const list = Object.values(people).filter((p) => !p.extra).sort((a, b) => a.k - b.k);
 const gens = [...new Set(list.map((p) => p.gen))];
 ---
@@ -30,7 +31,7 @@ const gens = [...new Set(list.map((p) => p.gen))];
                 <span class="v-data">{(p.dates || p.years || '').split(' – ').map((d) => <span class="nowrap d-cast">{d}</span>)}</span>
               </td>
               <td class="small">{p.rel}</td>
-              <td class="small nowrap">{p.line && lineByK[p.line] && <><span class="dot" style={`display:inline-block;width:.6rem;height:.6rem;border-radius:50%;background:${lineByK[p.line].color};margin-right:.3rem`}></span>{lineByK[p.line].name}</>}</td>
+              <td class="small">{p.line && <Rod k={p.line} />}</td>
               <td class="nowrap"><span class={`chip ${statusClass(p.st)}`}>{p.status}</span></td>
             </tr>
           ))}
@@ -60,11 +61,11 @@ const gens = [...new Set(list.map((p) => p.gen))];
 <style>
   .nowrap { white-space: nowrap; }
   /* všechny generace mají stejně široké sloupce, aby při posouvání zůstaly pod sebou */
-  .predci table { table-layout: fixed; width: 100%; min-width: 52rem; }   /* i na mobilu zbyde sloupci Vztah ~12 rem; tabulka se posouvá vodorovně (.table-box) */
+  .predci table { table-layout: fixed; width: 100%; min-width: 56rem; }   /* i na mobilu zbyde sloupci Vztah ~12 rem; tabulka se posouvá vodorovně (.table-box) */
   .predci col.c-k { width: 4rem; }
   .predci col.c-jmeno { width: 21%; }
   .predci col.c-zivot { width: 8.5rem; }
-  .predci col.c-rod { width: 7.5rem; }
+  .predci col.c-rod { width: 11rem; }
   .predci col.c-stav { width: 9.5rem; }
   .predci td { overflow-wrap: break-word; }
   .predci td.c-k { overflow-wrap: normal; }   /* číslo předka se nezalamuje */
