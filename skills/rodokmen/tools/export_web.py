@@ -1548,16 +1548,40 @@ def main():
                 timeline=timeline_data(P, SAME, slugs, people, line_of, {k for k in skryti_p if k in slugs}))
 
     generovane = {}
+    # Zdroje textů pro web (ADR 0002, 0003): deník z data/denik.jsonl a veřejné otázky z data/verejne_otazky.json; dokud nejsou,
+    # platí dosavadní soubory (zpětná kompatibilita do migrace). Fronty úkolů (data/ukoly_*.md) se sem NIKDY nečtou.
+    import denik as denik_mod
+    import otazky as otazky_mod
+    nazvy_rodu = {v["k"]: v["name"] for v in rody_spravce.values()}
     for src, dst in (("archivni_dotazy.md", "dotazy.md"), ("otazky_pro_rodinu.md", "otazky.md"),
                      ("research_log.md", "denik.md"), ("zajimavosti.md", "zajimavosti.md")):
         path = os.path.join(DATA, src)
-        text = open(path, encoding="utf-8-sig").read() if os.path.exists(path) else ""
+        if dst == "denik.md" and os.path.exists(denik_mod.LOG):
+            zaznamy_d, chyby_d = denik_mod.nacti_zaznamy()
+            if chyby_d:
+                sys.exit("CHYBA: data/denik.jsonl nesplňuje pravidla formy (denik.py over):\n  " + "\n  ".join(chyby_d[:15]))
+            text = denik_mod.vykresli(zaznamy_d)
+        elif dst in ("otazky.md", "dotazy.md") and os.path.exists(otazky_mod.SOUBOR):
+            d_o = otazky_mod.nacti()
+            chyby_o = [f"záznam {z.get('id')}: {x}" for z in d_o["otazky"] for x in otazky_mod.over_zaznam(z)
+                       if "potvrzeno" in z]
+            if chyby_o:
+                sys.exit("CHYBA: data/verejne_otazky.json nesplňuje pravidla formy (otazky.py over):\n  " + "\n  ".join(chyby_o[:15]))
+            text = otazky_mod.vykresli(d_o["otazky"], "rodina" if dst == "otazky.md" else "pramen", nazvy_rodu)
+        else:
+            text = open(path, encoding="utf-8-sig").read() if os.path.exists(path) else ""
+            if text.strip() and dst == "denik.md":
+                print("POZOR: deník se čte ze starého research_log.md; převeď ho na strukturovaná data: "
+                      "python3 -I tools/denik.py migruj (pak denik.py overit-migraci)")
+            elif text.strip() and dst in ("otazky.md", "dotazy.md"):
+                print(f"POZOR: {src} je fronta úkolů a jde na web celá; založ veřejné otázky: python3 -I tools/otazky.py "
+                      "(data/verejne_otazky.json, na web jde jen potvrzené)")
         text = re.sub(r"^# .*\n", "", text, count=1)
         # rody (zakladatelé) se čtou z komentářů – filtrovat před jejich odstraněním
-        if src == "zajimavosti.md":
+        if dst == "zajimavosti.md":
             text = filtr_zajimavosti(text)
-        elif src in ("otazky_pro_rodinu.md", "archivni_dotazy.md"):   # otázky podle rodů (8–15), obecné nahoře
-            text = filtr_oddilu(text, src == "otazky_pro_rodinu.md")
+        elif dst in ("otazky.md", "dotazy.md"):   # otázky podle rodů (8–15), obecné nahoře
+            text = filtr_oddilu(text, dst == "otazky.md")
         elif not texty:
             text = ""
         text = hvezdicky_narozeni(strip_comments(prepis_odkazy_rodu(text)))
