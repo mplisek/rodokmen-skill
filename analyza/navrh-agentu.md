@@ -314,7 +314,7 @@ a test. Návrh typů:
 (dnešní deník má `# | datum | zdroj | rozsah | hledáno | výsledek | citace`, viz kapitola 10). Zdroj má pevné
 pořadí *archiv, signatura knihy, snímek*; `hledáno` je jedna věta (nejvýš 160 znaků); `výsledek` je z výčtu
 *nalezeno / vyvráceno / nenalezeno / částečně / nečitelné* s příznakem `ověřeno`. `zdroj` má **typ**
-(`archiv`, `stopa`, `rodina`, `jiné`). `nález` je jedna věta (nejvýš 200 znaků), `citace` je doslovný přepis a překlad zvlášť,
+(`archiv`, `stopa`, `rodina`, `jiné`). `nález` je jedna věta (nejvýš 400 znaků), `citace` je doslovný přepis a překlad zvlášť,
 ostatní jde do pole `poznamka`, které web ukáže rozbalitelně pod řádkem. Oprava je **nový záznam** s odkazem na opravovaný,
 ne přepis textu.
 
@@ -431,8 +431,12 @@ Pořadí a pravidlo schvalování (schváleno, Q13): **po každé fázi se zasta
 | Q11 | Počáteční sada je 9 agentů, čtyři další zatím nahrazují skripty (4.1). |
 | Q12 | Testy a kontroly nasazeného webu jsou volné; samotné nasazení vždy se souhlasem uživatele (testovací režim bez `--prod`). |
 | Q13 | Pořadí fází 0, A, B, E, C, D; po každé fázi zastávka a rozhodnutí uživatele. **Nic se neimplementuje**, dokud uživatel nedá pokyn. |
-| Q14 | Délka buněk v deníku: `nález` do 200 znaků, `citace` zvlášť, zbytek do rozbalitelné `poznamka` (5.2). |
+| Q14 | Délka buněk v deníku: `nález` do 400 znaků, `citace` zvlášť, zbytek do rozbalitelné `poznamka` (5.2). |
 | Q15 | Výčet `výsledek` = nalezeno / vyvráceno / nenalezeno / částečně / nečitelné + příznak `ověřeno`; `zdroj` má typ (archiv, stopa, rodina, jiné). Starší hodnoty se mapují při migraci: `potvrzeno` a `nalezeno (ověřeno)` na `nalezeno` + `ověřeno`, `nedočteno` na `částečně`, 11 řádků bez klíče ručně. |
+| Q16 | Hooky a oprávnění patří vždy do pluginu (`hooks/hooks.json`, rozlišení podle `agent_type`), nikdy do definice agenta; agenti se dodávají v pluginu a jejich definice nesou jen roli, model a nástroje. |
+| Q17 | Hook na Bash orchestrátora se zkusí; když selže v testu, přejde se bez dalšího schvalování na orchestrátora bez Bashe a zápisy front přes `clerk`. |
+| Q18 | Cizí skilly (`.agents/`, `.claude/skills/`, `skills-lock.json`) jsou v `.gitignore` forku, používají se jen lokálně. |
+| Q19 | `GLOSSARY.md` a ADR vznikají na začátku Fáze A, ne dřív; do té doby platí návrh z 9.4. |
 
 Nic z toho zatím není implementované, nic nebylo pushnuto ani vydáno.
 
