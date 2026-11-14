@@ -59,6 +59,16 @@ nástroj i tento návod. Test nic nestahuje a souhlas s podmínkami portálů za
   („Copulati Gross Lhota“).
 - Ber ohled na server: stahuj jen to, co čteš; žádné hromadné stahování celých svazků.
 
+## Prohlížeč pro portály, kam skript nesmí – `tools/prohlizec.py`
+
+Portály ze `ZAKAZ` (SOA Třeboň, eBadatelna, ZA Opava, MZA) se čtou jen v prohlížeči tempem člověka. Prohlížeč pro agenta `browser-reader` spouští
+a ovládá `tools/prohlizec.py` (`stav`, `start`, `otevri <url> [--listovani]`, `klik`, `pis`, `text`, `snimek pracovni/…png`, `stop`); uživatel nic
+nespouští ani nenastavuje. Nástroj používá vlastní instanci Edge (vlastní profil, ladicí port, bez adresy portálu při startu) a drží pravidla sám:
+pauza aspoň 5 s (10 s při listování), nejvýš 120 otevření stránky za hodinu, jeden archiv na relaci, stop při HTTP 403/429/503 a při CAPTCHA
+(zapíše se do brzdy `slusne.py`, výstupní kód 4), výzva k přihlášení se vrací uživateli (kód 5). Hook `hlidac_site.py` ruční `Start-Process` prohlížeče
+s adresou takového portálu nebo s `--remote-debugging-port` zamítne; povolený je jen `prohlizec.py`. Čtení pořád jen tempem člověka; smyčky přes celé
+svazky jsou zakázané (R-ARCH-002).
+
 ## SOA Třeboň (digi.ceskearchivy.cz) – jen v prohlížeči
 
 - **Od 2. 11. 2026 archiv nástroj odmítá** (HTTP 403 podle User-Agentu „rodokmen“), `trebon.py` je odstraněn a brzda

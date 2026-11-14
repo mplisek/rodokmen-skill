@@ -14,6 +14,12 @@ ZAMITNOUT = [
     ("Bash", "cd tools && curl https://digi.archives.cz/da/"),
     ("Bash", 'python3 -c "import urllib.request; urllib.request.urlopen(1)"'),
     ("PowerShell", "Invoke-WebRequest https://digi.archives.cz/"),
+    # vlastní prohlížeč na portál, kam skript nesmí, jen přes tools/prohlizec.py (ten drží pauzy, stop a jeden archiv na relaci)
+    ("PowerShell", 'Start-Process "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" "https://digi.ceskearchivy.cz/"'),
+    ("PowerShell", 'Start-Process msedge -ArgumentList "--remote-debugging-port=9222"'),
+    ("PowerShell", "Start-Process https://www.mza.cz/actapublica/"),
+    ("Bash", "msedge --remote-debugging-port=9222 about:blank"),
+    ("Bash", "chrome https://digi.archives.cz/da/"),
 ]
 PUSTIT = [
     ("Bash", "python3 -I tools/slusne.py curl https://www.mza.cz/"),
@@ -22,6 +28,10 @@ PUSTIT = [
     ("Bash", "npm run build"),
     ("Bash", "git push origin main"),
     ("PowerShell", "Get-ChildItem"),
+    ("Bash", "python tools/prohlizec.py start --port 9222"),
+    ("Bash", "python tools/prohlizec.py otevri https://digi.ceskearchivy.cz/ebadatelna --listovani"),
+    ("PowerShell", "python tools/prohlizec.py text"),
+    ("PowerShell", "Start-Process msedge https://github.com/mplisek/rodokmen-skill"),     # prohlížeč mimo portály ze ZAKAZ nevadí
 ]
 
 

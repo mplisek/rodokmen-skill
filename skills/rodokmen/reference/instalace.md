@@ -48,6 +48,11 @@ Litoměřice). Když předci žili tam a nemáš nástroje `mcp__…playwright�
 (`/chrome`); postupy v `portaly.md` jsou vyzkoušené hlavně s Playwrightem (snímek obrazovky do souboru).
 Bez prohlížeče ať uživatel posílá snímky obrazovky.
 
+**Prohlížeč agenta `browser-reader`** spouští a ovládá nástroj `tools/prohlizec.py` (vlastní instance Edge s vlastním profilem v `pracovni/`,
+pauzy a stop zabudované v nástroji). Uživatel nic nespouští ani nenastavuje. Při nastavení projektu a po každé aktualizaci spusť
+`python tools/prohlizec.py stav` (bez `-I`). Chybí-li Playwright, nainstaluj ho sám: `python -m pip install --user playwright` (prohlížeč se
+nestahuje, použije se Edge nebo Chrome; `pip install` jde do user-site, který `python -I` nevidí, proto se nástroj spouští bez `-I`).
+
 ## Založení projektu
 
 1. Zeptej se, kde má projekt být (navrhni `~/Rodokmen`), a založ ho: `python3 -I SKILL_DIR/tools/novy_projekt.py <složka>`.

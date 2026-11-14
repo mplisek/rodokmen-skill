@@ -101,10 +101,34 @@ def python_kod(cmd, od):
     return ([m.group(2).strip("\"'")] if m else []), [t for _, t in HEREDOC_TELO.findall(cmd)]
 
 
+try:   # portály, kam skript nesmí (ZAKAZ v slusne.py): tam jen vlastní prohlížeč přes tools/prohlizec.py
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import slusne as _slusne
+    ZAKAZ_HOSTY = tuple(_slusne.ZAKAZ)
+except Exception:
+    ZAKAZ_HOSTY = ("mza.cz", "actapublica.eu", "digi.ceskearchivy.cz", "soapraha.cz", "archives.cz")
+PROHLIZEC = re.compile(r"(?:\b(?:msedge|chrome|chromium|firefox|brave)(?:\.exe)?\b|\bstart-process\b|\bxdg-open\b|\bopen\s+https?://)", re.I)
+DEBUG_PORT = re.compile(r"--remote-debugging-port", re.I)
+
+
+def prohlizec_duvod(cmd):
+    """Prohlížeč spuštěný mimo tools/prohlizec.py: s ladicím portem, nebo s adresou portálu ze ZAKAZ. Jinak None."""
+    if "prohlizec.py" in cmd or not PROHLIZEC.search(cmd):
+        return None
+    if DEBUG_PORT.search(cmd):
+        return "prohlížeč s ladicím portem jen přes tools/prohlizec.py (vlastní instance, pauzy, stop při 403/429)"
+    for h in URL.findall(cmd):
+        if any(h.lower() == z or h.lower().endswith("." + z) for z in ZAKAZ_HOSTY):
+            return f"portál {h} nepovoluje skripty – prohlížeč na něj jen přes tools/prohlizec.py (vlastní instance, pauzy, stop při 403/429)"
+    return None
+
+
 def posoudit(tool, cmd, cwd):
     """Vrátí důvod zamítnutí, nebo None (pustit)."""
     if tool == "Monitor":   # spouští příkaz v bashi stejně jako Bash
         tool = "Bash"
+    if tool in ("Bash", "PowerShell") and (d := prohlizec_duvod(cmd)):
+        return d
     if tool == "PowerShell":
         if PS.search(cmd) and "slusne.py" not in cmd and not jen_volne(cmd):
             return "PowerShell stahuje z webu mimo brzdu"
