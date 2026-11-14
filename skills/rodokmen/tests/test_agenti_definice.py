@@ -17,7 +17,7 @@ MODELY = {"haiku", "sonnet", "opus", "inherit"}
 def frontmatter(text):
     m = re.match(r"---\n(.*?)\n---\n", text, re.S)
     assert m, "chybí frontmatter"
-    return {k: v.strip() for k, v in re.findall(r"(?m)^([a-z-]+):\s*(.*)$", m.group(1))}
+    return {k: v.strip() for k, v in re.findall(r"(?m)^([A-Za-z-]+):\s*(.*)$", m.group(1))}
 
 
 class DefiniceAgentu(unittest.TestCase):
@@ -37,18 +37,19 @@ class DefiniceAgentu(unittest.TestCase):
             self.assertEqual(fm.get("name"), jmeno, jmeno)
             self.assertGreaterEqual(len(fm.get("description", "")), 30, jmeno)
             self.assertIn(fm.get("model"), MODELY, jmeno)
-            self.assertTrue(fm.get("tools"), jmeno)
+            self.assertTrue(fm.get("tools") or fm.get("disallowedTools"), jmeno)
             self.assertIn("rodokmen-agents", fm.get("skills", ""), jmeno)
 
     def test_nastroje_jen_ze_seznamu(self):
         for jmeno, text in self.texty.items():
-            for n in re.split(r"\s*,\s*", frontmatter(text)["tools"]):
-                zaklad = n.split("(")[0].strip()
-                self.assertIn(zaklad, NASTROJE, f"{jmeno}: {n}")
+            fm = frontmatter(text)
+            seznam = re.sub(r"\([^)]*\)", "", fm.get("tools") or fm["disallowedTools"])
+            for n in re.split(r"\s*,\s*", seznam):
+                self.assertIn(n.strip(), NASTROJE, f"{jmeno}: {n}")
 
     def test_orchestrator_nezapisuje_a_nema_web(self):
         fm = frontmatter(self.texty["orchestrator"])
-        nastroje = {n.split("(")[0].strip() for n in re.split(r"\s*,\s*", fm["tools"])}
+        nastroje = {n.strip() for n in re.split(r"\s*,\s*", re.sub(r"\([^)]*\)", "", fm["tools"]))}
         self.assertFalse(nastroje & {"Edit", "Write", "WebFetch", "WebSearch", "PowerShell"}, nastroje)
         self.assertIn("Agent", nastroje)
         self.assertIn("Bash", nastroje)               # úzce hlídá hooks/hlidac_orchestratora.py

@@ -1,6 +1,7 @@
 # Fáze C: agenti, kontextový balíček a zpráva o originálu
 
-Stav: **plán fáze ke schválení rozhraní.** Nic z toho zatím není implementováno. Vychází z `analyza/navrh-agentu.md`
+Stav: **implementováno** (Q-C1 až Q-C5 potvrzeny: ano). Odchylky od plánu: hook je `hooks/hlidac_orchestratora.py` a `hooks/hooks.json`
+(spouští `python3`, při selhání `python`); `browser-reader` má místo `tools:` seznam `disallowedTools` (aby zdědil nástroje prohlížeče z relace). Vychází z `analyza/navrh-agentu.md`
 (kapitola 4, 4.7, 9.1; rozhodnutí Q6, Q7) a z `analyza/overeni-platformy.md`. Větev `faze-c-agenti` stojí na Fázi E.
 
 ## 1. Rozsah

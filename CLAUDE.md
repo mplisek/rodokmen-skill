@@ -26,5 +26,8 @@ přezkoumej a potvrď `pravidla.py potvrdit <id>`; co z originálu patří do pr
 bez potvrzení neprojde. Veřejný repozitář nesmí obsahovat údaje z projektu: před pushem `python scripts/anonymita.py pred-pushem`
 (lokální seznam `.anonymita-seznam`, vzor `.anonymita-seznam.priklad`; hook `pre-push` zapíná uživatel příkazem `anonymita.py nainstaluj`).
 
+Agenti (`agents/`, anglicky) a hook orchestrátora (`hooks/`): před sloučením z originálu `python scripts/sync_report.py` (po `git fetch upstream`),
+změna definice agenta musí projít `test_agenti_definice.py` (kritérium dokončení, nástroje, odkazy na existující pravidla a skripty).
+
 Markdown: `.markdownlint.yaml` a `.editorconfig` v kořeni; kontrola `npx -y markdownlint-cli2@0.18.1 "**/*.md" "!**/node_modules/**"`
 (v CI i před commitem, `--fix` jen s kontrolou `git diff`). MD037 je vypnuté kvůli „* 1890“ (narozen).

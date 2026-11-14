@@ -14,6 +14,12 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
 ### Nové
 
+- **Sada agentů a jejich nástroje (Fáze C).** `agents/` v pluginu (anglicky): `orchestrator` (spouští se jako hlavní vlákno,
+  `claude --agent rodokmen:orchestrator`), `researcher`, `browser-reader`, `verifier`, `upstream-sync`, `test-runner`,
+  `failure-analyst`, `fixer`, `test-author`; každý má kritérium dokončení. `tools/kontext.py` sestaví kontextový balíček osoby
+  a pravidel vybraných podle témat (jen čtení, nikdy neořezává mlčky). `scripts/sync_report.py` ukáže, co je nového v originále
+  (commity, verze, dotčené soubory, překryv s forkem, pravidla k přezkoumání; jen lokální git). Hook pluginu
+  `hooks/hlidac_orchestratora.py` dovolí orchestrátorovi v Bashi jen výpis z `fronta.py` a `kontext.py`.
 - **Vynucovaná forma výzkumného deníku a veřejných otázek (Fáze A).** Deník je strukturovaný soubor `data/denik.jsonl` (jen
   přidávání) a tabulku na webu z něj generuje skript: `tools/denik.py` (`pridej`, `vykresli`, `over`, `migruj`, `overit-migraci`).
   Chybný záznam se odmítne (datum, výčet výsledku, rozsah u negativního výsledku, délky, zakázané údaje o procesu: čísla úkolů,

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell|Monitor",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "(python3 -I \"${CLAUDE_PLUGIN_ROOT}/hooks/hlidac_orchestratora.py\" || python -I \"${CLAUDE_PLUGIN_ROOT}/hooks/hlidac_orchestratora.py\")"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -15,7 +15,7 @@ ENV = dict(os.environ, GIT_AUTHOR_NAME="T", GIT_AUTHOR_EMAIL="t@example.org", GI
 
 ZRCADLO = "# Návod\n\n## Ztotožnění osob\n\nSpoj jen podle dvou znaků.\n\n## Jiné\n\nText.\n"
 PRAVIDLO = ("# Identity\n\n## R-ID-001\nwhen: dva stejného jména\ndo: spojit jen na dva znaky\nwhy: chyba\n"
-            "source: skills/rodokmen/reference/navod.md#Ztotožnění osob\n")
+            "source: reference/navod.md#Ztotožnění osob\n")
 
 
 def git(cwd, *a):
