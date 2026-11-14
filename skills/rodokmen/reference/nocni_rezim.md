@@ -45,6 +45,38 @@ Povinné jsou Otázka, Možnosti (aspoň dvě, oddělené středníkem) a Výcho
 Zakládá je jen hlavní agent (orchestrátor) na konci pracovní jednotky, když je další krok zablokovaný; podagenti vrací „potřebuje rozhodnutí“
 ve výsledkovém souboru.
 
+## Router: úkoly proudí přes vstup
+
+Nový úkol nevzniká přímo v cílové frontě. Zakládá se do **vstupu** (`ukoly_vstup.md`: `fronta.py pridej vstup --text …`; dokud soubor ve
+složce `data/` není, platí starší chování a lze zakládat přímo). **Router** je krok orchestrátora; pro každý úkol ve vstupu:
+
+1. **Kontrola dat:** je cíl už v datech? Pak `fronta.py smeruj` úkol nezařadí a odkáže na `fronta.py hotovo`.
+2. **Duplicity:** podobný úkol v jiné frontě se doplní a úkol ze vstupu zmizí.
+3. **Definice hotového (DOD):** `--dod "co je výsledek a kde bude zapsán"` je povinná, uloží se do textu jako řádek `Definice hotového: …`.
+   Úkol bez ní se nesměruje.
+4. **Zařazení:** `fronta.py smeruj <id> --do noc|badani|dotazy|rodina|rozhodnuti --dod … [--cena S|M|L|XL] [--p P1]`; do rozhodnutí jen úkol
+   s povinnými poli (viz níže). Portál, kam skript nesmí (tabulka `ZAKAZ`), znamená `badani`.
+5. **Dělení:** `fronta.py rozdel <id> --cast FRONTA "text" "DOD" --cast …` rozdělí úkol na části v různých frontách (každá s DOD a `rodič:`);
+   hotová část se ze zadání prostě vynechá, protože je v datech.
+6. **Parkování:** `fronta.py zaparkuj <id> --do RRRR-MM-DD --duvod "…"` nastaví `stav:čeká`; úkol se sám vrátí mezi připravené, až datum
+   uplyne (`fronta.py frontier`, `dalsi`). Hodí se pro zápis, který se zpřístupní později, nebo pro odpověď archivu.
+
+Cena `S`, `M`, `L`, `XL` je odhad nákladu (složitost, počet snímků, model); `XL` patří do rozhodnutí („provést, odložit, nebo ručně?“),
+aby první dva velké úkoly nespálily limit na noc.
+
+## Selhání portálu
+
+Hlásí se příkazem `fronta.py selhani <id> --druh prechodna|zakaz --portal ARON`.
+
+- **Přechodná chyba** (503, časový limit): úkol dostane `stav:čeká` a režim `kdy:` podle `data/rezim.json` → `opakovani`. Výchozí pořadí:
+  nejdřív za dvě noci (aspoň každou druhou noc), pak o víkendu, pak v pracovní době (výpadky portálů se liší podle doby). `fronta.py dalsi` pustí
+  takový úkol jen v jeho režimu (úkol s `kdy:pracovni` smí běžet i přes den). Po vyčerpání pokusů: jedno rozhodnutí za portál.
+- **Zákaz nebo zablokování** (403, brzda „zastavený“): žádný automatický opakovaný pokus; hned **jedno rozhodnutí za portál**: „portál nejde číst
+  automaticky, čekají úkoly …: počkat, nebo přeřadit do ručního bádání?“ Další úkoly téhož portálu se připojí ke stejnému rozhodnutí
+  (`cíl:portal:<portál>`) a závisejí na něm, takže se po rozhodnutí samy odblokují.
+
+## Fronta na noc
+
 **Noční fronta je jen na to, co jde skriptem a bez člověka** (ARON a jiné portály, které skript smí). Úkol, který vyžaduje prohlížeč,
 archiv, rodinu nebo čeká na lhůtu, se nezakládá do `ukoly_na_noc.md` s poznámkou „nelze v noci“, ale rovnou do správné fronty
 (`ukoly_k_badani.md`, `ukoly_dotazy_na_archivy.md`, `ukoly_na_rodinu.md`) s důvodem v textu úkolu. Do souboru fronty se nepíšou stavové

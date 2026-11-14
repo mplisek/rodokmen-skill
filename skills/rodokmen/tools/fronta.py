@@ -9,6 +9,10 @@ Použití (z kořene projektu): python3 -I tools/fronta.py <příkaz> …
                                           NEZALOŽÍ, ale doplní (osoby, text, vyšší priorita)
                                           u fronty rozhodnuti povinně --otazka T --moznosti "A) …; B) …" --vychozi T (a doporučeně --dukazy,
                                           --zkuseno, --doporuceni); bez nich se úkol odmítne (reference/nocni_rezim.md)
+  smeruj <id> --do <fronta> --dod "…" [--cena S|M|L|XL] [--p P1]   router: úkol ze vstupu do cílové fronty (DOD povinná)
+  rozdel <id> --cast FRONTA "text" "DOD" [--cast …]                   rozdělí úkol na části v různých frontách
+  zaparkuj <id> --do RRRR-MM-DD [--duvod T]                           stav:čeká do data
+  selhani <id> --druh prechodna|zakaz --portal P [--kdy "RRRR-MM-DD HH:MM"]   opakování podle rezim.json, pak rozhodnutí za portál
   uprav <id> [--p P2] [--text T] [--stav odloženo] [--os …] [--cil …] [--zavisi …] [--pridat-text T]
   hotovo <id> | hotovo --cil krest:115    úkol smaže (jeho výsledek je v datech nebo v následných úkolech)
   presun <id> <fronta>                    přesune úkol do jiné fronty
@@ -38,16 +42,20 @@ for _s in (sys.stdout, sys.stderr):
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
-FRONTY = {"noc": "ukoly_na_noc.md", "rozhodnuti": "ukoly_k_rozhodnuti.md", "badani": "ukoly_k_badani.md",
+FRONTY = {"vstup": "ukoly_vstup.md", "noc": "ukoly_na_noc.md", "rozhodnuti": "ukoly_k_rozhodnuti.md", "badani": "ukoly_k_badani.md",
           "dotazy": "ukoly_dotazy_na_archivy.md", "rodina": "ukoly_na_rodinu.md"}
+CENY = ("S", "M", "L", "XL")        # pásma ceny úkolu (rozpočet na noc, analyza/navrh-router-uloh.md kap. 5)
+REZIMY_BEHU = ("noc", "vikend", "pracovni")
 # Do 0.10.1-fork.2 se tyto dvě fronty jmenovaly takto. Dokud nový soubor neexistuje, čte a zapisuje se starý (prejmenuj to převede).
 STARE_NAZVY = {"dotazy": "archivni_dotazy.md", "rodina": "otazky_pro_rodinu.md"}
 # Soubory ukoly_* jsou vnitřní: export webu je nikdy nečte (ADR 0003). Veřejný text je v data/verejne_otazky.json (tools/otazky.py).
 HLAVICKA = re.compile(r"^##+ (U-\d+)\s*\|(.*)$")
-STAVY = ("otevřeno", "odloženo", "probíhá")
+STAVY = ("otevřeno", "odloženo", "probíhá", "čeká")
 TYPY_RUN = {"bádání": "badani", "skill": "skill", "test": "skill", "údržba": "skill"}   # typ úkolu → druh běhu (brzda)
 VYCHOZI_REZIM = {"pracovni_dny": [1, 2, 3, 4, 5], "pracovni_od": "06:00", "pracovni_do": "22:00", "svatky": [],
-                 "pomocniku": 2, "dod": {}}
+                 "pomocniku": 2, "dod": {},
+                 # po přechodné chybě portálu: nejdřív za dvě noci, pak o víkendu, pak přes den; pak jedno rozhodnutí za portál
+                 "opakovani": [{"rezim": "noc", "odstup_dnu": 2}, {"rezim": "vikend"}, {"rezim": "pracovni"}]}
 
 
 # Úkol k rozhodnutí (reference/nocni_rezim.md, analyza/navrh-router-uloh.md kap. 2): rozhoduje člověk, ne stroj. Proto musí mít otázku, možnosti
@@ -119,12 +127,14 @@ class Ukol:
     def __init__(self, id_, p="P2", os_=None, typ="", cil="", rodic="", stav="otevřeno", text="", zavisi=None):
         self.id, self.p, self.os, self.typ, self.cil, self.rodic, self.stav, self.text = id_, p, list(os_ or []), typ, cil, rodic, stav, text
         self.zavisi = list(zavisi or [])
+        self.cena, self.do, self.kdy, self.pokusu = "", "", "", 0   # router: pásmo ceny, čekání do data, režim běhu, počet selhání
 
     def hlavicka(self):
         pole = [self.id, self.p]
         if self.os:
             pole.append("os:" + ",".join(self.os))
-        for k, v in (("typ", self.typ), ("cíl", self.cil), ("rodič", self.rodic), ("zavisi", ",".join(self.zavisi))):
+        for k, v in (("typ", self.typ), ("cíl", self.cil), ("rodič", self.rodic), ("zavisi", ",".join(self.zavisi)), ("cena", self.cena),
+                     ("kdy", self.kdy), ("do", self.do), ("pokusu", str(self.pokusu) if self.pokusu else "")):
             if v:
                 pole.append(f"{k}:{v}")
         pole.append(f"stav:{self.stav}")
@@ -158,6 +168,14 @@ def parse_hlavicka(radek):
                 u.zavisi = [a for a in re.split(r"[,\s]+", v) if a]
             elif k == "stav":
                 u.stav = v
+            elif k == "cena":
+                u.cena = v
+            elif k == "kdy":
+                u.kdy = v
+            elif k == "do":
+                u.do = v
+            elif k == "pokusu" and v.isdigit():
+                u.pokusu = int(v)
     return u
 
 
@@ -206,11 +224,17 @@ def dalsi_id(data):
     return f"U-{n + 1:04d}"
 
 
-def frontier(data):
-    """Otevřené úkoly, jejichž závislosti jsou hotové: závislost na úkolu, který už v žádné frontě není, je splněná
+def pripraveny(u, dnes):
+    """Otevřený úkol, nebo čekající, kterému už uplynulo datum `do` (zaparkovaný úkol se tak sám vrátí)."""
+    return u.stav == "otevřeno" or (u.stav == "čeká" and (not u.do or u.do <= dnes.isoformat()))
+
+
+def frontier(data, dnes=None):
+    """Úkoly připravené k přidělení, jejichž závislosti jsou hotové: závislost na úkolu, který už v žádné frontě není, je splněná
     (hotové úkoly se mažou)."""
+    dnes = dnes or datetime.date.today()
     existuji = {u.id for _, uk in data.values() for u in uk}
-    return [u for _, uk in data.values() for u in uk if u.stav == "otevřeno" and not (set(u.zavisi) & existuji)]
+    return [u for _, uk in data.values() for u in uk if pripraveny(u, dnes) and not (set(u.zavisi) & existuji)]
 
 
 def stejny(a, b):
@@ -273,6 +297,76 @@ def cti_zamek():
     except ValueError:
         pass
     return z
+
+
+# ---------- router: směrování, dělení, parkování, selhání portálu (analyza/navrh-router-uloh.md) ----------
+def nastav_dod(u, dod):
+    """Definice hotového jako řádek textu úkolu (nahradí předchozí)."""
+    radky = [r for r in u.text.splitlines() if not r.startswith("Definice hotového:")]
+    u.text = "\n".join(radky + [f"Definice hotového: {dod.strip()}"]).strip("\n")
+
+
+def nova_id(data, n=0):
+    cislo = max([int(u.id[2:]) for _, uk in data.values() for u in uk] + [0]) + 1 + n
+    return f"U-{cislo:04d}"
+
+
+def den_po(od, r, volny):
+    """První den po `od`, který je volný (víkend, svátek) nebo pracovní."""
+    d = od + datetime.timedelta(days=1)
+    while je_volno(d, r) != volny:
+        d += datetime.timedelta(days=1)
+    return d
+
+
+def rozhodnuti_za_portal(data, portal, u, druh, pokusu):
+    """Jedno společné rozhodnutí za portál: počkat, nebo přeřadit čekající úkoly do ručního bádání. Další úkol téhož portálu se připojí."""
+    uv, uk = data["rozhodnuti"]
+    cil = f"portal:{portal}"
+    r = next((x for x in uk if x.cil == cil), None)
+    ids = {u.id}
+    if r:
+        ids |= set(re.findall(r"U-\d+", pole_rozhodnuti(r.text).get("Důkazy", "")))
+    seznam = ", ".join(sorted(ids))
+    doporuceni = "B (zákaz nebo zablokování portálu se opakováním neopraví)" if druh == "zakaz" else "A (výpadek bývá přechodný)"
+    text = (f"Otázka: Portál {portal} nejde číst automaticky ({'zákaz nebo zablokování' if druh == 'zakaz' else 'opakované selhání'}); "
+            f"čekají úkoly {seznam}. Počkat, nebo přeřadit do ručního bádání?\n"
+            f"Možnosti: A) počkat a zkusit automat později; B) přeřadit čekající úkoly do ručního bádání\n"
+            f"Důkazy: úkoly {seznam}\n"
+            f"Zkoušeno: {druh}, pokusů {pokusu}\n"
+            f"Doporučení: {doporuceni}\n"
+            f"Výchozí postup: úkoly zůstanou čekat na toto rozhodnutí, nic se automaticky nezkouší")
+    if r:
+        r.text = text
+    else:
+        r = Ukol(nova_id(data), "P2", [], "portal", cil, "", "otevřeno", text)
+        uk.append(r)
+    data["rozhodnuti"] = (uv, uk)
+    if r.id not in u.zavisi:
+        u.zavisi.append(r.id)
+    u.stav, u.kdy, u.do = "otevřeno", "", ""
+    return r
+
+
+def po_selhani(data, u, druh, portal, now, r):
+    """Přechodná chyba: čekání podle `opakovani` (noc → víkend → pracovní doba); po vyčerpání nebo při zákazu rozhodnutí za portál."""
+    kroky = r.get("opakovani") or VYCHOZI_REZIM["opakovani"]
+    if druh == "zakaz":
+        return rozhodnuti_za_portal(data, portal, u, druh, u.pokusu)
+    u.pokusu += 1
+    if u.pokusu > len(kroky):
+        return rozhodnuti_za_portal(data, portal, u, druh, u.pokusu)
+    krok = kroky[u.pokusu - 1]
+    rez = krok.get("rezim", "noc")
+    dnes = now.date()
+    if rez == "vikend":
+        d = den_po(dnes, r, True)
+    elif rez == "pracovni":
+        d = den_po(dnes, r, False)
+    else:
+        d = dnes + datetime.timedelta(days=max(2, int(krok.get("odstup_dnu", 2))))   # aspoň každou druhou noc
+    u.stav, u.kdy, u.do = "čeká", rez, d.isoformat()
+    return None
 
 
 # ---------- kontrola ----------
@@ -364,6 +458,14 @@ def main(argv=None):
     sp.add_parser("kontrola")
     s = sp.add_parser("rezim"); s.add_argument("--kdy")
     s = sp.add_parser("dalsi"); s.add_argument("fronta", choices=list(FRONTY)); s.add_argument("--typ"); s.add_argument("--vzdy", action="store_true")
+    s.add_argument("--kdy")   # jen pro zkoušku: „2026-11-16 23:00“ místo aktuálního času
+    s = sp.add_parser("smeruj"); s.add_argument("id"); s.add_argument("--do", required=True); s.add_argument("--dod")
+    s.add_argument("--cena"); s.add_argument("--p")
+    s = sp.add_parser("rozdel"); s.add_argument("id")
+    s.add_argument("--cast", nargs=3, action="append", metavar=("FRONTA", "TEXT", "DOD"), required=True)
+    s = sp.add_parser("zaparkuj"); s.add_argument("id"); s.add_argument("--do", required=True); s.add_argument("--duvod")
+    s = sp.add_parser("selhani"); s.add_argument("id"); s.add_argument("--druh", choices=("prechodna", "zakaz"), required=True)
+    s.add_argument("--portal", required=True); s.add_argument("--kdy")
     s = sp.add_parser("zamek"); s.add_argument("akce", choices=("start", "stop", "stav")); s.add_argument("typ", nargs="?", choices=("badani", "skill"))
     a = ap.parse_args(argv)
 
@@ -431,12 +533,16 @@ def main(argv=None):
                     print(f"{f:10} {u.hlavicka()[3:]}  {u.text.strip().splitlines()[0][:90] if u.text.strip() else ''}")
         return 0
     if a.cmd == "dalsi":
-        m, _ = rezim_v(datetime.datetime.now(), nacti_rezim())
-        if m == "pracovni" and not a.vzdy:
-            sys.exit("pracovní doba: další úkol se nepouští (--vzdy pro ruční spuštění)")
-        pripraveno = {id(u) for u in frontier(data)}
+        now = datetime.datetime.fromisoformat(a.kdy) if a.kdy else datetime.datetime.now()
+        m, _ = rezim_v(now, nacti_rezim())
+        pripraveno = {id(u) for u in frontier(data, now.date())}
         for u in data[a.fronta][1]:
-            if u.stav != "otevřeno" or (a.typ and u.typ != a.typ) or id(u) not in pripraveno:   # blokovaný úkol se nepřidělí
+            if (a.typ and u.typ != a.typ) or id(u) not in pripraveno:   # blokovaný úkol se nepřidělí
+                continue
+            if u.kdy:                       # po selhání portálu: jen v určeném režimu (noc, víkend, přes den)
+                if u.kdy != m:
+                    continue
+            elif m == "pracovni" and not a.vzdy:
                 continue
             druh = TYPY_RUN.get(u.typ or "bádání", "badani")
             z = cti_zamek()
@@ -444,14 +550,108 @@ def main(argv=None):
                 continue
             print(u.hlavicka()[3:] + "\n" + u.text)
             return 0
+        if m == "pracovni" and not a.vzdy:
+            sys.exit("pracovní doba: další úkol se nepouští (--vzdy pro ruční spuštění)")
         print("žádný úkol")
         return 3
+    if a.cmd == "smeruj":
+        if a.do not in FRONTY or a.do == "vstup":
+            sys.exit(f"smeruj --do: {', '.join(f for f in FRONTY if f != 'vstup')}")
+        if a.cena and a.cena not in CENY:
+            sys.exit(f"cena: {' | '.join(CENY)}")
+        if not (a.dod or "").strip():
+            sys.exit("ODMÍTNUTO: úkol bez definice hotového (--dod) se nesměruje: co je výsledek a kde bude zapsán")
+        uv, uk = data["vstup"]
+        u = next((x for x in uk if x.id == a.id), None)
+        if u is None:
+            sys.exit(f"{a.id} není ve frontě vstup")
+        if u.cil and cil_splnen(u.cil):
+            print(f"cíl {u.cil} už je v datech: fronta.py hotovo {u.id}")
+            return 1
+        nastav_dod(u, a.dod)
+        u.cena = a.cena or u.cena
+        u.p = a.p or u.p
+        if a.do == "rozhodnuti":
+            vyzaduj_rozhodnuti(u.text)
+        for f2, (uv2, uk2) in data.items():
+            if f2 == "vstup":
+                continue
+            for x in uk2:
+                if stejny(x, u):
+                    sluc(x, u)
+                    uk.remove(u)
+                    uloz(f2, uv2, uk2)
+                    uloz("vstup", uv, uk)
+                    print(f"doplněno {x.id} ({f2}) – úkol {u.id} ze vstupu se slučuje")
+                    return 0
+        uk.remove(u)
+        uv2, uk2 = data[a.do]
+        uk2.append(u)
+        uloz("vstup", uv, uk)
+        uloz(a.do, uv2 or "", uk2)
+        print(f"{u.id}: vstup → {a.do}" + (f" (cena {u.cena})" if u.cena else ""))
+        return 0
+    if a.cmd == "rozdel":
+        nalezeno = next(((f, x) for f, (_, uk) in data.items() for x in uk if x.id == a.id), None)
+        if nalezeno is None:
+            sys.exit(f"{a.id} nenalezeno")
+        f0, rodic = nalezeno
+        deti = []
+        for i, (fronta_, text, dod) in enumerate(a.cast):
+            if fronta_ not in FRONTY or fronta_ == "vstup":
+                sys.exit(f"rozdel --cast: neznámá fronta „{fronta_}“")
+            if not text.strip() or not dod.strip():
+                sys.exit("ODMÍTNUTO: každá část potřebuje text a definici hotového")
+            dite = Ukol(nova_id(data, i), rodic.p, rodic.os, rodic.typ, "", rodic.id, "otevřeno", text)
+            nastav_dod(dite, dod)
+            if fronta_ == "rozhodnuti":
+                vyzaduj_rozhodnuti(dite.text)
+            deti.append((fronta_, dite))
+        uv0, uk0 = data[f0]
+        uk0.remove(rodic)
+        uloz(f0, uv0, uk0)
+        for fronta_, dite in deti:
+            uv_, uk_ = data[fronta_]
+            uk_.append(dite)
+            uloz(fronta_, uv_ or "", uk_)
+            print(f"{dite.id} ({fronta_}) z {rodic.id}")
+        return 0
+    if a.cmd == "zaparkuj":
+        try:
+            datetime.date.fromisoformat(a.do)
+        except ValueError:
+            sys.exit("zaparkuj --do RRRR-MM-DD")
+        for f, (uv, uk) in data.items():
+            for u in uk:
+                if u.id == a.id:
+                    u.stav, u.do = "čeká", a.do
+                    if a.duvod:
+                        u.text = (u.text + f"\n\nČeká do {a.do}: {a.duvod}").strip("\n")
+                    uloz(f, uv or "", uk)
+                    print(f"{u.id} ({f}): čeká do {a.do}")
+                    return 0
+        sys.exit(f"{a.id} nenalezeno")
+    if a.cmd == "selhani":
+        now = datetime.datetime.fromisoformat(a.kdy) if a.kdy else datetime.datetime.now()
+        r = nacti_rezim()
+        for f, (uv, uk) in data.items():
+            for u in uk:
+                if u.id == a.id:
+                    dec = po_selhani(data, u, a.druh, a.portal, now, r)
+                    for f2, (uv2, uk2) in data.items():
+                        uloz(f2, uv2 or "", uk2) if (uk2 or os.path.exists(cesta(f2))) else None
+                    print(f"{u.id}: " + (f"rozhodnutí {dec.id} (portál {a.portal})" if dec else f"čeká do {u.do}, režim {u.kdy}, pokus {u.pokusu}"))
+                    return 0
+        sys.exit(f"{a.id} nenalezeno")
     if a.cmd == "pridej":
         text = (text_rozhodnuti(a) if a.fronta == "rozhodnuti" else None) or a.text
         if not text:
             sys.exit("pridej: chybí --text" + (" (u rozhodnutí --otazka, --moznosti, --vychozi)" if a.fronta == "rozhodnuti" else ""))
         if a.fronta == "rozhodnuti":
             vyzaduj_rozhodnuti(text)
+        if a.fronta != "vstup" and os.path.exists(cesta("vstup")):
+            sys.exit("ODMÍTNUTO: nový úkol vstupuje přes frontu vstup (fronta.py pridej vstup --text …); "
+                     "pak ho router zařadí: fronta.py smeruj <id> --do <fronta> --dod \"co je výsledek\" [--cena S|M|L|XL]")
         novy = Ukol(dalsi_id(data), a.p or "P2", [x for x in re.split(r"[,\s]+", a.os or "") if x], a.typ or "", a.cil or "",
                     a.rodic or "", a.stav or "otevřeno", text, [x for x in re.split(r"[,\s]+", a.zavisi or "") if x])
         if not re.fullmatch(r"P[1-3]", novy.p):

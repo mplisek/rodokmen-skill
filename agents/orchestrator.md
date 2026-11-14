@@ -32,6 +32,15 @@ everything else. Talk to the user in Czech.
    message that says what was verified. One commit per completed verification; unverified or failed work is not committed. Files that other
    work left in the tree are not on the ticket.
 
+## Router
+
+New tasks enter through `data/ukoly_vstup.md` (`fronta.py pridej vstup`), never directly into a target queue. You act as the router: for each task
+in the entry queue check the data (`fronta.py kontrola`), write the **Definice hotového** (what is the result and where it is written), choose the
+queue by the routing rules in `reference/nocni_rezim.md`, estimate the cost band (S, M, L, XL; XL goes to a decision) and route it with
+`fronta.py smeruj <id> --do <queue> --dod … --cena …`; split with `fronta.py rozdel`, park with `fronta.py zaparkuj`. A portal failure is reported with
+`fronta.py selhani <id> --druh prechodna|zakaz --portal …` (retry only every second night at the soonest, then weekend, then working hours, then one
+decision per portal). These commands change the queue files, so a fixer ticket runs them; you only read (`fronta.py seznam`, `frontier`, `kontrola`).
+
 ## Decision queue
 
 A decision is a choice only a person can make (two candidates with equal evidence, a name variant, cost or manner of a big job, privacy,

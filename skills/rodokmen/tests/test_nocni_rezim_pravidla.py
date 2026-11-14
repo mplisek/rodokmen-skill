@@ -41,6 +41,21 @@ class NocniRezimPravidla(unittest.TestCase):
         self.assertIn("druhé čtení naslepo", odstavec)
         self.assertNotIn("potvrdit, zamítnout, nebo přečíst znovu", odstavec)
 
+    def test_router_je_popsany(self):
+        for s in ("ukoly_vstup.md", "fronta.py smeruj", "Definice hotového", "fronta.py rozdel", "fronta.py zaparkuj", "stav:čeká"):
+            self.assertIn(s, self.t, s)
+
+    def test_selhani_portalu_je_popsano(self):
+        for s in ("fronta.py selhani", "za dvě noci", "o víkendu", "v pracovní době", "jedno rozhodnutí za portál", "opakovani"):
+            self.assertIn(s, self.t, s)
+
+    def test_sablona_ma_vstupni_frontu_a_orchestrator_router(self):
+        repo = Path(__file__).resolve().parents[3]
+        self.assertTrue((repo / "skills/rodokmen/template/data/ukoly_vstup.md").is_file())
+        o = (repo / "agents/orchestrator.md").read_text(encoding="utf-8")
+        for s in ("fronta.py smeruj", "fronta.py selhani", "ukoly_vstup.md", "Definice hotového"):
+            self.assertIn(s, o, s)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -16,6 +16,7 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
 - `tools/pracovni_prehled.py`: soupis stažených svazků ARONu a ostatních snímků v `pracovni/` s vazbou na deník; `--hledej` před stažením, `--json`. Jen čte, bez sítě.
 - Deník: zakázaný vzor „mnou“ (první osoba); nahrazený záznam (`--opravuje`) se na zakázané vzory nekontroluje a oprava projde i při starším záznamu, který nový vzor porušuje.
+- Router úkolů: vstupní fronta `ukoly_vstup.md` (v šabloně), `fronta.py smeruj | rozdel | zaparkuj` s povinnou definicí hotového, ceny S až XL, stav `čeká` s datem; `fronta.py selhani` a `rezim.json → opakovani` (po přechodné chybě portálu nejdřív za dvě noci, pak víkend, pak pracovní doba, pak jedno rozhodnutí za portál; po zákazu rovnou). Starší projekty bez `ukoly_vstup.md` fungují jako dřív.
 - Fronta úkolů k rozhodnutí: rozhodovací postup směrování v `reference/nocni_rezim.md`; `fronta.py pridej rozhodnuti` vyžaduje otázku, možnosti a výchozí postup, `fronta.py kontrola` varuje u úkolů bez nich i u úkolů, které vypadají jako práce; orchestrátor frontu rozhodnutí auditoval a zakládá jen skutečná rozhodnutí.
 - Návody (`reference/matriky.md`, `portaly.md`): křest hledat v celém roce, názvy obcí z hlavičky archivu bez domýšlení diakritiky, rejstřík sňatků v AHMP jen u některých farností.
 - Noční fronta jen pro úkoly bez člověka (`reference/nocni_rezim.md`, orchestrátor, researcher): úkoly na prohlížeč, archiv, rodinu nebo lhůtu rovnou do své fronty s důvodem.

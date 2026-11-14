@@ -31,5 +31,17 @@
   "dod": {
     "max_snimku": 150,
     "vlny": "1-3"
-  }
+  },
+  "opakovani": [
+    {
+      "rezim": "noc",
+      "odstup_dnu": 2
+    },
+    {
+      "rezim": "vikend"
+    },
+    {
+      "rezim": "pracovni"
+    }
+  ]
 }
