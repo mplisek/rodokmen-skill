@@ -88,11 +88,15 @@ def over_zaznam(z, id_pred=()):
 def nacti_zaznamy():
     """(záznamy, chyby) – chyby jsou řádky s číslem řádku; duplicity id a odkazy na opravované se kontrolují tady."""
     zaznamy, chyby, videna = [], [], set()
-    for n, z, e in store.nacti(LOG):
+    radky = list(store.nacti(LOG))
+    nahrazene = {z.get("opravuje") for _, z, e in radky if not e and isinstance(z, dict) and z.get("opravuje") is not None}
+    for n, z, e in radky:
         if e:
             chyby.append(f"řádek {n}: {e}")
             continue
         for ch in over_zaznam(z, videna):
+            if z.get("id") in nahrazene and "zakázaný vzor" in ch:
+                continue   # nahrazený záznam je jen historie a na web nejde; nový vzor ho zpětně nevyřazuje
             chyby.append(f"řádek {n} (id {z.get('id')}): {ch}")
         if z.get("id") in videna:
             chyby.append(f"řádek {n}: duplicitní id {z.get('id')}")
@@ -121,6 +125,8 @@ def vykresli(zaznamy):
 
 def cmd_pridej(a):
     zaznamy, chyby = nacti_zaznamy()
+    if a.opravuje is not None:   # oprava smí projít, i když starý záznam porušuje zakázaný vzor přidaný později (právě ho nahrazuje)
+        chyby = [c for c in chyby if "zakázaný vzor" not in c]
     if chyby:
         sys.exit("denik.jsonl má chyby, nejdřív je oprav (denik.py over):\n  " + "\n  ".join(chyby[:10]))
     z = {"id": max([x["id"] for x in zaznamy], default=0) + 1, "datum": a.datum,

@@ -130,6 +130,17 @@ class DenikTest(unittest.TestCase):
         self.assertEqual(radek.count("|") - radek.count("\\|"), 10)    # 9 sloupců = 10 oddělovačů
 
     # ---- kontrola celého souboru
+    def test_zakazany_vzor_se_nehlida_u_nahrazeneho_zaznamu(self):
+        """Starý záznam s „čteno mnou“ (z doby před vzorem) po opravě už nevadí; bez opravy ano."""
+        self.assertEqual(self.pridej().returncode, 0)
+        self.log.write_text(self.log.read_text(encoding="utf-8").replace("Křest 14. 3. 1852", "Křest 14. 3. 1852 (čteno mnou)"), encoding="utf-8")
+        r = self.denik("over")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("první osoba", r.stdout)
+        self.assertEqual(self.pridej("--opravuje", "1").returncode, 0)
+        r = self.denik("over")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
     def test_over_najde_rucne_rozbity_radek(self):
         self.assertEqual(self.pridej().returncode, 0)
         self.assertEqual(self.denik("over").returncode, 0)

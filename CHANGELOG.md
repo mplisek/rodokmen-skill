@@ -15,6 +15,7 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 ### Nové
 
 - `tools/pracovni_prehled.py`: soupis stažených svazků ARONu a ostatních snímků v `pracovni/` s vazbou na deník; `--hledej` před stažením, `--json`. Jen čte, bez sítě.
+- Deník: zakázaný vzor „mnou“ (první osoba); nahrazený záznam (`--opravuje`) se na zakázané vzory nekontroluje a oprava projde i při starším záznamu, který nový vzor porušuje.
 
 ## Nevydáno
 
