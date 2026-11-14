@@ -7,6 +7,7 @@ Výstup (Markdown, stdout): záznam osoby z data/osoby.py, navázané zápisy (p
 témat. Témata jsou názvy souborů ve složce pravidel (`skills/rodokmen-agents/rules/`). Stejný vstup dává stejný výstup (řazení podle
 id). Nečte fronty ukoly_*.md ani veřejné otázky a nic nezapisuje. Překročí-li balíček --limit znaků, skončí chybou a nic nevypíše
 (neořezává mlčky; zúžit se dá výběrem témat). Pravidla se hledají v --rules, jinak v $CLAUDE_PLUGIN_ROOT/skills/rodokmen-agents/rules,
+jinak podle pracovni/.plugin_root (zapíše ho SessionStart hook pluginu),
 jinak vedle skillu (…/skills/rodokmen-agents/rules).
 """
 import argparse
@@ -35,6 +36,11 @@ def cesta_pravidel(arg):
     if not arg:
         if os.environ.get("CLAUDE_PLUGIN_ROOT"):
             kandidati.append(os.path.join(os.environ["CLAUDE_PLUGIN_ROOT"], "skills", "rodokmen-agents", "rules"))
+        try:   # hooks/zapis_koren.py zapíše cestu pluginu při startu session (Bash nástroj CLAUDE_PLUGIN_ROOT nemá)
+            with open(os.path.join(os.path.dirname(HERE), "pracovni", ".plugin_root"), encoding="utf-8") as f:
+                kandidati.append(os.path.join(f.read().strip(), "skills", "rodokmen-agents", "rules"))
+        except OSError:
+            pass
         kandidati.append(os.path.join(os.path.dirname(os.path.dirname(HERE)), "rodokmen-agents", "rules"))
     for k in kandidati:
         if os.path.isdir(k):

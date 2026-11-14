@@ -2,9 +2,11 @@
 """Výřez zápisu ze staženého snímku stránky (z jakéhokoli portálu).
 
 Použití:
-  vyrez.py <snimek.jpg> <klic> [x0,y0,x1,y1] [--kontrast | --vylepsit]
+  vyrez.py <snimek.jpg> <klic> [x0,y0,x1,y1] [--kontrast | --vylepsit] [--out SLOŽKA]
       x0..y1 = oblast zápisu jako zlomky šířky a výšky stránky (0..1); bez nich se bere celá stránka.
       Uloží zdroje/<klic>.jpg (plné rozlišení) a vyrezy/<klic>.jpg (zmenšeno na max. 1800 px pro web).
+      --out SLOŽKA = jen náhled: uloží SLOŽKA/<klic>.jpg v plném rozlišení a nic víc (ne zdroje/, vyrezy/ ani pamatování oblasti);
+      pro čtení bez zápisu do veřejných složek webu (agent smí zapisovat jen do pracovni/vysledky/). Web výřez udělá až zápis bez --out.
       --kontrast = vybledlý zápis: šedá škála, papír vybělit a písmo ztmavit (obojí ve zdroje/ i vyrezy/).
       --vylepsit = silnější úprava, když nepomůže ani --kontrast: navíc místní vyrovnání kontrastu a doostření
       (na zkoušku nejdřív overit.py … --vylepsit).
@@ -104,15 +106,21 @@ def main():
         return zacernit(sys.argv[2:])
     kontrast = "--kontrast" in sys.argv
     vylepsit = "--vylepsit" in sys.argv
+    out = None
+    if "--out" in sys.argv:
+        i = sys.argv.index("--out")
+        out = sys.argv[i + 1] if i + 1 < len(sys.argv) else sys.exit("--out chce složku")
+        del sys.argv[i:i + 2]
     args = [a for a in sys.argv[1:] if a not in ("--vylepsit", "--kontrast")]
     if len(args) < 2:
         sys.exit(__doc__)
     src, key = args[0], args[1]
     MAGICK = magick()
-    full = os.path.join(ROOT, "zdroje", key + ".jpg")
+    full = os.path.join(ROOT, "zdroje", key + ".jpg") if out is None else os.path.join(os.path.abspath(out), key + ".jpg")
     small = os.path.join(ROOT, "vyrezy", key + ".jpg")
     os.makedirs(os.path.dirname(full), exist_ok=True)
-    os.makedirs(os.path.dirname(small), exist_ok=True)
+    if out is None:
+        os.makedirs(os.path.dirname(small), exist_ok=True)
     oblast = [0, 0, 1, 1]
     cmd = [MAGICK, src, "-auto-orient"]   # fotky z mobilu: otočit podle EXIF (EXIF i s GPS pak smaže +profile, barevný profil ICC zůstane)
     if len(args) > 2:
@@ -129,6 +137,9 @@ def main():
     elif kontrast:   # --vylepsit už kontrast obsahuje
         cmd += KONTRAST
     subprocess.run(cmd + ["+profile", "!icc,*", "+set", "comment", "-quality", "90", full], check=True)
+    if out is not None:   # jen náhled do zadané složky
+        print("uloženo:", full, "(náhled; zdroje/ a vyrezy/ se nemění)" + (" (zvýšený kontrast)" if kontrast or vylepsit else ""))
+        return
     subprocess.run([MAGICK, full, "-resize", "1800x1800>", "-quality", "85", small], check=True)
     zapamatuj_oblast(key, oblast)
     _, docs = _dokumenty()   # začernění rodných čísel (vyrez.py --zacernit) nakreslit znovu

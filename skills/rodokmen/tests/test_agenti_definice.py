@@ -70,6 +70,17 @@ class DefiniceAgentu(unittest.TestCase):
         self.assertNotIn("Agent", frontmatter(self.texty["fixer"])["tools"])
         self.assertIn("never", self.texty["failure-analyst"].lower())     # analytik nikdy neupravuje
 
+    def test_researcher_stahuje_pres_brzdu_a_vyrezy_do_sve_slozky(self):
+        r = self.texty["researcher"]
+        self.assertIn("tools/slusne.py tools/<script>.py", r)             # hook odmítne přímé volání stahovacího skriptu
+        self.assertIn("vyrez.py", r)
+        self.assertIn("--out pracovni/vysledky/", r)                       # výřezy mimo veřejné složky webu
+        self.assertRegex(r, r"(?i)one row")                                # výřez jednoho řádku
+
+    def test_orchestrator_jmenuje_radek_a_stranky_v_karte(self):
+        o = self.texty["orchestrator"]
+        self.assertRegex(o, r"(?i)name the (exact )?row|single row|one row")
+
     def test_kazdy_agent_ma_kriterium_dokonceni(self):
         for jmeno, text in self.texty.items():
             self.assertRegex(text, r"(?mi)^#+\s+(Done when|Definition of done)", jmeno)
