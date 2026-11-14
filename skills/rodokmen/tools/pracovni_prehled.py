@@ -10,7 +10,8 @@ Použití (z kořene projektu):
   --slozka SLOŽKA                      -> jiná složka než pracovni
 
 Vazba na deník je přibližná: řádek se přiřadí svazku, když zdroj nebo rozsah obsahuje signaturu jako samostatné slovo.
-Před stažením svazku nebo snímku zavolej tento nástroj; stahovací nástroje (aron_stahni.py) už existující soubor přeskočí.
+Soupis je hlavně historický: svazky stažené dřív do pracovni/aron/. Nové snímky se hledají a ukládají do sdílené mezipaměti
+(tools/cache.py, stahování přes brzdu tools/slusne.py); před novým stažením se podívej sem i do mezipaměti (cache.py najdi).
 """
 import json
 import os

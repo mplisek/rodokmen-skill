@@ -180,7 +180,7 @@ pro každý web pro všechny procesy na počítači.
 - **Na jeden archiv nejvýš jeden pomocník.** Víc projektů na jednom počítači má jednu IP adresu.
 - **Mezipaměť obrázků:** co se stáhne přes brzdu, uloží se a příště se vezme z disku (`tools/cache.py`, společná pro
   všechny projekty; `cache.py stav` ukáže úsporu). Snímky eBadatelny ukládej z prohlížeče (`portaly.md`).
-  Nejvýš 5 GB; jiný limit nebo složku (`RODOKMEN_SNIMKY_GB`, `RODOKMEN_SNIMKY`) nastav se souhlasem uživatele v jeho
+  Nejvýš 25 GB; jiný limit nebo složku (`RODOKMEN_SNIMKY_GB`, `RODOKMEN_SNIMKY`) nastav se souhlasem uživatele v jeho
   `~/.claude/settings.json` v `"env"` (README → Nastavení).
 
 ### Pomocníci (subagenti) – šetrně

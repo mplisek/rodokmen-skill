@@ -10,7 +10,7 @@ uložený snímek se smaže a stáhne znovu). Porta fontium a eBadatelna dělaj�
 snímku bez sítě.
 
 Mezipaměť je společná pro všechny projekty na počítači: ~/.cache/rodokmen_snimky/ (Windows
-%LOCALAPPDATA%\\rodokmen_snimky), jinou složku nastaví proměnná RODOKMEN_SNIMKY. Nejvýš 5 GB (RODOKMEN_SNIMKY_GB),
+%LOCALAPPDATA%\\rodokmen_snimky), jinou složku nastaví proměnná RODOKMEN_SNIMKY. Nejvýš 25 GB (RODOKMEN_SNIMKY_GB),
 nejdéle nepoužité soubory se mažou samy. Celou složku lze kdykoli smazat, nástroje si obrázky stáhnou znovu.
 
 Použití (z kořene projektu):
@@ -33,7 +33,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit
 
 KOREN = os.environ.get("RODOKMEN_SNIMKY") or os.path.join(
     os.environ.get("LOCALAPPDATA") or os.path.join(os.path.expanduser("~"), ".cache"), "rodokmen_snimky")
-LIMIT = float(os.environ.get("RODOKMEN_SNIMKY_GB") or 5) * 1024 ** 3
+LIMIT = float(os.environ.get("RODOKMEN_SNIMKY_GB") or 25) * 1024 ** 3
 PRIPONY = ((b"\xff\xd8\xff", ".jpg"), (b"\x89PNG\r\n\x1a\n", ".png"), (b"GIF8", ".gif"), (b"II*\x00", ".tif"),
            (b"MM\x00*", ".tif"), (b"\x00\x00\x00\x0cjP  ", ".jp2"), (b"\xffO\xffQ", ".j2k"))
 

@@ -218,7 +218,7 @@ ne v projektu.
 
 | Proměnná | Co mění | Výchozí hodnota |
 |---|---|---|
-| `RODOKMEN_SNIMKY_GB` | největší velikost mezipaměti stažených snímků v GB (smí být i desetinná, např. `"2.5"`); nad limitem se mažou nejdéle nepoužité snímky | `5` |
+| `RODOKMEN_SNIMKY_GB` | největší velikost mezipaměti stažených snímků v GB (smí být i desetinná, např. `"2.5"`); nad limitem se mažou nejdéle nepoužité snímky | `25` |
 | `RODOKMEN_SNIMKY` | složka mezipaměti snímků, třeba na jiném disku | `~/.cache/rodokmen_snimky` (Windows `%LOCALAPPDATA%\rodokmen_snimky`) |
 | `SLUSNE_STAV` | složka se stavem brzdy (kdy se naposledy ptala kterého archivu, pauzy po zablokování) | `~/.cache/rodokmen_slusne` (Windows `%LOCALAPPDATA%\rodokmen_slusne`) |
 | `SLUSNE_CURL` | cesta k programu `curl`, když ho brzda nenajde nebo najde nefunkční | `curl` z PATH, na Windows záložně `C:\Windows\System32\curl.exe` |

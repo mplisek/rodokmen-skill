@@ -16,6 +16,7 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
 - `tools/pracovni_prehled.py`: soupis stažených svazků ARONu a ostatních snímků v `pracovni/` s vazbou na deník; `--hledej` před stažením, `--json`. Jen čte, bez sítě.
 - Deník: zakázaný vzor „mnou“ (první osoba); nahrazený záznam (`--opravuje`) se na zakázané vzory nekontroluje a oprava projde i při starším záznamu, který nový vzor porušuje.
+- Mezipaměť snímků: výchozí limit 25 GB (dřív 5 GB); `RODOKMEN_SNIMKY_GB` ho dál přepíše.
 - Agent `committer` a krok 6 orchestrátora: commit po každém dokončeném ověření, jen vyjmenované soubory na zadané větvi (výchozí `main`, jinak větev, na které se pracuje); hook `committer`u povolí jen bezpečné git příkazy a orchestrátoru čtení větve a stavu.
 - Agenti: SessionStart hook `hooks/zapis_koren.py` zapíše cestu pluginu do `pracovni/.plugin_root`, `kontext.py` podle ní najde pravidla i v Bash nástroji (ten `CLAUDE_PLUGIN_ROOT` nemá).
 - `vyrez.py --out SLOŽKA`: výřez jen do zadané složky (agent nezapisuje do veřejných `zdroje/` a `vyrezy/`).
