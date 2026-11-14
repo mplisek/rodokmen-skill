@@ -151,6 +151,16 @@ class KontrolaWebu(Zaklad):
         self.stranka("p.html", "<script>const x = 'pomocník U-0013 pracovni/';</script><style>/* sonnet */</style><p>čisto</p>")
         self.assertEqual(self.kontrola().returncode, 0)
 
+    def test_bez_dat_rodu_se_kontroluje_jen_procesni_text(self):
+        self.stranka("p.html", f"<p>{znacka('cizi', 'Cizí', '#123456')} Novákové.</p>")
+        r = subprocess.run([sys.executable, "-I", "-X", "utf8", str(TOOLS / "kontrola_webu.py"), str(self.d), "--site",
+                            str(self.d / "neexistuje.json")], capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.stranka("p.html", "<p>Čte pomocník.</p>")
+        r = subprocess.run([sys.executable, "-I", "-X", "utf8", str(TOOLS / "kontrola_webu.py"), str(self.d), "--site",
+                            str(self.d / "neexistuje.json")], capture_output=True, text=True, encoding="utf-8")
+        self.assertNotEqual(r.returncode, 0)
+
     def test_skloneny_tvar_je_jen_upozorneni(self):
         self.stranka("p.html", f"<p>{znacka()} a Novákových.</p>")
         r = self.kontrola()

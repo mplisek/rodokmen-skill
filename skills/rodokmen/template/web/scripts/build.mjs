@@ -41,6 +41,9 @@ function zapisStranky(id, dir) {
 
 function sestav(outDir) {
   npx("astro", "build", "--outDir", outDir);
+  // jednotná značka rodu v textech všech stránek (ADR 0004); před pagefind, ať hledání zná hotový text
+  const z = python("znackuj_rody.py", [join(web, outDir), "--site", join(web, "src", "data", "site.json")]);
+  if (z.status !== 0) process.exit(z.status ?? 1);
   npx("pagefind", "--site", outDir);
 }
 

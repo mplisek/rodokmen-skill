@@ -40,14 +40,14 @@ def kontroluj(cesta, rody, rx, podle_slugu, chyby, upozorneni):
         rh.projdi(html, lambda t: holé.extend(m.group(0) for m in rx.finditer(t)) or t)
         for n in sorted(set(holé)):
             chyby.append(f"{jmeno}: holý název rodu „{n}“ (má být značka; znackuj_rody.py)")
-    for m in ZNACKA.finditer(html):
+    for m in (ZNACKA.finditer(html) if rody else ()):   # bez dat rodů (--site chybí) se značky nekontrolují
         r = podle_slugu.get(m.group(2))
         if not r:
             chyby.append(f"{jmeno}: značka neznámého rodu /rod/{m.group(2)}/")
         elif r["color"].lower() != m.group(1).strip().lower():
             chyby.append(f"{jmeno}: barva značky rodu {r['name']} je {m.group(1).strip()}, rod má {r['color']}")
     poradi = []
-    for m in NADPIS.finditer(html):
+    for m in (NADPIS.finditer(html) if rody else ()):
         z = ZNACKA.search(m.group(2))
         if z and podle_slugu.get(z.group(2)) and podle_slugu[z.group(2)]["k"] is not None:
             poradi.append((podle_slugu[z.group(2)]["k"], podle_slugu[z.group(2)]["name"]))
