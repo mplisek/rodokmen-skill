@@ -286,6 +286,40 @@ def _nahled(src, out, sirka=None):
         print("náhled se nepovedl (chybí ImageMagick?) – snímek je uložený, náhled udělej přes ebadatelna.py snimek … nahled")
 
 
+def snimky_na_nalez(slozka_stavu):
+    """Řádek o tom, kolik snímků se stáhlo z archivu na jeden nalezený záznam v deníku projektu (měří, zda mapa knihy a mezipaměť šetří archivy).
+    Snímky se počítají od data, od kterého brzda statistiku vede; nalezené záznamy jsou v data/denik.jsonl od téhož data. Bez statistiky nic."""
+    stazeno, od = 0, None
+    for f in sorted(os.listdir(slozka_stavu)) if slozka_stavu and os.path.isdir(slozka_stavu) else []:
+        if f.endswith(".json"):
+            try:
+                with open(os.path.join(slozka_stavu, f), encoding="utf-8") as fh:
+                    st = json.load(fh)
+            except (OSError, ValueError):
+                continue
+            if st.get("stazeno"):
+                stazeno += int(st["stazeno"])
+                od = min(od or st.get("pocitano_od", "9999"), st.get("pocitano_od", "9999"))
+    if not stazeno:
+        return None
+    nalezeno = 0
+    try:
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "denik.jsonl"), encoding="utf-8") as f:
+            for r in f:
+                try:
+                    z = json.loads(r)
+                except ValueError:
+                    continue
+                if z.get("vysledek") == "nalezeno" and not z.get("k_rucni_kontrole") and str(z.get("datum", "")) >= str(od or ""):
+                    nalezeno += 1
+    except OSError:
+        pass
+    if not nalezeno:
+        return f"Stažených snímků na nalezený záznam: zatím žádný nalezený záznam v deníku od {od} ({stazeno} snímků z archivu)"
+    return (f"Stažených snímků na nalezený záznam: {stazeno / nalezeno:.1f}".replace(".", ",") +
+            f" ({stazeno} snímků z archivu, {nalezeno} nalezených záznamů v deníku od {od})")
+
+
 def main(a):
     for s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8
         if hasattr(s, "reconfigure"):
@@ -310,6 +344,9 @@ def main(a):
         try:
             slusne = _slusne()
             slusne._stav_mezipameti(slusne._slozka())
+            nalez = snimky_na_nalez(slusne._slozka())
+            if nalez:
+                print(nalez)
         except Exception:   # noqa: BLE001
             pass
     elif a[0] == "uloz" and len(a) > 1:

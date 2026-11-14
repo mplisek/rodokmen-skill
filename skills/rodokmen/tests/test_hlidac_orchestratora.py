@@ -39,6 +39,14 @@ class HlidacOrchestratora(unittest.TestCase):
             self.assertIn("fronta.py", duvod)
             self.assertIn("kontext.py", duvod)
 
+    def test_orchestrator_smi_ptat_se_mapy_knihy_jen_cist(self):
+        for p in ("python3 -I tools/mapa.py hledej aron 03066862 --pismeno F", "python3 -I tools/mapa.py hledej aron 03066862 --rok 1856 --celkem 300",
+                  "python3 -I tools/mapa.py stav aron 03066862"):
+            self.assertEqual(hook("orchestrator", p)[0], "allow", p)
+        for p in ("python3 -I tools/mapa.py zapis pracovni/vysledky/x.json", "python3 -I tools/mapa.py snimek aron 03066862 5",
+                  "python3 -I tools/mapa.py naplnit-z-pracovni", "python3 -I tools/mapa.py hledej aron x --pismeno F; rm -rf data"):
+            self.assertEqual(hook("orchestrator", p)[0], "deny", p)
+
     def test_orchestrator_smi_cist_vetev_a_stav_gitu(self):
         for p in ("git branch --show-current", "git status --short", "git log --oneline -5", "git log --oneline"):
             self.assertEqual(hook("orchestrator", p)[0], "allow", p)

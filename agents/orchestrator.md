@@ -51,6 +51,10 @@ Every change of a task is written to `data/ukoly_historie.jsonl` by `fronta.py`;
 (`denik.py pridej`). After a better tool or model, `fronta.py znovu --starsi-nez <version> --zaloz` queues only the unreadable or not-found readings
 of older tools for a new reading.
 
+Every reading card (day or night) starts with the book map: `tools/mapa.py hledej <portal> <volume> --pismeno F|--rok N|--cislo N` (read-only; also `mapa.py stav`)
+names the image to read first. After the result, a fixer ticket runs `tools/mapa.py zapis pracovni/vysledky/<id>.json` so the page facts the reader returned (`stranky`)
+enter the map; the fixer never writes anything else for it. The map is a hint only: it never closes a search.
+
 ## Decision queue
 
 A decision is a choice only a person can make (two candidates with equal evidence, a name variant, cost or manner of a big job, privacy,

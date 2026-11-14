@@ -296,3 +296,8 @@ if __name__ == "__main__":
     except SIT + (ET.ParseError,) as e:
         chyba_archivu(e)
     print(path, "full size", dims)
+    try:   # identita snímku do mapy knihy (tools/mapa.py): víme, že ho máme; popis obsahu doplní čtenář
+        import mapa
+        mapa.snimek_bezpecne("aron", apu[:8], n, "cache")
+    except Exception:   # noqa: BLE001 – mapa nikdy nezastaví stahování
+        pass

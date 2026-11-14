@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Hlídač agentů (hook PreToolUse pluginu, Fáze C, Q6, Q-C4):
-- `orchestrator` smí v Bashi jen výpis z fronta.py (seznam, frontier, kontrola, rezim, dalsi), kontext.py a čtení gitu
+- `orchestrator` smí v Bashi jen výpis z fronta.py (seznam, frontier, kontrola, rezim, dalsi), kontext.py, mapa.py hledej|stav (jen čtení) a čtení gitu
   (`git branch --show-current`, `git status --short`, `git log --oneline [-N]`);
 - `committer` smí jen `git status|diff|log`, `git branch --show-current`, `git add <konkrétní soubory>` a `git commit -m "…"`
   (bez -a, --amend, --no-verify, --allow-empty; nikdy push, checkout, reset, merge, …).
@@ -14,7 +14,7 @@ import sys
 
 POVOLENE = re.compile(
     r"^(?:python3?|py)(?:\s+-\S+(?:\s+\S+)?)*\s+(?:\./)?(?:tools/)?(?:fronta\.py\s+(?:seznam|frontier|kontrola|rezim|dalsi)(?:\s+[\w.:/=-]+)*"
-    r"|kontext\.py(?:\s+[\w.,:/=-]+)*)\s*$")
+    r"|kontext\.py(?:\s+[\w.,:/=-]+)*|mapa\.py\s+(?:hledej|stav)(?:\s+[\w.,:/=-]+)*)\s*$")
 GIT_CTENI = re.compile(r"^git\s+(?:branch\s+--show-current|status\s+(?:--short|-s|--porcelain)(?:\s+-b)?|log\s+--oneline(?:\s+-\d{1,3})?)\s*$")
 NEBEZPECNE = re.compile(r"[;&|<>`$()\n]")
 CESTA = re.compile(r"^[\w][\w./@+ěščřžýáíéúůďťňĚŠČŘŽÝÁÍÉÚŮĎŤŇ-]*$")
@@ -55,7 +55,7 @@ def committer_smi(prikaz):
 
 
 ORCH_DUVOD = ("Orchestrator guard: the orchestrator may run only read-only listings of `tools/fronta.py` "
-              "(seznam, frontier, kontrola, rezim, dalsi), `tools/kontext.py --osoba N --tema …` and read-only git "
+              "(seznam, frontier, kontrola, rezim, dalsi), `tools/kontext.py --osoba N --tema …`, `tools/mapa.py hledej|stav` and read-only git "
               "(`git branch --show-current`, `git status --short`, `git log --oneline -N`), "
               "one command without pipes, redirects or chaining. Delegate everything else to a specialist agent.")
 COMMIT_DUVOD = ("Committer guard: only `git status|diff|log`, `git branch --show-current`, `git add <exact files>` "

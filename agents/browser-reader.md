@@ -22,7 +22,7 @@ per session, screenshots only into `pracovni/`.
 
 Exit code 4 (HTTP 403/429/503, CAPTCHA, a stopped archive) means stop: the brake is written, do other work and tell the user what happened; never
 retry sooner or work around it. Exit code 5 (login or a human check): hand the task back to the user. You write only `pracovni/`. Czech output text.
-In the result file give the address, the volume and the image number of every page you read from (the identity of the image).
+In the result file give the address, the volume and the image number of every page you read from (the identity of the image) and what the page covers (`stranky`: portal, svazek, snimek, typ, od, do, kvalita) so the book map grows.
 
 ## Result
 

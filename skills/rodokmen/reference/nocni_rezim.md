@@ -93,6 +93,24 @@ a modelu; `fronta.py smeruj … --cena`, nebo `uprav --cena`) a okno má rozpoč
   a řekne, které pásmo je podhodnoceno nebo nadhodnoceno.
 - **Identita:** číslo úkolu (`U-0042`) se nikdy znovu nepřidělí; smazaný úkol svoje ID neuvolní, protože po něm zůstává historie.
 
+## Před každým čtením: mapa knihy, mezipaměť a historie
+
+Platí pro každé čtení, v noci i přes den. Cílem je stahovat z archivu jen to, co je opravdu potřeba.
+
+- **Mapa knihy** (`tools/mapa.py`): u každého snímku svazku si pamatuje, co pokrývá (písmena rejstříku, roky, čísla zápisů, titul, prázdná strana).
+  `mapa.py hledej <portál> <svazek> --pismeno F | --rok 1856 | --cislo 107` z dvou známých bodů odhadne, který snímek číst (jako při hledání ve slovníku),
+  a vrátí i okolní popsané stránky. **Je to jen rada a nikdy neuzavře hledání:** „není tam“ vyžaduje přečíst stránky, které cíl ohraničují (R-NEG-001);
+  pořadí v rejstřících a číslech zápisů nemusí být přísné.
+- **Co se ukládá:** jen navigační údaje o stránce (typ, od–do, sloupce, kvalita, kdo a čím četl), žádné přepisy a jména. Proto je mapa společná pro
+  všechny projekty na počítači: `rodokmen_mapy/<portál>/<svazek>.jsonl` vedle mezipaměti snímků (mimo její úklid; jen přidávání, poslední čtení snímku platí).
+  Přepisy a deník zůstávají v projektu.
+- **Kdo zapisuje:** čtenář (`researcher`, `browser-reader`) vrací údaje o stránkách ve výsledkovém souboru (`stranky`); orchestrátor je nechá zapsat přes `fixer`
+  (`mapa.py zapis`). Agent nezapisuje mimo `pracovni/vysledky/`.
+- **Identita:** snímek, který vstoupí do mezipaměti (`aron_img.py`; z prohlížeče výsledek `browser-readeru` s adresou, svazkem a číslem snímku), se zapíše do mapy;
+  dříve stažené svazky doplní `mapa.py naplnit-z-pracovni`, eBadatelnu v mezipaměti `mapa.py naplnit-z-cache`.
+- **Další zdroje, které se zeptají před stažením:** `pracovni_prehled.py --hledej`, `cache.py najdi <adresa>` a historie čtení (`fronta.py znovu`).
+- **Měření:** `cache.py stav` ukáže „Stažených snímků na nalezený záznam“; klesá-li, mapa archivy šetří.
+
 ## Historie úkolů a opakované čtení
 
 - **Historie:** každá změna úkolu (vznik, doplnění, směrování, dělení, parkování, selhání, přesun, hotovo) se připíše do `data/ukoly_historie.jsonl`
