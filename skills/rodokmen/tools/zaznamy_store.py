@@ -16,6 +16,7 @@ ZAKAZANE = [
     ("oprava uvnitř textu", re.compile(r"dříve chybně|\bopraveno:|\boprava:", re.I)),
     ("mezera před dvojtečkou", re.compile(r"[^\W\d_] :")),
     ("šipka ->", re.compile(r"->")),
+    ("první osoba (mnou)", re.compile(r"\bmnou\b", re.I)),
 ]
 
 

@@ -89,6 +89,8 @@ class DenikTest(unittest.TestCase):
             ("--nalez", "Dříve chybně zapsáno 1853.", "dříve chybně"),
             ("--nalez", "Nalezeno : křest 1852.", "dvojteč"),
             ("--poznamka", "viz A -> B", "->"),
+            ("--nalez", "Křest 1852 (čteno mnou).", "první osoba"),
+            ("--poznamka", "Mnou potvrzeno.", "první osoba"),
         ):
             with self.subTest(text=text):
                 self.odmitne(*self.ZAKLAD, pole, text, fragment=stopa)
