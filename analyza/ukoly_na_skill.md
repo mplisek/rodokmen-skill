@@ -3,7 +3,7 @@
 Úkoly pro úpravu skillu vzniklé při práci v repozitáři skillu. Úkoly z kontextu projektu patří do `data/poznamky_pro_skill.md`
 v projektu. Hotový úkol se maže, výsledek je v CHANGELOG. Návrh a zdůvodnění: `analyza/navrh-router-uloh.md`.
 
-## S-001 | P1 | typ:skill | stav:čeká na schválení (Q1–Q6 v návrhu)
+## S-001 | P1 | typ:skill | stav:schváleno (Q1, Q2, Q4, Q6; Q3 s úpravou)
 
 Router úkolů: vstupní fronta `ukoly_vstup.md`, krok routeru v `agents/orchestrator.md`, příkazy `fronta.py smeruj | rozdel | zaparkuj`,
 zákaz zakládání přímo do cílové fronty. DOD povinná. Testy v `skills/rodokmen/tests/`.
@@ -29,7 +29,7 @@ opakování po 403 a zablokování (brzda „zastavený“).
 Rozpočet: pásma S až XL a práh v `rezim.json` (`rozpocet`), odhad v routeru podle složitosti, řazení priorita a cena, kalibrace pásem ze skutečné
 spotřeby. Úkol nad prahem jde do rozhodnutí.
 
-## S-006 | P2 | typ:skill
+## S-006 | P2 | typ:skill | stav:čeká na grilování Q5
 
 Historie a metadata: `data/ukoly_historie.jsonl` (jen přidávání), pole `ukol`, `nastroj`, `model` a strukturovaný `rozsah` v deníku,
 `fronta.py znovu --vysledek nečitelné,nenalezeno --starsi-nez <verze>`. Plnou „knihu čtení“ nezavádět (viz kap. 6.2).

@@ -74,12 +74,14 @@ neukazuje mezi úkoly k řešení, jen v přehledu čekajících.
 
 ### 4.3 Chyba serveru
 
-Navrhovaná odchylka od „chyba = rozhodnutí“, aby každý výpadek nezaplavil frontu:
+Navrhovaná odchylka od „chyba = rozhodnutí“, aby každý výpadek nezaplavil frontu (Q3 potvrzeno s úpravou 14. 11. 2026):
 
-- **Přechodná chyba** (503, časový limit): router úkol sám vrátí na další noc, nejvýš N pokusů (`rezim.json: opakovani`, výchozí 2).
+- **Přechodná chyba** (503, časový limit): router úkol sám vrátí do fronty, **nejdřív za dvě noci** (odstup aspoň každou druhou noc).
+- **Jiný režim:** když to v noci stále selhává, zkusí se **o víkendu** a pak **přes den v pracovních hodinách** (výpadky portálů se liší podle doby).
+  Počet pokusů v každém režimu a pořadí je v `rezim.json: opakovani`.
 - **Zákaz nebo zablokování** (403, brzda „zastavený“): nikdy automatický opakovaný pokus.
-- Po vyčerpání pokusů nebo při zákazu vznikne **jedno společné rozhodnutí za portál**: „portál X nedostupný, čeká N úkolů: počkat, nebo
-  přeřadit do ručního bádání?“
+- Teprve po vyčerpání režimů nebo při zákazu vznikne **jedno společné rozhodnutí za portál**: „portál X nedostupný, čeká N úkolů: počkat,
+  nebo přeřadit do ručního bádání?“
 
 ## 5. Rozpočet na noc
 
@@ -141,9 +143,9 @@ Stačí (1) pole `ukol`, `nastroj`, `model` v deníku, (2) strukturovaný `rozsa
 
 ## 9. Otevřené otázky k potvrzení
 
-- **Q1:** Router jako role orchestrátora s nástrojem `fronta.py` (ne nový agent)? Doporučuju ano.
-- **Q2:** Vstup `ukoly_vstup.md` jako povinná první fronta? Doporučuju ano.
-- **Q3:** Opakování po přechodné chybě v noci max. 2× a pak jedno rozhodnutí za portál? Doporučuju ano.
-- **Q4:** Rozpočet v pásmech S až XL s prahem v `rezim.json`? Doporučuju ano.
-- **Q5:** Minimální verze metadat (kap. 6.3)? Doporučuju ano, plnou „knihu čtení“ nezavádět.
-- **Q6:** Zrušit typy `skill` a `test` v projektových frontách? Doporučuju ano.
+- **Q1:** Router jako role orchestrátora s nástrojem `fronta.py` (ne nový agent)? **Potvrzeno.**
+- **Q2:** Vstup `ukoly_vstup.md` jako povinná první fronta? **Potvrzeno.**
+- **Q3:** Opakování po přechodné chybě: nejdřív za dvě noci, pak víkend, pak pracovní doba, pak jedno rozhodnutí za portál. **Potvrzeno s úpravou (viz 4.3).**
+- **Q4:** Rozpočet v pásmech S až XL s prahem v `rezim.json`? **Potvrzeno.**
+- **Q5:** Metadata čtení: **otevřeno, grilluje se** (kap. 6, uživatel navrhl popisy snímků a „mapu“ knihy v cache; viz odpověď a otázky Q-M1 až Q-M7).
+- **Q6:** Zrušit typy `skill` a `test` v projektových frontách? **Potvrzeno** (úkoly pro skill: v projektu `poznamky_pro_skill.md`, v metodice `analyza/ukoly_na_skill.md`).
