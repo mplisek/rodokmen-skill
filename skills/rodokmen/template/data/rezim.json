@@ -43,5 +43,18 @@
     {
       "rezim": "pracovni"
     }
-  ]
+  ],
+  "rozpocet": {
+    "vahy": {
+      "S": 1,
+      "M": 3,
+      "L": 8,
+      "XL": 20
+    },
+    "okno": {
+      "noc": 24,
+      "vikend": 60
+    },
+    "prah": "XL"
+  }
 }

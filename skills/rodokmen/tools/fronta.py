@@ -16,6 +16,8 @@ Použití (z kořene projektu): python3 -I tools/fronta.py <příkaz> …
   hotovo <id> [--denik 12,13] [--soubory a,b] [--spotreba S|M|L|XL] [--poznamka T]   zapíše do historie, co úkol vyřešilo
   historie [<id>]                                                     události úkolu (i dětí po rozdělení) z data/ukoly_historie.jsonl
   znovu --starsi-nez <verze> [--vysledek nečitelné,nenalezeno] [--zaloz]   neúspěšná čtení v deníku staršího nástroje; --zaloz založí úkoly
+  plan [fronta]                                                       plán okna: pořadí, kumulativní váha, co je mimo rozpočet nebo čeká na schválení
+  kalibrace                                                           odhady cen při směrování × skutečná spotřeba z historie
   uprav <id> [--p P2] [--text T] [--stav odloženo] [--os …] [--cil …] [--zavisi …] [--pridat-text T]
   hotovo <id> | hotovo --cil krest:115    úkol smaže (jeho výsledek je v datech nebo v následných úkolech)
   presun <id> <fronta>                    přesune úkol do jiné fronty
@@ -58,7 +60,9 @@ TYPY_RUN = {"bádání": "badani", "skill": "skill", "test": "skill", "údržba"
 VYCHOZI_REZIM = {"pracovni_dny": [1, 2, 3, 4, 5], "pracovni_od": "06:00", "pracovni_do": "22:00", "svatky": [],
                  "pomocniku": 2, "dod": {},
                  # po přechodné chybě portálu: nejdřív za dvě noci, pak o víkendu, pak přes den; pak jedno rozhodnutí za portál
-                 "opakovani": [{"rezim": "noc", "odstup_dnu": 2}, {"rezim": "vikend"}, {"rezim": "pracovni"}]}
+                 "opakovani": [{"rezim": "noc", "odstup_dnu": 2}, {"rezim": "vikend"}, {"rezim": "pracovni"}],
+                 # rozpočet okna v pásmech ceny (váhy jsou odhad, kalibruje je `fronta.py kalibrace`); úkol od pásma `prah` výš potřebuje schválení člověka
+                 "rozpocet": {"vahy": {"S": 1, "M": 3, "L": 8, "XL": 20}, "okno": {"noc": 24, "vikend": 60}, "prah": "XL"}}
 
 
 # Úkol k rozhodnutí (reference/nocni_rezim.md, analyza/navrh-router-uloh.md kap. 2): rozhoduje člověk, ne stroj. Proto musí mít otázku, možnosti
@@ -206,7 +210,7 @@ def nacti(f):
 
 
 def uloz(f, uvod, ukoly):
-    ukoly = sorted(ukoly, key=lambda u: (u.p, int(u.id[2:])))
+    ukoly = sorted(ukoly, key=lambda u: (u.p, CENY.index(u.cena) + 1 if u.cena in CENY else 0, int(u.id[2:])))   # priorita, cena (levné napřed)
     r = ([uvod.rstrip("\n"), ""] if uvod.strip() else [])
     for u in ukoly:
         r += u.radky()
@@ -219,12 +223,19 @@ def vse():
     return {f: nacti(f) for f in FRONTY if os.path.exists(cesta(f))}
 
 
+def nejvyssi_id(data):
+    """Nejvyšší dosud použité číslo úkolu: ve frontách i v historii (smazaný úkol svoje ID neuvolní, aby šla historie sledovat)."""
+    n = max([int(u.id[2:]) for _, uk in data.values() for u in uk] + [0])
+    for e in nacti_historii():
+        for x in [e.get("id", "")] + [d.get("id", "") for d in e.get("deti", [])]:
+            m = re.fullmatch(r"U-(\d+)", str(x))
+            if m:
+                n = max(n, int(m.group(1)))
+    return n
+
+
 def dalsi_id(data):
-    n = 0
-    for f, (_, uk) in data.items():
-        for u in uk:
-            n = max(n, int(u.id[2:]))
-    return f"U-{n + 1:04d}"
+    return f"U-{nejvyssi_id(data) + 1:04d}"
 
 
 def pripraveny(u, dnes):
@@ -300,6 +311,67 @@ def cti_zamek():
     except ValueError:
         pass
     return z
+
+
+# ---------- rozpočet okna (analyza/navrh-router-uloh.md kap. 5) ----------
+def rozpocet_cfg(r):
+    cfg = {k: (dict(v) if isinstance(v, dict) else v) for k, v in VYCHOZI_REZIM["rozpocet"].items()}
+    for k, v in (r.get("rozpocet") or {}).items():
+        if isinstance(v, dict) and isinstance(cfg.get(k), dict):
+            cfg[k].update(v)
+        else:
+            cfg[k] = v
+    return cfg
+
+
+def cena_vaha(u, cfg):
+    return cfg["vahy"].get(u.cena or "M", cfg["vahy"].get("M", 3))
+
+
+def schvaleno(u):
+    return "Schváleno:" in u.text
+
+
+def vyzaduje_schvaleni(u, cfg):
+    """Úkol v pásmu ceny od prahu výš (výchozí XL) smí běžet jen po schválení člověkem (řádek „Schváleno: …“ v textu)."""
+    return bool(u.cena in CENY and cfg.get("prah") in CENY and CENY.index(u.cena) >= CENY.index(cfg["prah"]) and not schvaleno(u))
+
+
+def spotreba_cesta():
+    return os.path.join(DATA, ".rozpocet.json")
+
+
+def cti_spotrebu(okno):
+    """Spotřeba rozpočtu v daném okně (nové okno = od nuly)."""
+    try:
+        with open(spotreba_cesta(), encoding="utf-8") as f:
+            z = json.load(f)
+        return int(z["spotreba"]) if z.get("okno") == okno else 0
+    except (OSError, ValueError, KeyError):
+        return 0
+
+
+def zapis_spotrebu(okno, spotreba):
+    with open(spotreba_cesta(), "w", encoding="utf-8", newline="\n") as f:
+        json.dump({"okno": okno, "spotreba": spotreba}, f)
+
+
+def vybirej(data, fronta_, now, r, vzdy=False, typ=None):
+    """Úkoly fronty v pořadí, v jakém je `dalsi` přidělí: [(Ukol, stav)], stav = ok | schvaleni | rezim (mimo režim úkolu)."""
+    m, _ = rezim_v(now, r)
+    cfg = rozpocet_cfg(r)
+    pripraveno = {id(u) for u in frontier(data, now.date())}
+    out = []
+    for u in data[fronta_][1]:
+        if (typ and u.typ != typ) or id(u) not in pripraveno:
+            continue
+        if u.kdy:
+            if u.kdy != m:
+                continue
+        elif m == "pracovni" and not vzdy:
+            continue
+        out.append((u, "schvaleni" if vyzaduje_schvaleni(u, cfg) else "ok"))
+    return out
 
 
 # ---------- historie úkolů (data/ukoly_historie.jsonl, jen přidávání; analyza/navrh-router-uloh.md kap. 6.1) ----------
@@ -389,8 +461,7 @@ def nastav_dod(u, dod):
 
 
 def nova_id(data, n=0):
-    cislo = max([int(u.id[2:]) for _, uk in data.values() for u in uk] + [0]) + 1 + n
-    return f"U-{cislo:04d}"
+    return f"U-{nejvyssi_id(data) + 1 + n:04d}"
 
 
 def den_po(od, r, volny):
@@ -530,7 +601,7 @@ def main(argv=None):
               "--doporuceni", "--vychozi"):
         s.add_argument(a)
     s = sp.add_parser("uprav"); s.add_argument("id")
-    for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--zavisi", "--pridat-text"):
+    for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--zavisi", "--pridat-text", "--cena"):
         s.add_argument(a)
     s = sp.add_parser("frontier"); s.add_argument("fronta", nargs="?", choices=list(FRONTY))
     sp.add_parser("prejmenuj")
@@ -546,8 +617,10 @@ def main(argv=None):
     s = sp.add_parser("rezim"); s.add_argument("--kdy")
     s = sp.add_parser("dalsi"); s.add_argument("fronta", choices=list(FRONTY)); s.add_argument("--typ"); s.add_argument("--vzdy", action="store_true")
     s.add_argument("--kdy")   # jen pro zkoušku: „2026-11-16 23:00“ místo aktuálního času
+    s = sp.add_parser("plan"); s.add_argument("fronta", nargs="?", choices=list(FRONTY)); s.add_argument("--kdy"); s.add_argument("--vzdy", action="store_true")
+    sp.add_parser("kalibrace")
     s = sp.add_parser("smeruj"); s.add_argument("id"); s.add_argument("--do", required=True); s.add_argument("--dod")
-    s.add_argument("--cena"); s.add_argument("--p")
+    s.add_argument("--cena"); s.add_argument("--p"); s.add_argument("--schvaleno", action="store_true")
     s = sp.add_parser("rozdel"); s.add_argument("id")
     s.add_argument("--cast", nargs=3, action="append", metavar=("FRONTA", "TEXT", "DOD"), required=True)
     s = sp.add_parser("zaparkuj"); s.add_argument("id"); s.add_argument("--do", required=True); s.add_argument("--duvod")
@@ -621,26 +694,89 @@ def main(argv=None):
         return 0
     if a.cmd == "dalsi":
         now = datetime.datetime.fromisoformat(a.kdy) if a.kdy else datetime.datetime.now()
-        m, _ = rezim_v(now, nacti_rezim())
-        pripraveno = {id(u) for u in frontier(data, now.date())}
-        for u in data[a.fronta][1]:
-            if (a.typ and u.typ != a.typ) or id(u) not in pripraveno:   # blokovaný úkol se nepřidělí
+        r = nacti_rezim()
+        m, konec = rezim_v(now, r)
+        cfg = rozpocet_cfg(r)
+        limit = cfg["okno"].get(m)
+        okno = konec.isoformat() if konec else ""
+        spotreba = cti_spotrebu(okno)
+        vyloucen_rozpoctem = False
+        for u, stav in vybirej(data, a.fronta, now, r, a.vzdy, a.typ):   # blokovaný úkol se nepřidělí
+            if stav == "schvaleni":                       # XL bez schválení člověkem
                 continue
-            if u.kdy:                       # po selhání portálu: jen v určeném režimu (noc, víkend, přes den)
-                if u.kdy != m:
-                    continue
-            elif m == "pracovni" and not a.vzdy:
+            vaha = cena_vaha(u, cfg)
+            if limit is not None and not schvaleno(u) and spotreba + vaha > limit:
+                vyloucen_rozpoctem = True
                 continue
             druh = TYPY_RUN.get(u.typ or "bádání", "badani")
             z = cti_zamek()
             if z and z["typ"] != druh:
                 continue
+            if limit is not None:
+                zapis_spotrebu(okno, spotreba + vaha)
+            u.stav = "probíhá"                      # přidělený úkol se podruhé nepřidělí (a nepočítá se podruhé do rozpočtu)
+            uv_, uk_ = data[a.fronta]
+            uloz(a.fronta, uv_ or "", uk_)
+            zapis_udalost("prideleno", u.id, fronta=a.fronta, rezim=m)
             print(u.hlavicka()[3:] + "\n" + u.text)
             return 0
         if m == "pracovni" and not a.vzdy:
             sys.exit("pracovní doba: další úkol se nepouští (--vzdy pro ruční spuštění)")
-        print("žádný úkol")
+        if vyloucen_rozpoctem:
+            print(f"rozpočet okna vyčerpán ({spotreba}/{limit}); zbylé úkoly počkají na další okno")
+        else:
+            print("žádný úkol")
         return 3
+    if a.cmd == "plan":
+        now = datetime.datetime.fromisoformat(a.kdy) if a.kdy else datetime.datetime.now()
+        r = nacti_rezim()
+        m, konec = rezim_v(now, r)
+        cfg = rozpocet_cfg(r)
+        limit = cfg["okno"].get(m)
+        okno = konec.isoformat() if konec else ""
+        spotreba = cti_spotrebu(okno)
+        print(f"plán okna {m}" + (f" do {konec:%Y-%m-%d %H:%M}" if konec else "") + f"; rozpočet {spotreba}/{limit if limit is not None else 'bez limitu'}")
+        for u, stav in vybirej(data, a.fronta or "noc", now, r, a.vzdy):
+            vaha = cena_vaha(u, cfg)
+            znacka = ""
+            if stav == "schvaleni":
+                znacka = "  čeká na schválení (cena " + u.cena + ")"
+            elif limit is not None and not schvaleno(u) and spotreba + vaha > limit:
+                znacka = "  mimo rozpočet"
+            else:
+                spotreba += vaha
+            print(f"{u.id} | {u.p} | cena {u.cena or '?'} | váha {vaha} | {spotreba}/{limit if limit is not None else '-'}{znacka}")
+        return 0
+    if a.cmd == "kalibrace":
+        smerovani, skutecne = {}, {}
+        for e in nacti_historii():
+            if e["udalost"] == "smerovani" and e.get("cena"):
+                smerovani[e["id"]] = e["cena"]
+            elif e["udalost"] == "hotovo" and e.get("spotreba"):
+                skutecne[e["id"]] = e["spotreba"]
+        odhady = {}
+        for f_, (_, uk_) in data.items():
+            for u_ in uk_:
+                if u_.cena:
+                    odhady.setdefault(u_.id, u_.cena)
+        odhady.update(smerovani)
+        # odhad z hlavičky úkolu, dokud byl ve frontě, je v historii jen u směrovaných; ostatní doplní událost smerovani
+        tabulka = {c: {x: 0 for x in CENY} for c in CENY}
+        for u_id, skut in skutecne.items():
+            if u_id in odhady and skut in CENY and odhady[u_id] in CENY:
+                tabulka[odhady[u_id]][skut] += 1
+        if not any(sum(v.values()) for v in tabulka.values()):
+            print("zatím není z čeho kalibrovat (potřeba směrování s cenou a hotovo --spotreba)")
+            return 0
+        for c in CENY:
+            n = sum(tabulka[c].values())
+            if not n:
+                continue
+            nad = sum(v for k, v in tabulka[c].items() if CENY.index(k) > CENY.index(c))
+            pod = sum(v for k, v in tabulka[c].items() if CENY.index(k) < CENY.index(c))
+            rada = " – podhodnoceno" if nad * 2 > n else (" – nadhodnoceno" if pod * 2 > n else "")
+            print(f"{c}  {n} úkolů  skutečně: " + "  ".join(f"{k} {v}" for k, v in tabulka[c].items()) + rada)
+        return 0
     if a.cmd == "historie":
         udal = nacti_historii()
         ids = {a.id} if a.id else None
@@ -678,6 +814,11 @@ def main(argv=None):
         nastav_dod(u, a.dod)
         u.cena = a.cena or u.cena
         u.p = a.p or u.p
+        if a.do == "noc" and vyzaduje_schvaleni(u, rozpocet_cfg(nacti_rezim())):
+            if not a.schvaleno:
+                sys.exit(f"ODMÍTNUTO: cena {u.cena} je nad prahem rozpočtu – úkol patří do rozhodnutí (provést, odložit, nebo ručně?): "
+                         "fronta.py smeruj <id> --do rozhodnuti …; po schválení uživatelem znovu s --schvaleno")
+            u.text = (u.text + f"\n\nSchváleno: uživatel, {datetime.date.today().isoformat()}").strip("\n")
         if a.do == "rozhodnuti":
             vyzaduj_rozhodnuti(u.text)
         for f2, (uv2, uk2) in data.items():
@@ -820,6 +961,10 @@ def main(argv=None):
                     u.text = a.text
                 if a.pridat_text:
                     u.text = (u.text + "\n\n" + a.pridat_text).strip("\n")
+                if a.cena:
+                    if a.cena not in CENY:
+                        sys.exit(f"cena: {' | '.join(CENY)}")
+                    u.cena = a.cena
                 for k, attr in (("typ", "typ"), ("cil", "cil"), ("rodic", "rodic"), ("stav", "stav")):
                     if getattr(a, k):
                         setattr(u, attr, getattr(a, k))
@@ -829,7 +974,7 @@ def main(argv=None):
                     u.zavisi = [x for x in re.split(r"[,\s]+", a.zavisi) if x]
                 print("upraveno", u.id)
             nove.append(u)
-        if nove != uk or a.cmd == "uprav":
+        if (nove != uk or a.cmd == "uprav") and (nove or os.path.exists(cesta(f))):   # prázdný soubor fronty se nezakládá (vstup zapíná router)
             uloz(f, uv or "", nove)
     if not zmeneno:
         print("nic nenalezeno")

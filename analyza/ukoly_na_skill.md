@@ -3,11 +3,6 @@
 Úkoly pro úpravu skillu vzniklé při práci v repozitáři skillu. Úkoly z kontextu projektu patří do `data/poznamky_pro_skill.md`
 v projektu. Hotový úkol se maže, výsledek je v CHANGELOG. Návrh a zdůvodnění: `analyza/navrh-router-uloh.md`.
 
-## S-005 | P2 | typ:skill
-
-Rozpočet: pásma S až XL a práh v `rezim.json` (`rozpocet`), odhad v routeru podle složitosti, řazení priorita a cena, kalibrace pásem ze skutečné
-spotřeby. Úkol nad prahem jde do rozhodnutí.
-
 ## S-007 | P2 | typ:skill
 
 Před každým čtením (noc i den) kontrola cache a historie, zda byl výřez už čten pro tuto otázku (`pracovni_prehled.py`, `cache.py najdi`, deník).

@@ -82,6 +82,13 @@ class Historie(Zaklad):
         p = [u for u in self.udalosti() if u["udalost"] == "presun"][0]
         self.assertEqual((p["id"], p["z"], p["do"]), ("U-0002", "noc", "badani"))
 
+    def test_id_se_po_hotovo_nepouzije_znovu(self):
+        """Stabilní identita úkolu (kap. 6.1): smazaný úkol zůstává v historii, jeho ID se nesmí přidělit novému."""
+        self.run_("pridej", "noc", "--text", "první", "--os", "1", "--typ", "a")
+        self.run_("hotovo", "U-0001")
+        self.run_("pridej", "noc", "--text", "druhý", "--os", "2", "--typ", "b")
+        self.assertEqual([u.id for u in fronta.nacti("noc")[1]], ["U-0002"])
+
     def test_slouceni_se_zapise_jako_doplneni(self):
         self.run_("pridej", "noc", "--text", "a", "--os", "1", "--typ", "krest")
         self.run_("pridej", "noc", "--text", "b", "--os", "1", "--typ", "krest")

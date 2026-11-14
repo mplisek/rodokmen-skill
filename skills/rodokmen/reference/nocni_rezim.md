@@ -75,6 +75,24 @@ Hlásí se příkazem `fronta.py selhani <id> --druh prechodna|zakaz --portal AR
   automaticky, čekají úkoly …: počkat, nebo přeřadit do ručního bádání?“ Další úkoly téhož portálu se připojí ke stejnému rozhodnutí
   (`cíl:portal:<portál>`) a závisejí na něm, takže se po rozhodnutí samy odblokují.
 
+## Rozpočet na noc
+
+Na noc bývá víc úkolů, než se stihne nebo než vydrží limit. Proto má úkol **pásmo ceny** `S`, `M`, `L`, `XL` (odhad podle složitosti, počtu snímků
+a modelu; `fronta.py smeruj … --cena`, nebo `uprav --cena`) a okno má rozpočet.
+
+- **Rozpočet** je v `data/rezim.json` → `rozpocet`: `vahy` (výchozí S 1, M 3, L 8, XL 20), `okno` (výchozí noc 24, víkend 60) a `prah` (výchozí XL).
+  Váhy jsou odhad a mění se podle skutečnosti (`fronta.py kalibrace`).
+- **Řazení:** priorita, pak cena (levné napřed); úkol bez ceny je před oceněnými.
+- **Práh:** úkol v pásmu od prahu výš (XL) smí na noc **jen po schválení člověkem**. `fronta.py smeruj --do noc --cena XL` ho odmítne a odkáže
+  na rozhodnutí („provést, odložit, nebo ručně?“); po schválení se zařadí s `--schvaleno` a v textu přibude řádek `Schváleno: …`.
+  `fronta.py dalsi` neschválený úkol z prahu nepřidělí.
+- **Čerpání:** `fronta.py dalsi` přidělí úkol, označí ho `stav:probíhá` (podruhé se nepřidělí ani nepočítá) a přičte jeho váhu k spotřebě okna
+  (`data/.rozpocet.json`). Co se do zbytku okna nevejde, počká na další okno; vyčerpaný rozpočet `dalsi` oznámí.
+- **Plán okna:** `fronta.py plan [fronta]` ukáže pořadí, kumulativní váhu a které úkoly jsou mimo rozpočet nebo čekají na schválení.
+- **Kalibrace:** `fronta.py hotovo <id> --spotreba S|M|L|XL` zapíše skutečnou cenu; `fronta.py kalibrace` porovná odhady při směrování se skutečností
+  a řekne, které pásmo je podhodnoceno nebo nadhodnoceno.
+- **Identita:** číslo úkolu (`U-0042`) se nikdy znovu nepřidělí; smazaný úkol svoje ID neuvolní, protože po něm zůstává historie.
+
 ## Historie úkolů a opakované čtení
 
 - **Historie:** každá změna úkolu (vznik, doplnění, směrování, dělení, parkování, selhání, přesun, hotovo) se připíše do `data/ukoly_historie.jsonl`

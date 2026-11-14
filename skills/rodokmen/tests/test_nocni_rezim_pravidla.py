@@ -64,6 +64,17 @@ class NocniRezimPravidla(unittest.TestCase):
         for s in ("--ukol", "--snimky", "fronta.py znovu"):
             self.assertIn(s, o, s)
 
+    def test_rozpocet_a_identita_id_jsou_popsane(self):
+        for s in ("rozpocet", "fronta.py plan", "fronta.py kalibrace", "Schváleno:", "stav:probíhá", "neuvolní", "levné napřed"):
+            self.assertIn(s, self.t, s)
+        repo = Path(__file__).resolve().parents[3]
+        o = (repo / "agents/orchestrator.md").read_text(encoding="utf-8")
+        for s in ("fronta.py plan", "XL", "budget"):
+            self.assertIn(s, o, s)
+        import json
+        rezim = json.loads((repo / "skills/rodokmen/template/data/rezim.json").read_text(encoding="utf-8"))
+        self.assertIn("rozpocet", rezim)
+
 
 if __name__ == "__main__":
     unittest.main()
