@@ -243,3 +243,13 @@ Zdroj: <https://code.claude.com/docs/en/skills> (Control who invokes a skill).
   `memory` i `effort` jsou k dispozici i pro pluginové agenty.
 - **Návrat informací:** subagent má čerstvý kontext a vrací se jeho výsledek (u forku výslovně jen finální výsledek);
   vše potřebné musí orchestrátor předat v delegační zprávě, protože nevidí historii ani dříve načtené skilly.
+
+## Doplnění: název skillu v `skills:` u pluginového agenta
+
+Verdikt: NELZE OVĚŘIT. Oficiální dokumentace neříká, zda stačí holý název skillu, nebo je u skillu ze stejného pluginu (či u projektového agenta s pluginovým skillem) nutný tvar `plugin:skill`. Nehádáme.
+
+Co dokumentace říká: pole `skills` je u pluginových agentů podporované („Supported fields: ... `skills` ...“, ignorují se jen `permissionMode`, `hooks`, `mcpServers`, `initialPrompt`). Jediný příklad používá holé názvy (`skills: [api-conventions, error-handling-patterns]`). Chybějící skill se přeskočí: „If a listed skill is missing or disabled ... Claude Code skips it and logs a warning to the debug log.“ Tvar `plugin:název` je v dokumentaci uveden jen pro agenty (`my-plugin:security-reviewer`) a pro příkazy skillů (`/my-plugin:review`), ne pro pole `skills:`.
+
+Důsledek: při použití holého názvu u pluginového agenta je třeba ověřit prakticky (debug log), jinak se skill může tiše nenačíst.
+
+URL: https://code.claude.com/docs/en/sub-agents (sekce Preload skills into subagents), https://code.claude.com/docs/en/plugins/components.md (sekce Agents, Frontmatter fields in plugin agents)

@@ -313,7 +313,10 @@ a test. Návrh typů:
 **Záznam deníku:** pevné sloupce `datum | zdroj | rozsah | hledáno | výsledek | nález | citace | osoby | odkaz | opravuje`
 (dnešní deník má `# | datum | zdroj | rozsah | hledáno | výsledek | citace`, viz kapitola 10). Zdroj má pevné
 pořadí *archiv, signatura knihy, snímek*; `hledáno` je jedna věta (nejvýš 160 znaků); `výsledek` je z výčtu
-*nalezeno / vyvráceno / nenalezeno / částečně*. Oprava je **nový záznam** s odkazem na opravovaný, ne přepis textu.
+*nalezeno / vyvráceno / nenalezeno / částečně / nečitelné* s příznakem `ověřeno`. `zdroj` má **typ**
+(`archiv`, `stopa`, `rodina`, `jiné`). `nález` je jedna věta (nejvýš 200 znaků), `citace` je doslovný přepis a překlad zvlášť,
+ostatní jde do pole `poznamka`, které web ukáže rozbalitelně pod řádkem. Oprava je **nový záznam** s odkazem na opravovaný,
+ne přepis textu.
 
 **Zakázáno ve všech textových polích** (skript i `kontrola.py`): číslo úkolu (`U-\d+`, `N\d+[a-z]`), jména agentů a modelů,
 jméno uživatele, cesty (`pracovni/`, `C:\`), „ověřeno na snímku“, „čtyři oči“, „vlna“, „dříve chybně“ (to je pole
@@ -428,6 +431,8 @@ Pořadí a pravidlo schvalování (schváleno, Q13): **po každé fázi se zasta
 | Q11 | Počáteční sada je 9 agentů, čtyři další zatím nahrazují skripty (4.1). |
 | Q12 | Testy a kontroly nasazeného webu jsou volné; samotné nasazení vždy se souhlasem uživatele (testovací režim bez `--prod`). |
 | Q13 | Pořadí fází 0, A, B, E, C, D; po každé fázi zastávka a rozhodnutí uživatele. **Nic se neimplementuje**, dokud uživatel nedá pokyn. |
+| Q14 | Délka buněk v deníku: `nález` do 200 znaků, `citace` zvlášť, zbytek do rozbalitelné `poznamka` (5.2). |
+| Q15 | Výčet `výsledek` = nalezeno / vyvráceno / nenalezeno / částečně / nečitelné + příznak `ověřeno`; `zdroj` má typ (archiv, stopa, rodina, jiné). Starší hodnoty se mapují při migraci: `potvrzeno` a `nalezeno (ověřeno)` na `nalezeno` + `ověřeno`, `nedočteno` na `částečně`, 11 řádků bez klíče ručně. |
 
 Nic z toho zatím není implementované, nic nebylo pushnuto ani vydáno.
 
@@ -530,7 +535,7 @@ Jednorázový skript (mimo repozitář, jen součty, žádná jména) prošel dn
 - **`zdroj`:** 204 z 259 začíná archivem, 244 obsahuje snímek, signaturu nebo `apu`. Zbytek jsou stopy, rodinné zdroje apod.
   Zdroj tedy potřebuje **typ** (archiv, stopa, rodina, jiné).
 
-Nové otevřené otázky z prototypu (Q14 a Q15) jsou v odpovědi uživateli, po schválení se zapíšou do kapitoly 8.
+Otázky z prototypu (Q14 a Q15) jsou schválené a zapsané v kapitole 8.
 
 ## 11. Ověření platformy (hotovo)
 
@@ -549,4 +554,4 @@ jsou v `analyza/overeni-platformy.md`. Souhrn dopadů:
 | Pluginoví agenti | pole `hooks`, `permissionMode`, `mcpServers` se **ignorují** | hooky patří do `hooks/hooks.json` pluginu; agenty s těmito poli dodávat v projektu, ne v pluginu |
 | Čerstvý kontext subagenta | potvrzeno | orchestrátor musí předat vše potřebné v zadání (kontextový balíček) |
 
-Zbývá ověřit: zápis názvu skillu v `skills:` u pluginového agenta (agent to označil jako nedořešené).
+Dokumentace neříká, zda v `skills:` u pluginového agenta stačí holý název skillu, nebo je nutné `plugin:skill` (příklady používají holý název). Chybějící skill se **tiše přeskočí** (jen varování v debug logu), proto musí test `tests/agenti/` ověřit, že se skill opravdu přednačetl, a při implementaci se zápis ověří prakticky.
