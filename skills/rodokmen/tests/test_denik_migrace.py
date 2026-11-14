@@ -35,6 +35,12 @@ Konvence: každý řádek = jedno hledání, i neúspěšné.
 | 13 | 2026-11-06 | ARON, Horní Lhota, oddaní 1860–1880 | sn. 1–50 | sňatek Karla Nováka | **zatím nenalezeno** v oddaných. | – |
 | 14 | 2026-11-07 | ARON, Dolní Lhota, narození 1840–1850 | sn. 7 | křest Evy Králové | **ověřeno:** sn. 7, Eva dcera Jana Krále. | – |
 | 15 | 2026-11-07 | ARON, Dolní Lhota, narození 1840–1850 | sn. 8 | křest Petra Králového | **Králové** nejasné slovo v záhlaví. | – |
+| 16 | 2026-11-08 | ARON, Dolní Lhota, narození 1840–1850, sn. 7 | křest Evy Králové (12) | Královi (12, 13) | **nalezeno** sn. 7, Eva dcera Jana Krále. | – |
+| 17 | 2026-11-08 | ARON, Dolní Lhota, oddaní 1860–1880, sn. 1–50 | Novákovi, Králové (70, 71) | 70, 71 | **Nenalezeno**: sňatek Jana Nováka × Evy Králové ani v rejstříku. | ARON 5 |
+| 18 | 2026-11-09 | ARON, Dolní Lhota, narození 1840–1850, sn. 3–9 | křest Petra Králového | **nenalezeno** v sn. 3–9 | – |
+| 19 | 2026-11-09 | ARON, Dolní Lhota, úmrtí 1890–1900 | děti Josefa Nováka 1887–1909 | ověření čtení pomocníka | **Ověřeno:** sn. 12, Josefa † 27. 7. 1887. | – |
+| 20 | 2026-11-09 | ARON, Chlum, oddaní, sn. 5 | křest a sňatek Marie Tesařové | **křest nalezen**, sňatek nenalezen v rejstříku. | – |
+| 21 | 2026-11-10 | ARON, Dolní Lhota, oddaní 1860–1880, sn. 1–50 | Zárubové a Čermákovi (76–79) | – | **Nenalezeno**: křest Josefa Záruby ~1796 v rejstříku. | – |
 """
 
 
@@ -141,14 +147,61 @@ class Migrace(unittest.TestCase):
 
     def test_nestandardni_radky_jsou_k_rucni_kontrole_a_ne_na_web(self):
         z = self.migruj()
-        for cislo in (9, 10):
+        for cislo in (9, 15):
             self.assertTrue(z[cislo].get("k_rucni_kontrole"), cislo)
         md = self.denik("vykresli").stdout
         self.assertNotIn("| 9 |", md)
-        self.assertNotIn("| 10 |", md)
+        self.assertNotIn("| 15 |", md)
         protokol = (self.p / "pracovni" / "migrace_denik.md").read_text(encoding="utf-8")
-        self.assertIn("9", protokol)
-        self.assertIn("10", protokol)
+        self.assertIn("- 9:", protokol)
+        self.assertIn("- 15:", protokol)
+
+    # ---- sloupce, které se ve starém deníku používaly jinak (zjištěno na skutečném deníku: 163 z 300 řádků)
+    def test_radek_bez_sloupce_rozsah_se_nepovazuje_za_chybny(self):
+        z = self.migruj()
+        self.assertFalse(z[10].get("k_rucni_kontrole"), z[10])
+        self.assertEqual((z[10]["hledano"], z[10]["vysledek"], z[10]["rozsah"]), ("křest Evy Novákové", "nalezeno", ""))
+        self.assertEqual(z[10]["puvodni"], self.src_radky[9])
+        n = z[18]                                    # záporný výsledek: rozsah je ve zdroji
+        self.assertFalse(n.get("k_rucni_kontrole"), n)
+        self.assertEqual((n["hledano"], n["vysledek"]), ("křest Petra Králového", "nenalezeno"))
+        self.assertEqual(n["rozsah"], n["zdroj"]["text"])
+
+    def test_sloupec_hledano_s_cisly_osob_je_kontext_a_hledano_je_ve_sloupci_rozsah(self):
+        z = self.migruj()
+        a = z[16]
+        self.assertEqual((a["hledano"], a["rozsah"], a["vysledek"]), ("křest Evy Králové", "", "nalezeno"))
+        self.assertFalse(a.get("k_rucni_kontrole"), a)
+        self.assertTrue(a.get("uprava_automaticky"))
+        b = z[17]                                    # kontext jsou rody s čísly osob, hledání jen z textu výsledku
+        self.assertEqual((b["hledano"], b["vysledek"]), ("Novákovi, Králové", "nenalezeno"))
+        self.assertEqual(b["rozsah"], b["zdroj"]["text"])
+        self.assertFalse(b.get("k_rucni_kontrole"), b)
+        c = z[21]                                    # sloupec hledáno prázdný, rod s čísly je ve sloupci rozsah
+        self.assertEqual((c["hledano"], c["vysledek"]), ("Zárubové a Čermákovi", "nenalezeno"))
+        self.assertFalse(c.get("k_rucni_kontrole"), c)
+
+    def test_cisla_osob_se_nedostanou_do_tabulky_na_webu(self):
+        self.migruj()
+        md = self.denik("vykresli").stdout
+        self.assertNotIn("(12, 13)", md)
+        self.assertNotIn("70, 71", md)
+        self.assertNotIn("(76–79)", md)
+        self.assertEqual(self.denik("over").returncode, 0)
+
+    def test_hledano_zbyle_prazdne_po_odebrani_procesu_se_vezme_ze_sloupce_rozsah(self):
+        z = self.migruj()[19]
+        self.assertEqual((z["hledano"], z["rozsah"]), ("děti Josefa Nováka 1887–1909", ""))
+        self.assertTrue(any("pomocník" in x for x in z["proces"]))
+        self.assertFalse(z.get("k_rucni_kontrole"), z)
+
+    def test_smisena_zjisteni_jsou_castecne(self):
+        self.assertEqual(self.migruj()[20]["vysledek"], "částečně")
+
+    def test_bezne_radky_se_nezmeni(self):
+        z = self.migruj()
+        self.assertEqual((z[1]["rozsah"], z[1]["hledano"]), ("sn. 20–35", "křest Jana Nováka * 1852"))
+        self.assertEqual((z[2]["rozsah"], z[2]["hledano"]), ("sn. 5, 40", "sňatek Jana Nováka × Marie Králová"))
 
     def test_migruj_neprepise_existujici_denik(self):
         self.migruj()
