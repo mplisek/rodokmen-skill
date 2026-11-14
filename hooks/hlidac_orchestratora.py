@@ -28,9 +28,28 @@ def orchestrator_smi(prikaz):
     return bool((POVOLENE.match(prikaz) or GIT_CTENI.match(prikaz)) and not NEBEZPECNE.search(prikaz))
 
 
+def operatory_jen_v_uvozovkach(prikaz):
+    """Řetězení, roury, přesměrování a konec řádku smí být jen uvnitř uvozovek (text zprávy); neuzavřená uvozovka = False."""
+    q, i = None, 0
+    while i < len(prikaz):
+        c = prikaz[i]
+        if q:
+            if c == "\\" and q == '"':
+                i += 2
+                continue
+            if c == q:
+                q = None
+        elif c in "'\"":
+            q = c
+        elif c in ";&|<>\n\r":
+            return False
+        i += 1
+    return q is None
+
+
 def committer_smi(prikaz):
-    """Jeden git příkaz bez řetězení; add jen konkrétní relativní soubory; commit jen s -m."""
-    if re.search(r"[`$\n;&|<>]", prikaz):   # i uvnitř uvozovek ($(…), `…`) – zbytečné pro zprávy commitu
+    """Jeden git příkaz bez řetězení; add jen konkrétní relativní soubory; commit jen s -m (zpráva smí mít <e-mail>, ;, &, | i víc řádků v uvozovkách)."""
+    if re.search(r"[`$]", prikaz) or not operatory_jen_v_uvozovkach(prikaz):   # $(…) a `…` se rozbalí i v uvozovkách
         return False
     try:
         t = shlex.split(prikaz, posix=True)
@@ -60,7 +79,7 @@ ORCH_DUVOD = ("Orchestrator guard: the orchestrator may run only read-only listi
               "one command without pipes, redirects or chaining. Delegate everything else to a specialist agent.")
 COMMIT_DUVOD = ("Committer guard: only `git status|diff|log`, `git branch --show-current`, `git add <exact files>` "
                 "(no -A, -u, `.`, `..`, absolute paths) and `git commit -m \"…\"` (no -a, --amend, --no-verify, --allow-empty), "
-                "one command, no pipes, redirects, `$` or backticks. Never push, switch branches, reset or merge.")
+                "one command, no chaining, pipes or redirects outside the quotes of the message, no `$` or backticks. Never push, switch branches, reset or merge.")
 
 
 def main():

@@ -16,7 +16,8 @@ You record one completed, verified piece of work in git. The ticket gives the **
    unchanged or missing is reported, not guessed.
 3. `git add <file> <file> …` with exactly the listed files, never `-A`, `-u`, `.` or a folder you were not given. Files that other work left
    in the tree stay untouched and uncommitted.
-4. `git commit -m "<message>"` (more `-m` for more lines), never `-a`, `--amend`, `--no-verify` or `--allow-empty`. Czech message that says
+4. `git commit -m "<message>"` (more `-m` for more lines), never `-a`, `--amend`, `--no-verify` or `--allow-empty`. The message may have several `-m` parts, several lines inside the quotes and the attribution line
+   `Co-Authored-By: Name <email>` when the ticket gives one (quote it; `$` and backticks are never allowed). Czech message that says
    what was verified, for example which diary row and which source; no process wording (no agent names, no task numbers).
 5. Report the short hash and the file list. A hook blocks everything else: no push, merge, rebase, reset, checkout, stash or tag.
 

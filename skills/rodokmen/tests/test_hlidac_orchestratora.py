@@ -63,6 +63,19 @@ class HlidacOrchestratora(unittest.TestCase):
             self.assertEqual(hook("committer", p)[0], "allow", p)
         self.assertEqual(hook("rodokmen:committer", "git add data/x.json")[0], "allow")
 
+    def test_committer_smi_atribuci_a_viceradkovou_zpravu_v_uvozovkach(self):
+        """Poznámka z projektu (14. 11. 2026): řádek Co-Authored-By s <e-mail> a víceřádková zpráva v uvozovkách se nesmí blokovat."""
+        for p in ('git commit -m "Fronty: nový úkol" -m "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"',
+                  'git commit -m "Titulek' + chr(10) + chr(10) + 'Tělo zprávy; s pomlčkou & ampersandem | rourou"',
+                  "git commit -m 'Jednoduché uvozovky <a> & b'"):
+            self.assertEqual(hook("committer", p)[0], "allow", p)
+
+    def test_committer_stale_nesmi_nic_mimo_uvozovky(self):
+        for p in ('git commit -m "ok" ; rm -rf data', 'git commit -m "ok" && git push', 'git commit -m "ok" > /dev/null',
+                  'git commit -m "ok"' + chr(10) + "rm -rf data", 'git status' + chr(10) + 'rm -rf data', 'git commit -m "neuzavřená',
+                  'git commit -m "$(rm -rf data)"', 'git commit -m "`id`"', 'git commit -m "cena $5"'):
+            self.assertEqual(hook("committer", p)[0], "deny", p)
+
     def test_committer_nesmi_nic_nebezpecneho(self):
         for p in ("git add -A", "git add .", "git add --all", "git add -u", "git add -f pracovni/x", "git add ../x", "git add /etc/passwd",
                   "git commit -a -m x", "git commit --amend -m x", "git commit --no-verify -m x", "git commit -m x --allow-empty",
