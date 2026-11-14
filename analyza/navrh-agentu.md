@@ -303,7 +303,8 @@ a test. Návrh typů:
 | Zápis (`zaznamy.json`) | `nazev` ve stálém tvaru, `shrnuti` jen obsah | `zaznamy.json` |
 | Rod | značka (barevný kruh + název) | komponenta `Rod` |
 
-**Záznam deníku:** pevné sloupce `datum | zdroj | hledáno | výsledek | nález | osoby | odkaz | opravuje`. Zdroj má pevné
+**Záznam deníku:** pevné sloupce `datum | zdroj | rozsah | hledáno | výsledek | nález | citace | osoby | odkaz | opravuje`
+(dnešní deník má `# | datum | zdroj | rozsah | hledáno | výsledek | citace`, viz kapitola 10). Zdroj má pevné
 pořadí *archiv, signatura knihy, snímek*; `hledáno` je jedna věta (nejvýš 160 znaků); `výsledek` je z výčtu
 *nalezeno / vyvráceno / nenalezeno / částečně*. Oprava je **nový záznam** s odkazem na opravovaný, ne přepis textu.
 
@@ -422,3 +423,110 @@ Pořadí a pravidlo schvalování (schváleno, Q13): **po každé fázi se zasta
 | Q13 | Pořadí fází 0, A, B, E, C, D; po každé fázi zastávka a rozhodnutí uživatele. **Nic se neimplementuje**, dokud uživatel nedá pokyn. |
 
 Nic z toho zatím není implementované, nic nebylo pushnuto ani vydáno.
+
+## 9. Využití nainstalovaných skillů
+
+V repozitáři jsou nainstalované cizí skilly (`.claude/skills/`, `.agents/`, `skills-lock.json`; zdroj `mattpocock/skills`). Nejsou
+součástí našeho skillu a **nic z našeho návrhu na nich nezávisí**: jsou to pomůcky pro práci na něm. Níže je, kde pomáhají.
+Dvě jsem rovnou použil (grilling při rozhodování, prototype na deníku, research na ověření platformy).
+
+| Skill | Kde pomůže | Jak | Pozor |
+|---|---|---|---|
+| `grilling` (a `grill-me`, `grill-with-docs`) | rozhodování o návrhu; později `orchestrator` u nejasných úkolů | kola otázek s doporučenou odpovědí, „frontier“ = otázky, které jde položit hned | `grill-with-docs` zapisuje do glosáře a ADR (viz domain-modeling) |
+| `writing-for-agents` | psaní `rules/`, tenkého skillu a definic agentů | pravidla v 9.1 | – |
+| `tdd` | způsob implementace každé fáze | testy jen na dohodnutých rozhraních, nejdřív červený test (9.2) | před psaním testu se rozhraní potvrzuje s uživatelem |
+| `diagnosing-bugs` | metoda `failure-analyst` a regresní test u každé chyby (Q7) | napřed „těsná“ smyčka, která na chybě padá; u nestabilních chyb měřit četnost (9.3) | – |
+| `domain-modeling` | `GLOSSARY.md` a záznamy rozhodnutí (ADR) | sjednotí pojmy (rod, větev, přístup, pohled, svazek, záznam × zápis, jistota), které dnes kolísají; Q1–Q13 jsou hotové ADR (9.4) | soubory vznikají až při implementaci |
+| `codebase-design`, `improve-codebase-architecture` | Fáze A | `denik`, `fronta` a `otazky` jsou tři skoro stejné „ověřované přidávací úložiště“; navrhuju jeden hluboký modul s jednou smlouvou a registrem schémat (9.5) | – |
+| `code-review` | brána po každé fázi (Q13) | osa „Standards“ = `CLAUDE.md` + `rules/`, osa „Spec“ = tato analýza; výsledek vidí uživatel před rozhodnutím | – |
+| `implement-spec`, `implement` | možný vykonavatel fází z úkolů s grafem závislostí | úkoly = fronta s `zavisi_na`; ale automaticky slučuje větve | **koliduje s Q9**: použít jen na větvi, kterou uživatel určí a výslovně povolí slučování; vyžaduje nastavení sledování úkolů, které tu není |
+| `research` | ověřování faktů o platformě a sledování originálu | pozadí agent čte jen primární zdroje a píše soubor; teď běží (`analyza/overeni-platformy.md`) | – |
+| `prototype` | zkouška tvaru, než se napíše šablona | použito na deníku (kapitola 10); stejně se vyzkouší tabulka deníku a značka rodu | zahazuje se |
+| `handoff` | předání rozdělané práce novému sezení (také mezi fázemi) | shrne rozhovor a odkáže na soubory, ne je opakuje | musí vynechat osobní údaje |
+| `pr` | popis PR při příspěvku do originálu | – | zatím nepotřeba |
+
+Doporučení k repozitáři: protože jsou to cizí nástroje uživatele, patří do `.gitignore` (`.agents/`, `.claude/skills/`,
+`skills-lock.json`), pokud je nechceš sdílet ve veřejném forku. Rozhodnutí je na uživateli.
+
+### 9.1 Pravidla psaní agentů a pravidel (podle `writing-for-agents`)
+
+- **Ukazatele s jednou spouštěcí podmínkou na větev:** `description` agenta i skillu začíná rozhodujícím slovem a nevyjmenovává
+  synonyma. Orchestrátor má jeden ukazatel na `rules/` a vybírá téma přes `kontext.py`.
+- **Jedna pravda:** pravidlo žije jen v `rules/`, ostatní dokumenty na ně ukazují přes `id`. Co je v prostředí (`--help`,
+  schémata, seznam nástrojů), se nepřepisuje, jen se odkazuje.
+- **Každý krok končí kritériem dokončení, které jde ověřit a je vyčerpávající.** Příklad: `researcher` je hotov, když existuje
+  soubor výsledku **a** seznam všech prohledaných rozsahů; karta rozhodnutí má pole „hotovo, když“.
+- **Žádné řízení zákazy.** Věty typu „nikdy nezapisuje do `data/`“ přitahují pozornost k zakázanému. Specifikace říká, co agent
+  dělá („výsledek vrací jako soubor v `pracovni/vysledky/`; do `data/` zapisují skripty“), a zákaz vynucuje hlídač (kapitola 5).
+  V návrhu výše jsou ještě formulace se zákazy, při psaní skutečných definic se přepíšou.
+- **Vedoucí slova** (jeden pojem = jeden token, stále stejný): *frontier* (úkoly připravené k přidělení), *červený* test,
+  *rozhraní* (testovaný okraj), *balíček* (kontext), *brána* (kontrola před krokem). Patří do glosáře.
+- **Dvě zátěže:** nepřidávat dokumenty a ukazatele bez důvodu. Člověk je rejstřík, proto zůstává 9 agentů a 8 témat pravidel.
+- **Vyřadit prázdné pokyny:** co model dělá sám od sebe, se nepíše.
+
+### 9.2 Postup `tdd` v našich fázích (rozhraní ke schválení)
+
+Před každou fází navrhnu **rozhraní, na kterých se testuje**, a uživatel je potvrdí; mimo ně žádné testy. Každý test je nejdřív
+červený (u webu proti dnešním datům, 5.4).
+
+| Fáze | Rozhraní (testuje se zvenku) |
+|---|---|
+| 0 | vstup a výstup hlídače (příkaz → povolit/zablokovat + hláška); obsah `settings.json`, který vytvoří `novy_projekt.py` |
+| A | příkazy `denik.py`, `fronta.py`, `otazky.py` (argumenty → soubor dat + vykreslená tabulka); `overit-migraci`; chyba exportu při zakázaném vzoru |
+| B | sestavené HTML (`dist/`): značka rodu, pořadí rodů, žádný procesní text |
+| E | příkazy `pravidla.py` nad dočasným zrcadlem; kontrola velikosti a odkazů tenkého skillu |
+| D | `pokryti.py` nad dočasným projektem |
+
+Bez zesměšňování vnitřku: žádné mockování našich vlastních modulů, jen dočasné projekty a soubory.
+
+### 9.3 Postup `failure-analyst` (podle `diagnosing-bugs`)
+
+První výstup analytika není úvaha, ale **příkaz, který na chybě padá** (jeden, už jednou spuštěný, s ukázaným výstupem). Teprve
+pak následuje příčina a zadání opravy. U nestabilních chyb (dnešní časovací testy na Windows) je cíl **změřit četnost**
+(opakovat 20×, uvést podíl pádů), ne „spustit znovu a doufat“. To zpřesňuje `test-runner`: jedno opakování zůstává, ale
+při druhém pádu se místo zprávy o selhání spustí měření četnosti a výsledek se označí `nestabilní (X z 20)`.
+Pravidlo z Q7 (regresní test u každé nahlášené chyby) je přímo tato červená smyčka uložená jako test.
+
+### 9.4 Glosář a záznamy rozhodnutí (podle `domain-modeling`)
+
+Návrh (nevytváří se, dokud se nezačne): `GLOSSARY.md` v kořeni (česky, u pojmů pro agenty anglický ekvivalent) a `docs/adr/`.
+Počáteční pojmy, které dnes kolísají: rod × větev × linie, přístup × pohled × verze webu, záznam × zápis, jistota (`doc`, `prob`,
+`fam`), úkol × fronta × veřejná otázka, deník × výzkumný deník. Rozhodnutí Q1–Q13 z kapitoly 8 se převedou na ADR (jedno na
+rozhodnutí, krátce: kontext, rozhodnutí, důsledek).
+
+### 9.5 Jeden hluboký modul místo tří (podle `codebase-design`)
+
+`denik`, `fronta` a `otazky` dělají totéž: ověřují pole podle schématu, přidávají do souboru jen na konec, hlídají zakázané
+vzory a vykreslují tabulku. Navrhuju jeden modul (provizorně `zaznamy_store`) s jedinou smlouvou (`pridej`, `oprav`, `vykresli`,
+`over`) a **registrem schémat** (deník, úkol, veřejná otázka, později další typy). Nový typ informace pak znamená jen nové
+schéma a šablonu, ne další skript. Rozhraní je malé, uvnitř je validace, zámek souboru a vykreslení.
+
+### 9.6 Nový prvek do fronty: závislosti (podle pojmu *frontier*)
+
+Do `ukoly.jsonl` přidat pole `zavisi_na` (seznam id). Orchestrátor pak přidělí jen úkoly, jejichž závislosti jsou hotové
+(frontier), a může je dávat paralelně do limitu z 4.2. Dnes se pořadí drží v hlavě a v prioritách.
+
+## 10. Zjištění z prototypu deníku (zahozená zkouška na dnešních datech)
+
+Jednorázový skript (mimo repozitář, jen součty, žádná jména) prošel dnešní `research_log.md`. Výsledek mění část návrhu:
+
+- **277 řádků tabulky, ale jen 259 se rozdělí na 7 sloupců; 18 ne** (6 sloupců, nejspíš nezapsaná buňka nebo znak `|` v textu).
+  Migrace tedy nesmí tiše přeskakovat: `denik.py overit-migraci` musí selhat, dokud není zpracovaných všech 277 (Q3).
+- **Skutečné sloupce jsou `# | datum | zdroj | rozsah | hledáno | výsledek | citace`.** Můj návrh sloupců jsem proto upravil
+  (5.2): přibyly `rozsah` a `citace`, `nález` je krátké shrnutí.
+- **17 % řádků (45 z 259) má zakázaný vzor:** 28 zmiňuje pomocníka, agenta nebo model, 13 cesty, 6 čísla úkolů, 6 procesní
+  věty, 5 „opraveno“. Potvrzuje to Q8 (`puvodni` + `proces`).
+- **Pole `výsledek` je mix:** 80 × „nenalezeno“, 68 × „nalezeno“ a pak varianty (`nalezeno (ověřeno)`, `potvrzeno`, `nedočteno`,
+  `částečně`, `nenalezeno / nečitelné`), **11 řádků bez klíče**. Výčet hodnot se musí zvolit a existující varianty namapovat.
+- **`výsledek` + `citace` je souvislý text:** medián 492 znaků, 83 řádků přes 600, nejdelší 1692. „Tabulka vždy“ proto potřebuje
+  rozhodnutí, co smí být v buňce dlouhé a co se rozdělí (citace zvlášť, poznámka zvlášť).
+- **`zdroj`:** 204 z 259 začíná archivem, 244 obsahuje snímek, signaturu nebo `apu`. Zbytek jsou stopy, rodinné zdroje apod.
+  Zdroj tedy potřebuje **typ** (archiv, stopa, rodina, jiné).
+
+Nové otevřené otázky z prototypu (Q14 a Q15) jsou v odpovědi uživateli, po schválení se zapíšou do kapitoly 8.
+
+## 11. Ověření platformy
+
+Předpoklady návrhu o Claude Code (podagent nespouští podagenty, hlavní vlákno jako agent, `skills:` u agenta, omezení Bashe,
+přednost `deny`, hooky) ověřuje agent z primárních zdrojů do souboru `analyza/overeni-platformy.md`. Dokud nedoběhne, jsou
+to nepotvrzené předpoklady.
