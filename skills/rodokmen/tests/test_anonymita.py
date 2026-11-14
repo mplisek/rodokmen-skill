@@ -23,6 +23,7 @@ class Anonymita(unittest.TestCase):
         self.git("config", "user.name", "Tester")
         self.git("config", "commit.gpgsign", "false")
         (self.r / "README.md").write_text("start\n", encoding="utf-8")
+        (self.r / ".gitignore").write_text(".anonymita-seznam\n", encoding="utf-8")   # jako ve skutečném repozitáři
         self.commit("start")
         self.zakladni = self.git("rev-parse", "HEAD").stdout.strip()
         self.seznam = self.r / ".anonymita-seznam"

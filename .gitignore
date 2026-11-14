@@ -6,3 +6,6 @@ node_modules/
 .agents/
 .claude/skills/
 skills-lock.json
+
+# lokální seznam zakázaných řetězců pro scripts/anonymita.py (nepatří do gitu)
+.anonymita-seznam

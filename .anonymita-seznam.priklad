@@ -1,0 +1,11 @@
+# Vzor seznamu pro kontrolu anonymity před pushem (scripts/anonymita.py).
+# Skutečný seznam je soubor .anonymita-seznam (v .gitignore, NEPATŘÍ do gitu – sám by prozradil jména).
+#
+# Jeden řetězec na řádek; hledá se bez ohledu na velikost písmen a diakritiku, „Novák“ najde i „Novákové“.
+# Regulární výraz: řádek začíná re:
+# Vyjmout cestu (např. testovací data s vymyšlenými jmény): řádek začíná !
+#
+# Vymyšlené příklady formátu:
+Příjmeníprojektu
+re:číslo osoby \d{2,3}
+!skills/rodokmen/template/ukazka/

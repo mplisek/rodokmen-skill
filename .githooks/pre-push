@@ -1,0 +1,11 @@
+#!/bin/sh
+# Kontrola anonymity před pushem (scripts/anonymita.py). Zapíná ji uživatel příkazem: python3 scripts/anonymita.py nainstaluj
+# Seznam zakázaných řetězců je lokální soubor .anonymita-seznam (není v gitu). Skript nic nepřepisuje, jen push zastaví.
+koren=$(git rev-parse --show-toplevel) || exit 0
+for py in python3 python py; do
+  if command -v "$py" >/dev/null 2>&1 && "$py" -c "import sys" >/dev/null 2>&1; then
+    exec "$py" -X utf8 "$koren/scripts/anonymita.py" pre-push
+  fi
+done
+echo "anonymita: Python nenalezen, kontrola přeskočena" >&2
+exit 0
