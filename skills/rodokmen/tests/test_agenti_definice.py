@@ -56,7 +56,10 @@ class DefiniceAgentu(unittest.TestCase):
         povoleni = set(re.findall(r"Agent\(([^)]*)\)", fm["tools"]))
         self.assertTrue(povoleni, "Agent(...) musí vyjmenovat povolené podagenty")
         for p in re.split(r"\s*,\s*", ",".join(povoleni)):
-            self.assertIn(p.strip(), POCATECNI - {"orchestrator"})
+            # agenti pluginu mají jméno s předponou pluginu (rodokmen:researcher); bez ní by seznam nic nepropustil („Available agents: none“)
+            self.assertTrue(p.strip().startswith("rodokmen:"), p)
+            self.assertIn(p.strip().split(":", 1)[1], POCATECNI - {"orchestrator"})
+        self.assertIn("rodokmen:researcher", self.texty["orchestrator"].split("---", 2)[2])   # i v postupu volá agenty plným jménem
 
     def test_cteci_agenti_nemaji_zapis(self):
         for jmeno in ("verifier", "failure-analyst", "test-runner"):
