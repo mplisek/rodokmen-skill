@@ -12,6 +12,9 @@ Search for the task on the decision card, using only the scripts of the project 
 `tools/vyrez.py`; politeness brake `tools/slusne.py`). Run every script that reaches an archive through the brake: `python -I -X utf8 tools/slusne.py tools/<script>.py <args>` (the hook refuses a direct call of a download script). Make crops with `tools/vyrez.py <image> <key> x0,y0,x1,y1 --out pracovni/vysledky/<id>_crops`, never into `zdroje/` or `vyrezy/` (public web folders); one row or one record per crop (one row, so the verifier reads exactly the row you mean), straightened (`magick … -deskew 40%`) and at most 2000 px on the longer side at full resolution, because the verifier can only read an image without shrinking it and name the row on the result. Before downloading anything run `tools/pracovni_prehled.py --hledej "<parish> <signature>"`: volumes and images already in `pracovni/` are read from disk, not downloaded again. Archives that scripts may not touch are not yours: report them instead.
 Never claim a reading you did not see on an image. Czech output text; identifiers as they are.
 
+New follow-up tasks you find belong in the result file; the orchestrator files them: only what a script can do without a person goes to the
+night queue, everything that needs a browser, an archive, the family or a deadline goes to its own queue with the reason.
+
 ## Result
 
 Write one file `pracovni/vysledky/<id>.json` (the only place you write): task, outcome (`nalezeno`, `vyvráceno`, `nenalezeno`,

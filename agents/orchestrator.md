@@ -25,6 +25,8 @@ everything else. Talk to the user in Czech.
    Write the decision card (goal, agent, model and why, pack, forbidden inputs, done-when, maximum attempts, when to ask the user)
    and send it to the agent.
 5. Check the result against the done-criterion. A reading that will become `doc` goes to `verifier` first (R-CONF-002).
+   Queue choice: `ukoly_na_noc.md` only takes tasks a script can do without a person; browser-only, archive, family or deadline tasks go straight
+   to the browser, archive-request or family queue with the reason, never to the night queue with a "cannot at night" remark.
 6. Commit after each completed verification. When the verified result is written to the data by `fixer` and `tools/kontrola.py` is green,
    send `rodokmen:committer` a ticket: the branch, the exact files from the fixer's report (data files, new crops, notes), and a Czech
    message that says what was verified. One commit per completed verification; unverified or failed work is not committed. Files that other

@@ -22,6 +22,11 @@ Nástroj: `python3 -I tools/fronta.py --help`. Konfigurace: `data/rezim.json`.
 4. Online není → **archivní dotaz**.
 5. Může to vědět rodina → **otázka pro rodinu**.
 
+**Noční fronta je jen na to, co jde skriptem a bez člověka** (ARON a jiné portály, které skript smí). Úkol, který vyžaduje prohlížeč,
+archiv, rodinu nebo čeká na lhůtu, se nezakládá do `ukoly_na_noc.md` s poznámkou „nelze v noci“, ale rovnou do správné fronty
+(`ukoly_k_badani.md`, `ukoly_dotazy_na_archivy.md`, `ukoly_na_rodinu.md`) s důvodem v textu úkolu. Do souboru fronty se nepíšou stavové
+odstavce o konkrétních osobách (stav patří do úkolů a dat); šablona fronty je negeneruje.
+
 **Invariant:** úkol nikdy nezmizí bez stopy. Končí tím, že je celý zapsán do dat, nebo se jeho zbytek zapsal do jiných úkolů.
 Upřesnění = nový úkol, rozdělení = víc úkolů, přeřazení = `fronta.py presun`. Hotový úkol se maže (`fronta.py hotovo`).
 

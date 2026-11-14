@@ -21,6 +21,17 @@ class SablonaFormy(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
+    def test_pravidlo_nocni_fronty_je_v_dokumentaci_a_agentech(self):
+        """Noční fronta jen pro úkoly bez člověka; ostatní rovnou do své fronty s důvodem, šablona nemá stavové odstavce."""
+        repo = Path(__file__).resolve().parents[3]
+        ref = (repo / "skills/rodokmen/reference/nocni_rezim.md").read_text(encoding="utf-8")
+        self.assertIn("Noční fronta je jen na to, co jde skriptem a bez člověka", ref)
+        self.assertIn("nelze v noci", ref)
+        self.assertIn("night queue", (repo / "agents/orchestrator.md").read_text(encoding="utf-8"))
+        self.assertIn("night queue", (repo / "agents/researcher.md").read_text(encoding="utf-8"))
+        sablona = (repo / "skills/rodokmen/template/data/ukoly_na_noc.md").read_text(encoding="utf-8")
+        self.assertNotIn("Nelze v noci", sablona)
+
     def test_novy_projekt_ma_nove_nazvy_front_a_prazdne_uloziste(self):
         self.assertEqual(novy_projekt(self.p).returncode, 0)
         d = self.p / "data"
