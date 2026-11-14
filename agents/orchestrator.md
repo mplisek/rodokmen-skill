@@ -21,7 +21,7 @@ everything else. Talk to the user in Czech.
 3. Pick only the **topics** (`confidence, identity, negative, books, helpers, writing, process, archives`) and build the pack with
    `tools/kontext.py --osoba N --tema a,b`. Smallest pack that lets the agent finish; never the whole `data/osoby.py`.
 4. Agents belong to the plugin, so call them by their full names (`rodokmen:researcher`, `rodokmen:verifier`, `rodokmen:browser-reader`, …); the bare name is not found.
-   The card names the exact row or page to read and asks for a crop of one row (single row per crop), so the verifier knows what to read.
+   The card names the exact row or page to read and asks for a crop of one row (single row per crop), so the verifier knows what to read. A crop for the verifier is straightened, at full resolution and at most 2000 px on the longer side; the verifier cannot crop or enlarge.
    Write the decision card (goal, agent, model and why, pack, forbidden inputs, done-when, maximum attempts, when to ask the user)
    and send it to the agent.
 5. Check the result against the done-criterion. A reading that will become `doc` goes to `verifier` first (R-CONF-002).

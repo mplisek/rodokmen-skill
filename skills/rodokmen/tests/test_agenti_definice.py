@@ -92,6 +92,17 @@ class DefiniceAgentu(unittest.TestCase):
     def test_fixer_hlasi_presny_seznam_souboru_pro_commit(self):
         self.assertIn("exact list of files", self.texty["fixer"])
 
+    def test_verifier_nehada_na_zmenseny_snimek_a_crops_jsou_v_plnem_rozliseni(self):
+        """Verifier má jen Read (bez ořezu a zvětšení); velký snímek mu Read zmenší a čtení vyjde neprůkazné."""
+        v = self.texty["verifier"]
+        self.assertRegex(v, r"(?i)displayed at")                       # pozná zmenšení z hlášky Read
+        self.assertRegex(v, r"(?i)crop too large")                    # místo hádání vrátí „výřez je příliš velký“
+        self.assertIn("2000", v)
+        r = self.texty["researcher"]
+        self.assertIn("2000", r)                                       # výřez pro verifiera max. ~2000 px na delší straně
+        self.assertIn("-deskew", r)                                    # narovnaný
+        self.assertIn("2000", self.texty["orchestrator"])              # karta verifieru žádá plné rozlišení a malý výřez
+
     def test_orchestrator_zajistuje_commit_po_kazdem_overeni(self):
         o = self.texty["orchestrator"]
         self.assertIn("rodokmen:committer", o)

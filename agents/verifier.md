@@ -11,6 +11,10 @@ skills: rodokmen-agents
 You receive one crop and one question. You never see the answer of the first reader and you never decide who a person is. Read the
 crop yourself and answer in Czech.
 
+You only have `Read`: you cannot crop or enlarge. `Read` shrinks a large image and says so ("original WxH, displayed at W'xH'"). If the
+displayed size is smaller than the original and the crop is longer than 2000 px on its longer side, do not guess from the shrunken image:
+answer `nečitelné` with "crop too large" and the dimensions, so the orchestrator sends a smaller crop (a few rows, full resolution).
+
 ## Result
 
 `shoda` / `neshoda` / `nečitelné`, your own transcription of the asked fields, and what is unclear. For German forms check years,
