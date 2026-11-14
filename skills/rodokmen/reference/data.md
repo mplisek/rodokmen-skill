@@ -204,9 +204,11 @@ Viz `web.md`.
 
 ## Markdown poznámky
 
-- `research_log.md` – tabulka `| # | datum | zdroj | rozsah | hledáno | výsledek | citace |`, nové řádky na konec, i negativní.
-  Web ji zobrazuje jako „Výzkumný deník“. První sloupec může mít číselné nebo textové ID (např. `BA-1`, `KA-1`,
-  `STR-10`); při slučování deníků zachovej původní ID nebo je uprav tak, aby byla v celém výsledném deníku jedinečná.
+- `denik.jsonl` – výzkumný deník, **jen přidávání**, zapisuje se výhradně `python3 -I tools/denik.py pridej …` (pevné pole:
+  datum, zdroj s typem, rozsah, hledáno, výsledek, nález, citace, osoby, odkaz; oprava je nový záznam s `--opravuje`).
+  Web z něj generuje tabulku „Výzkumný deník“ (`denik.py vykresli`); ručně se soubor neupravuje. Starší projekt má deník
+  v tabulce `research_log.md`: převede ho `denik.py migruj` (a `denik.py overit-migraci` ověří, že se nic neztratilo);
+  do převodu se web čte ze starého souboru. Podrobně: `zapisy.md`.
 - `zajimavosti.md` – `## Nadpis`, pod ním řádek `Rod: [Plíškové](/rod/pliskove/)` (rod, ke kterému zajímavost patří; víc
   odkazů čárkou) + text, odkazy `[Jméno](/osoba/<slug>/)`. Zajímavost bez řádku `Rod:` je obecná (vidí ji každý přístup).
 - `pribeh.md` – původní jediný příběh: frontmatter `title`, `lead` + kapitoly `##`; pokud `data/pribehy/` neobsahuje
@@ -216,15 +218,18 @@ Viz `web.md`.
   Jak psát: `pribehy.md`.
 - Poznámky pro Clauda v markdownu piš jako `<!-- … -->` – na web nejdou.
 - `udaje_od_rodiny.md` – volný text (kdo co řekl, `st="fam"`).
-- **Stránka „Co hledáme“ má tři části** – každá věc patří tam, kde se dá vyřešit, a jen jednou:
-  - `otazky_pro_rodinu.md` → **Otázky pro rodinu** (co může vědět jen rodina). Oddíl `## Dokumenty doma` nahoře, pak
-    `## <rod>` se stejným názvem jako v `LINES` (web je seřadí podle čísla rodu), jedna otázka na odrážku.
+- **Stránka „Co hledáme“ má tři části** – každá věc patří tam, kde se dá vyřešit, a jen jednou. Texty pro rodinu jsou
+  **veřejné otázky v `data/verejne_otazky.json`** (zapisuje je `python3 -I tools/otazky.py`, na web jde jen záznam, který
+  uživatel potvrdil: `otazky.py potvrd <id> --kdo …`). **Vnitřní fronty `ukoly_*.md` se na web nikdy nepřenášejí.**
+  - druh `rodina` → **Otázky pro rodinu** (co může vědět jen rodina): otázka, proč nás to zajímá, co by pomohlo; rod
+    (číslo 8–15) nebo oddíl, např. „Dokumenty doma“. Koncept z vnitřního úkolu: `otazky.py z-ukolu U-0001 --druh rodina`.
   - `ISSUES` → **Otevřené otázky** (rozpor nebo mezera v datech), viz výše.
-  - `archivni_dotazy.md` → **Prameny mimo online matriky** (co je jen v archivu nebo na úřadě). Oddíl = archiv
-    nebo úřad (`## SOA Zámrsk`, `## Matriční úřad Holice`), v odrážce `**Rod – osoba (k):** co hledáme – proč není online`.
-  - Krátké věty pro rodinu, bez dat zápisu („zapsáno …“), čísel deníku a snímků (ty jsou v `research_log.md`).
-    Vyřešené a zodpovězené smaž – výsledek do dat, `udaje_od_rodiny.md` nebo deníku. Pracovní poznámky do `<!-- … -->`.
-    Jde na web: o žijících jen jméno a rok. `kontrola.py` hlídá tvar, data zápisu, zodpovězené položky a citlivé údaje.
+  - druh `pramen` → **Prameny mimo online matriky** (co je jen v archivu nebo na úřadě): archiv nebo úřad, co hledáme
+    a proč není online, rod a osoba.
+  - Krátké věty pro rodinu, bez dat zápisu („zapsáno …“), čísel úkolů a snímků (ty jsou v deníku). Zodpovězené a vyřešené
+    smaž (`otazky.py smaz`) – výsledek do dat, `udaje_od_rodiny.md` nebo deníku. Jde na web: o žijících jen jméno a rok.
+    `otazky.py` odmítne zakázané údaje o procesu, `kontrola.py` hlídá citlivé údaje. Starší projekt čte do převodu soubory
+    `otazky_pro_rodinu.md` a `archivni_dotazy.md` celé (včetně vnitřních hlaviček úkolů) – přejdi na `verejne_otazky.json`.
 
 ## Odkazy na osoby (slug)
 

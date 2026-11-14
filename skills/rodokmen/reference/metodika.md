@@ -120,7 +120,7 @@ z nich brát snímky: `portaly.md`, formát dat: `data.md`.
 - **Nalezenec:** záznamy nalezince → fara kojné. Spojuje číslo nalezince.
 - **Zápis 20. století ještě neveřejný:** matriční úřad (ČR: zápisy starší lhůty kdokoli, mladší rodina; SK: jen
   rodina), Standesamt (DE, AT),
-  kartotéka HOK (sudetští Němci), policejní přihlášky. Do `archivni_dotazy.md`.
+  kartotéka HOK (sudetští Němci), policejní přihlášky. Do `ukoly_dotazy_na_archivy.md`.
 - **Sudetoněmecká rodina po 1945:** Heimatortskartei (HOK) → spisy Lastenausgleich → obecní seznamy obyvatel a
   pohřešovaných (vše Bundesarchiv Bayreuth, níže). Spojuje bydliště k 1. 9. 1939.
 - **Změna jména, jazykové tvary:** všechny tvary osoby i místa (výše).
@@ -128,7 +128,7 @@ z nich brát snímky: `portaly.md`, formát dat: `data.md`.
 ## Prameny mimo ČR
 
 Portály, které skill zná (Matricula, Geneteka, FamilySearch), a jak z nich brát snímky: `portaly.md`.
-Ostatní archivy jsou většinou jen na písemnou žádost – zapiš do `archivni_dotazy.md`.
+Ostatní archivy jsou většinou jen na písemnou žádost – zapiš do `ukoly_dotazy_na_archivy.md`.
 
 **Slovensko**
 

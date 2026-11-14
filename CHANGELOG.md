@@ -12,6 +12,22 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
 ## Nevydáno
 
+### Nové
+
+- **Vynucovaná forma výzkumného deníku a veřejných otázek (Fáze A).** Deník je strukturovaný soubor `data/denik.jsonl` (jen
+  přidávání) a tabulku na webu z něj generuje skript: `tools/denik.py` (`pridej`, `vykresli`, `over`, `migruj`, `overit-migraci`).
+  Chybný záznam se odmítne (datum, výčet výsledku, rozsah u negativního výsledku, délky, zakázané údaje o procesu: čísla úkolů,
+  jména agentů a modelů, cesty, opravy uvnitř textu). Převod starého `research_log.md` nic neztratí: původní řádek se uchová
+  v poli `puvodni`, procesní údaje v `proces`, řádky k ruční kontrole se na web nedostanou a jsou v protokolu.
+- **Veřejné otázky odděleně od vnitřní fronty:** `tools/otazky.py` a `data/verejne_otazky.json` (otázky pro rodinu a prameny
+  mimo online matriky), na web jde jen ručně potvrzený záznam; koncept z úkolu `otazky.py z-ukolu`. Opravuje únik hlaviček
+  úkolů (`U-0013 | P2 | …`) na stránku Co hledáme.
+- **Fronty se jmenují `ukoly_*`** (`ukoly_na_rodinu.md`, `ukoly_dotazy_na_archivy.md`) a nikdy se nečtou při sestavení webu;
+  `fronta.py prejmenuj` převede staré názvy (`otazky_pro_rodinu.md`, `archivni_dotazy.md`), do přejmenování fungují oba.
+  Úkoly mají pole `zavisi` a `fronta.py frontier` vypíše ty, jejichž závislosti jsou hotové; `dalsi` blokovaný úkol nepřidělí.
+- Export webu čte deník a veřejné otázky z nového úložiště, dokud je prázdné, platí dosavadní soubory; chyba formy v novém
+  úložišti sestavení zastaví (`CHYBA`). Glosář `GLOSSARY.md` a záznamy rozhodnutí `docs/adr/`.
+
 ### Opravy
 
 - **Hlídač sítě neblokuje testování vlastní práce.** `novy_projekt.py` už nezapisuje plošný zákaz `curl`/`wget`

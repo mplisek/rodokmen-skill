@@ -49,7 +49,7 @@ D = {
 - **Stav (`st`) má každá položka zvlášť**: `doc` přečteno v pramenu (vždy s `r` nebo `zdroj`), `lit` z literatury (vždy se
   `zdroj`), `prob` pravděpodobné (v `note` proč), `fam` od rodiny, `unk` neznámé. Nejistotu nezamlčuj, web ji napíše
   („pravděpodobně“).
-- **`otevrene`**: co zatím nevíme a kde to hledat. Je to hotový seznam úkolů; co jde jen přes úřad, přepiš do `data/archivni_dotazy.md`.
+- **`otevrene`**: co zatím nevíme a kde to hledat. Je to hotový seznam úkolů; co jde jen přes úřad, přepiš do `data/ukoly_dotazy_na_archivy.md`.
 - **`verejne=False`**: záznam na web nejde.
 
 ## Prameny podle doby (od dneška zpátky)
@@ -72,7 +72,7 @@ Postup je stejný jako u matrik: z každého pramene vezmi číslo domu, jméno 
 | 1651, 1654 | soupis poddaných, berní rula | hospodář, kategorie usedlosti (tištěné edice) |
 | vše | vlastivědy, kroniky obce a školy, noviny | události obce, požáry, dražby; Kramerius, ANNO |
 
-Dostupnost online ověř vždy v portálu (`reference/portaly.md`); co není, patří do `otevrene` a `archivni_dotazy.md`.
+Dostupnost online ověř vždy v portálu (`reference/portaly.md`); co není, patří do `otevrene` a `ukoly_dotazy_na_archivy.md`.
 
 ## Postup krok za krokem
 
@@ -88,7 +88,7 @@ Dostupnost online ověř vždy v portálu (`reference/portaly.md`); co není, pa
    „hostinský v čp. 2“ zapiš do `obyvatele`, do `drzitele` až s dokladem (kniha, sčítání) nebo jako `prob` s důvodem.
 5. **Zapiš to.** Do `data/stavby.py`, každý údaj s `st` a zdrojem; co nevíš, do `otevrene`.
 6. **Zkontroluj a ukaž.** `python3 -I tools/stavby.py kontrola`, pak `npm run data && npm run build` a podívej se na stránku Domy.
-7. **Deník.** Každé hledání (i neúspěšné) patří do `data/research_log.md`, jako u matrik.
+7. **Deník.** Každé hledání (i neúspěšné) patří do deníku (`denik.py pridej`, `data/denik.jsonl`), jako u matrik.
 
 ## Soukromí
 

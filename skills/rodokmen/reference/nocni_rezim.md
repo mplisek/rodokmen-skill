@@ -10,8 +10,8 @@ Nástroj: `python3 -I tools/fronta.py --help`. Konfigurace: `data/rezim.json`.
 | `ukoly_na_noc.md` | úkol, který jde udělat automaticky, bez člověka | hlavní agent + pomocníci |
 | `ukoly_k_rozhodnuti.md` | věc, kde musí rozhodnout člověk | člověk |
 | `ukoly_k_badani.md` | jen online v prohlížeči, kam skript nesmí (eBadatelna, MZA, Třeboň) | člověk s asistentem |
-| `archivni_dotazy.md` | co online není | žádost archivu |
-| `otazky_pro_rodinu.md` | nápad na otázku pro rodinu | rodina |
+| `ukoly_dotazy_na_archivy.md` | co online není | žádost archivu |
+| `ukoly_na_rodinu.md` | nápad na otázku pro rodinu | rodina |
 
 **Směrování nálezu** (kam co zapsat, když při práci narazíš na něco nového):
 
@@ -49,7 +49,7 @@ a konec okna.
 - **Mimo pracovní dobu (noc, víkend, svátek)** běh spouští uživatel. Jede se do konce úkolů, **konce okna**, nebo do DOD.
   Doběhne-li úkol po začátku pracovní doby, **další se nepouští**; končí-li okno dříve, hlavní agent pouští další úkol.
   Nikdy se neptá: rozhodnutí → `ukoly_k_rozhodnuti.md`, úkol se odloží; nelze-li online → `ukoly_k_badani.md`;
-  není online → `archivni_dotazy.md`; nápad pro rodinu → `otazky_pro_rodinu.md`.
+  není online → `ukoly_dotazy_na_archivy.md`; nápad pro rodinu → `ukoly_na_rodinu.md`.
 - **V pracovní době** po doběhu vyhodnoť výsledky, ulož, vypiš dotazy (rozhodnutí, nové úkoly k bádání) a čekej na instrukci.
 - **Po každém doběhu úkolu hlavní agent vždy zkontroluje výstupy a zápis** a výsledek zapíše tam, kam patří (data, fronty).
 - Chyba portálu (brzda „zastavený“): úkol zůstane `otevřeno`, zapíše se do deníku a běh končí.

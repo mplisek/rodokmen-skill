@@ -137,5 +137,5 @@ Shrň uživateli, co přišlo. Ne každá odpověď žádost uzavírá:
   „odpověď – zpracovat“.
 - Uzavři ji, až je vyřízená (údaje přišly), zamítnutá, nebo když ji uživatel vzdá (opuštěno, třeba po marné
   připomínce bez odpovědi). Nové údaje zapiš do dat (`osoby.py`, matriční doklad jako dokument do `dokumenty.json`)
-  a do `research_log.md`, řádek v `data/zadosti.md` přesuň do Uzavřených. U zamítnuté napiš do Stavu i důvod,
+  a do deníku (`denik.py pridej`), řádek v `data/zadosti.md` přesuň do Uzavřených. U zamítnuté napiš do Stavu i důvod,
   ať se žádost neopakuje.

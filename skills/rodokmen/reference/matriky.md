@@ -23,10 +23,10 @@ u každého zápisu zvlášť** (§ 25b zákona 301/2000 Sb.): zápis starší 1
 se týká, nebo člen rodiny (manžel, partner, rodiče, děti, sourozenci, prarodiče, vnuci, pravnuci) s doložením
 příbuzenství. Žádej o **doslovný výpis** – na rozdíl od rodného či oddacího listu obsahuje i okrajové poznámky
 (pozdější sňatek, úmrtí, legitimaci). Stejné lhůty platí pro sbírku listin a druhopisy do roku 1958. Slovensko má jiná
-pravidla (`metodika.md` → Prameny mimo ČR, Slovensko). Zapiš do `archivni_dotazy.md`.
+pravidla (`metodika.md` → Prameny mimo ČR, Slovensko). Zapiš do `ukoly_dotazy_na_archivy.md`.
 Katalogy archivů uvádějí **i svazky, které jsou ještě na úřadě**: v detailu „Technická poznámka: MATRIKA JE DOSUD
 ULOŽENA NA MATRIČNÍM ÚŘADĚ“, „Místo uložení: Obecní úřad X“ a 0 příloh (snímků). Tu poznámku přečti dřív, než hledáš
-snímky; svazek rovnou zapiš do `archivni_dotazy.md` i s místem uložení (tam se píše o výpis). Zkus **samostatný rejstřík**
+snímky; svazek rovnou zapiš do `ukoly_dotazy_na_archivy.md` i s místem uložení (tam se píše o výpis). Zkus **samostatný rejstřík**
 (I-N, I-O, I-Z) přes stejné roky nebo **druhopis** (může končit dřív než originál, a být tak už v archivu) – bývá online a dá aspoň datum a číslo domu. Uživateli řekni předem, že narození
 zhruba po roce 1910 často online nebudou (kniha pokračuje za rok 1926, lhůta běží od posledního zápisu).
 

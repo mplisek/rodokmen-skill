@@ -88,10 +88,10 @@ Základní smyčka pro každou osobu:
    známou událost**: úmrtí (ve 20. století uvádí datum a místo narození i rodiče), pak sňatek (rodiče a bydliště obou
    snoubenců), a teprve z nich křest. **Nikdy nehledej křest naslepo** po stovkách snímků bez rejstříku, když je známé
    úmrtí nebo sňatek. Není-li nejmladší událost online, začni nejmladším svazkem, který online je (křty sourozenců,
-   sňatek rodičů, rejstříky), a chybějící zápis dej do `archivni_dotazy.md`.
+   sňatek rodičů, rejstříky), a chybějící zápis dej do `ukoly_dotazy_na_archivy.md`.
 2. **Ověř přístupnost**: matriky jsou v archivu až po uplynutí lhůty od *posledního* zápisu ve svazku (narození 100 let,
    sňatky 75, úmrtí 30; `matriky.md` → Lhůty). Mladší údaje jsou na matričním úřadě – zápis starší lhůty tam
-   dostane kdokoli, mladší jen rodina (`matriky.md` → Lhůty). Co jde jen přes úřad, zapiš do `data/archivni_dotazy.md`;
+   dostane kdokoli, mladší jen rodina (`matriky.md` → Lhůty). Co jde jen přes úřad, zapiš do `data/ukoly_dotazy_na_archivy.md`;
    chce-li uživatel žádost poslat, viz „Žádosti“ níže a `reference/zadosti.md`.
 3. **Najdi svazek**: podle obce → farnost → archiv. ARON: `python3 -I tools/aron_search.py "Obec"`, SOA Plzeň:
    `python3 -I tools/portafontium.py obec "Obec"`, Praha: `tools/ahmp_search.sh`; SOA Praha, MZA Brno a SOA Třeboň
@@ -117,7 +117,8 @@ Základní smyčka pro každou osobu:
    Nová obec předků → `tools/mista.py pridej "Obec"` (mapa), nový pradědeček nebo prababička (8–15) → rod do `LINES`.
    Při převzetí staršího výzkumu bez původních snímků nevytvářej náhradní výřezy ani rámečky; zachovej informaci, že podklad
    chybí (`kontrola.py` ji dál hlásí).
-6. **Zapiš hledání do deníku** `data/research_log.md` – i neúspěšné, s rozsahem (které roky / snímky jsi prošel).
+6. **Zapiš hledání do deníku** příkazem `python3 -I tools/denik.py pridej …` (`data/denik.jsonl`, `reference/zapisy.md`) – i neúspěšné,
+   s rozsahem (které roky / snímky jsi prošel).
    **Zjevně související výskyt** po cestě (vzácné příjmení rodu, stejný dům, jméno z rodinného vyprávění) zapiš do
    výsledku se snímkem – je to stopa, ne doklad. Když se hledání zasekne, projdi deník právě kvůli takovým stopám.
 7. Spusť `python3 -I tools/kontrola.py` a oprav chyby.
@@ -211,7 +212,7 @@ tolik neubývají.
 ### Noční a víkendový režim, fronty úkolů
 
 Úkoly, které jde dělat bez člověka, vedeš ve frontách (`data/ukoly_na_noc.md`, `ukoly_k_rozhodnuti.md`, `ukoly_k_badani.md`,
-`archivni_dotazy.md`, `otazky_pro_rodinu.md`) nástrojem `tools/fronta.py`. Běh bez člověka spouští uživatel mimo pracovní dobu
+`ukoly_dotazy_na_archivy.md`, `ukoly_na_rodinu.md`) nástrojem `tools/fronta.py`. Běh bez člověka spouští uživatel mimo pracovní dobu
 (`data/rezim.json`); nikdy se neptá, rozhodnutí odkládá do `ukoly_k_rozhodnuti.md`. V jednom běhu jede buď bádání, nebo úprava
 skillu. **Pravidla, směrování, priority a kdo úkol dělá: `reference/nocni_rezim.md`; šablony zápisů a zakázané údaje o procesu
 na webu: `reference/zapisy.md`.**
@@ -225,8 +226,8 @@ neposílej**; na jeden archiv nejvýš jedna otevřená žádost. Postup, vzory 
 ### Kdy přestat
 
 Linie končí, když matriky mlčí (nemanželské dítě bez otce, shořelé knihy, chybějící svazky) nebo když jsi
-v 17. století. Zapiš to do „Co hledáme“ – rozpor do `ISSUES`, co může vědět rodina do `otazky_pro_rodinu.md`, co je jen
-v archivu do `archivni_dotazy.md` (každou věc jen jednou, krátce; `reference/data.md`) – náhradní prameny: `metodika.md` →
+v 17. století. Zapiš to do „Co hledáme“ – rozpor do `ISSUES`, co může vědět rodina do `ukoly_na_rodinu.md`, co je jen
+v archivu do `ukoly_dotazy_na_archivy.md` (každou věc jen jednou, krátce; `reference/data.md`) – náhradní prameny: `metodika.md` →
 Mrtvé body. Pak jdi na jinou větev. Průběžně aktualizuj `data/STAV.md` („Rozpracováno“), aby šlo kdykoli navázat.
 
 ## Fáze 3 – Zajímavosti a příběhy rodů
@@ -298,8 +299,8 @@ připomeň uživateli, že je může poslat správci skillu:
 ## Soubory projektu
 
 `data/`: `STAV.md` (vstupní bod), `osoby.py` (předci, `LINES`, `RODINA`, `SIDE`, `ISSUES`, `HYPOTEZY`, `SAME`), `zaznamy.json`,
-`svazky.json`, `prepisy.json`, `zvyrazneni.json`, `research_log.md` (deník), `udaje_od_rodiny.md`, `otazky_pro_rodinu.md`,
-`archivni_dotazy.md`, `zadosti.md` (poslané žádosti, nejde na web), `zajimavosti.md`, `pribeh.md`, `pribehy/*.md`, `web.json`,
+`svazky.json`, `prepisy.json`, `zvyrazneni.json`, `research_log.md` (deník), `udaje_od_rodiny.md`, `ukoly_na_rodinu.md`,
+`ukoly_dotazy_na_archivy.md`, `zadosti.md` (poslané žádosti, nejde na web), `zajimavosti.md`, `pribeh.md`, `pribehy/*.md`, `web.json`,
 `dokumenty.json`, `mista.json`, `pozvanky.json` (osobní odkazy, jen otisky), `stavby.py` (dějiny domů) (formát `reference/data.md`;
 `osoby.py` má i `RODINA` = další osoby mimo přímou linii a `PARTNERI`). Dál `vyrezy/` a `zdroje/` (výřezy pro web / plné
 rozlišení), `dokumenty/` (originály od rodiny), `pracovni/` (nejde na web), `data/poznamky_pro_skill.md`, `tools/` (kopie ze skillu – aktualizuje se celý projekt přes `novy_projekt.py`), `web/`.
@@ -324,6 +325,8 @@ rozlišení), `dokumenty/` (originály od rodiny), `pracovni/` (nejde na web), `
 | `graf.py` | rodina jako graf: dvojníci, dítě ve dvou rodinách, cykly, věk rodičů, předek víckrát (návrh `SAME`); `graf.py strom strom.ged` před importem |
 | `vyrez.py`, `ramecek.py`, `overit.py` | výřez zápisu (zlomky stránky), rámeček (zlomky výřezu, `--stranka` celé stránky, `--pozn` poznámka), ověření čtení na dvou polovinách; vybledlé písmo: `--kontrast`, nejhorší `--vylepsit` |
 | `zapis.py` | zápis do `data/*.json` a odkazů `r` v `osoby.py` beze změny formátu; `--smazat <klíč>` smaže zápis, který byl omyl |
+| `denik.py` | výzkumný deník jako strukturovaná data (`pridej`, `vykresli`, `over`, `migruj`, `overit-migraci`), `reference/zapisy.md` |
+| `otazky.py` | veřejné otázky pro web (`data/verejne_otazky.json`): `pridej`, `potvrd`, `z-ukolu`, `smaz`, `over`; fronty `ukoly_*` na web nejdou |
 | `mailto.py` | koncept žádosti → odkaz, který otevře hotový e-mail (nic neodesílá) – `zadosti.md` |
 | `pozvanky.py`, `pristupy.py` | osobní odkazy na web (`pridej`, `seznam`, `nova`, `zrus`, `--pristup <id>`) a přehled přístupů: kdo co vidí – `web.md` |
 | `smoke_test.py` | když nástroj selže: ověří síťové nástroje jedním dotazem (OK / CHYBA = portál se změnil / NEDOSTUPNÉ / ZASTAVENO) |
