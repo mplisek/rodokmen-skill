@@ -1,4 +1,4 @@
-# Návrh sady agentů, vynucování pravidel a testů (verze 0.4, rozhodnutí schválena, nic neimplementováno)
+# Návrh sady agentů, vynucování pravidel a testů (verze 0.5, rozhodnutí schválena, platforma ověřena, nic neimplementováno)
 
 Stav: **návrh k diskusi, nic z toho zatím není implementováno.** Celá analýza je česky. Až se návrh schválí, vzniknou
 z něj anglické soubory (agenti, instrukce, skilly, metodika pro model); návody k bádání a použití zůstávají česky
@@ -121,7 +121,9 @@ Rozhodnuto: `SKILL.md` (zrcadlo) zůstává česky a beze změny struktury; vedl
   odkaz na `rules/` a na `kontext.py` (jak se pravidla vybírají podle tématu). **Neopakuje** obsah `SKILL.md` ani návodů,
   jen na ně odkazuje (např. „archivní zákazy: `slusne.py`, `reference/portaly.md`“).
 - **Spouštění:** popis (`description`) anglicky, určený pro agenty; skill se agentům nahrává přes definici
-  (`skills:` v `.claude/agents/<jméno>.md`) a orchestrátor ho má vždy načtený. Český `SKILL.md` se tím nezmění ani nezpomalí.
+  (`skills:` v definici agenta) a orchestrátor ho má vždy načtený. `skills:` vkládá **celý obsah** skillu při startu agenta
+  (nejvýš 32 skillů), proto je limit 120 řádků vážný. Skill nesmí mít `disable-model-invocation: true` (nepřednačetl by se);
+  použije se `user-invocable: false`. Český `SKILL.md` se tím nezmění ani nezpomalí.
 - **Jedna pravda:** když se pravidlo objeví v `rules/`, v tenkém skillu je jen odkaz na jeho `id`, nikdy kopie textu.
 - **Testy (`tests/agenti/`):** velikost skillu pod limitem; všechny odkazované soubory a `id` pravidel existují; popis a text
   jsou anglicky; definice každého agenta odkazuje jen na existující skill a nástroje; žádný text z `SKILL.md` se v něm
@@ -151,8 +153,10 @@ z originálu. Každé nové pravidlo projde `pravidla.py pokryti` a dostane otis
 
 ## 4. Sada agentů
 
-Platforma: **podagent v Claude Code nemůže spouštět další podagenty**, proto orchestrátor běží jako **hlavní vlákno**
-(`claude --agent orchestrator`, nebo pravidlo v `CLAUDE.md`). Ostatní jsou podagenti v `.claude/agents/<jméno>.md`
+Platforma (ověřeno v dokumentaci, kapitola 11): podagent s nástrojem `Agent` **smí** spouštět další podagenty (výchozí hloubka 3),
+moje původní tvrzení, že to nejde, bylo chybné. Orchestrátor přesto navrhuju jako **hlavní vlákno**
+(`claude --agent orchestrator`, nebo klíč `agent` v `settings.json`), protože jen tam funguje omezení, které typy podagentů smí
+spouštět (`Agent(typ1, typ2)`). Jako zásada to obstojí, jako nutnost ne. Ostatní jsou podagenti v `.claude/agents/<jméno>.md`
 (`name`, `description`, `tools`, `model`; soubory budou anglicky).
 
 ### 4.1 Přehled
@@ -184,7 +188,10 @@ balíčku), `denik`, `fronta`, `otazky` (zápisy), `pokryti`, `jazyk`, `sync_rep
 
 ### 4.2 `orchestrator`
 
-Nástroje: `Agent`, `Read`, `Glob`, `Grep` a úzká výjimka v Bashi pro `fronta.py` (výpis) a `kontext.py`. **Nemá** zápis,
+Nástroje: `Agent(...)` s výčtem povolených podagentů, `Read`, `Glob`, `Grep` a úzká výjimka v Bashi pro `fronta.py` (výpis) a
+`kontext.py`. **Výjimku v Bashi nejde zapsat do `tools:` agenta** (dokumentace to nezná); realizuje se `PreToolUse` hookem v pluginu,
+který podle `agent_type` ze vstupu povolí orchestrátorovi jen tyto dva příkazy (kapitola 11; dokumentace ho označuje za křehký).
+Pokud se ukáže jako nespolehlivý, náhradou je varianta „žádný Bash“ a zápisy front přes malého agenta `clerk`. **Nemá** zápis,
 úpravy souborů, web ani prohlížeč. Čte jen proto, aby rozhodl; vše, co chce změnit, jde přes specialistu.
 
 Ke každému úkolu vyrobí **kartu rozhodnutí** (uloží se do záznamu ve frontě): cíl, agent, model a proč, kontextový balíček,
@@ -525,8 +532,21 @@ Jednorázový skript (mimo repozitář, jen součty, žádná jména) prošel dn
 
 Nové otevřené otázky z prototypu (Q14 a Q15) jsou v odpovědi uživateli, po schválení se zapíšou do kapitoly 8.
 
-## 11. Ověření platformy
+## 11. Ověření platformy (hotovo)
 
-Předpoklady návrhu o Claude Code (podagent nespouští podagenty, hlavní vlákno jako agent, `skills:` u agenta, omezení Bashe,
-přednost `deny`, hooky) ověřuje agent z primárních zdrojů do souboru `analyza/overeni-platformy.md`. Dokud nedoběhne, jsou
-to nepotvrzené předpoklady.
+Předpoklady návrhu o Claude Code ověřil agent z primárních zdrojů (`code.claude.com/docs`); podrobnosti, citace a adresy
+jsou v `analyza/overeni-platformy.md`. Souhrn dopadů:
+
+| Předpoklad návrhu | Výsledek | Důsledek |
+|---|---|---|
+| Podagent nemůže spouštět podagenty | **vyvráceno** (s `Agent` v `tools` ano, hloubka 3) | text opraven (kapitola 4); orchestrátor jako hlavní vlákno zůstává jako zásada |
+| Agent jako hlavní vlákno | potvrzeno (`--agent`, klíč `agent`) | beze změny |
+| `skills:` přednačte skill do agenta | potvrzeno, vkládá celý obsah | tenký skill musí být opravdu malý, bez `disable-model-invocation` |
+| Omezení Bashe v `tools:` agenta | **nepodloženo** | jen přes `PreToolUse` hook podle `agent_type` (křehké); alternativa `clerk` |
+| `deny` přebíjí `allow` | potvrzeno | podporuje krok 0 (odstranit plošný `deny curl`), zúžení výjimkou nejde |
+| Hook na chráněné soubory | potvrzeno (`Edit\|Write`, exit 2 + zpráva, běží i v subagentech) | Q2; hook potřebuje i větev pro Bash, protože soubor jde změnit i přes Bash |
+| Hook na `git push` | částečně (`if: "Bash(git push *)"`, best-effort) | Q10 stojí na gitovém `pre-push` hooku mimo Claude Code, ne na hooku Claude |
+| Pluginoví agenti | pole `hooks`, `permissionMode`, `mcpServers` se **ignorují** | hooky patří do `hooks/hooks.json` pluginu; agenty s těmito poli dodávat v projektu, ne v pluginu |
+| Čerstvý kontext subagenta | potvrzeno | orchestrátor musí předat vše potřebné v zadání (kontextový balíček) |
+
+Zbývá ověřit: zápis názvu skillu v `skills:` u pluginového agenta (agent to označil jako nedořešené).
