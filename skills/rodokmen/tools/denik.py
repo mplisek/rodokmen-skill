@@ -263,11 +263,32 @@ def prevod_vysledku(klic):
     return None, False, False
 
 
+KONTEXT = re.compile(r"^(?:osob[ay]\s+)?\d[\d,\s–-]*$|\(\s*\d[\d,\s–-]*\)\s*$")
+CISLA_OSOB = re.compile(r"\s*\(\s*\d[\d,\s–-]*\)")
+
+
+def je_kontext(text, maximum=120):
+    """Sloupec „hledáno“ ve starém deníku často nese jen rod nebo osoby s čísly (Culkové (72, 73), „osoba 24“, „144, 145“),
+    ne větu o tom, co se hledalo."""
+    t = (text or "").strip()
+    return bool(t) and t not in ("–", "-") and len(t) <= maximum and bool(KONTEXT.search(t))
+
+
+def bez_cisel_osob(text):
+    """Text bez čísel osob v závorkách; zbude-li jen číslice a čárky, je výsledek prázdný."""
+    t = CISLA_OSOB.sub("", text or "").strip(" ,;")
+    return "" if re.fullmatch(r"[\d,\s–-]*", t) else t
+
+
 def migruj_radek(radek, nahradni_id):
     """(záznam, důvody k ruční kontrole, odebrané procesní části)."""
     c = bunky_radku(radek)
     duvody, odebrano = [], []
     z = {"id": int(c[0]) if c and c[0].isdigit() else nahradni_id}
+    posun = False   # sloupce se v řádku používaly jinak než v záhlaví: přeřazeno, jde to do protokolu
+    if len(c) == 6:   # starší řádky bez sloupce rozsah (rozsah je ve zdroji): zdroj, hledáno, výsledek, citace
+        c = c[:3] + [""] + c[3:]
+        posun = True
     if len(c) != 7:
         duvody.append(f"řádek má {len(c)} sloupců místo 7")
         z.update(k_rucni_kontrole=True, puvodni=radek, duvod="; ".join(duvody))
@@ -275,6 +296,15 @@ def migruj_radek(radek, nahradni_id):
             z["zdroj"] = {"typ": typ_zdroje(c[2]), "text": c[2]}
         return z, duvody, odebrano
     _, datum, zdroj, rozsah, hledano, vysledek, citace = c
+    prazdne = ("", "–", "-")
+    if je_kontext(hledano) and rozsah not in prazdne:        # hledáno = kontext, věta o hledání je ve sloupci rozsah
+        nove = bez_cisel_osob(rozsah)
+        if nove:
+            rozsah, hledano, posun = "", nove, True
+    elif hledano in prazdne and je_kontext(rozsah):          # hledáno prázdné, rod s čísly osob je ve sloupci rozsah
+        nove = bez_cisel_osob(rozsah)
+        if nove:
+            rozsah, hledano, posun = "", nove, True
     if not store.je_datum(datum):
         duvody.append(f"datum „{datum}“ není RRRR-MM-DD")
     z["datum"] = datum
@@ -295,11 +325,18 @@ def migruj_radek(radek, nahradni_id):
         else:
             duvody.append("výsledek nemá rozpoznatelný klíč (**nalezeno** apod.)")
             vys = "nalezeno"
+    if vys == "nalezeno" and odhad and "nenalezen" in zbytek[:300].lower():   # „křest nalezen, sňatek nenalezen“
+        vys = "částečně"
     z["vysledek"] = vys
     if over:
         z["overeno"] = True
     hl, odeb, zm1 = sanitizuj("" if hledano in ("–", "-") else hledano)
     odebrano += odeb
+    if not hl.strip() and roz.strip() and not posun:   # sloupec hledáno měl jen procesní text: věta o hledání je v rozsahu
+        hl, roz, posun = roz, "", True
+        z["rozsah"] = ""
+    if posun and not roz.strip() and vys in ROZSAH_POVINNY:   # u posunutých řádků je rozsah (co se prošlo) ve zdroji
+        z["rozsah"] = zz
     poznamka = []
     hl2, zbyt = rozdel(hl, MAX_HLEDANO)
     if zbyt:
@@ -321,7 +358,7 @@ def migruj_radek(radek, nahradni_id):
     z["puvodni"] = radek
     if odebrano:
         z["proces"] = odebrano
-    if odebrano or odhad or zm or zmr or zm1 or zm2 or zm3:
+    if odebrano or odhad or posun or zm or zmr or zm1 or zm2 or zm3:
         z["uprava_automaticky"] = True
     duvody += [x for x in over_zaznam(dict(z), ()) if not x.startswith("id:")]
     if duvody:
