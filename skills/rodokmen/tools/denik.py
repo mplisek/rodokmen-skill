@@ -43,6 +43,32 @@ NALEZ_POVINNY = ("nalezeno", "vyvráceno")
 VEREJNA_POLE = ("rozsah", "hledano", "nalez", "citace", "poznamka", "odkaz")
 SLOUPCE = ("#", "datum", "zdroj", "rozsah", "hledáno", "výsledek", "nález", "citace", "odkaz")
 MAX_HLEDANO, MAX_NALEZ = 160, 400
+# Metadata čtení (analyza/navrh-router-uloh.md kap. 6.1): ID úkolu, verze nástroje, model a strojově čitelný seznam snímků; na web nejdou.
+UKOL = re.compile(r"U-\d{4,}")
+SNIMKY_TVAR = re.compile(r"^[\w.-]+:\d+(?:-\d+)?(?:,[\w.-]+:\d+(?:-\d+)?)*$")
+
+
+def parse_snimky(text):
+    """„03066862:236-258,a20a05e2:12“ → [{svazek, od, do}]; ValueError při špatném tvaru."""
+    if not SNIMKY_TVAR.match(text or ""):
+        raise ValueError("snimky: svazek:od-do, více oddělených čárkou (např. 03066862:236-258)")
+    out = []
+    for cast in text.split(","):
+        svazek, _, rozsah = cast.partition(":")
+        od, _, do = rozsah.partition("-")
+        out.append({"svazek": svazek, "od": int(od), "do": int(do or od)})
+        if out[-1]["od"] < 1 or out[-1]["do"] < out[-1]["od"]:
+            raise ValueError(f"snimky: {cast} – snímky od 1, do ≥ od")
+    return out
+
+
+def verze_nastroje():
+    """Verze skillu v projektu (.skill_verze), jinak ''."""
+    try:
+        with open(os.path.join(ROOT, ".skill_verze"), encoding="utf-8") as f:
+            return f.read().strip()
+    except OSError:
+        return ""
 
 
 def over_zaznam(z, id_pred=()):
@@ -78,7 +104,18 @@ def over_zaznam(z, id_pred=()):
         chyby.append("osoby: seznam klíčů osob")
     if z.get("opravuje") is not None and z["opravuje"] not in id_pred:
         chyby.append(f"opravuje: záznam {z['opravuje']} neexistuje")
-    texty = [("zdroj", (zd or {}).get("text", "") if isinstance(zd, dict) else "")] + [(p, str(z.get(p) or "")) for p in VEREJNA_POLE]
+    if "ukol" in z and not (isinstance(z["ukol"], str) and UKOL.fullmatch(z["ukol"])):
+        chyby.append("ukol: ID úkolu ve tvaru U-0042")
+    for pole in ("nastroj", "model"):
+        if pole in z and not (isinstance(z[pole], str) and 0 < len(z[pole]) <= 60):
+            chyby.append(f"{pole}: text do 60 znaků")
+    if "snimky" in z:
+        sn = z["snimky"]
+        if not (isinstance(sn, list) and sn and all(isinstance(x, dict) and isinstance(x.get("svazek"), str) and x["svazek"]
+                                                       and isinstance(x.get("od"), int) and isinstance(x.get("do"), int)
+                                                       and 1 <= x["od"] <= x["do"] for x in sn)):
+            chyby.append("snimky: seznam {svazek, od, do} s 1 ≤ od ≤ do")
+    texty =[("zdroj", (zd or {}).get("text", "") if isinstance(zd, dict) else "")] + [(p, str(z.get(p) or "")) for p in VEREJNA_POLE]
     for pole, text in texty:
         for nazev, nalezeno in store.zakazane_vzory(text):
             chyby.append(f"{pole}: zakázaný vzor „{nazev}“: {nalezeno}")
@@ -141,6 +178,18 @@ def cmd_pridej(a):
         z["osoby"] = [x.strip() for x in a.osoby.split(",") if x.strip()]
     if a.opravuje is not None:
         z["opravuje"] = a.opravuje
+    if a.ukol:
+        z["ukol"] = a.ukol
+    nastroj = a.nastroj or verze_nastroje()
+    if nastroj:
+        z["nastroj"] = nastroj
+    if a.model:
+        z["model"] = a.model
+    if a.snimky:
+        try:
+            z["snimky"] = parse_snimky(a.snimky)
+        except ValueError as e:
+            sys.exit(f"Záznam se neuložil:\n  {e}")
     ch = over_zaznam(z, {x["id"] for x in zaznamy})
     if ch:
         sys.exit("Záznam se neuložil:\n  " + "\n  ".join(ch))
@@ -476,6 +525,10 @@ def main():
     p.add_argument("--odkaz")
     p.add_argument("--opravuje", type=int)
     p.add_argument("--overeno", action="store_true")
+    p.add_argument("--ukol")       # ID úkolu z fronty (U-0042)
+    p.add_argument("--nastroj")    # verze skillu; výchozí z .skill_verze
+    p.add_argument("--model")      # kdo četl (sonnet, opus…)
+    p.add_argument("--snimky")     # svazek:od-do[,svazek:od-do]
     p.set_defaults(fn=cmd_pridej)
     p = sub.add_parser("vykresli")
     p.add_argument("--do")

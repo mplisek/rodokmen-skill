@@ -41,6 +41,11 @@ queue by the routing rules in `reference/nocni_rezim.md`, estimate the cost band
 `fronta.py selhani <id> --druh prechodna|zakaz --portal …` (retry only every second night at the soonest, then weekend, then working hours, then one
 decision per portal). These commands change the queue files, so a fixer ticket runs them; you only read (`fronta.py seznam`, `frontier`, `kontrola`).
 
+Every change of a task is written to `data/ukoly_historie.jsonl` by `fronta.py`; when a task is done the fixer ticket names the diary rows and files
+(`fronta.py hotovo <id> --denik … --soubory … --spotreba …`) and the diary rows carry `--ukol U-…`, `--model` and `--snimky svazek:od-do`
+(`denik.py pridej`). After a better tool or model, `fronta.py znovu --starsi-nez <version> --zaloz` queues only the unreadable or not-found readings
+of older tools for a new reading.
+
 ## Decision queue
 
 A decision is a choice only a person can make (two candidates with equal evidence, a name variant, cost or manner of a big job, privacy,

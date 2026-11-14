@@ -56,6 +56,14 @@ class NocniRezimPravidla(unittest.TestCase):
         for s in ("fronta.py smeruj", "fronta.py selhani", "ukoly_vstup.md", "Definice hotového"):
             self.assertIn(s, o, s)
 
+    def test_historie_a_metadata_cteni_jsou_popsane(self):
+        for s in ("ukoly_historie.jsonl", "fronta.py historie", "fronta.py znovu", "--ukol", "--snimky", "--nastroj", "--denik"):
+            self.assertIn(s, self.t, s)
+        repo = Path(__file__).resolve().parents[3]
+        o = (repo / "agents/orchestrator.md").read_text(encoding="utf-8")
+        for s in ("--ukol", "--snimky", "fronta.py znovu"):
+            self.assertIn(s, o, s)
+
 
 if __name__ == "__main__":
     unittest.main()

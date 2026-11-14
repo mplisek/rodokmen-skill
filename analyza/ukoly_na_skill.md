@@ -8,11 +8,6 @@ v projektu. Hotový úkol se maže, výsledek je v CHANGELOG. Návrh a zdůvodn�
 Rozpočet: pásma S až XL a práh v `rezim.json` (`rozpocet`), odhad v routeru podle složitosti, řazení priorita a cena, kalibrace pásem ze skutečné
 spotřeby. Úkol nad prahem jde do rozhodnutí.
 
-## S-006 | P2 | typ:skill
-
-Historie a metadata: `data/ukoly_historie.jsonl` (jen přidávání), pole `ukol`, `nastroj`, `model` a strukturovaný `rozsah` v deníku,
-`fronta.py znovu --vysledek nečitelné,nenalezeno --starsi-nez <verze>` (kap. 6.1).
-
 ## S-007 | P2 | typ:skill
 
 Před každým čtením (noc i den) kontrola cache a historie, zda byl výřez už čten pro tuto otázku (`pracovni_prehled.py`, `cache.py najdi`, deník).

@@ -13,6 +13,9 @@ Použití (z kořene projektu): python3 -I tools/fronta.py <příkaz> …
   rozdel <id> --cast FRONTA "text" "DOD" [--cast …]                   rozdělí úkol na části v různých frontách
   zaparkuj <id> --do RRRR-MM-DD [--duvod T]                           stav:čeká do data
   selhani <id> --druh prechodna|zakaz --portal P [--kdy "RRRR-MM-DD HH:MM"]   opakování podle rezim.json, pak rozhodnutí za portál
+  hotovo <id> [--denik 12,13] [--soubory a,b] [--spotreba S|M|L|XL] [--poznamka T]   zapíše do historie, co úkol vyřešilo
+  historie [<id>]                                                     události úkolu (i dětí po rozdělení) z data/ukoly_historie.jsonl
+  znovu --starsi-nez <verze> [--vysledek nečitelné,nenalezeno] [--zaloz]   neúspěšná čtení v deníku staršího nástroje; --zaloz založí úkoly
   uprav <id> [--p P2] [--text T] [--stav odloženo] [--os …] [--cil …] [--zavisi …] [--pridat-text T]
   hotovo <id> | hotovo --cil krest:115    úkol smaže (jeho výsledek je v datech nebo v následných úkolech)
   presun <id> <fronta>                    přesune úkol do jiné fronty
@@ -299,6 +302,85 @@ def cti_zamek():
     return z
 
 
+# ---------- historie úkolů (data/ukoly_historie.jsonl, jen přidávání; analyza/navrh-router-uloh.md kap. 6.1) ----------
+def historie_cesta():
+    return os.path.join(DATA, "ukoly_historie.jsonl")
+
+
+def prvni_radek(text, n=120):
+    r = (text or "").strip().splitlines()
+    return r[0][:n] if r else ""
+
+
+def zapis_udalost(udalost, id_, **kw):
+    """Připíše událost úkolu (vznik, doplneno, smerovani, deleni, parkovani, selhani, presun, hotovo). Hotový úkol se z fronty maže, stopa zůstává."""
+    z = {"cas": datetime.datetime.now().isoformat(timespec="seconds"), "udalost": udalost, "id": id_}
+    z.update({k: v for k, v in kw.items() if v not in (None, "", [])})
+    os.makedirs(DATA, exist_ok=True)
+    with open(historie_cesta(), "a", encoding="utf-8", newline="\n") as f:
+        f.write(json.dumps(z, ensure_ascii=False) + "\n")
+
+
+def nacti_historii():
+    p = historie_cesta()
+    if not os.path.exists(p):
+        return []
+    out = []
+    with open(p, encoding="utf-8") as f:
+        for r in f:
+            if r.strip():
+                try:
+                    out.append(json.loads(r))
+                except ValueError:
+                    pass
+    return out
+
+
+def verze_tuple(s):
+    """„0.10.1-fork.1“ → (0, 10, 1, 1); porovnání verzí nástroje."""
+    return tuple(int(x) for x in re.findall(r"\d+", s or ""))
+
+
+def znovu(data, vysledky, starsi, zalozit):
+    """Neúspěšná čtení v deníku (aktivní, ne nahrazená opravou), jejichž nástroj je starší než `starsi` (nebo neznámý). Volitelně založí úkoly."""
+    p = os.path.join(DATA, "denik.jsonl")
+    if not os.path.exists(p):
+        print("data/denik.jsonl neexistuje")
+        return 1
+    radky = []
+    with open(p, encoding="utf-8") as f:
+        for r in f:
+            if r.strip():
+                try:
+                    radky.append(json.loads(r))
+                except ValueError:
+                    pass
+    nahrazene = {z.get("opravuje") for z in radky if z.get("opravuje") is not None}
+    hranice = verze_tuple(starsi)
+    texty = " ".join(u.text for _, uk in data.values() for u in uk)
+    cil = "vstup" if os.path.exists(cesta("vstup")) else "noc"
+    nalezeno = zalozeno = 0
+    for z in sorted(radky, key=lambda x: x.get("id", 0)):
+        if z.get("id") in nahrazene or z.get("k_rucni_kontrole") or z.get("vysledek") not in vysledky:
+            continue
+        if z.get("nastroj") and verze_tuple(z["nastroj"]) >= hranice:
+            continue
+        nalezeno += 1
+        print(f"deník {z['id']}: {z['vysledek']} – {str(z.get('hledano', ''))[:80]} ({z.get('nastroj') or 'nástroj neznámý'})")
+        if zalozit and f"(deník {z['id']})" not in texty:
+            text = (f"Přečíst znovu (deník {z['id']}): {z.get('hledano', '')}. Původní výsledek {z['vysledek']} "
+                    f"({z.get('nastroj') or 'nástroj neznámý'}). Zdroj: {(z.get('zdroj') or {}).get('text', '')}.")
+            novy = Ukol(nova_id(data, zalozeno), "P3", [str(x) for x in z.get("osoby", [])], "bádání", "", "", "otevřeno", text)
+            uv, uk = data[cil]
+            uk.append(novy)
+            data[cil] = (uv, uk)
+            uloz(cil, uv or "", uk)
+            zapis_udalost("vznik", novy.id, fronta=cil, text=prvni_radek(text), duvod="znovu", denik=[z["id"]])
+            zalozeno += 1
+    print(f"nalezeno {nalezeno} čtení" + (f", založeno {zalozeno} úkolů ({cil})" if zalozit else " (--zaloz je založí)"))
+    return 0
+
+
 # ---------- router: směrování, dělení, parkování, selhání portálu (analyza/navrh-router-uloh.md) ----------
 def nastav_dod(u, dod):
     """Definice hotového jako řádek textu úkolu (nahradí předchozí)."""
@@ -453,6 +535,11 @@ def main(argv=None):
     s = sp.add_parser("frontier"); s.add_argument("fronta", nargs="?", choices=list(FRONTY))
     sp.add_parser("prejmenuj")
     s = sp.add_parser("hotovo"); s.add_argument("id", nargs="?"); s.add_argument("--cil")
+    for a_ in ("--denik", "--soubory", "--spotreba", "--poznamka"):
+        s.add_argument(a_)   # co úkol vyřešilo (řádky deníku, soubory), skutečná cena S|M|L|XL; zapíše se do historie
+    s = sp.add_parser("historie"); s.add_argument("id", nargs="?")
+    s = sp.add_parser("znovu"); s.add_argument("--vysledek", default="nečitelné,nenalezeno"); s.add_argument("--starsi-nez", dest="starsi", required=True)
+    s.add_argument("--zaloz", action="store_true")
     s = sp.add_parser("presun"); s.add_argument("id"); s.add_argument("fronta", choices=list(FRONTY))
     sp.add_parser("trid")
     sp.add_parser("kontrola")
@@ -554,6 +641,26 @@ def main(argv=None):
             sys.exit("pracovní doba: další úkol se nepouští (--vzdy pro ruční spuštění)")
         print("žádný úkol")
         return 3
+    if a.cmd == "historie":
+        udal = nacti_historii()
+        ids = {a.id} if a.id else None
+        if ids:
+            zmena = True
+            while zmena:   # i události dětí rozdělených úkolů
+                zmena = False
+                for u in udal:
+                    if u["udalost"] == "deleni" and u["id"] in ids:
+                        for d in u.get("deti", []):
+                            if d["id"] not in ids:
+                                ids.add(d["id"])
+                                zmena = True
+        for u in udal:
+            if ids is None or u["id"] in ids:
+                dalsi_pole = {k: v for k, v in u.items() if k not in ("cas", "udalost", "id")}
+                print(f"{u['cas']} {u['udalost']:10} {u['id']}  {json.dumps(dalsi_pole, ensure_ascii=False)}")
+        return 0
+    if a.cmd == "znovu":
+        return znovu(data, [x.strip() for x in a.vysledek.split(",") if x.strip()], a.starsi, a.zaloz)
     if a.cmd == "smeruj":
         if a.do not in FRONTY or a.do == "vstup":
             sys.exit(f"smeruj --do: {', '.join(f for f in FRONTY if f != 'vstup')}")
@@ -582,6 +689,7 @@ def main(argv=None):
                     uk.remove(u)
                     uloz(f2, uv2, uk2)
                     uloz("vstup", uv, uk)
+                    zapis_udalost("doplneno", x.id, fronta=f2, z_ukolu=u.id)
                     print(f"doplněno {x.id} ({f2}) – úkol {u.id} ze vstupu se slučuje")
                     return 0
         uk.remove(u)
@@ -589,6 +697,7 @@ def main(argv=None):
         uk2.append(u)
         uloz("vstup", uv, uk)
         uloz(a.do, uv2 or "", uk2)
+        zapis_udalost("smerovani", u.id, z="vstup", do=a.do, dod=a.dod.strip(), cena=u.cena)
         print(f"{u.id}: vstup → {a.do}" + (f" (cena {u.cena})" if u.cena else ""))
         return 0
     if a.cmd == "rozdel":
@@ -615,6 +724,7 @@ def main(argv=None):
             uk_.append(dite)
             uloz(fronta_, uv_ or "", uk_)
             print(f"{dite.id} ({fronta_}) z {rodic.id}")
+        zapis_udalost("deleni", rodic.id, z=f0, deti=[{"id": d.id, "fronta": f_} for f_, d in deti])
         return 0
     if a.cmd == "zaparkuj":
         try:
@@ -628,6 +738,7 @@ def main(argv=None):
                     if a.duvod:
                         u.text = (u.text + f"\n\nČeká do {a.do}: {a.duvod}").strip("\n")
                     uloz(f, uv or "", uk)
+                    zapis_udalost("parkovani", u.id, fronta=f, do=a.do, duvod=a.duvod)
                     print(f"{u.id} ({f}): čeká do {a.do}")
                     return 0
         sys.exit(f"{a.id} nenalezeno")
@@ -637,9 +748,14 @@ def main(argv=None):
         for f, (uv, uk) in data.items():
             for u in uk:
                 if u.id == a.id:
+                    drive = {x.id for _, uk_ in data.values() for x in uk_}
                     dec = po_selhani(data, u, a.druh, a.portal, now, r)
                     for f2, (uv2, uk2) in data.items():
                         uloz(f2, uv2 or "", uk2) if (uk2 or os.path.exists(cesta(f2))) else None
+                    if dec and dec.id not in drive:
+                        zapis_udalost("vznik", dec.id, fronta="rozhodnuti", p=dec.p, text=prvni_radek(dec.text), duvod="selhání portálu " + a.portal)
+                    zapis_udalost("selhani", u.id, fronta=f, druh=a.druh, portal=a.portal, pokusu=u.pokusu,
+                                  vysledek=(f"rozhodnutí {dec.id}" if dec else f"čeká do {u.do}, režim {u.kdy}"))
                     print(f"{u.id}: " + (f"rozhodnutí {dec.id} (portál {a.portal})" if dec else f"čeká do {u.do}, režim {u.kdy}, pokus {u.pokusu}"))
                     return 0
         sys.exit(f"{a.id} nenalezeno")
@@ -661,11 +777,13 @@ def main(argv=None):
                 if stejny(u, novy):
                     sluc(u, novy)
                     uloz(f, uv, uk)
+                    zapis_udalost("doplneno", u.id, fronta=f, text=prvni_radek(novy.text))
                     print(f"doplněno {u.id} ({f}) – nový úkol se nezakládá")
                     return 0
         uv, uk = data[a.fronta]
         uk.append(novy)
         uloz(a.fronta, uv or "", uk)
+        zapis_udalost("vznik", novy.id, fronta=a.fronta, p=novy.p, text=prvni_radek(novy.text))
         print(f"založeno {novy.id} ({a.fronta})")
         return 0
     # uprav / hotovo / presun – podle id
@@ -681,6 +799,8 @@ def main(argv=None):
                 continue
             zmeneno += 1
             if a.cmd == "hotovo":
+                zapis_udalost("hotovo", u.id, fronta=f, denik=[int(x) for x in re.split(r"[,\s]+", a.denik or "") if x.isdigit()],
+                              soubory=[x for x in re.split(r"\s*,\s*", a.soubory or "") if x], spotreba=a.spotreba, poznamka=a.poznamka)
                 print(f"smazáno {u.id} ({f})")
                 continue
             if a.cmd == "presun":
@@ -690,6 +810,7 @@ def main(argv=None):
                         vyzaduj_rozhodnuti(u.text)
                     uk2.append(u)
                     uloz(a.fronta, uv2 or "", uk2)
+                    zapis_udalost("presun", u.id, z=f, do=a.fronta)
                     print(f"{u.id}: {f} → {a.fronta}")
                     continue
             if a.cmd == "uprav":

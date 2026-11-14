@@ -75,6 +75,18 @@ Hlásí se příkazem `fronta.py selhani <id> --druh prechodna|zakaz --portal AR
   automaticky, čekají úkoly …: počkat, nebo přeřadit do ručního bádání?“ Další úkoly téhož portálu se připojí ke stejnému rozhodnutí
   (`cíl:portal:<portál>`) a závisejí na něm, takže se po rozhodnutí samy odblokují.
 
+## Historie úkolů a opakované čtení
+
+- **Historie:** každá změna úkolu (vznik, doplnění, směrování, dělení, parkování, selhání, přesun, hotovo) se připíše do `data/ukoly_historie.jsonl`
+  (jen přidávání, jeden JSON na řádek). Hotový úkol se z fronty maže, ale zůstane po něm stopa. `fronta.py historie [<id>]` vypíše události
+  úkolu i jeho dětí po rozdělení. `fronta.py hotovo <id> --denik 12,13 --soubory pracovni/vysledky/x.json --spotreba M` zapíše, co úkol vyřešilo
+  (řádky deníku, soubory) a jeho skutečnou cenu.
+- **Metadata čtení v deníku:** `denik.py pridej … --ukol U-0042 --model sonnet --snimky 03066862:236-258` (a `--nastroj`, výchozí je verze skillu
+  z `.skill_verze`). Na web nejdou. Strojově čitelný seznam snímků nahrazuje volný text u nových záznamů.
+- **Opakované čtení podle schopností:** `fronta.py znovu --starsi-nez <verze> [--vysledek nečitelné,nenalezeno] [--zaloz]` najde v deníku
+  neúspěšná čtení, která dělal starší (nebo neznámý) nástroj, a založí na ně úkoly (do vstupu, jinak do fronty noc). Úspěšná, ověřená čtení se
+  neopakují. Spouští se po zlepšení nástroje nebo modelu.
+
 ## Fronta na noc
 
 **Noční fronta je jen na to, co jde skriptem a bez člověka** (ARON a jiné portály, které skript smí). Úkol, který vyžaduje prohlížeč,
