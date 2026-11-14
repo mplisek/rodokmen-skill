@@ -82,7 +82,11 @@ def main(argv=None):
     weby = verze_webu()
     site = os.path.join(ROOT, "web", "src", "data", "site.json")
     for cesta in weby:
-        arg = [cesta] + (["--site", site] if os.path.isfile(site) else [])
+        # site.json je z posledního exportu = celý rodokmen; názvy a barvy rodů v přístupu mají jiná data (jako test_jednotnost_web),
+        # proto se podle něj kontroluje jen verze „vse“ (nebo jediný dist); přístup se kontroluje bez dat rodů
+        pristup = os.path.basename(os.path.dirname(cesta)) == "_p" and os.path.basename(cesta) != "vse"
+        arg = [cesta] + (["--site", os.path.join(os.path.dirname(site), "neexistuje.json")] if pristup
+                         else ["--site", site] if os.path.isfile(site) else [])
         ok, vystup = spust(["kontrola_webu.py", *arg])
         kroky.append({"krok": "web", "cil": os.path.relpath(cesta, ROOT).replace("\\", "/"), "ok": ok,
                       "vystup": "" if ok else poslednich(vystup, 25)})

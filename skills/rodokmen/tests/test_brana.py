@@ -53,6 +53,26 @@ class Brana(unittest.TestCase):
         self.assertIn("index.html", r.stdout + r.stderr)
         self.assertEqual(self.marker()["vysledek"], "cervena")
 
+    def test_site_json_se_pouzije_jen_pro_vse_ne_pro_pristupy(self):
+        """Rody a barvy ze site.json (poslední export) platí jen pro verzi „vse“; přístup má vlastní rody (jako test_jednotnost_web)."""
+        site = self.p / "web" / "src" / "data" / "site.json"
+        site.parent.mkdir(parents=True, exist_ok=True)
+        site.write_text(json.dumps({"lines": {"rod-a": {"k": 8, "slug": "rod-a", "name": "Rodové A", "color": "#111111"}}}), encoding="utf-8")
+        znacka = '<span class="rod-znak"><span class="dot" style="background: {b}"></span><a href="/rod/{s}/">{n}</a></span>'
+        stranka = "<!doctype html><html><body><p>{z}</p></body></html>"
+        vse = self.p / "web" / "dist" / "_p" / "vse"
+        pristup = self.p / "web" / "dist" / "_p" / "pristup"
+        for d in (vse, pristup):
+            d.mkdir(parents=True, exist_ok=True)
+        (vse / "index.html").write_text(stranka.format(z=znacka.format(b="#111111", s="rod-a", n="Rodové A")), encoding="utf-8")
+        (pristup / "index.html").write_text(stranka.format(z=znacka.format(b="#222222", s="rod-b", n="Rodové B")), encoding="utf-8")
+        r = self.brana()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        (vse / "index.html").write_text(stranka.format(z=znacka.format(b="#999999", s="rod-a", n="Rodové A")), encoding="utf-8")
+        r = self.brana()
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("barva značky", r.stdout)
+
     def test_cervena_u_rozbitych_dat(self):
         self.web()
         (self.p / "data" / "ukoly_na_rodinu.md").write_text("# R\n\n## U-0001 | P2 | stav:otevřeno | zavisi:U-0002\na\n"
