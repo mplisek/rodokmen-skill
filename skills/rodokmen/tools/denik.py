@@ -254,6 +254,14 @@ def prevod_vysledku(klic):
     if k.startswith("nalezeno") or k.startswith("potvrzeno"):
         return "nalezeno", over, False
     # volnější klíče ze starých řádků: mapují se odhadem podle slov (v protokolu ke kontrole)
+    if "negativn" in k:
+        return "nenalezeno", False, True
+    if k.startswith("vyloučen"):
+        return "vyvráceno", False, True
+    if re.match(r"stop[ayu]\b", k):
+        return "částečně", False, True
+    if re.search(r"\b(?:ověřen|potvrzen|přečten)", k) and not re.search(r"neověřen|nepotvrzen|nepřečten", k):
+        return "nalezeno", True, True
     if "nenalezen" in k or "nic nenašl" in k or "bez jistého" in k or "bez přímého" in k:
         return "nenalezeno", False, True
     if re.search(r"kandidát|stopa|zatím jen|rozpracováno|neověřeno|nejist", k):

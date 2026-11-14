@@ -40,6 +40,10 @@ Konvence: každý řádek = jedno hledání, i neúspěšné.
 | 18 | 2026-11-09 | ARON, Dolní Lhota, narození 1840–1850, sn. 3–9 | křest Petra Králového | **nenalezeno** v sn. 3–9 | – |
 | 19 | 2026-11-09 | ARON, Dolní Lhota, úmrtí 1890–1900 | děti Josefa Nováka 1887–1909 | ověření čtení pomocníka | **Ověřeno:** sn. 12, Josefa † 27. 7. 1887. | – |
 | 20 | 2026-11-09 | ARON, Chlum, oddaní, sn. 5 | křest a sňatek Marie Tesařové | **křest nalezen**, sňatek nenalezen v rejstříku. | – |
+| 22 | 2026-11-10 | ARON, Dolní Lhota, úmrtí 1880–1890 | sn. 4 | úmrtí Anny Novákové | **PŘEČTENO**: Anna † 2. 5. 1884, dcera Josefa. | – |
+| 23 | 2026-11-10 | ARON, Dolní Lhota, úmrtí 1880–1890 | sn. 5–9 | úmrtí Evy Králové | **Rozkoš POTVRZENO (negativní)**: v sn. 5–9 žádná Eva. | – |
+| 24 | 2026-11-10 | ARON, Dolní Lhota, úmrtí 1880–1890 | sn. 9 | úmrtí Petra Nováka | **Stopy (ověřeno)**: úmrtí Petra † 1884 v Horní Lhotě. | – |
+| 25 | 2026-11-10 | ARON, Dolní Lhota, úmrtí 1880–1890 | sn. 9 | křest Karla Králového | **Vyloučeno**: kandidát Karel * 1850 je jiný, matka Anna. | – |
 | 21 | 2026-11-10 | ARON, Dolní Lhota, oddaní 1860–1880, sn. 1–50 | Zárubové a Čermákovi (76–79) | – | **Nenalezeno**: křest Josefa Záruby ~1796 v rejstříku. | – |
 """
 
@@ -197,6 +201,15 @@ class Migrace(unittest.TestCase):
 
     def test_smisena_zjisteni_jsou_castecne(self):
         self.assertEqual(self.migruj()[20]["vysledek"], "částečně")
+
+    def test_dalsi_vyslovne_klice_vysledku(self):
+        z = self.migruj()
+        self.assertEqual((z[22]["vysledek"], z[22].get("overeno")), ("nalezeno", True))    # PŘEČTENO
+        self.assertEqual(z[23]["vysledek"], "nenalezeno")                                  # POTVRZENO (negativní)
+        self.assertEqual(z[24]["vysledek"], "částečně")                                    # Stopy (ověřeno)
+        self.assertEqual(z[25]["vysledek"], "vyvráceno")                                   # Vyloučeno
+        for i in (22, 23, 24, 25):
+            self.assertTrue(z[i].get("uprava_automaticky"), i)                             # odhad je v protokolu
 
     def test_bezne_radky_se_nezmeni(self):
         z = self.migruj()
