@@ -1,4 +1,4 @@
-# Návrh sady agentů, vynucování pravidel a testů (verze 0.3 k iteraci)
+# Návrh sady agentů, vynucování pravidel a testů (verze 0.4, rozhodnutí schválena, nic neimplementováno)
 
 Stav: **návrh k diskusi, nic z toho zatím není implementováno.** Celá analýza je česky. Až se návrh schválí, vzniknou
 z něj anglické soubory (agenti, instrukce, skilly, metodika pro model); návody k bádání a použití zůstávají česky
@@ -41,6 +41,10 @@ Princip, který z toho plyne a který chci jako závazný:
 - Plošný zákaz `curl` a `wget` je příliš hrubý. Hlídač (`hlidac_site.py`) už `curl` na cizí servery přesměruje přes
   `slusne.py curl` a localhost pustí, zákaz je tedy navíc a škodí. Návrh: odstranit `SIT_ZAKAZ` z `novy_projekt.py`
   a při aktualizaci projektu ho ze `settings.json` vyjmout (změna v šabloně, s testem, že localhost projde a archiv ne).
+- Výjimky hlídače (`VOLNE`) musí pokrýt **vlastní nasazení, testovací i produkční, na Netlify i Cloudflare**: dnes obsahují
+  `netlify.app`, `workers.dev`, `cloudflare.com`, ale **chybí `pages.dev` a vlastní domény**. Vlastní domény se doplní
+  z `web.json`, ne jako obecná výjimka. Testy a kontroly nasazeného webu jsou volné, **samotné nasazení** zůstává se souhlasem
+  uživatele (kapitola 8, Q12).
 
 ## 2. Zásady
 
@@ -169,6 +173,11 @@ Platforma: **podagent v Claude Code nemůže spouštět další podagenty**, pro
 | `fixer` | provede opravu přesně podle zadání | sonnet → opus | jen soubory ze zadání | nic |
 | `privacy-reviewer` | soukromí před zveřejněním | sonnet | nic | nic |
 
+**Počáteční sada je 9 agentů:** `orchestrator`, `researcher`, `browser-reader`, `verifier`, `upstream-sync`, `test-runner`,
+`failure-analyst`, `fixer`, `test-author`. Čtyři zbylé (`record-writer`, `skill-dev`, `web-steward`, `privacy-reviewer`)
+**zatím nahrazují skripty a stávající kontroly** (`zapis.py` a spol., testy, `kontrola.py` s E2E soukromím) a agentem se
+stanou, až se ukáže, že skript nestačí.
+
 **Skript, ne agent:** `vydani` (verze na třech místech, kontrola CHANGELOGu, tag), `kontext` (sestavení kontextového
 balíčku), `denik`, `fronta`, `otazky` (zápisy), `pokryti`, `jazyk`, `sync_report` (co je nového v originále), `fix_auto`
 (mechanické opravy).
@@ -247,7 +256,10 @@ test-runner  ->  zpráva o selhání (strukturovaná, bez názoru)
 - **Analytik nikdy neupravuje, opravář nikdy nerozhoduje o rozsahu.** Jeden agent, který by dělal obojí, je u maličkostí
   rychlejší, ale hodnotí vlastní práci a v „opravě“ se skrývají změny návrhu. Třída S drží cenu nízkou.
 - **Zadání opravy:** příznak (test a řádek), příčina s důkazem (commit, řádek, reprodukce), změna (soubory a co), seznam
-  povolených souborů, testy ke spuštění, riziko, velikost, čeho se nedotýkat.
+  povolených souborů, testy ke spuštění, **regresní test (povinné pole)**, riziko, velikost, čeho se nedotýkat.
+- **Každá nahlášená chyba dostane regresní test dřív, než se uzavře** (rozhodnuto, Q7). Chybu nahlásil uživatel nebo ji našel
+  test: zadání bez regresního testu se nepřijme, `fixer` úkol neuzavře, dokud test neexistuje a neprošel, a `test-author` ho
+  napíše podle šablony. Cíl: tatáž chyba se v příštích bězích nemůže vrátit nepozorovaně.
 - **`test-runner`** je expert na spuštění a hlášení: `{sada, prošlo, selhalo:[{test, soubor, zpráva}], nestabilní?, doba}`.
   Neúspěšný časovací test **jednou zopakuje** a označí `nestabilní`, nehádá (dnes se to stalo na Windows runneru).
 - **`test-author`** píše testy podle šablony a seznamu nepokrytého (kapitola 6), nikdy neupravuje produkční kód.
@@ -302,8 +314,9 @@ jméno uživatele, cesty (`pracovni/`, `C:\`), „ověřeno na snímku“, „č
 ### 5.3 Jednotná prezentace webu
 
 - **Jeden zdroj značky rodu:** komponenta `Rod` (barevný kruh + název z `lines[slug]`). **Holý název rodu v textu je zakázán.**
-  `export_web.py` při sestavení nahradí každý výskyt názvu rodu značkou, autor textu nic neznačkuje. Návrh tvaru: vždy *kruh
-  a za ním „Novákové“*, bez slova „rod“.
+  `export_web.py` při sestavení nahradí každý výskyt názvu rodu značkou, autor textu nic neznačkuje. Tvar (schváleno): vždy *kruh
+  a za ním název*, bez slova „rod“. **V zadání, pravidlech a metodice je pravidlo anonymní a přenositelné** (obecně
+  „název rodu“, příklady jen s vymyšlenými jmény), aby šlo použít v kterémkoli projektu.
 - **Barvy** jen z `lines[*].color`; žádná barva rodu mimo komponentu a statistiky.
 - **Pořadí rodů** je na všech stránkách stejné (podle čísla předka), oddíl „bez rodu“ je poslední.
 - **Datum, místa, čísla domů** stejným tvarem (D. M. RRRR, „čp. N“).
@@ -324,6 +337,29 @@ jméno uživatele, cesty (`pracovni/`, `C:\`), „ověřeno na snímku“, „č
 | `tests/pokryti/test_pokryti.py` | každá stránka a nástroj má test |
 
 Každý nový test napřed ověřím proti dnešním datům: `hledame` a `denik` ho musí **neprojít**, jinak nic nehlídá.
+
+### 5.5 Návrh: kontrola anonymity před pushem do veřejného repozitáře (Q10)
+
+Problém: repozitář skillu je veřejný a údaje z projektu (jména, příjmení, čísla osob a úkolů) se do něj snadno dostanou
+v příkladech, testech nebo zprávách commitů. Kontrola se spouští **jen před pushem**, ne při každém commitu, a **nikdy nemění
+historii** (rozhodnutí k Q9: git a slučování commitů zůstává na uživateli).
+
+- **Lokální seznam** `.anonymita-seznam` (v `.gitignore`, **ne v gitu**, protože by sám prozradil jména). Jeden řetězec nebo
+  regulární výraz na řádek, `#` komentář, hledá se bez ohledu na velikost písmen a diakritiku a nad kmeny (zadáš „Novák“,
+  najde i „Novákové“). Řádek `!cesta/souboru` vyjme soubor (např. testovací data s vymyšlenými jmény).
+- **Vzorový soubor** `.anonymita-seznam.priklad` je v gitu a obsahuje jen formát, žádná jména.
+- **Skript** `scripts/anonymita.py` (údržba repozitáře, není součástí skillu pro projekty):
+  - `pred-pushem` projde **všechny přidané řádky a zprávy všech commitů, které se budou pushovat** (`origin/main..HEAD`),
+    ne jen výsledný stav. To chytí i jméno, které už je v dalším commitu odstraněné, ale zůstalo v historii (přesně dnešní případ);
+  - při shodě skončí chybou a vypíše commit, soubor, řádek a **maskovaný** nález (`Nov***`); nic neopravuje a nepřepisuje;
+  - `navrhni-z-projektu <cesta>` vytvoří **kandidáty** na seznam z dat projektu (příjmení a místa z `osoby.py`, bez běžných slov
+    a krátkých řetězců), uživatel je prořeže; jména se do repozitáře nikdy nezapisují;
+  - `nainstaluj` nastaví `core.hooksPath` na `.githooks/` (hook `pre-push` je v gitu a volá `pred-pushem`).
+- **Zdroj pravdy o tom, co je chráněné, je jen lokální seznam.** Chybí-li, hook varuje a push nezastaví (CI seznam nemá).
+- **Testy** (`tests/anonymita/`, dočasné repozitáře, bez sítě): shoda v koncovém stavu; shoda jen v prostředním commitu
+  (musí selhat); shoda ve zprávě commitu; vyjmutá cesta projde; kmen se skloňováním; chybějící seznam jen varuje; skript nikdy
+  nezmění historii ani pracovní strom.
+- **Meze:** nechytí údaj, který v seznamu není, ani text v obrázcích. Proto je seznam živý (doplňuje se při každém úniku).
 
 ## 6. E2E při aktualizaci verze skillu v projektu
 
@@ -352,24 +388,37 @@ snímky potřebují údržbu při záměrné změně; chceme je, nebo jen strukt
 
 ## 7. Plán (nic nezačínám, dokud neschválíte)
 
+Pořadí a pravidlo schvalování (schváleno, Q13): **po každé fázi se zastavím**, výsledek zůstane jako lokální commity ve větvi
+(bez pushe) a uživatel rozhodne, zda pokračovat. **Zatím se nic neimplementuje.**
+
 0. **Hlídač a oprávnění** (malá, nezávislá oprava): odstranit plošný zákaz `curl`/`wget` z `novy_projekt.py` a ze
-   `settings.json` projektu, test `tests/hlidac/test_rozsah.py`.
+   `settings.json` projektu, doplnit `pages.dev` a vlastní domény z `web.json`, `tests/hlidac/test_rozsah.py`
+   (localhost, test a kontrola na vlastních nasazeních projdou; archiv a zápis do chráněných souborů ne).
 1. **Fáze A – vynucování formy:** `denik.py`, `otazky.py`, rozšíření `fronta.py`, `kontext.py`, `jazyk.py`, `pokryti.py`,
    generování Deníku a Co hledáme, testy z 5.4, migrace stávajícího deníku.
 2. **Fáze B – web:** komponenta `Rod`, automatické značkování, oprava `hledame` a `denik`, úzký hlídač zápisů.
 3. **Fáze C – agenti:** definice v `.claude/agents/` (anglicky), `orchestrator` jako hlavní vlákno, pravidla jazyka.
 4. **Fáze D – E2E brána** po aktualizaci verze a její zapojení do `novy_projekt.py`.
-5. **Fáze E – vrstva `rules/` a tenký skill:** jednorázová extrakce pravidel z `matriky.md` a `metodika.md`, `rules/zdroje.json`, `tools/pravidla.py`
+5. **Fáze E – vrstva `rules/` a tenký skill (spolu s kontrolou anonymity z 5.5):** jednorázová extrakce pravidel z `matriky.md` a `metodika.md`, `rules/zdroje.json`, `tools/pravidla.py`
    (`overit`, `potvrdit`, `pokryti`), `tests/pravidla/`, skill `rodokmen-agents` + `tests/agenti/`, zapojení do `upstream-sync` a E2E brány.
 6. Průběžně: `upstream-sync` začne dělat zprávy hned (nízké riziko).
 
-## 8. Rozhodnutí, která potřebuju od vás
+## 8. Schválená rozhodnutí
 
-1. **Vrstvy a hlídání změn** (3): schvaluje se varianta „zrcadlo + vlastní anglická pravidla s otisky“. `SKILL.md` zůstává česky, vedle něj přibude tenký anglický skill pro agenty (3.5).
-2. **Hlídač:** souhlasíte s bodem 0 (odstranit plošný zákaz `curl`/`wget`) a s úzkým hlídačem zápisů z 5.1?
-3. **Obrácení toku deníku** (JSONL zdroj, tabulka generovaná): souhlasíte s migrací stávajícího `research_log.md`?
-4. Značka rodu: *kruh + „Novákové“*, bez slova „rod“?
-5. Orchestrátor jako hlavní vlákno, s výjimkou pro `fronta.py` a `kontext.py`, nebo bez Bashe a zápisy front přes `clerk`?
-6. Oprava selhání: třídění mechanická / S / M / L z 4.7; má u L vždy rozhodnout uživatel?
-7. E2E: vizuální referenční snímky, nebo jen strukturní kontroly?
-8. Veřejné „Co hledáme“: potvrzujete, že vnitřní fronta se na web nikdy nepřenáší automaticky?
+| # | Rozhodnutí |
+|---|---|
+| Q1 | Plošný zákaz `curl`/`wget` se odstraní. Hlídač nikdy neblokuje localhost ani testy a kontroly na vlastních nasazeních (Netlify i Cloudflare, test i produkce, včetně `pages.dev` a vlastních domén z `web.json`). Test to hlídá. |
+| Q2 | Úzký hlídač `PreToolUse` blokuje jen ruční zápis do seznamu chráněných souborů, nic jiného. |
+| Q3 | Deník: zdroj je `denik.jsonl`, tabulka se generuje. **Z dosavadního výzkumu se nesmí nic ztratit:** `denik.py overit-migraci` ověří počet řádků, že každý starý řádek má záznam a že pole `puvodni` se doslova rovná původnímu textu. |
+| Q4 | Veřejné „Co hledáme“ je oddělené od vnitřní fronty, na web jde jen ručně potvrzené. |
+| Q5 | Značka rodu = barevný kruh + název, bez slova „rod“. V zadání a metodice je pravidlo anonymní a přenositelné. |
+| Q6 | Orchestrátor má Bash jen pro `fronta.py` (výpis) a `kontext.py`. |
+| Q7 | Selhání se třídí na mechanická / S / M / L; u L rozhoduje uživatel. E2E má strukturní kontroly bez vizuálních snímků. **Každá nahlášená chyba dostane regresní test** (4.7). |
+| Q8 | Historické záznamy deníku: původní text v `puvodni` (jen v datech), procesní údaje v `proces` (nevykreslují se), web používá zbylá pole. |
+| Q9 | **Git a historii se nedotýkám.** Slučování lokálních commitů je věc uživatele ve větvi, kterou řídí. Před případným pushem upozorním, že lokální historie analýzy obsahuje starší, neanonymizované verze (`f620962`, `d4f9ebb`). |
+| Q10 | Kontrola anonymity před pushem podle lokálního seznamu, bez zásahu do historie (návrh v 5.5). |
+| Q11 | Počáteční sada je 9 agentů, čtyři další zatím nahrazují skripty (4.1). |
+| Q12 | Testy a kontroly nasazeného webu jsou volné; samotné nasazení vždy se souhlasem uživatele (testovací režim bez `--prod`). |
+| Q13 | Pořadí fází 0, A, B, E, C, D; po každé fázi zastávka a rozhodnutí uživatele. **Nic se neimplementuje**, dokud uživatel nedá pokyn. |
+
+Nic z toho zatím není implementované, nic nebylo pushnuto ani vydáno.
