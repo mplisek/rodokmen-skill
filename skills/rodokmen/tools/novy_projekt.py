@@ -424,7 +424,15 @@ def main():
             os.makedirs(os.path.dirname(nove), exist_ok=True)
             os.replace(stare, nove)
             print("Přesunuto: poznamky_pro_skill.md → data/poznamky_pro_skill.md")
-    copy_tree(os.path.join(SKILL, "template", "ukazka" if demo else "data"), os.path.join(dst, "data"))
+    datovy = os.path.join(dst, "data")
+    existovalo = {n: os.path.exists(os.path.join(datovy, n)) for n in ("ukoly_na_rodinu.md", "ukoly_dotazy_na_archivy.md")}
+    copy_tree(os.path.join(SKILL, "template", "ukazka" if demo else "data"), datovy)
+    # fronta se starým názvem (archivni_dotazy.md, otazky_pro_rodinu.md) se přejmenuje až příkazem fronta.py prejmenuj;
+    # prázdná šablona pod novým názvem by ji zastínila a úkoly by zmizely z dohledu
+    for nova, stara in (("ukoly_na_rodinu.md", "otazky_pro_rodinu.md"), ("ukoly_dotazy_na_archivy.md", "archivni_dotazy.md")):
+        if not existovalo[nova] and os.path.exists(os.path.join(datovy, nova)) and os.path.exists(os.path.join(datovy, stara)):
+            os.remove(os.path.join(datovy, nova))
+            print(f"POZOR: fronta {stara} má starý název; přejmenuj ji: python3 -I tools/fronta.py prejmenuj")
     if demo:
         for sub in ("vyrezy", "zdroje"):
             src = os.path.join(SKILL, "template", "ukazka_" + sub)

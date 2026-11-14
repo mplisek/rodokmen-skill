@@ -114,6 +114,8 @@ def vykresli(zaznamy):
         bunky = [z["id"], z["datum"], z["zdroj"]["text"], z.get("rozsah"), z.get("hledano"), vys]
         radky.append("| " + " | ".join(store.bunka(b) for b in bunky) + " | " + nalez + " | " + store.bunka(z.get("citace"))
                      + " | " + store.bunka(z.get("odkaz")) + " |")
+    if len(radky) == 2:   # není co ukázat (prázdný deník): stránka nemá prázdnou tabulku
+        return ""
     return "\n".join(radky) + "\n"
 
 

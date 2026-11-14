@@ -4,12 +4,16 @@
 Použití (z kořene projektu): python3 -I tools/fronta.py <příkaz> …
   seznam [fronta]                         vypíše úkoly (fronta: noc | rozhodnuti | badani | dotazy | rodina)
   pridej <fronta> --text T [--p P1] [--os 57,114] [--typ krest] [--cil krest:115] [--rodic U-0001] [--stav otevřeno]
+                  [--zavisi U-0001,U-0002]
                                           nový úkol; podobný (stejný typ a překryv osob/cíle, v kterékoli frontě) se
                                           NEZALOŽÍ, ale doplní (osoby, text, vyšší priorita)
-  uprav <id> [--p P2] [--text T] [--stav odloženo] [--os …] [--cil …] [--pridat-text T]
+  uprav <id> [--p P2] [--text T] [--stav odloženo] [--os …] [--cil …] [--zavisi …] [--pridat-text T]
   hotovo <id> | hotovo --cil krest:115    úkol smaže (jeho výsledek je v datech nebo v následných úkolech)
   presun <id> <fronta>                    přesune úkol do jiné fronty
   trid                                    setřídí všechny fronty (priorita, id)
+  frontier [fronta]                       úkoly, jejichž závislosti (zavisi) jsou hotové – lze je přidělit
+  prejmenuj                               přejmenuje staré soubory front (archivni_dotazy.md, otazky_pro_rodinu.md)
+                                          na ukoly_dotazy_na_archivy.md a ukoly_na_rodinu.md
   kontrola                                formát hlaviček, duplicity, úkoly s už splněným cílem (v datech)
   rezim [--kdy "2026-11-12 23:50"]        aktuální režim (pracovni | noc | vikend) a konec okna
   dalsi <fronta> [--typ T]                další úkol ke zpracování (jen mimo pracovní dobu nebo s --vzdy); hlídá zámek
@@ -33,7 +37,10 @@ for _s in (sys.stdout, sys.stderr):
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 FRONTY = {"noc": "ukoly_na_noc.md", "rozhodnuti": "ukoly_k_rozhodnuti.md", "badani": "ukoly_k_badani.md",
-          "dotazy": "archivni_dotazy.md", "rodina": "otazky_pro_rodinu.md"}
+          "dotazy": "ukoly_dotazy_na_archivy.md", "rodina": "ukoly_na_rodinu.md"}
+# Do 0.10.1-fork.2 se tyto dvě fronty jmenovaly takto. Dokud nový soubor neexistuje, čte a zapisuje se starý (prejmenuj to převede).
+STARE_NAZVY = {"dotazy": "archivni_dotazy.md", "rodina": "otazky_pro_rodinu.md"}
+# Soubory ukoly_* jsou vnitřní: export webu je nikdy nečte (ADR 0003). Veřejný text je v data/verejne_otazky.json (tools/otazky.py).
 HLAVICKA = re.compile(r"^##+ (U-\d+)\s*\|(.*)$")
 STAVY = ("otevřeno", "odloženo", "probíhá")
 TYPY_RUN = {"bádání": "badani", "skill": "skill", "test": "skill", "údržba": "skill"}   # typ úkolu → druh běhu (brzda)
@@ -42,7 +49,11 @@ VYCHOZI_REZIM = {"pracovni_dny": [1, 2, 3, 4, 5], "pracovni_od": "06:00", "praco
 
 
 def cesta(f):
-    return os.path.join(DATA, FRONTY[f])
+    nova = os.path.join(DATA, FRONTY[f])
+    stara = os.path.join(DATA, STARE_NAZVY[f]) if f in STARE_NAZVY else None
+    if stara and not os.path.exists(nova) and os.path.exists(stara):
+        return stara
+    return nova
 
 
 def bez_diakritiky(t):
@@ -51,14 +62,15 @@ def bez_diakritiky(t):
 
 
 class Ukol:
-    def __init__(self, id_, p="P2", os_=None, typ="", cil="", rodic="", stav="otevřeno", text=""):
+    def __init__(self, id_, p="P2", os_=None, typ="", cil="", rodic="", stav="otevřeno", text="", zavisi=None):
         self.id, self.p, self.os, self.typ, self.cil, self.rodic, self.stav, self.text = id_, p, list(os_ or []), typ, cil, rodic, stav, text
+        self.zavisi = list(zavisi or [])
 
     def hlavicka(self):
         pole = [self.id, self.p]
         if self.os:
             pole.append("os:" + ",".join(self.os))
-        for k, v in (("typ", self.typ), ("cíl", self.cil), ("rodič", self.rodic)):
+        for k, v in (("typ", self.typ), ("cíl", self.cil), ("rodič", self.rodic), ("zavisi", ",".join(self.zavisi))):
             if v:
                 pole.append(f"{k}:{v}")
         pole.append(f"stav:{self.stav}")
@@ -88,6 +100,8 @@ def parse_hlavicka(radek):
                 u.cil = v
             elif k in ("rodič", "rodic"):
                 u.rodic = v
+            elif k in ("zavisi", "závisí"):
+                u.zavisi = [a for a in re.split(r"[,\s]+", v) if a]
             elif k == "stav":
                 u.stav = v
     return u
@@ -136,6 +150,13 @@ def dalsi_id(data):
         for u in uk:
             n = max(n, int(u.id[2:]))
     return f"U-{n + 1:04d}"
+
+
+def frontier(data):
+    """Otevřené úkoly, jejichž závislosti jsou hotové: závislost na úkolu, který už v žádné frontě není, je splněná
+    (hotové úkoly se mažou)."""
+    existuji = {u.id for _, uk in data.values() for u in uk}
+    return [u for _, uk in data.values() for u in uk if u.stav == "otevřeno" and not (set(u.zavisi) & existuji)]
 
 
 def stejny(a, b):
@@ -233,6 +254,20 @@ def kontrola():
             upoz.append(f"{u.id} ({f}): úkol bez textu")
         if u.rodic and u.rodic not in ids and u.rodic not in {x.id for _, x in vsechny}:
             upoz.append(f"{u.id} ({f}): rodič {u.rodic} už neexistuje (v pořádku, byl splněn)")
+    zavisi = {u.id: set(u.zavisi) for _, u in vsechny}
+    for f, u in vsechny:
+        if u.id in u.zavisi:
+            chyby.append(f"{u.id} ({f}): závisí sám na sobě")
+        else:   # cyklus: z úkolu se po závislostech dostanu zpátky
+            videno, hrana = set(), list(u.zavisi)
+            while hrana:
+                x = hrana.pop()
+                if x == u.id:
+                    chyby.append(f"{u.id} ({f}): závislosti tvoří cyklus")
+                    break
+                if x not in videno:
+                    videno.add(x)
+                    hrana += list(zavisi.get(x, ()))
     for i, (f1, a) in enumerate(vsechny):
         for f2, b in vsechny[i + 1:]:
             if stejny(a, b):
@@ -254,11 +289,13 @@ def main(argv=None):
     sp = ap.add_subparsers(dest="cmd", required=True)
     s = sp.add_parser("seznam"); s.add_argument("fronta", nargs="?", choices=list(FRONTY))
     s = sp.add_parser("pridej"); s.add_argument("fronta", choices=list(FRONTY))
-    for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav"):
+    for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--zavisi"):
         s.add_argument(a)
     s = sp.add_parser("uprav"); s.add_argument("id")
-    for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--pridat-text"):
+    for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--zavisi", "--pridat-text"):
         s.add_argument(a)
+    s = sp.add_parser("frontier"); s.add_argument("fronta", nargs="?", choices=list(FRONTY))
+    sp.add_parser("prejmenuj")
     s = sp.add_parser("hotovo"); s.add_argument("id", nargs="?"); s.add_argument("--cil")
     s = sp.add_parser("presun"); s.add_argument("id"); s.add_argument("fronta", choices=list(FRONTY))
     sp.add_parser("trid")
@@ -270,6 +307,18 @@ def main(argv=None):
 
     if a.cmd == "kontrola":
         return kontrola()
+    if a.cmd == "prejmenuj":
+        zmeneno = 0
+        for f, stary in STARE_NAZVY.items():
+            sp_, np_ = os.path.join(DATA, stary), os.path.join(DATA, FRONTY[f])
+            if os.path.exists(sp_):
+                if os.path.exists(np_):
+                    sys.exit(f"Nepřejmenováno: existuje {FRONTY[f]} i {stary}. Sluč je ručně a starý soubor smaž.")
+                os.replace(sp_, np_)
+                print(f"{stary} -> {FRONTY[f]}")
+                zmeneno += 1
+        print("přejmenováno" if zmeneno else "není co přejmenovat")
+        return 0
     if a.cmd == "rezim":
         now = datetime.datetime.fromisoformat(a.kdy) if a.kdy else datetime.datetime.now()
         r = nacti_rezim()
@@ -312,12 +361,20 @@ def main(argv=None):
                 uloz(f, uv, uk)
         print("setříděno")
         return 0
+    if a.cmd == "frontier":
+        pripraveno = {id(u) for u in frontier(data)}
+        for f in ([a.fronta] if a.fronta else FRONTY):
+            for u in data[f][1]:
+                if id(u) in pripraveno:
+                    print(f"{f:10} {u.hlavicka()[3:]}  {u.text.strip().splitlines()[0][:90] if u.text.strip() else ''}")
+        return 0
     if a.cmd == "dalsi":
         m, _ = rezim_v(datetime.datetime.now(), nacti_rezim())
         if m == "pracovni" and not a.vzdy:
             sys.exit("pracovní doba: další úkol se nepouští (--vzdy pro ruční spuštění)")
+        pripraveno = {id(u) for u in frontier(data)}
         for u in data[a.fronta][1]:
-            if u.stav != "otevřeno" or (a.typ and u.typ != a.typ):
+            if u.stav != "otevřeno" or (a.typ and u.typ != a.typ) or id(u) not in pripraveno:   # blokovaný úkol se nepřidělí
                 continue
             druh = TYPY_RUN.get(u.typ or "bádání", "badani")
             z = cti_zamek()
@@ -331,7 +388,7 @@ def main(argv=None):
         if not a.text:
             sys.exit("pridej: chybí --text")
         novy = Ukol(dalsi_id(data), a.p or "P2", [x for x in re.split(r"[,\s]+", a.os or "") if x], a.typ or "", a.cil or "",
-                    a.rodic or "", a.stav or "otevřeno", a.text)
+                    a.rodic or "", a.stav or "otevřeno", a.text, [x for x in re.split(r"[,\s]+", a.zavisi or "") if x])
         if not re.fullmatch(r"P[1-3]", novy.p):
             sys.exit("priorita P1–P3")
         for f, (uv, uk) in data.items():
@@ -380,6 +437,8 @@ def main(argv=None):
                         setattr(u, attr, getattr(a, k))
                 if a.os:
                     u.os = [x for x in re.split(r"[,\s]+", a.os) if x]
+                if a.zavisi is not None:   # prázdná hodnota závislosti smaže
+                    u.zavisi = [x for x in re.split(r"[,\s]+", a.zavisi) if x]
                 print("upraveno", u.id)
             nove.append(u)
         if nove != uk or a.cmd == "uprav":

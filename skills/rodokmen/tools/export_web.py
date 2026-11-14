@@ -1556,13 +1556,13 @@ def main():
     for src, dst in (("archivni_dotazy.md", "dotazy.md"), ("otazky_pro_rodinu.md", "otazky.md"),
                      ("research_log.md", "denik.md"), ("zajimavosti.md", "zajimavosti.md")):
         path = os.path.join(DATA, src)
-        if dst == "denik.md" and os.path.exists(denik_mod.LOG):
-            zaznamy_d, chyby_d = denik_mod.nacti_zaznamy()
-            if chyby_d:
-                sys.exit("CHYBA: data/denik.jsonl nesplňuje pravidla formy (denik.py over):\n  " + "\n  ".join(chyby_d[:15]))
-            text = denik_mod.vykresli(zaznamy_d)
-        elif dst in ("otazky.md", "dotazy.md") and os.path.exists(otazky_mod.SOUBOR):
-            d_o = otazky_mod.nacti()
+        zaznamy_d = denik_mod.nacti_zaznamy() if dst == "denik.md" and os.path.exists(denik_mod.LOG) else ([], [])
+        d_o = otazky_mod.nacti() if dst in ("otazky.md", "dotazy.md") and os.path.exists(otazky_mod.SOUBOR) else {"otazky": []}
+        if zaznamy_d[0] or zaznamy_d[1]:   # nové úložiště má záznamy (nebo chyby): čte se z něj; prázdné nic nepřebije
+            if zaznamy_d[1]:
+                sys.exit("CHYBA: data/denik.jsonl nesplňuje pravidla formy (denik.py over):\n  " + "\n  ".join(zaznamy_d[1][:15]))
+            text = denik_mod.vykresli(zaznamy_d[0])
+        elif d_o["otazky"]:
             chyby_o = [f"záznam {z.get('id')}: {x}" for z in d_o["otazky"] for x in otazky_mod.over_zaznam(z)
                        if "potvrzeno" in z]
             if chyby_o:
