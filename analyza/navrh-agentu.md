@@ -11,9 +11,9 @@ z něj anglické soubory (agenti, instrukce, skilly, metodika pro model); návod
 Procházel jsem sestavený web staticky (`web/dist`); test v prohlížeči zatím čeká (kapitola 7).
 
 - **`/hledame/`, konec stránky:** do textu pro rodinu prosákla syntaxe fronty úkolů
-  (`U-0013 | P2 | os:32,33 | typ:snatek | cíl:snatek:32 | stav:otevřeno`) a procesní věty („žádost jen po souhlasu“,
+  (`U-0000 | P2 | os:1,2 | typ:snatek | cíl:snatek:1 | stav:otevřeno`) a procesní věty („žádost jen po souhlasu“,
   „jsou uložené a přístupné?“). Jedny položky jsou řazené podle rodu, jiné podle archivu.
-- **`/denik/`:** záznamy se liší tvarem i obsahem: číslo úkolu a jméno uživatele („Rozhodnuto (U-0011, Martin potvrdil)“),
+- **`/denik/`:** záznamy se liší tvarem i obsahem: číslo úkolu a jméno uživatele („Rozhodnuto (U-0000, <jméno uživatele> potvrdil)“),
   cesty do pracovní složky, opravy vepsané do textu („dříve chybně …“), drobné chyby tvaru („Nehledáno :“). Starý i nový
   stav leží v jedné buňce.
 - **Rody:** název rodu ve značce s barvou × holý text (hrubé měření): `hledame` 12 × 10, `denik` 0 × 32, `dokumenty`
@@ -256,7 +256,7 @@ test-runner  ->  zpráva o selhání (strukturovaná, bez názoru)
 
 | Úkol | Skóre | Agent / model | Balíček |
 |---|---|---|---|
-| Najít křest Anny Matějkové, ARON, 1801 | 2 | `researcher` / sonnet | osoba 231, matriky fary, pravidla ztotožnění |
+| Najít křest Anny Nové, ARON, 1801 | 2 | `researcher` / sonnet | osoba 17 (příklad), matriky fary, pravidla ztotožnění |
 | Číst vybledlý kurent 1815, Třeboň | 4 | `browser-reader` / opus, pak `verifier` | výřez, otázka, pasti kurentu |
 | Sloučit originál 0.10.2 | 3 | `upstream-sync` / sonnet (opus při konfliktu) | `sync_report`, naše překryvy |
 | Špatná mezera v záznamu deníku | 1 | skript (`denik.py oprav`) | žádný |
@@ -303,7 +303,7 @@ jméno uživatele, cesty (`pracovni/`, `C:\`), „ověřeno na snímku“, „č
 
 - **Jeden zdroj značky rodu:** komponenta `Rod` (barevný kruh + název z `lines[slug]`). **Holý název rodu v textu je zakázán.**
   `export_web.py` při sestavení nahradí každý výskyt názvu rodu značkou, autor textu nic neznačkuje. Návrh tvaru: vždy *kruh
-  a za ním „Plíškové“*, bez slova „rod“.
+  a za ním „Novákové“*, bez slova „rod“.
 - **Barvy** jen z `lines[*].color`; žádná barva rodu mimo komponentu a statistiky.
 - **Pořadí rodů** je na všech stránkách stejné (podle čísla předka), oddíl „bez rodu“ je poslední.
 - **Datum, místa, čísla domů** stejným tvarem (D. M. RRRR, „čp. N“).
@@ -368,7 +368,7 @@ snímky potřebují údržbu při záměrné změně; chceme je, nebo jen strukt
 1. **Vrstvy a hlídání změn** (3): schvaluje se varianta „zrcadlo + vlastní anglická pravidla s otisky“. `SKILL.md` zůstává česky, vedle něj přibude tenký anglický skill pro agenty (3.5).
 2. **Hlídač:** souhlasíte s bodem 0 (odstranit plošný zákaz `curl`/`wget`) a s úzkým hlídačem zápisů z 5.1?
 3. **Obrácení toku deníku** (JSONL zdroj, tabulka generovaná): souhlasíte s migrací stávajícího `research_log.md`?
-4. Značka rodu: *kruh + „Plíškové“*, bez slova „rod“?
+4. Značka rodu: *kruh + „Novákové“*, bez slova „rod“?
 5. Orchestrátor jako hlavní vlákno, s výjimkou pro `fronta.py` a `kontext.py`, nebo bez Bashe a zápisy front přes `clerk`?
 6. Oprava selhání: třídění mechanická / S / M / L z 4.7; má u L vždy rozhodnout uživatel?
 7. E2E: vizuální referenční snímky, nebo jen strukturní kontroly?
