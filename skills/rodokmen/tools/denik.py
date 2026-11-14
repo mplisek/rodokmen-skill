@@ -289,7 +289,7 @@ CISLA_OSOB = re.compile(r"\s*\(\s*\d[\d,\s–-]*\)")
 
 
 def je_kontext(text, maximum=120):
-    """Sloupec „hledáno“ ve starém deníku často nese jen rod nebo osoby s čísly (Culkové (72, 73), „osoba 24“, „144, 145“),
+    """Sloupec „hledáno“ ve starém deníku často nese jen rod nebo osoby s čísly (Vzorovi (72, 73), „osoba 24“, „144, 145“),
     ne větu o tom, co se hledalo."""
     t = (text or "").strip()
     return bool(t) and t not in ("–", "-") and len(t) <= maximum and bool(KONTEXT.search(t))

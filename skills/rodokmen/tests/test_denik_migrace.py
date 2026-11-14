@@ -39,12 +39,12 @@ Konvence: každý řádek = jedno hledání, i neúspěšné.
 | 17 | 2026-11-08 | ARON, Dolní Lhota, oddaní 1860–1880, sn. 1–50 | Novákovi, Králové (70, 71) | 70, 71 | **Nenalezeno**: sňatek Jana Nováka × Evy Králové ani v rejstříku. | ARON 5 |
 | 18 | 2026-11-09 | ARON, Dolní Lhota, narození 1840–1850, sn. 3–9 | křest Petra Králového | **nenalezeno** v sn. 3–9 | – |
 | 19 | 2026-11-09 | ARON, Dolní Lhota, úmrtí 1890–1900 | děti Josefa Nováka 1887–1909 | ověření čtení pomocníka | **Ověřeno:** sn. 12, Josefa † 27. 7. 1887. | – |
-| 20 | 2026-11-09 | ARON, Chlum, oddaní, sn. 5 | křest a sňatek Marie Tesařové | **křest nalezen**, sňatek nenalezen v rejstříku. | – |
+| 20 | 2026-11-09 | ARON, Chlum, oddaní, sn. 5 | křest a sňatek Marie Vzorové | **křest nalezen**, sňatek nenalezen v rejstříku. | – |
 | 22 | 2026-11-10 | ARON, Dolní Lhota, úmrtí 1880–1890 | sn. 4 | úmrtí Anny Novákové | **PŘEČTENO**: Anna † 2. 5. 1884, dcera Josefa. | – |
 | 23 | 2026-11-10 | ARON, Dolní Lhota, úmrtí 1880–1890 | sn. 5–9 | úmrtí Evy Králové | **Rozkoš POTVRZENO (negativní)**: v sn. 5–9 žádná Eva. | – |
 | 24 | 2026-11-10 | ARON, Dolní Lhota, úmrtí 1880–1890 | sn. 9 | úmrtí Petra Nováka | **Stopy (ověřeno)**: úmrtí Petra † 1884 v Horní Lhotě. | – |
 | 25 | 2026-11-10 | ARON, Dolní Lhota, úmrtí 1880–1890 | sn. 9 | křest Karla Králového | **Vyloučeno**: kandidát Karel * 1850 je jiný, matka Anna. | – |
-| 21 | 2026-11-10 | ARON, Dolní Lhota, oddaní 1860–1880, sn. 1–50 | Zárubové a Čermákovi (76–79) | – | **Nenalezeno**: křest Josefa Záruby ~1796 v rejstříku. | – |
+| 21 | 2026-11-10 | ARON, Dolní Lhota, oddaní 1860–1880, sn. 1–50 | Vzorové a Příkladovi (76–79) | – | **Nenalezeno**: křest Josefa Vzora ~1796 v rejstříku. | – |
 """
 
 
@@ -182,7 +182,7 @@ class Migrace(unittest.TestCase):
         self.assertEqual(b["rozsah"], b["zdroj"]["text"])
         self.assertFalse(b.get("k_rucni_kontrole"), b)
         c = z[21]                                    # sloupec hledáno prázdný, rod s čísly je ve sloupci rozsah
-        self.assertEqual((c["hledano"], c["vysledek"]), ("Zárubové a Čermákovi", "nenalezeno"))
+        self.assertEqual((c["hledano"], c["vysledek"]), ("Vzorové a Příkladovi", "nenalezeno"))
         self.assertFalse(c.get("k_rucni_kontrole"), c)
 
     def test_cisla_osob_se_nedostanou_do_tabulky_na_webu(self):
@@ -219,8 +219,8 @@ class Migrace(unittest.TestCase):
     def test_deleni_dlouheho_textu_nerezne_za_zkratkou_ani_cislem_dne(self):
         sys.path.insert(0, str(TOOLS))
         import denik
-        text = ("Josef Plíšek (22), syn Františka, domkáře z Modletína č. 12. Narodil se 5. 4. 1828 v Barovicích č. 9, a Kateřiny "
-                "rozené Dvořákové. ") * 8
+        text = ("Josef Vzorný (22), syn Františka, domkáře z Horní Lhoty č. 12. Narodil se 5. 4. 1828 v Dolní Lhotě č. 9, a Kateřiny "
+                "rozené Příkladové. ") * 8
         for max_ in (300, 360, 400):
             cast, zbytek = denik.rozdel(text, max_)
             self.assertLessEqual(len(cast), max_)

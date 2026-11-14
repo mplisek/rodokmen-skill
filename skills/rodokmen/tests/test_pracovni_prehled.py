@@ -30,7 +30,7 @@ class PracovniPrehled(unittest.TestCase):
             "snimku": 300, "url": "https://aron.example/apu/x"}}), encoding="utf-8")
         radky = [
             {"id": 7, "datum": "2026-10-30", "zdroj": {"typ": "archiv", "text": "ARON Libice sign. 365, sn. 236–258"},
-             "rozsah": "sn. 236–258", "hledano": "křty Plíšků", "vysledek": "nalezeno", "nalez": "x"},
+             "rozsah": "sn. 236–258", "hledano": "křty Vzorových", "vysledek": "nalezeno", "nalez": "x"},
             {"id": 8, "datum": "2026-10-30", "zdroj": {"typ": "archiv", "text": "ARON Chloumek sign. 3650"},
              "rozsah": "r", "hledano": "jiné", "vysledek": "nenalezeno"},
         ]
