@@ -11,8 +11,9 @@ Použití: python3 <skill>/tools/novy_projekt.py <cílová složka> [--ukazka] [
 
 Vytvoří: data/ (prázdné kostry nebo ukázka), web/ (Astro web), tools/ (kopie nástrojů),
 vyrezy/, zdroje/, dokumenty/, pracovni/, CLAUDE.md, .gitignore, .gitattributes (konce řádků LF i na Windows)
-a .claude/launch.json (náhled v Claude desktop). Do .claude/settings.json doplní zákaz přímého curl/wget
-(stahování z archivů jde přes brzdu tools/slusne.py); ostatní nastavení v souboru nechá beze změny.
+a .claude/launch.json (náhled v Claude desktop). Do .claude/settings.json zapíše hlídač sítě (úzký hook: jen příkazy na weby
+archivů mimo brzdu tools/slusne.py; localhost a vlastní nasazení neblokuje); ostatní nastavení v souboru nechá beze změny.
+Starší plošný zákaz curl/wget (permissions.deny) při aktualizaci odstraní a nahradí ho hlídačem, ochrana archivů tak neklesne.
 Existující data nepřepisuje.
 Do .skill_sablona/ uloží kopii šablony web/ a tools/, ze které projekt vznikl (patří do gitu s projektem).
 Aktualizace staršího projektu (znovu spustit na stejnou složku) rozhodne o každém souboru web/ a tools/ podle
@@ -311,7 +312,7 @@ def vyresit(dst, cesta):
     return True
 
 
-SIT_ZAKAZ = ["Bash(curl:*)", "Bash(wget:*)"]   # stahování z archivů jen přes tools/slusne.py (curl přes něj jde)
+STARY_ZAKAZ = ["Bash(curl:*)", "Bash(wget:*)"]   # do 0.10.1 plošný zákaz; blokoval i localhost a vlastní nasazení, nahradil ho hlídač
 # Hlídač spustit, jen když soubor existuje: chybějící skript by Python ukončil kódem 2 a ten by zablokoval každý příkaz.
 # mimo Windows ne cestu s číslem verze (po aktualizaci Pythonu by zmizela); na Windows lomítka (projdou Git Bash i cmd)
 KOD = ("import os,runpy;p=os.path.join(os.environ.get('CLAUDE_PROJECT_DIR','.'),'tools','hlidac_site.py');"
@@ -337,7 +338,9 @@ def hook_hlidace():
 
 
 def nastaveni(dst, hlidac):
-    """Doplní do .claude/settings.json zákaz curl/wget; hlidac=True/False zapne/vypne hook, None nechá, jak je."""
+    """Zapíše hlídač sítě do .claude/settings.json: hlidac=True/False zapne/vypne hook, None nechá, jak je. Výjimka: nový
+    projekt nebo projekt se starým plošným zákazem curl/wget dostane hook sám (zákaz se odstraní, ochrana neklesne);
+    vypnutý hook (--bez-hlidace) zůstane vypnutý."""
     path = os.path.join(dst, ".claude", "settings.json")
     data = {}
     if os.path.exists(path):
@@ -347,10 +350,19 @@ def nastaveni(dst, hlidac):
             print(f"POZOR: {path} není platný JSON – nastavení brzdy jsem nedoplnil. Oprav ho a spusť znovu.")
             return
     puvodni = json.dumps(data, sort_keys=True)
-    deny = data.setdefault("permissions", {}).setdefault("deny", [])
-    deny += [r for r in SIT_ZAKAZ if r not in deny]
+    nove = not os.path.exists(path)
+    deny = (data.get("permissions") or {}).get("deny") or []
+    mel_zakaz = any(r in deny for r in STARY_ZAKAZ)
+    if mel_zakaz:   # plošný zákaz pryč; vlastní pravidla uživatele zůstanou
+        deny[:] = [r for r in deny if r not in STARY_ZAKAZ]
+        if not deny:
+            data["permissions"].pop("deny", None)
+        if not data["permissions"]:
+            del data["permissions"]
     pre = data.setdefault("hooks", {}).setdefault("PreToolUse", [])
     nase = [h for h in pre if "hlidac_site.py" in json.dumps(h)]
+    if hlidac is None and not nase and (nove or mel_zakaz):
+        hlidac = True   # ochrana archivů se nezmenšuje: místo plošného zákazu úzký hook
     for h in nase:   # aktualizace projektu: hook obnovit (cesta k Pythonu i tvar se mohly změnit)
         h["matcher"] = MATCHER
         h["hooks"] = [hook_hlidace()]
@@ -367,7 +379,8 @@ def nastaveni(dst, hlidac):
             json.dump(data, f, ensure_ascii=False, indent=2)
             f.write("\n")
     zapnuty = any("hlidac_site.py" in json.dumps(h) for h in data.get("hooks", {}).get("PreToolUse", []))
-    print("Hlídač sítě:", "zapnutý" if zapnuty else "vypnutý (zapnout: --hlidac)")
+    print("Hlídač sítě:", "zapnutý (jen weby archivů mimo brzdu; localhost a vlastní nasazení neblokuje)" if zapnuty
+          else "vypnutý (zapnout: --hlidac)")
 
 
 def _verze(text):

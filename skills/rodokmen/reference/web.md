@@ -84,6 +84,8 @@ Pozor: takový web nemá přihlášení – je vidět z celé domácí sítě. V
   Bez otázky i bez odkazu nasazení (`npm run nasadit-cloudflare`, `nasadit`, `deploy-caprover`) skončí chybou; otevřený web jen výslovně
   přes `"otevreny": true` v `prihlaseni` (jen `true`, ne `"true"` ani `"ano"`; otevře web i s nastavenou otázkou).
   Je to lehká ochrana proti náhodným návštěvníkům, ne bankovní zabezpečení – citlivé věci na web nepatří.
+- `domeny`: volitelný seznam vlastních domén webu (např. `["rodina.example.org"]`), které hlídač sítě (`hlidac_site.py`) nepovažuje za archiv.
+  Adresy `*.netlify.app`, `*.workers.dev`, `*.pages.dev` a localhost tam psát netřeba (jsou povolené vždy).
 - `uvod.foto` = klíč obrázku ve `vyrezy/` (ulož přes `vyrez.py`).
 - `pribeh`: `menu` a `tlacitko` pojmenuj podle hlavního rodu („Příběh Novákových“), `rod` = číslo rodu (8–15).
   Bez vyplněného `uvod` ukáže úvodní stránka aspoň název a `lead` příběhu. Viz `pribehy.md`.

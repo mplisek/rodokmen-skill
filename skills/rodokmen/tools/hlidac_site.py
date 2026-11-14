@@ -30,8 +30,12 @@ HEREDOC = re.compile(r"<<-?\s*['\"]?\w+|@['\"]\s*\n")   # bash <<EOF, PowerShell
 PS = re.compile(r"\b(Invoke-WebRequest|Invoke-RestMethod|iwr|irm|curl\.exe|wget|Start-BitsTransfer|Net\.WebClient|"
                 r"HttpClient|DownloadString|DownloadFile)\b", re.I)
 URL = re.compile(r"https?://([^/\s\"'`:;)]+)", re.I)
-VOLNE = ("localhost", "127.0.0.1", "0.0.0.0", "netlify.app", "netlify.com", "workers.dev", "cloudflare.com", "github.com", "githubusercontent.com",
-         "npmjs.org", "pypi.org", "pythonhosted.org")
+# Vlastní web a jeho nasazení (Netlify, Cloudflare Workers a Pages), localhost a běžné zdroje balíčků se nehlídají: testovat vlastní
+# práci a nasazený web hlídač nikdy nebrání. Vlastní domény (jiné než *.netlify.app, *.workers.dev, *.pages.dev) uvádí projekt
+# v data/web.json v poli "domeny" (seznam jmen serverů).
+VOLNE = ("localhost", "127.0.0.1", "0.0.0.0", "netlify.app", "netlify.com", "workers.dev", "pages.dev", "cloudflare.com",
+         "github.com", "githubusercontent.com", "npmjs.org", "pypi.org", "pythonhosted.org")
+DOMENY = []   # vlastní domény projektu z data/web.json (naplní main())
 RADA = ("Síť na weby archivů jen přes brzdu proti zablokování (tools/slusne.py), i u pomocníků:\n"
         "  python3 -I tools/slusne.py curl …            místo curl/wget\n"
         "  python3 -I tools/slusne.py pracovni/x.py …   místo python3 pracovni/x.py (skript se síťí)\n"
@@ -39,9 +43,25 @@ RADA = ("Síť na weby archivů jen přes brzdu proti zablokování (tools/slusn
         "Nástroje v tools/ brzdu mají samy, spouštěj je normálně. Brzdu neobcházej (jiný příkaz, prohlížeč).")
 
 
+def vlastni_domeny(*slozky):
+    """Jména serverů z pole "domeny" v data/web.json projektu (hledá v cwd a v CLAUDE_PROJECT_DIR). Bez souboru nebo při
+    chybě vrátí prázdný seznam – domény se nikdy nepřidávají obecně, jen podle toho, co si projekt sám uvede."""
+    out = []
+    for slozka in slozky:
+        try:
+            with open(os.path.join(slozka, "data", "web.json"), encoding="utf-8-sig") as f:
+                for d in json.load(f).get("domeny") or []:
+                    d = re.sub(r"^https?://", "", str(d).strip().lower()).split("/")[0].rstrip(".")
+                    if re.fullmatch(r"[a-z0-9.-]+\.[a-z]{2,}", d):
+                        out.append(d)
+        except (OSError, ValueError, AttributeError):
+            continue
+    return out
+
+
 def volny(host):
     host = host.lower().rstrip(".")
-    return any(host == v or host.endswith("." + v) for v in VOLNE)
+    return any(host == v or host.endswith("." + v) for v in VOLNE + tuple(DOMENY))
 
 
 def jen_volne(text):
@@ -129,7 +149,9 @@ def main():
         vstup = json.load(sys.stdin)
         tool = vstup.get("tool_name", "")
         cmd = (vstup.get("tool_input") or {}).get("command", "") or ""
-        duvod = posoudit(tool, cmd, vstup.get("cwd") or os.getcwd())
+        cwd = vstup.get("cwd") or os.getcwd()
+        DOMENY[:] = vlastni_domeny(cwd, os.environ.get("CLAUDE_PROJECT_DIR") or cwd)
+        duvod = posoudit(tool, cmd, cwd)
     except Exception:          # rozbitý hlídač příkaz pustí
         return 0
     if duvod:

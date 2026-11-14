@@ -29,7 +29,8 @@ class NovyProjekt(unittest.TestCase):
             self.assertTrue((self.p / f).exists(), f)
         self.assertEqual((self.p / ".skill_verze").read_text(encoding="utf-8").strip(),
                          (SKILL / "VERZE").read_text(encoding="utf-8").strip())
-        self.assertEqual(self.nastaveni()["permissions"]["deny"], ["Bash(curl:*)", "Bash(wget:*)"])
+        self.assertNotIn("permissions", self.nastaveni())   # plošný zákaz curl/wget od 0.10.1-fork.2 není, jen hlídač
+        self.assertIn("hlidac_site.py", json.dumps(self.nastaveni()["hooks"]))
 
     def test_help_nezalozi_slozku(self):
         r = novy_projekt("--help")
@@ -74,13 +75,13 @@ class NovyProjekt(unittest.TestCase):
     def test_nastaveni_zachova_cizi_klice_a_prepina_hlidac(self):
         s = self.nastaveni()
         s["enabledPlugins"] = {"rodokmen@rodokmen-skill": True}
-        s["permissions"]["deny"].append("Bash(rm:*)")
+        s.setdefault("permissions", {}).setdefault("deny", []).append("Bash(rm:*)")
         (self.p / ".claude" / "settings.json").write_text(json.dumps(s), encoding="utf-8")
 
         self.assertEqual(novy_projekt(self.p, "--hlidac").returncode, 0)
         s = self.nastaveni()
         self.assertEqual(s["enabledPlugins"], {"rodokmen@rodokmen-skill": True})
-        self.assertEqual(s["permissions"]["deny"], ["Bash(curl:*)", "Bash(wget:*)", "Bash(rm:*)"])   # bez duplicit
+        self.assertEqual(s["permissions"]["deny"], ["Bash(rm:*)"])   # vlastní pravidlo zůstalo, plošný zákaz se nepřidává
         self.assertIn("hlidac_site.py", json.dumps(s["hooks"]))
 
         self.assertEqual(novy_projekt(self.p).returncode, 0)          # bez přepínače hlídač zůstane

@@ -73,7 +73,7 @@ ZAKAZ["archives.cz"] = (            # ZA Opava: robots.txt „Disallow: /“, od
     "HTTP 403/404) – soal_zoomify.py ani vlastní skripty nepoužívej. Snímek ulož z prohlížeče snímků: Playwright "
     "(dlaždice, které načte prohlížeč, složí úryvek do celého snímku), jinak snímek obrazovky přiblíženého zápisu "
     "(reference/portaly.md, ZA Opava). Neobcházej to (jiný User-Agent, nástroj, hlavičky).")
-VOLNE = ("localhost", "127.0.0.1", "::1", "0.0.0.0", "netlify.app", "netlify.com", "workers.dev", "cloudflare.com", "github.com",
+VOLNE = ("localhost", "127.0.0.1", "::1", "0.0.0.0", "netlify.app", "netlify.com", "workers.dev", "pages.dev", "cloudflare.com", "github.com",
          "githubusercontent.com", "npmjs.org", "pypi.org", "pythonhosted.org")
 UA = "Mozilla/5.0 (rodokmen)"           # jak se představuje slusne.py curl (stejně jako nástroje)
 STOPKY = (30 * 60, 2 * 3600, 8 * 3600)   # stopka po 1., 2. a 3. (i každém dalším) odmítnutí webu během OKNO

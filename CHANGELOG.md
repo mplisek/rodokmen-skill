@@ -10,6 +10,16 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
+## Nevydáno
+
+### Opravy
+
+- **Hlídač sítě neblokuje testování vlastní práce.** `novy_projekt.py` už nezapisuje plošný zákaz `curl`/`wget`
+  (`permissions.deny`), který blokoval i `curl` na localhost a na vlastní nasazený web; místo něj je zapnutý úzký hlídač
+  (jen weby archivů mimo brzdu). Při aktualizaci se starý zákaz odstraní a hlídač se zapne, takže ochrana archivů neklesne;
+  `--bez-hlidace` zůstane vypnutý. Volné jsou localhost, `*.netlify.app`, `*.workers.dev`, nově `*.pages.dev` a vlastní
+  domény z `data/web.json` (`domeny`). Test `test_hlidac_rozsah.py`.
+
 ## 0.10.1-fork.1 – 13. 11. 2026
 
 Fork na originálu 0.10.1 (sloučeno) a navíc:
