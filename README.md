@@ -245,7 +245,8 @@ neměňte hned po zablokování archivem.
   rodu jsou v `data/web.json` v projektu (ve forku i přístupy pro jednotlivé větve rodiny `pristupy` a poznámky ke stránkám). Popis všech položek je v `skills/rodokmen/reference/web.md`.
 - **Hlídač sítě** – zapnete ho příkazem `novy_projekt.py <projekt> --hlidac` a vypnete příkazem
   `novy_projekt.py <projekt> --bez-hlidace` (viz [Bezpečnost](#bezpečnost)).
-- **`.claude/settings.json` projektu** obsahuje hlídač sítě (jen weby archivů, localhost a vlastní nasazení neblokuje). Spravuje ho
+- **`.claude/settings.json` projektu** obsahuje hlídač sítě (jen weby archivů, localhost a vlastní nasazení neblokuje) a hlídač zápisů
+  (ruční úprava deníku, veřejných otázek a generovaných souborů webu se zamítne s návodem, kterým skriptem se to dělá). Spravuje ho
   skill a při aktualizaci projektu ho doplní. Vlastní položky v tomto souboru zůstanou zachované.
 
 ### Co nastavit nejde

@@ -25,6 +25,12 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 - **Fronty se jmenují `ukoly_*`** (`ukoly_na_rodinu.md`, `ukoly_dotazy_na_archivy.md`) a nikdy se nečtou při sestavení webu;
   `fronta.py prejmenuj` převede staré názvy (`otazky_pro_rodinu.md`, `archivni_dotazy.md`), do přejmenování fungují oba.
   Úkoly mají pole `zavisi` a `fronta.py frontier` vypíše ty, jejichž závislosti jsou hotové; `dalsi` blokovaný úkol nepřidělí.
+- **Jednotná značka rodu na celém webu (Fáze B):** po `astro build` (před `pagefind`) nahradí `tools/znackuj_rody.py` holý název
+  rodu v textech všech stránek značkou (barevný kruh a název s odkazem); autor textu nic neznačkuje. `tools/kontrola_webu.py`
+  hlídá holé názvy, barvu a pořadí značek a procesní text na stránkách a běží i v CI nad ukázkovým webem.
+- **Hlídač zápisů** (`tools/hlidac_zapisu.py`): hook zamítne ruční úpravu `data/denik.jsonl`, `data/verejne_otazky.json` a
+  generovaných souborů webu a napíše, kterým skriptem se to dělá; čtení, kopie z nich, zápis skriptem, git ani build neblokuje.
+  Zapisuje ho `novy_projekt.py` vedle hlídače sítě a vypíná se stejně (`--bez-hlidace`).
 - Export webu čte deník a veřejné otázky z nového úložiště, dokud je prázdné, platí dosavadní soubory; chyba formy v novém
   úložišti sestavení zastaví (`CHYBA`). Glosář `GLOSSARY.md` a záznamy rozhodnutí `docs/adr/`.
 

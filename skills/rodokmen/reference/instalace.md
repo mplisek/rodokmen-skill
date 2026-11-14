@@ -58,7 +58,9 @@ Bez prohlížeče ať uživatel posílá snímky obrazovky.
    (`tools/hlidac_site.py`), který před každým příkazem zkontroluje, že stahování jde přes brzdu, a jinak ho zamítne.
    Sám nic nestahuje. Je úzký: hlídá jen weby archivů, **localhost a vlastní nasazení (Netlify, Cloudflare, vlastní domény
    z `data/web.json` → `domeny`) neblokuje**, takže web jde normálně testovat. Nový projekt ho má zapnutý sám; plošný zákaz
-   `curl`/`wget` z dřívějších verzí se při aktualizaci odstraní a hlídač ho nahradí.
+   `curl`/`wget` z dřívějších verzí se při aktualizaci odstraní a hlídač ho nahradí. Spolu s ním se zapíše **hlídač zápisů**
+   (`tools/hlidac_zapisu.py`): zamítne ruční úpravu `data/denik.jsonl`, `data/verejne_otazky.json` a generovaných souborů
+   `web/src/generated`, `web/src/data` a řekne, kterým skriptem se to dělá; nic jiného neblokuje. Vypíná se stejně (`--bez-hlidace`).
 3. V projektu `git init` a první uložení (git = historie změn, kdyby se něco pokazilo). Doporuč pokračovat v Claude Code
    **z této složky** (soubor `CLAUDE.md` v ní zajistí, že příště navážeš).
 4. Vyplň v `data/STAV.md` sekci „Pro koho“ a v `data/web.json` název webu („Rodokmen Novákových“), jakmile znáš

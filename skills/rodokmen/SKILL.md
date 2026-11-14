@@ -327,6 +327,9 @@ rozlišení), `dokumenty/` (originály od rodiny), `pracovni/` (nejde na web), `
 | `zapis.py` | zápis do `data/*.json` a odkazů `r` v `osoby.py` beze změny formátu; `--smazat <klíč>` smaže zápis, který byl omyl |
 | `denik.py` | výzkumný deník jako strukturovaná data (`pridej`, `vykresli`, `over`, `migruj`, `overit-migraci`), `reference/zapisy.md` |
 | `otazky.py` | veřejné otázky pro web (`data/verejne_otazky.json`): `pridej`, `potvrd`, `z-ukolu`, `smaz`, `over`; fronty `ukoly_*` na web nejdou |
+| `znackuj_rody.py` | po `astro build` nahradí holý název rodu v textech stránek jednotnou značkou (volá ho sestavení webu) |
+| `kontrola_webu.py` | kontrola sestaveného webu: holé názvy rodů, barva a pořadí značek, procesní text na stránkách |
+| `hlidac_zapisu.py` | hook: zablokuje ruční zápis do `denik.jsonl`, `verejne_otazky.json` a generovaných souborů webu (zapisuje ho `novy_projekt.py`) |
 | `mailto.py` | koncept žádosti → odkaz, který otevře hotový e-mail (nic neodesílá) – `zadosti.md` |
 | `pozvanky.py`, `pristupy.py` | osobní odkazy na web (`pridej`, `seznam`, `nova`, `zrus`, `--pristup <id>`) a přehled přístupů: kdo co vidí – `web.md` |
 | `smoke_test.py` | když nástroj selže: ověří síťové nástroje jedním dotazem (OK / CHYBA = portál se změnil / NEDOSTUPNÉ / ZASTAVENO) |

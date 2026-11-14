@@ -91,6 +91,7 @@ jobs:
           npm run build
           node scripts/over_css.mjs
           python -X utf8 "$GITHUB_WORKSPACE/skills/rodokmen/tests/over_odkazy.py" dist
+          python -X utf8 ../tools/kontrola_webu.py dist --site src/data/site.json   # jednotná značka rodu, žádný procesní text
 
       - name: Ukázkový web s více přístupy - samostatná verze pro každý přístup
         shell: bash
@@ -110,3 +111,5 @@ jobs:
           node scripts/over_css.mjs
           python -X utf8 "$GITHUB_WORKSPACE/skills/rodokmen/tests/over_odkazy.py" dist
           ! grep -rq "Václav Novák" dist/_p/matcina-rodina --include=*.html   # otcova větev ve verzi matky není
+          python -X utf8 ../tools/kontrola_webu.py dist/_p/vse --site src/data/site.json
+          for id in matcina-rodina marie; do python -X utf8 ../tools/kontrola_webu.py "dist/_p/$id" --site /nonexistent; done
