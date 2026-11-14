@@ -217,16 +217,23 @@ def sanitizuj(text):
     return text, odebrano, text != puvodni.strip()
 
 
+ZKRATKA = re.compile(r"(?:^|[\s(„])(?:č|čp|sn|str|fol|pag|apu|sign|kn|tj|tzv|atd|např|resp|cca|sv|ml|st|dc|zv)\.$", re.I)
+
+
 def rozdel(text, maximum):
     """(začátek do maxima znaků, zbytek): řez na konci věty, jinak na mezeře; nic se neztratí."""
     if len(text) <= maximum:
         return text, ""
     cast = text[:maximum]
-    for rx in (r"[.!?]\s", r"\s"):
-        m = list(re.finditer(rx, cast))
-        if m:
-            i = m[-1].end()
-            return text[:i].strip(), text[i:].strip()
+    for m in reversed(list(re.finditer(r"[.!?;]\s", cast))):   # řez na konci věty, ne za zkratkou („č. 12“) ani za dnem v datu („5. 4.“)
+        pred = cast[:m.start() + 1]
+        if m.group(0)[0] != ";" and (pred[-2:-1].isdigit() or ZKRATKA.search(pred)):
+            continue
+        if m.end() >= maximum // 3:
+            return text[:m.end()].strip(), text[m.end():].strip()
+    m = list(re.finditer(r"\s", cast))
+    if m:
+        return text[:m[-1].end()].strip(), text[m[-1].end():].strip()
     return cast, text[maximum:].strip()
 
 

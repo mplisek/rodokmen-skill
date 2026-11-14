@@ -216,6 +216,18 @@ class Migrace(unittest.TestCase):
         self.assertEqual((z[1]["rozsah"], z[1]["hledano"]), ("sn. 20–35", "křest Jana Nováka * 1852"))
         self.assertEqual((z[2]["rozsah"], z[2]["hledano"]), ("sn. 5, 40", "sňatek Jana Nováka × Marie Králová"))
 
+    def test_deleni_dlouheho_textu_nerezne_za_zkratkou_ani_cislem_dne(self):
+        sys.path.insert(0, str(TOOLS))
+        import denik
+        text = ("Josef Plíšek (22), syn Františka, domkáře z Modletína č. 12. Narodil se 5. 4. 1828 v Barovicích č. 9, a Kateřiny "
+                "rozené Dvořákové. ") * 8
+        for max_ in (300, 360, 400):
+            cast, zbytek = denik.rozdel(text, max_)
+            self.assertLessEqual(len(cast), max_)
+            self.assertEqual((cast + " " + zbytek).split(), text.split())                     # nic se neztratí
+            self.assertNotRegex(cast, r"(?:\bč|\bčp|\bsn|\bstr|\d)\.?$")   # nekončí zkratkou ani číslem dne
+            self.assertTrue(cast.endswith((".", "!", "?", ";")) or zbytek == "", cast[-30:])  # řez na konci věty
+
     def test_migruj_neprepise_existujici_denik(self):
         self.migruj()
         pred = (self.p / "data" / "denik.jsonl").read_bytes()
