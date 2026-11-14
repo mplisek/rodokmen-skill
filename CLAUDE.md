@@ -29,5 +29,9 @@ bez potvrzení neprojde. Veřejný repozitář nesmí obsahovat údaje z projekt
 Agenti (`agents/`, anglicky) a hook orchestrátora (`hooks/`): před sloučením z originálu `python scripts/sync_report.py` (po `git fetch upstream`),
 změna definice agenta musí projít `test_agenti_definice.py` (kritérium dokončení, nástroje, odkazy na existující pravidla a skripty).
 
+Pokrytí: nový nástroj v `tools/` potřebuje test (nebo výjimku s důvodem v `tests/e2e/vyjimky.json`), nová trasa v `template/web/src/pages`
+záznam v `tests/e2e/stranky.json`; ověřuje `python scripts/pokryti.py` (i v CI). Po aktualizaci projektu na novou verzi spusť v projektu
+`tools/brana.py`, jinak hlídač nepustí nasazení.
+
 Markdown: `.markdownlint.yaml` a `.editorconfig` v kořeni; kontrola `npx -y markdownlint-cli2@0.18.1 "**/*.md" "!**/node_modules/**"`
 (v CI i před commitem, `--fix` jen s kontrolou `git diff`). MD037 je vypnuté kvůli „* 1890“ (narozen).

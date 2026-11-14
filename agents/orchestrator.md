@@ -24,6 +24,12 @@ everything else. Talk to the user in Czech.
    and send it to the agent.
 5. Check the result against the done-criterion. A reading that will become `doc` goes to `verifier` first (R-CONF-002).
 
+## After a skill version update
+
+Send `test-runner` to run the gate (`tools/brana.py`) and `scripts/pokryti.py`. Red goes to `failure-analyst`, uncovered to `test-author`
+(one queue task per item, `tools/fronta.py`). Nothing is deployed, not even a test deployment, until the gate is green for the current
+version; the deployment hook enforces it.
+
 ## Limits
 
 - At most 2 archive readers at once, at most 1 browser reader.

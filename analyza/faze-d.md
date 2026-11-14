@@ -1,6 +1,6 @@
 # Fáze D: kontrola pokrytí a brána po aktualizaci verze
 
-Stav: **plán fáze ke schválení rozhraní.** Nic z toho zatím není implementováno. Vychází z `analyza/navrh-agentu.md`
+Stav: **implementováno** (Q-D1 až Q-D5 potvrzeny: ano). Odchylky: záznamy tras mají navíc pole `kryje` (co test opravdu hlídá; většinu stránek kryje jen obecný test_jednotnost_web); `pokryti.py` hledá testy i v kořenovém `tests/` originálu. Vychází z `analyza/navrh-agentu.md`
 (kapitola 6, 4.7, Q7, otevřené body (c) a (d)). Větev `faze-d-brana` stojí na Fázi C.
 
 ## 1. Rozsah

@@ -473,8 +473,20 @@ def main():
         if not os.path.lexists(out):
             copy(os.path.join(SKILL, "template", name), out)
     nastaveni(dst, True if "--hlidac" in sys.argv else False if "--bez-hlidace" in sys.argv else None)
+    nova_v = open(os.path.join(SKILL, "VERZE"), encoding="utf-8").read()
+    try:
+        stara_v = open(os.path.join(dst, ".skill_verze"), encoding="utf-8").read()
+    except OSError:
+        stara_v = None
+    znacka = os.path.join(dst, "pracovni", "brana.json")
+    zneplatnit = stara_v is not None and stara_v.strip() != nova_v.strip() and os.path.isfile(znacka)
+    if zneplatnit:   # starý výsledek brány platil pro starou verzi: nasazení se odemkne až novým během brány
+        os.remove(znacka)
     with open(os.path.join(dst, ".skill_verze"), "w", encoding="utf-8") as f:   # SKILL.md podle něj nabídne aktualizaci
-        f.write(open(os.path.join(SKILL, "VERZE"), encoding="utf-8").read())
+        f.write(nova_v)
+    if stara_v is not None and stara_v.strip() != nova_v.strip():
+        print(f"Verze skillu v projektu se změnila ({stara_v.strip()} → {nova_v.strip()}): před nasazením spusť bránu "
+              "(po sestavení webu: python3 -I tools/brana.py).")
     print("Projekt připraven:", dst)
     for k, popis in (("prepsano", "Přepsáno novou verzí (bez vlastních úprav)"),
                      ("zalohovano", "Přepsáno, původní verze je v " + os.path.join(zaloha, "puvodni")

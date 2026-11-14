@@ -142,6 +142,48 @@ def posoudit(tool, cmd, cwd):
     return None
 
 
+NASAZENI = re.compile(
+    r"(?:\bnetlify(?:-cli)?(?:@[\w.]+)?\s+deploy\b|\bwrangler(?:@[\w.]+)?\s+(?:pages\s+)?(?:deploy|versions\s+upload)\b"
+    r"|\bnpm\s+run\s+(?:nasadit(?:-cloudflare)?|deploy-caprover)\b|\bnasadit(?:_cloudflare)?\.mjs\b|\bcaprover\s+deploy\b)", re.I)
+
+
+def koren_projektu(cwd):
+    """Nejbližší složka nad cwd s data/ a tools/ (kořen projektu), nebo None."""
+    d = os.path.abspath(cwd)
+    while True:
+        if os.path.isdir(os.path.join(d, "data")) and os.path.isdir(os.path.join(d, "tools")):
+            return d
+        nad = os.path.dirname(d)
+        if nad == d:
+            return None
+        d = nad
+
+
+def brana_duvod(tool, cmd, cwd):
+    """Důvod zamítnutí nasazení (testovacího i ostrého), dokud pracovni/brana.json není zelený pro verzi projektu; jinak None.
+    Projekt bez .skill_verze a příkazy mimo projekt se nehlídají."""
+    if tool not in ("Bash", "PowerShell", "Monitor") or not NASAZENI.search(bez_textu(cmd)):
+        return None
+    kor = koren_projektu(cwd)
+    if not kor:
+        return None
+    try:
+        with open(os.path.join(kor, ".skill_verze"), encoding="utf-8") as f:
+            verze = f.read().strip()
+    except OSError:
+        return None
+    try:
+        with open(os.path.join(kor, "pracovni", "brana.json"), encoding="utf-8-sig") as f:
+            znacka = json.load(f)
+        if znacka.get("vysledek") == "zelena" and znacka.get("verze") == verze:
+            return None
+        stav = f"výsledek brány je „{znacka.get('vysledek')}“ pro verzi {znacka.get('verze')}, projekt je ve verzi {verze}"
+    except (OSError, ValueError, AttributeError):
+        stav = "brána ještě neběžela (chybí nebo je poškozený pracovni/brana.json)"
+    return (f"Hlídač nasazení: {stav}. Před nasazením (i testovacím) musí být brána zelená pro aktuální verzi:\n"
+            "  python3 -I tools/brana.py        (po sestavení webu: cd web && npm run build)")
+
+
 def main():
     try:
         if hasattr(sys.stdin, "reconfigure"):   # Claude Code posílá UTF-8; na Windows by se četl v cp1250
@@ -152,12 +194,16 @@ def main():
         cwd = vstup.get("cwd") or os.getcwd()
         DOMENY[:] = vlastni_domeny(cwd, os.environ.get("CLAUDE_PROJECT_DIR") or cwd)
         duvod = posoudit(tool, cmd, cwd)
+        brana = None if duvod else brana_duvod(tool, cmd, cwd)
     except Exception:          # rozbitý hlídač příkaz pustí
         return 0
     if duvod:
         print(json.dumps({"hookSpecificOutput": {
             "hookEventName": "PreToolUse", "permissionDecision": "deny",
             "permissionDecisionReason": f"Hlídač sítě: {duvod}.\n{RADA}"}}))   # \uXXXX: čeština projde i v cp1250
+    elif brana:
+        print(json.dumps({"hookSpecificOutput": {
+            "hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": brana}}))
     return 0
 
 

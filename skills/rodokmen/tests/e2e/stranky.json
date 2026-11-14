@@ -1,0 +1,137 @@
+[
+ {
+  "vzor": "/",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/404",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/denik",
+  "test": "test_denik",
+  "kryje": "data a tabulka deníku; vzhled stránky kryje i test_jednotnost_web"
+ },
+ {
+  "vzor": "/dokumenty",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/domy",
+  "test": "test_stavby",
+  "kryje": "data domů předků"
+ },
+ {
+  "vzor": "/hledame",
+  "test": "test_co_hledame",
+  "kryje": "obsah stránky Co hledáme (veřejné otázky); vzhled kryje i test_jednotnost_web"
+ },
+ {
+  "vzor": "/hledat",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/jmena",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/mapa",
+  "test": "test_mapa_mista",
+  "kryje": "data mapy a míst"
+ },
+ {
+  "vzor": "/misto/*",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/osa",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/osoba/*",
+  "test": "test_soukromi_osob",
+  "kryje": "soukromí osoby na její stránce; značky kryje i test_jednotnost_web"
+ },
+ {
+  "vzor": "/osobnosti",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/poznamky",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/predci",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/pribehy/",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/pribehy/*",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/rod/*",
+  "test": "test_rody_texty",
+  "kryje": "texty a značky rodů na stránce rodu"
+ },
+ {
+  "vzor": "/rodina/*",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/rody",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/statistiky",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/strom",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/vejir",
+  "test": "test_export_web",
+  "kryje": "data vějíře předků"
+ },
+ {
+  "vzor": "/vejir/*",
+  "test": "test_export_web",
+  "kryje": "data vějíře předků"
+ },
+ {
+  "vzor": "/zajimavosti",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/zapisy",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ },
+ {
+  "vzor": "/zdroj/*",
+  "test": "test_jednotnost_web",
+  "kryje": "jen jednotnost: značky rodů a žádný procesní text na sestavené stránce, ne její obsah"
+ }
+]

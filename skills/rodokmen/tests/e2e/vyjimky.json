@@ -1,0 +1,14 @@
+{
+ "ahmp_parse.py": "pomocník shellového ahmp_search.sh; síť portálu AHMP, ověřuje ho smoke_test.py",
+ "ahmp_scan.py": "stahování snímků z portálu AHMP přes síť; ověřuje ho smoke_test.py",
+ "anno_snap.py": "stahování snímku z portálu ANNO přes síť; ověřuje ho smoke_test.py",
+ "domy_export.py": "export domů předků pro web; zatím bez testu (kandidát na test)",
+ "ftb_export.py": "převod zálohy MyHeritage .ftb; potřebuje vzorový soubor SQLite, který repozitář nemá (kandidát na test)",
+ "litomerice.py": "nástroj portálu SOA Litoměřice přes síť; ověřuje ho smoke_test.py",
+ "napady.py": "výpis námětů na zajímavosti z dat; informativní výstup (kandidát na test)",
+ "policie_prihlasky.py": "nástroj portálu policejních přihlášek přes síť; ověřuje ho smoke_test.py",
+ "ramecek.py": "kreslení rámečku zvýraznění do výřezu; vizuální výstup (kandidát na test)",
+ "rody_html.py": "společné pomůcky; nepřímo kryjí test_znackuj_rody a test_jednotnost_web",
+ "vademecum.py": "nástroj portálu VadeMeCum přes síť; ověřuje ho smoke_test.py",
+ "vezni.py": "nástroj databáze Památníku Terezín přes síť; ověřuje ho smoke_test.py"
+}

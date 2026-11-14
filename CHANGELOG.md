@@ -14,6 +14,11 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
 ### Nové
 
+- **Brána po aktualizaci verze a kontrola pokrytí (Fáze D).** `tools/brana.py` v projektu spustí bez sítě kontroly dat, front, deníku,
+  veřejných otázek a `kontrola_webu.py` nad každou sestavenou verzí webu a vyhlásí zelená / červená / nepokryto (výsledek v
+  `pracovni/brana.json`). `novy_projekt.py` při změně verze starý výsledek smaže a `hlidac_site.py` nepustí nasazení (ani testovací),
+  dokud brána není zelená pro aktuální verzi projektu. `scripts/pokryti.py` hlídá, že každý nástroj a každá trasa webu má test
+  (registry `tests/e2e/stranky.json` a `vyjimky.json`), anglická vrstva je anglicky a pravidla mají platné otisky; běží i v CI.
 - **Sada agentů a jejich nástroje (Fáze C).** `agents/` v pluginu (anglicky): `orchestrator` (spouští se jako hlavní vlákno,
   `claude --agent rodokmen:orchestrator`), `researcher`, `browser-reader`, `verifier`, `upstream-sync`, `test-runner`,
   `failure-analyst`, `fixer`, `test-author`; každý má kritérium dokončení. `tools/kontext.py` sestaví kontextový balíček osoby
