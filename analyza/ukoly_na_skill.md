@@ -29,10 +29,10 @@ opakování po 403 a zablokování (brzda „zastavený“).
 Rozpočet: pásma S až XL a práh v `rezim.json` (`rozpocet`), odhad v routeru podle složitosti, řazení priorita a cena, kalibrace pásem ze skutečné
 spotřeby. Úkol nad prahem jde do rozhodnutí.
 
-## S-006 | P2 | typ:skill | stav:čeká na grilování Q5
+## S-006 | P2 | typ:skill
 
 Historie a metadata: `data/ukoly_historie.jsonl` (jen přidávání), pole `ukol`, `nastroj`, `model` a strukturovaný `rozsah` v deníku,
-`fronta.py znovu --vysledek nečitelné,nenalezeno --starsi-nez <verze>`. Plnou „knihu čtení“ nezavádět (viz kap. 6.2).
+`fronta.py znovu --vysledek nečitelné,nenalezeno --starsi-nez <verze>` (kap. 6.1).
 
 ## S-007 | P2 | typ:skill
 
@@ -52,3 +52,10 @@ ve frontě do potvrzení odeslání.
 
 Úkoly pro skill: v projektu `data/poznamky_pro_skill.md`, v metodice `analyza/ukoly_na_skill.md`. Zrušit typy `skill` a `test` v projektových frontách
 (`fronta.py`, šablona, `nocni_rezim.md`) a zámek `bádání × skill` přepsat tak, aby odpovídal.
+
+## S-011 | P2 | typ:skill
+
+Mapa knihy (kap. 6.2): `tools/mapa.py` (`hledej`, `zapis`, `stav`), mapa na svazek v `rodokmen_snimky/mapy/<portál>/<svazek>.jsonl` mimo úklid cache,
+identita snímku (portál, svazek, snímek) při každém uložení do cache (`cache.py`, `aron_img.py`, `cache.py uloz` z prohlížeče), naplnění z názvů
+v `pracovni/aron/`, výsledkový soubor čtenáře nese údaje o stránce a adresu, `cache.py stav` ukáže stažené snímky na nalezený záznam. Zapsat do
+`researcher.md`, `browser-reader.md`, `orchestrator.md` (před stažením se zeptat mapy). Testy s falešným svazkem a mapou, bez sítě.

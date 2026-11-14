@@ -95,39 +95,49 @@ Navrhovaná odchylka od „chyba = rozhodnutí“, aby každý výpadek nezaplav
 - Skutečná spotřeba dokončeného úkolu (z hlášení podagenta) se zapíše do historie a **kalibruje pásma** (kap. 6).
 - Reálný limit předplatného agent nevidí, proto je rozpočet odhad a čas okna zůstává tvrdým stropem.
 
-## 6. Identita, historie a metadata čtení
+## 6. Identita, historie a mapa knihy
 
-### 6.1 Co navrhuju
+Potvrzeno 14. 11. 2026 (grilování Q-M1 až Q-M7).
+
+### 6.1 Historie úkolů
 
 - **Úkol má stabilní ID** (`U-0412`, už existuje) a **historii událostí** `data/ukoly_historie.jsonl` (jen přidávání, jako deník):
   vznik, směrování, dělení, parkování, hotovo; kdo (orchestrátor, uživatel), odkud a kam, důvod, DOD, odhad a skutečná cena, odkazy na řádky deníku
   a výsledkové soubory. Hotový úkol se z fronty maže dál, v historii zůstane.
+- **Metadata čtení v deníku:** pole `ukol` (ID úkolu), `nastroj` (verze skillu a nástroje), `model` (kdo četl) a `snimky` (strojově čitelný seznam
+  místo volného textu `rozsah`).
+- **Opakované čtení podle schopnosti:** `fronta.py znovu --vysledek nečitelné,nenalezeno --starsi-nez <verze>` najde v deníku čtení, která skončila
+  neúspěšně a četl je starší model nebo nástroj; router z nich založí nové úkoly jen pro ně.
 
-- **Metadata čtení**: k řádku deníku se přidají strukturovaná pole `ukol` (ID úkolu), `nastroj` (verze skillu a nástroje), `model` (kdo četl),
-  `snimky` (strojově čitelný seznam místo volného textu `rozsah`).
+### 6.2 Mapa knihy
 
-- **Opakované čtení podle schopnosti:** dotaz „které čtení se vrátily jako nečitelné nebo nenalezeno, četl je starší model nebo starší nástroj?“
-  = filtr nad deníkem; z něj router založí nové úkoly jen pro ně.
+**Nápad (uživatel):** u každého snímku vědět, co pokrývá (písmena A–C, roky 1830–1840, titul, prázdná strana), aby se stahovalo jen to, co je potřeba:
+z mapy se pozná, že hledané písmeno F leží mezi známými body, a stáhne se rovnou správná stránka. Popis přežije smazání obrázku z cache a upraví se
+při každém dalším čtení. Zjistí-li se, že snímek obsahuje jiný rozsah, než se čekalo, uloží se to.
 
-### 6.2 Námitky a omezení (zahrnuté do návrhu)
+**Rozhodnutí:**
 
-- **Neukládat obsah snímků.** Snímek je obrázek bez textu (OCR se na rukopis nepoužívá; výjimkou jsou portály s textovou vrstvou). Čtení dělá model
-  nad výřezem a zahodí vše, co nepotřebuje. Plný přepis každé stránky „pro příště“ by stál mnohem víc tokenů než cílené čtení, a navíc ukládaný
-  negativní výsledek („jméno tam není“) je jen tak dobrý jako čtenář (R-NEG-001).
+- **Struktura (Q-M1):** jedna mapa na svazek (soubor s událostmi, jen přidávání) a stávající `data/svazky.json` jako registr svazků.
+  Žádné soubory vedle každého snímku a žádný „index indexů“.
+- **Obsah (Q-M2):** jen navigační údaje o stránce: snímek, typ (titul, rejstřík, zápisy, prázdná), od, do (písmeno, datum nebo číslo), sloupce,
+  kvalita, kdy, kdo četl, nástroj. Žádné surové přepisy (stojí víc než cílené čtení, jména lidí). Přepis zůstává jen tam, kde už je zápis v datech.
+- **Umístění (Q-M3):** uživatelská složka vedle cache (`rodokmen_snimky/mapy/<portál>/<svazek>.jsonl`), mimo úklid cache, sdílená mezi projekty
+  na počítači, protože neobsahuje jména lidí. Přepisy a deník zůstávají v projektu.
+- **Zápis (Q-M4):** čtenář (researcher, browser-reader) vrací údaje o stránce ve výsledkovém souboru; do mapy je zapíše orchestrátor přes
+  `mapa.py zapis`. Agent nepíše mimo `pracovni/vysledky/`.
+- **Jen rada (Q-M5):** mapa smí určit, kterou stránku stáhnout, **nikdy neuzavře hledání**. „Není tam“ vyžaduje přečíst stránky, které cíl
+  ohraničují (R-NEG-001); pořadí v rejstřících a číslech zápisů nemusí být přísné.
+- **Identita (Q-M6):** každý snímek, který vstoupí do cache (skriptem i ručně z prohlížeče), se zapíše do mapy jako (portál, svazek, snímek).
+  Výsledek `browser-readeru` musí nést adresu, svazek a snímek. Staré soubory s hashem adresy se nemigrují (nejdou zpětně určit); `pracovni/aron/` se
+  do mapy naplní z názvů souborů.
+- **Měření (Q-M7):** `cache.py stav` ukáže stažené snímky na nalezený záznam, aby šlo doložit, zda mapa šetří archivy.
 
-- **Co se ukládá:** otázka a odpověď (hledáno, kde, výsledek, kdo četl), ne obsah. To je v podstatě deník, jen strukturovaněji.
-- **Kam ne:** metadata do cache snímků ne. Cache je společná pro všechny projekty, klíčovaná podle adresy a mazatelná kdykoli (limit, LRU).
-  Znalost o výzkumu patří do projektu, ne do cache.
+**Nástroj `mapa.py`:**
 
-- **Kdy opakovat:** výsledek `nalezeno` a ověřený se neopakuje. Dotaz na stejnou otázku nad týmž místem, který skončil `nenalezeno` nebo `nečitelné`,
-  se opakuje jen po změně schopností (nový model, nový nástroj, lepší výřez).
+- `mapa.py hledej <svazek> --pismeno F | --rok 1856` vrátí nejlepší další snímek a co je o okolí známo (půlení intervalu z dvou známých bodů).
+- `mapa.py zapis <vysledek.json>` přidá události z výsledkového souboru; `mapa.py stav <svazek>` vypíše pokrytí.
 
-- **Platí pro každé čtení, ne jen noční.** Před čtením (v noci i přes den) se kontroluje cache a historie: byl tento výřez už čten pro tuto otázku?
-
-### 6.3 Minimální verze
-
-Stačí (1) pole `ukol`, `nastroj`, `model` v deníku, (2) strukturovaný `rozsah`, (3) `ukoly_historie.jsonl` a (4) příkaz
-`fronta.py znovu --vysledek nečitelné,nenalezeno --starsi-nez <verze>`. Plná „kniha čtení“ po snímcích až když se ukáže, že to nestačí.
+**Platí pro každé čtení** (noc i den): před stažením se zeptat mapy, a cache.
 
 ## 7. Odesílání ven a úkoly pro skill
 
@@ -147,5 +157,5 @@ Stačí (1) pole `ukol`, `nastroj`, `model` v deníku, (2) strukturovaný `rozsa
 - **Q2:** Vstup `ukoly_vstup.md` jako povinná první fronta? **Potvrzeno.**
 - **Q3:** Opakování po přechodné chybě: nejdřív za dvě noci, pak víkend, pak pracovní doba, pak jedno rozhodnutí za portál. **Potvrzeno s úpravou (viz 4.3).**
 - **Q4:** Rozpočet v pásmech S až XL s prahem v `rezim.json`? **Potvrzeno.**
-- **Q5:** Metadata čtení: **otevřeno, grilluje se** (kap. 6, uživatel navrhl popisy snímků a „mapu“ knihy v cache; viz odpověď a otázky Q-M1 až Q-M7).
+- **Q5:** Metadata čtení: **potvrzeno** po grilování (kap. 6.2, Q-M1 až Q-M7; mapa knihy místo plné „knihy čtení“).
 - **Q6:** Zrušit typy `skill` a `test` v projektových frontách? **Potvrzeno** (úkoly pro skill: v projektu `poznamky_pro_skill.md`, v metodice `analyza/ukoly_na_skill.md`).
