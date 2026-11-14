@@ -271,6 +271,9 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
   Nejisté pole nevyplňuj „?“ – vynech ho a popiš v poznámce.
 - Kniha s „chybějícími čísly“ nemusí mít chybějící strany: čísla zápisů v roce bývají společná pro celou farnost a obce mají
   vlastní knihy (v knize jedné obce proto čísla vynechávají).
+- Křest hledej v celém roce: čísla zápisů neodpovídají pořadí dat (zápis č. 107 může být až v polovině července), takže z čísla neodvozuj
+  měsíc a nezastavuj se na stránce, kde „by měl být“.
+- Názvy obcí a farností přebírej z hlavičky nebo seznamu archivu (např. Miskovice, ne „Miškovice“); diakritiku si nedomýšlej.
 - Velké kolo s pomocníky (zkušenost s 10 souběžnými): společná pravidla dej do jednoho souboru (`pracovni/ZADANI_POMOCNIK.md`)
   a v zadání na něj jen odkaž. Do pravidel patří: obrázek pro čtení zmenšit na max. 2000 px (jinak se nástroji
   nezobrazí a pomocník „čte“ naslepo), **nikdy nepsat přepis zápisu, který neviděl**, ukládat výsledek průběžně po každém

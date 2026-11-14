@@ -216,6 +216,7 @@ nástroj i tento návod. Test nic nestahuje a souhlas s podmínkami portálů za
 - Trvalý odkaz `https://katalog.ahmp.cz/pragapublica/permalink?xid=<XID>&scan=<N>`.
 - Nový portál digi.ahmp.cz má ochranu proti robotům – nepoužívat. Pražské matriky 1890–1940 většinou **nemají rejstříky**
   a farností je mnoho – bez přesného data a farnosti (z úmrtí/sňatku nebo od rodiny) je hledání velmi drahé.
+- Rejstřík sňatků na konci knihy mají jen některé farnosti (např. Žižkov sv. Rocha ano); bez rejstříku je nutné znát farnost i rok.
 
 ## SOA Litoměřice (severní Čechy) – `tools/soal_zoomify.py`
 
