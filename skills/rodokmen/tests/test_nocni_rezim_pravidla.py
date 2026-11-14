@@ -75,6 +75,16 @@ class NocniRezimPravidla(unittest.TestCase):
         rezim = json.loads((repo / "skills/rodokmen/template/data/rezim.json").read_text(encoding="utf-8"))
         self.assertIn("rozpocet", rezim)
 
+    def test_cekani_odesilani_a_typy_jsou_popsane(self):
+        for s in ("fronta.py cekajici", "fronta.py odeslano", "--uzivatel", "odpoved_dnu", "Odesílá vždy člověk", "ukoly_na_skill.md",
+                  "poznamky_pro_skill.md"):
+            self.assertIn(s, self.t, s)
+        self.assertNotIn("`skill` (úprava skillu), `test`, `údržba`", self.t)             # typy zrušeny
+        repo = Path(__file__).resolve().parents[3]
+        o = (repo / "agents/orchestrator.md").read_text(encoding="utf-8")
+        for s in ("fronta.py cekajici", "odeslano", "poznamky_pro_skill.md"):
+            self.assertIn(s, o, s)
+
 
 if __name__ == "__main__":
     unittest.main()

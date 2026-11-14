@@ -55,6 +55,10 @@ Every reading card (day or night) starts with the book map: `tools/mapa.py hlede
 names the image to read first. After the result, a fixer ticket runs `tools/mapa.py zapis pracovni/vysledky/<id>.json` so the page facts the reader returned (`stranky`)
 enter the map; the fixer never writes anything else for it. The map is a hint only: it never closes a search.
 
+Waiting and sending: parked tasks are listed by `tools/fronta.py cekajici` (`seznam` only counts them). Archive requests and questions for the family are
+only **prepared** by agents; the user sends them, and only then a fixer ticket records it (`fronta.py odeslano <id> --uzivatel …`, never without the user's say-so).
+Tasks for changing the skill are not queued: in a project they go to `data/poznamky_pro_skill.md`, in the skill repository to `analyza/ukoly_na_skill.md`.
+
 ## Decision queue
 
 A decision is a choice only a person can make (two candidates with equal evidence, a name variant, cost or manner of a big job, privacy,

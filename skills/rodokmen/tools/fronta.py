@@ -18,6 +18,8 @@ Použití (z kořene projektu): python3 -I tools/fronta.py <příkaz> …
   znovu --starsi-nez <verze> [--vysledek nečitelné,nenalezeno] [--zaloz]   neúspěšná čtení v deníku staršího nástroje; --zaloz založí úkoly
   plan [fronta]                                                       plán okna: pořadí, kumulativní váha, co je mimo rozpočet nebo čeká na schválení
   kalibrace                                                           odhady cen při směrování × skutečná spotřeba z historie
+  cekajici [fronta]                                                   čekající úkoly seřazené podle data s důvodem (seznam je jen počítá; seznam --vse ukáže všechny)
+  odeslano <id> --uzivatel "kdo" [--odpoved-do RRRR-MM-DD]            dotaz nebo otázka pro rodinu odeslána (jen na pokyn uživatele): stav čeká do odpovědi
   uprav <id> [--p P2] [--text T] [--stav odloženo] [--os …] [--cil …] [--zavisi …] [--pridat-text T]
   hotovo <id> | hotovo --cil krest:115    úkol smaže (jeho výsledek je v datech nebo v následných úkolech)
   presun <id> <fronta>                    přesune úkol do jiné fronty
@@ -57,7 +59,7 @@ STARE_NAZVY = {"dotazy": "archivni_dotazy.md", "rodina": "otazky_pro_rodinu.md"}
 HLAVICKA = re.compile(r"^##+ (U-\d+)\s*\|(.*)$")
 STAVY = ("otevřeno", "odloženo", "probíhá", "čeká")
 TYPY_RUN = {"bádání": "badani", "skill": "skill", "test": "skill", "údržba": "skill"}   # typ úkolu → druh běhu (brzda)
-VYCHOZI_REZIM = {"pracovni_dny": [1, 2, 3, 4, 5], "pracovni_od": "06:00", "pracovni_do": "22:00", "svatky": [],
+VYCHOZI_REZIM = {"odpoved_dnu": 30, "pracovni_dny": [1, 2, 3, 4, 5], "pracovni_od": "06:00", "pracovni_do": "22:00", "svatky": [],
                  "pomocniku": 2, "dod": {},
                  # po přechodné chybě portálu: nejdřív za dvě noci, pak o víkendu, pak přes den; pak jedno rozhodnutí za portál
                  "opakovani": [{"rezim": "noc", "odstup_dnu": 2}, {"rezim": "vikend"}, {"rezim": "pracovni"}],
@@ -70,6 +72,9 @@ VYCHOZI_REZIM = {"pracovni_dny": [1, 2, 3, 4, 5], "pracovni_od": "06:00", "praco
 POVINNA_ROZHODNUTI = ("Otázka", "Možnosti", "Výchozí postup")
 POLE_ROZHODNUTI = (("otazka", "Otázka"), ("moznosti", "Možnosti"), ("dukazy", "Důkazy"), ("zkuseno", "Zkoušeno"),
                    ("doporuceni", "Doporučení"), ("vychozi", "Výchozí postup"))
+ZRUSENE_TYPY = ("skill", "test", "údržba")   # úkoly na úpravu skillu se ve frontách nevedou (S-010)
+ZPRAVA_TYP = ("typ „{t}“ se ve frontách nevede: úkoly pro skill patří do data/poznamky_pro_skill.md (projekt) nebo do analyza/ukoly_na_skill.md "
+              "(repozitář skillu)")
 POLE_RADEK = re.compile(r"^\s*(Otázka|Možnosti|Důkazy|Zkoušeno|Doporučení|Výchozí postup)\s*:\s*(.*\S)\s*$")
 PRACE = re.compile(r"^\s*(?:ověřit|zkontrolovat|porovnat|přečíst|potvrdit|prověřit|dohledat|zjistit)\b", re.I)
 
@@ -574,6 +579,8 @@ def kontrola():
             if stejny(a, b):
                 upoz.append(f"{a.id} ({f1}) a {b.id} ({f2}) se překrývají – sluč: fronta.py pridej (doplní) nebo hotovo")
     for f, u in vsechny:
+        if u.typ in ZRUSENE_TYPY:
+            upoz.append(f"{u.id} ({f}): typ {u.typ} se ve frontách nevede – přesuň do data/poznamky_pro_skill.md nebo analyza/ukoly_na_skill.md a `fronta.py hotovo {u.id}`")
         if f == "rozhodnuti":
             ch = chyby_rozhodnuti(u.text)
             if ch:
@@ -595,7 +602,9 @@ def kontrola():
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sp = ap.add_subparsers(dest="cmd", required=True)
-    s = sp.add_parser("seznam"); s.add_argument("fronta", nargs="?", choices=list(FRONTY))
+    s = sp.add_parser("seznam"); s.add_argument("fronta", nargs="?", choices=list(FRONTY)); s.add_argument("--vse", action="store_true")
+    s = sp.add_parser("cekajici"); s.add_argument("fronta", nargs="?", choices=list(FRONTY))
+    s = sp.add_parser("odeslano"); s.add_argument("id"); s.add_argument("--uzivatel"); s.add_argument("--odpoved-do", dest="odpoved_do")
     s = sp.add_parser("pridej"); s.add_argument("fronta", choices=list(FRONTY))
     for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--zavisi", "--otazka", "--moznosti", "--dukazy", "--zkuseno",
               "--doporuceni", "--vychozi"):
@@ -675,10 +684,51 @@ def main(argv=None):
     for f in FRONTY:
         data.setdefault(f, ("", []))
     if a.cmd == "seznam":
+        dnes, ceka = datetime.date.today(), 0
         for f in ([a.fronta] if a.fronta else FRONTY):
             for u in data[f][1]:
+                if not a.vse and u.stav == "čeká" and not pripraveny(u, dnes):   # čekající mimo úkoly k řešení (viz `cekajici`)
+                    ceka += 1
+                    continue
                 print(f"{f:10} {u.hlavicka()[3:]}  {u.text.strip().splitlines()[0][:90] if u.text.strip() else ''}")
+        if ceka:
+            print(f"(čeká {ceka} úkolů do data – přehled: fronta.py cekajici; všechny: seznam --vse)")
         return 0
+    if a.cmd == "cekajici":
+        dnes = datetime.date.today()
+        radky = []
+        for f in ([a.fronta] if a.fronta else FRONTY):
+            for u in data[f][1]:
+                if u.stav == "čeká" and not pripraveny(u, dnes):
+                    duvod = next((r for r in reversed(u.text.splitlines()) if r.startswith(("Čeká do", "Odesláno:"))), "")
+                    radky.append((u.do, f"{u.do}  {u.id} ({f})  {prvni_radek(u.text, 70)}" + (f"  – {duvod}" if duvod else "")))
+        for _, r in sorted(radky):
+            print(r)
+        if not radky:
+            print("nic nečeká")
+        return 0
+    if a.cmd == "odeslano":
+        if not (a.uzivatel or "").strip():
+            sys.exit("ODMÍTNUTO: odeslání dotazu archivu a otázky pro rodinu potvrzuje uživatel (--uzivatel \"kdo odeslal\"); agent jen připravuje")
+        for f, (uv, uk) in data.items():
+            for u in uk:
+                if u.id != a.id:
+                    continue
+                if f not in ("dotazy", "rodina"):
+                    sys.exit(f"{u.id} je ve frontě {f}: odeslat se dá jen úkol z front dotazy a rodina")
+                dnes = datetime.date.today()
+                do = a.odpoved_do or (dnes + datetime.timedelta(days=int(nacti_rezim().get("odpoved_dnu", 30)))).isoformat()
+                try:
+                    datetime.date.fromisoformat(do)
+                except ValueError:
+                    sys.exit("--odpoved-do RRRR-MM-DD")
+                u.stav, u.do = "čeká", do
+                u.text = (u.text + f"\n\nOdesláno: {dnes.isoformat()}, odpověď čekáme do {do}").strip("\n")
+                uloz(f, uv or "", uk)
+                zapis_udalost("odeslano", u.id, fronta=f, do=do, potvrdil=a.uzivatel.strip())
+                print(f"{u.id} ({f}): odesláno, čeká na odpověď do {do}")
+                return 0
+        sys.exit(f"{a.id} nenalezeno")
     if a.cmd == "trid":
         for f, (uv, uk) in data.items():
             if os.path.exists(cesta(f)) or uk:
@@ -901,6 +951,8 @@ def main(argv=None):
                     return 0
         sys.exit(f"{a.id} nenalezeno")
     if a.cmd == "pridej":
+        if (a.typ or "") in ZRUSENE_TYPY:
+            sys.exit("ODMÍTNUTO: " + ZPRAVA_TYP.format(t=a.typ))
         text = (text_rozhodnuti(a) if a.fronta == "rozhodnuti" else None) or a.text
         if not text:
             sys.exit("pridej: chybí --text" + (" (u rozhodnutí --otazka, --moznosti, --vychozi)" if a.fronta == "rozhodnuti" else ""))
@@ -961,6 +1013,8 @@ def main(argv=None):
                     u.text = a.text
                 if a.pridat_text:
                     u.text = (u.text + "\n\n" + a.pridat_text).strip("\n")
+                if (a.typ or "") in ZRUSENE_TYPY:
+                    sys.exit("ODMÍTNUTO: " + ZPRAVA_TYP.format(t=a.typ))
                 if a.cena:
                     if a.cena not in CENY:
                         sys.exit(f"cena: {' | '.join(CENY)}")

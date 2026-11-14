@@ -145,7 +145,8 @@ Text úkolu: co hledat, kde, co už je prohlédnuto.
 - **Duplicity:** `fronta.py pridej` porovná typ, osoby a cíl ve všech frontách; podobný úkol se nezaloží, ale **doplní**
   (osoby, text, vyšší priorita). Částečný překryv: doplň jeden z úkolů a druhý zúž (`uprav`).
 - **Cíl (`cíl:krest:115`, `umrti:`, `snatek:`)** umí `fronta.py kontrola` ověřit v datech; splněný úkol ohlásí ke smazání.
-- **Typ:** otevřená množina – `bádání`, `skill` (úprava skillu), `test`, `údržba`.
+- **Typ:** otevřená množina podle věci (`křest`, `úmrtí`, `bádání`…). Úkoly na úpravu skillu se ve frontách **nevedou**: v projektu patří do `data/poznamky_pro_skill.md`,
+  v repozitáři skillu do `analyza/ukoly_na_skill.md`; typy `skill`, `test` a `údržba` `fronta.py` odmítne a `kontrola` na staré upozorní.
 - Úkoly mohou vznikat z jiných úkolů (`rodič:`).
 
 ## Režimy podle času
@@ -161,6 +162,15 @@ a konec okna.
 - **V pracovní době** po doběhu vyhodnoť výsledky, ulož, vypiš dotazy (rozhodnutí, nové úkoly k bádání) a čekej na instrukci.
 - **Po každém doběhu úkolu hlavní agent vždy zkontroluje výstupy a zápis** a výsledek zapíše tam, kam patří (data, fronty).
 - Chyba portálu (brzda „zastavený“): úkol zůstane `otevřeno`, zapíše se do deníku a běh končí.
+
+## Čekání a odesílání ven
+
+- **Čekání:** úkol, který čeká na odpověď archivu nebo na datum, má `stav:čeká` a `do:<datum>` (`fronta.py zaparkuj`, nebo `odeslano`). Mezi úkoly k řešení se
+  neukazuje: `fronta.py seznam` je jen spočítá a `fronta.py cekajici` je vypíše seřazené podle data s důvodem (`seznam --vse` ukáže všechno). Po uplynutí data
+  se úkol sám vrátí mezi připravené.
+- **Odesílá vždy člověk:** dotaz archivu a otázku pro rodinu agent jen **připraví** (úkol zůstane ve frontě `dotazy` nebo `rodina`); odeslat smí jen uživatel. Až odešle,
+  zapíše se to příkazem `fronta.py odeslano <id> --uzivatel "kdo odeslal" [--odpoved-do RRRR-MM-DD]`: úkol dostane `stav:čeká` do data odpovědi
+  (výchozí `data/rezim.json` → `odpoved_dnu`, 30 dnů), v textu řádek `Odesláno: …` a v historii záznam s tím, kdo odeslání potvrdil. Bez `--uzivatel` příkaz odmítne.
 
 ## Brzda: bádání × úprava skillu
 
