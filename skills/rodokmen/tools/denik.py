@@ -18,6 +18,7 @@ Pravidla: reference/zapisy.md, ADR 0002. Zakázané v textech pro web: čísla �
 o procesu, opravy uvnitř textu, mezera před dvojtečkou, šipky.
 """
 import argparse
+import json
 import os
 import re
 import sys
@@ -163,6 +164,239 @@ def cmd_over(a):
     print(f"denik.jsonl v pořádku ({len(zaznamy)} záznamů)")
 
 
+# ---------------------------------------------------------------- migrace research_log.md -> denik.jsonl
+ARCHIV = re.compile(r"ARON|SOA|SOkA|AHMP|eBadatelna|MZA|Porta|Matricula|FamilySearch|Geneteka|Třeboň|\bZA\b|Zemský archiv|"
+                    r"Národní archiv|\bNA\b|Matriční úřad|matriční úřad|kronik", re.I)
+KLIC = re.compile(r"^\*\*([^*]+)\*\*\s*(.*)$", re.S)
+VETA = re.compile(r"(?<=[.!?])\s+(?=[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ„\"])")
+ZAVORKA = re.compile(r"\s*\([^()]*\)")
+PREDPONA = re.compile(r"^([^:]{1,90}):\s+(?=\S)")   # „Pomocník (sonnet) + moje kontrola: ARON …“ – kdo práci udělal
+
+
+def zdrojove_radky(cesta):
+    """Řádky tabulky původního deníku (doslova, bez záhlaví a oddělovače)."""
+    if not os.path.exists(cesta):
+        sys.exit(f"Původní deník {os.path.relpath(cesta, ROOT)} neexistuje.")
+    out = []
+    for r in open(cesta, encoding="utf-8-sig").read().splitlines():
+        if r.startswith("|") and not re.match(r"^\|\s*-{3}", r) and not re.match(r"^\|\s*#\s*\|", r):
+            out.append(r)
+    return out
+
+
+def bunky_radku(radek):
+    return [c.strip() for c in re.split(r"(?<!\\)\|", radek.strip())[1:-1]]
+
+
+def sanitizuj(text):
+    """(čistý text, odebrané části, zda se něco změnilo): procesní údaje pryč, věcný obsah zůstane."""
+    puvodni, odebrano = text, []
+    m = PREDPONA.match(text)
+    if m and store.zakazane_vzory(m.group(1)):   # předpona s procesním údajem pryč, věcná část za dvojtečkou zůstane
+        odebrano.append(m.group(1).strip())
+        text = text[m.end():]
+    while True:   # závorky s procesním údajem
+        zm = next((m for m in ZAVORKA.finditer(text) if store.zakazane_vzory(m.group(0))), None)
+        if not zm:
+            break
+        odebrano.append(zm.group(0).strip())
+        text = text[:zm.start()] + text[zm.end():]
+    vety = VETA.split(text)
+    if len(vety) > 1 or store.zakazane_vzory(text):
+        ponechat = []
+        for v in vety:
+            if store.zakazane_vzory(v):
+                odebrano.append(v.strip())
+            else:
+                ponechat.append(v)
+        text = " ".join(ponechat)
+    text = re.sub(r"([^\W\d_]) :", r"\1:", text).replace("->", "→")
+    text = re.sub(r"\s+([.,;])", r"\1", text).strip()
+    return text, odebrano, text != puvodni.strip()
+
+
+def rozdel(text, maximum):
+    """(začátek do maxima znaků, zbytek): řez na konci věty, jinak na mezeře; nic se neztratí."""
+    if len(text) <= maximum:
+        return text, ""
+    cast = text[:maximum]
+    for rx in (r"[.!?]\s", r"\s"):
+        m = list(re.finditer(rx, cast))
+        if m:
+            i = m[-1].end()
+            return text[:i].strip(), text[i:].strip()
+    return cast, text[maximum:].strip()
+
+
+def typ_zdroje(text):
+    t = text.strip().lower()
+    if t.startswith("(stopa") or t.startswith("stopa"):
+        return "stopa"
+    if re.match(r"(rodina|rodin[aouy]|od rodiny|udaje od rodiny)\b", t):
+        return "rodina"
+    return "archiv" if ARCHIV.search(text) else "jiné"
+
+
+def prevod_vysledku(klic):
+    """(výsledek, ověřeno, odhad): odhad = klíč nebyl ze schváleného seznamu, mapuje se podle slov a jde do protokolu."""
+    k = klic.strip().lower()
+    over = "ověřeno" in k and "neověřeno" not in k or k.startswith("potvrzeno")
+    if "nečiteln" in k or "nepřečten" in k:
+        return "nečitelné", False, k.split()[0] not in ("nenalezeno", "nečitelné")
+    if k.startswith("nenalezeno"):
+        return "nenalezeno", False, False
+    if k.startswith("vyvráceno"):
+        return "vyvráceno", over, False
+    if k.startswith("částečně") or k.startswith("nedočteno"):
+        return "částečně", False, False
+    if k.startswith("nalezeno") or k.startswith("potvrzeno"):
+        return "nalezeno", over, False
+    # volnější klíče ze starých řádků: mapují se odhadem podle slov (v protokolu ke kontrole)
+    if "nenalezen" in k or "nic nenašl" in k or "bez jistého" in k or "bez přímého" in k:
+        return "nenalezeno", False, True
+    if re.search(r"kandidát|stopa|zatím jen|rozpracováno|neověřeno|nejist", k):
+        return "částečně", False, True
+    if k.startswith("ověřeno") or re.search(r"\bnalezen", k):
+        return "nalezeno", "ověřeno" in k, True
+    return None, False, False
+
+
+def migruj_radek(radek, nahradni_id):
+    """(záznam, důvody k ruční kontrole, odebrané procesní části)."""
+    c = bunky_radku(radek)
+    duvody, odebrano = [], []
+    z = {"id": int(c[0]) if c and c[0].isdigit() else nahradni_id}
+    if len(c) != 7:
+        duvody.append(f"řádek má {len(c)} sloupců místo 7")
+        z.update(k_rucni_kontrole=True, puvodni=radek, duvod="; ".join(duvody))
+        if len(c) >= 3:
+            z["zdroj"] = {"typ": typ_zdroje(c[2]), "text": c[2]}
+        return z, duvody, odebrano
+    _, datum, zdroj, rozsah, hledano, vysledek, citace = c
+    if not store.je_datum(datum):
+        duvody.append(f"datum „{datum}“ není RRRR-MM-DD")
+    z["datum"] = datum
+    typ = typ_zdroje(zdroj)
+    zz, odeb, zm = sanitizuj(zdroj)
+    odebrano += odeb
+    z["zdroj"] = {"typ": typ, "text": zz}
+    roz, odeb, zmr = sanitizuj("" if rozsah in ("–", "-") else rozsah)
+    odebrano += odeb
+    z["rozsah"] = roz
+    m = KLIC.match(vysledek)
+    vys, over, odhad = prevod_vysledku(m.group(1)) if m else (None, False, False)
+    zbytek = m.group(2) if m else vysledek
+    if vys is None:
+        if typ == "stopa" and not m:   # stopa při čtení: není to hledání, věcný údaj je v textu
+            vys = "nalezeno"
+            hledano = "stopa při čtení" if hledano in ("–", "-", "") else hledano
+        else:
+            duvody.append("výsledek nemá rozpoznatelný klíč (**nalezeno** apod.)")
+            vys = "nalezeno"
+    z["vysledek"] = vys
+    if over:
+        z["overeno"] = True
+    hl, odeb, zm1 = sanitizuj("" if hledano in ("–", "-") else hledano)
+    odebrano += odeb
+    poznamka = []
+    hl2, zbyt = rozdel(hl, MAX_HLEDANO)
+    if zbyt:
+        poznamka.append("Hledáno (celé): " + hl)
+    z["hledano"] = hl2
+    nalez, odeb, zm2 = sanitizuj(zbytek)
+    odebrano += odeb
+    nalez, zbyt = rozdel(nalez, MAX_NALEZ)
+    if zbyt:
+        poznamka.append(zbyt)
+    if nalez:
+        z["nalez"] = nalez
+    cit, odeb, zm3 = sanitizuj("" if citace in ("–", "-") else citace)
+    odebrano += odeb
+    if cit:
+        z["citace"] = cit
+    if poznamka:
+        z["poznamka"] = " ".join(poznamka)
+    z["puvodni"] = radek
+    if odebrano:
+        z["proces"] = odebrano
+    if odebrano or odhad or zm or zmr or zm1 or zm2 or zm3:
+        z["uprava_automaticky"] = True
+    duvody += [x for x in over_zaznam(dict(z), ()) if not x.startswith("id:")]
+    if duvody:
+        z["k_rucni_kontrole"] = True
+        z["duvod"] = "; ".join(duvody)
+    return z, duvody, odebrano
+
+
+def cmd_migruj(a):
+    zdroj = os.path.join(ROOT, a.zdroj) if a.zdroj else STARY
+    radky = zdrojove_radky(zdroj)
+    if os.path.exists(LOG):
+        stare = [z for _, z, e in store.nacti(LOG) if z]
+        if not a.znovu:
+            sys.exit("data/denik.jsonl už existuje, nic jsem nepřepsal. Znovu jen s --znovu (smí jen tehdy, když jsou v něm "
+                     "samé migrované záznamy).")
+        if any(not z.get("puvodni") for z in stare):
+            sys.exit("denik.jsonl obsahuje i ručně přidané záznamy, --znovu by je smazalo. Nic jsem nezměnil.")
+    zaznamy, vsechny_duvody, procesni, videna = [], {}, {}, set()
+    cisla = [int(bunky_radku(r)[0]) for r in radky if bunky_radku(r) and bunky_radku(r)[0].isdigit()]
+    nahradni = max(cisla or [0]) + 1
+    for r in radky:
+        z, duvody, odebrano = migruj_radek(r, nahradni)
+        if z["id"] in videna:   # duplicitní číslo: nové id, řádek k ruční kontrole
+            z["id"] = nahradni
+            duvody.append("duplicitní číslo řádku")
+            z["k_rucni_kontrole"] = True
+            z["duvod"] = "; ".join(duvody)
+        nahradni = max(nahradni, z["id"] + 1)
+        videna.add(z["id"])
+        if duvody:
+            vsechny_duvody[z["id"]] = duvody
+        if odebrano:
+            procesni[z["id"]] = odebrano
+        zaznamy.append(z)
+    text = "".join(json.dumps(z, ensure_ascii=False) + "\n" for z in sorted(zaznamy, key=lambda x: x["id"]))
+    os.makedirs(DATA, exist_ok=True)
+    tmp = LOG + ".tmp"
+    with store.Zamek(LOG):
+        with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+            f.write(text)
+        os.replace(tmp, LOG)
+    os.makedirs(os.path.dirname(PROTOKOL), exist_ok=True)
+    with open(PROTOKOL, "w", encoding="utf-8", newline="\n") as f:
+        f.write("# Migrace deníku: protokol\n\n")
+        f.write(f"Záznamů: {len(zaznamy)}; k ruční kontrole (na web nejdou, dokud se neopraví): {len(vsechny_duvody)}; "
+                f"s automaticky odebranými procesními údaji: {len(procesni)}.\n\n")
+        f.write("## K ruční kontrole\n\n")
+        for i, d in sorted(vsechny_duvody.items()):
+            f.write(f"- {i}: {'; '.join(d)}\n")
+        f.write("\n## Odebrané procesní údaje (zůstaly v poli proces, na web nejdou)\n\n")
+        for i, o in sorted(procesni.items()):
+            f.write(f"- {i}: " + " | ".join(o) + "\n")
+    print(f"deník: převedeno {len(zaznamy)} řádků, k ruční kontrole {len(vsechny_duvody)}, protokol "
+          f"{os.path.relpath(PROTOKOL, ROOT)}")
+
+
+def cmd_overit_migraci(a):
+    zdroj = os.path.join(ROOT, a.zdroj) if a.zdroj else STARY
+    radky = zdrojove_radky(zdroj)
+    zbyva = {}
+    for _, z, e in store.nacti(LOG):
+        if z and z.get("puvodni"):
+            zbyva[z["puvodni"]] = zbyva.get(z["puvodni"], 0) + 1
+    chyby = []
+    for r in radky:
+        if zbyva.get(r, 0) > 0:
+            zbyva[r] -= 1
+        else:
+            cislo = (bunky_radku(r) or ["?"])[0]
+            chyby.append(f"řádek {cislo} původního deníku nemá v denik.jsonl záznam se shodným původním textem")
+    if chyby:
+        print("\n".join(chyby))
+        sys.exit(f"Migrace není úplná: {len(chyby)} řádků chybí nebo se liší.")
+    print(f"Migrace ověřena: všech {len(radky)} řádků původního deníku je v denik.jsonl a původní text se shoduje.")
+
+
 def main():
     if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
         sys.exit(__doc__)
@@ -188,6 +422,13 @@ def main():
     p.set_defaults(fn=cmd_vykresli)
     p = sub.add_parser("over")
     p.set_defaults(fn=cmd_over)
+    p = sub.add_parser("migruj")
+    p.add_argument("--zdroj")
+    p.add_argument("--znovu", action="store_true")
+    p.set_defaults(fn=cmd_migruj)
+    p = sub.add_parser("overit-migraci")
+    p.add_argument("--zdroj")
+    p.set_defaults(fn=cmd_overit_migraci)
     a = ap.parse_args()
     a.fn(a)
 

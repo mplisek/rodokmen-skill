@@ -31,6 +31,10 @@ Konvence: každý řádek = jedno hledání, i neúspěšné.
 | 9 | 2026-11-04 | ARON, Dolní Lhota | sn. 9 | křest Josefa Nováka | nalezeno sn. 9 bez tučného klíče | – |
 | 10 | 2026-11-04 | ARON, Dolní Lhota | křest Evy Novákové | **nalezeno** sn. 10 | – |
 | 11 | 2026-11-05 | rodina, telefonát | – | datum úmrtí Marie | **nalezeno** † 1901, podle rodiny. | – |
+| 12 | 2026-11-06 | Pomocník (sonnet): ARON, Horní Lhota, úmrtí 1880–1900, sign. 1236 | sn. 100–120 | úmrtí Anny Novákové | **kandidát z rejstříku** † 1890, nutné ověřit v matrice. | – |
+| 13 | 2026-11-06 | ARON, Horní Lhota, oddaní 1860–1880 | sn. 1–50 | sňatek Karla Nováka | **zatím nenalezeno** v oddaných. | – |
+| 14 | 2026-11-07 | ARON, Dolní Lhota, narození 1840–1850 | sn. 7 | křest Evy Králové | **ověřeno:** sn. 7, Eva dcera Jana Krále. | – |
+| 15 | 2026-11-07 | ARON, Dolní Lhota, narození 1840–1850 | sn. 8 | křest Petra Králového | **Králové** nejasné slovo v záhlaví. | – |
 """
 
 
@@ -93,6 +97,21 @@ class Migrace(unittest.TestCase):
         self.assertEqual(z[1]["zdroj"]["typ"], "archiv")
         self.assertEqual(z[3]["zdroj"]["typ"], "stopa")
         self.assertEqual(z[11]["zdroj"]["typ"], "rodina")
+
+    def test_pripona_pomocnika_pred_zdrojem_se_odebere_a_zdroj_zustane(self):
+        z = self.migruj()[12]
+        self.assertTrue(z["zdroj"]["text"].startswith("ARON, Horní Lhota"), z["zdroj"])
+        self.assertNotIn("Pomocník", z["zdroj"]["text"])
+        self.assertTrue(any("sonnet" in x for x in z["proces"]))
+        self.assertFalse(z.get("k_rucni_kontrole"))
+
+    def test_volnejsi_klice_vysledku_se_mapuji_odhadem_a_neznama_jdou_rucne(self):
+        z = self.migruj()
+        self.assertEqual(z[12]["vysledek"], "částečně")                                  # kandidát z rejstříku
+        self.assertEqual(z[13]["vysledek"], "nenalezeno")                                # zatím nenalezeno
+        self.assertEqual((z[14]["vysledek"], z[14]["overeno"]), ("nalezeno", True))      # ověřeno:
+        self.assertTrue(z[15].get("k_rucni_kontrole"))                                   # klíč není hodnota výsledku
+        self.assertTrue(z[12].get("uprava_automaticky"))                                 # odhad mapování je v protokolu
 
     def test_zdroj_rozsah_hledano_a_nalez_se_prenesou(self):
         z = self.migruj()
