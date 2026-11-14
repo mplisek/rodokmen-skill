@@ -10,6 +10,12 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
+## Nepublikováno (fork)
+
+### Nové
+
+- `tools/pracovni_prehled.py`: soupis stažených svazků ARONu a ostatních snímků v `pracovni/` s vazbou na deník; `--hledej` před stažením, `--json`. Jen čte, bez sítě.
+
 ## Nevydáno
 
 ### Nové

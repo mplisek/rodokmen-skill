@@ -98,7 +98,7 @@ Základní smyčka pro každou osobu:
    jen v prohlížeči, ostatní v `reference/portaly.md` (židovské matriky `vademecum.py`, SOA Litoměřice `litomerice.py`,
    Vídeň `matricula.py`, Brno `brno_encyklopedie.py`, vězni a oběti `arolsen.py`, `mauthausen.py`, `obeti.py`). Sňatek hledej nejdřív ve farnosti nevěsty. Je-li ke svazku
    rejstřík, začni jím.
-4. **Stáhni snímek** do `pracovni/<svazek>/` a nech ho tam – před dalším stažením se podívej, jestli ho už nemáš.
+4. **Stáhni snímek** do `pracovni/<svazek>/` a nech ho tam – před dalším stažením se podívej, jestli ho už nemáš: `python3 -I tools/pracovni_prehled.py --hledej "Libice 365"` vypíše stažené svazky, rozsah snímků a řádky deníku k nim.
    Na čtení a přepis vždy v **plném rozlišení** (úroveň `0`, u Porta fontium a eBadatelny bez `nahled`): zmenšené snímky
    jsou rozmazané, hodí se jen na hledání stránky. Nečitelné místo udělej výřezem z plného rozlišení. Najdi zápis,
    **přečti ho sám ze snímku**.

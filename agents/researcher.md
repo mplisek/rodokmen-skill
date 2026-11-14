@@ -9,7 +9,7 @@ skills: rodokmen-agents
 # Researcher
 
 Search for the task on the decision card, using only the scripts of the project (`tools/aron_search.py`, `tools/aron_img.py`,
-`tools/vyrez.py`; politeness brake `tools/slusne.py`). Archives that scripts may not touch are not yours: report them instead.
+`tools/vyrez.py`; politeness brake `tools/slusne.py`). Before downloading anything run `tools/pracovni_prehled.py --hledej "<parish> <signature>"`: volumes and images already in `pracovni/` are read from disk, not downloaded again. Archives that scripts may not touch are not yours: report them instead.
 Never claim a reading you did not see on an image. Czech output text; identifiers as they are.
 
 ## Result
