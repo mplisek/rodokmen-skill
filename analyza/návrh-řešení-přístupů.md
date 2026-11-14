@@ -22,13 +22,13 @@ Rozhodnutí jsou v kap. 7.
 ```json
 "pristupy": [
   {
-    "nazev": "Pátkovi",
+    "nazev": "Větev B",
     "koren": ["libuse_patkova_1932"],
     "odpoved": "…",
     "odkazy": [{"id": "p3", "jmeno": "Jana", "otisk": "…", "vytvoreno": "2026-11-10"}],
     "prava": {"soukrome": true, "texty": false, "poznamky": true},
     "uvod": {"odstavce": ["Vlastní text větve – pokračuje za společným úvodem."]},
-    "rody": {"8": ["Plíškové", "Popis z pohledu Pátkových…"], "9": ["Tesařovi", "…"]}
+    "rody": {"8": ["Rod X", "Popis z pohledu větve B…"], "9": ["Rod Y", "…"]}
   }
 ]
 ```
@@ -72,11 +72,11 @@ Rozhodnuto: prefix `(soukromé)` (kap. 7).
 
 Rody se počítají od kořene přístupu (8 pradědečků a prababiček), takže stejné číslo znamená u každého přístupu jiný
 rod. Obsah proto **neodkazuje na číslo rodu, ale na osobu – zakladatele rodu** v číslování celého rodokmenu
-(`osoby.py`): `rody: [8, 10]` = rod Jana Plíška (8) a rod Stanislava Marka (10) z pohledu správce.
+(`osoby.py`): `rody: [8, 10]` = rod otce (8) a rod matky (10) z pohledu správce.
 
 - Přístup obsah vidí, když je některý ze zakladatelů v jeho **přímé linii** (nebo je jeho předkem).
 - Zobrazí se **rody přístupu**, do kterých zakladatel patří, s jejich názvy a barvami z pohledu přístupu
-  (u Pátkových se obsah „rodu 8“ ukáže pod jejich rodem Plíšků).
+  (u větve B se obsah „rodu 8“ ukáže pod jejím rodem X).
 - Bez `rody` = obecný obsah (zajímavost ho vidí každý; text řídí právo `texty`).
 
 Rozhodnuto: číslem osoby (kap. 7).
@@ -131,10 +131,10 @@ Rozhodnuto: číslem osoby (kap. 7).
 
 ## 4. Projekt (tento rodokmen)
 
-1. **Přístupy:** správce (`vse`), větve – např. Pátkovi (kořen Libuše Pátková), Pšornovi (Emilie Pšornová),
+1. **Přístupy:** správce (`vse`), větve – např. větev B (kořen osoba B), větev A (osoba A),
    další podle rodiny; jejich práva, názvy rodů a vlastní úvod.
 2. **Převod** `data/pozvanky.json` → `web.json` (nástroj).
-3. **Rody u obsahu:** zajímavosti (už mají řádek `Rod:`), příběh Plíšků (`rody: [8]`, oddíly o žijících jako
+3. **Rody u obsahu:** zajímavosti (už mají řádek `Rod:`), příběh rodu X (`rody: [8]`, oddíly o žijících jako
    soukromé nebo do vlastní větve), otázky pro rodinu a prameny.
 4. **Dokumenty:** projít 41 souborů v `dokumenty/` – osoby, RČ, začernění, výběr přístupů, souhlasy.
 5. **Souhlasy** žijících, jejichž údaje a doklady mají být vidět.

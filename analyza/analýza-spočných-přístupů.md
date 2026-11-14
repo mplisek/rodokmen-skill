@@ -8,7 +8,7 @@ nejasné body v **Otevřené otázky**, body k ověření při testech v **Odlo�
 
 - V rodině je víc větví žijících příbuzných. Každá větev dostane vlastní přístup k webu.
 - Větve si mají navzájem **pomáhat budovat společné části** (společné předky), ale **nemají vidět soukromé
-  informace o jiných větvích** (např. potomci Emilie „Milušky“ Pšornové nevidí, co dodají potomci Libuše Pátkové).
+  informace o jiných větvích** (např. potomci osoby A nevidí, co dodají potomci osoby B).
 - Může tedy být víc rodů, víc příběhů a víc zajímavostí, které se vážou na jednotlivé části rodiny.
 
 ## 2. Pojmy
@@ -62,7 +62,7 @@ nejasné body v **Otevřené otázky**, body k ověření při testech v **Odlo�
 | žijící v ostatních větvích rozšířené linie | jméno a rok narození | jméno a rok narození |
 | osoby mimo rozšířenou linii | nic | nic |
 
-Příklad: Pšornovi (kořen Emilie Pšornová) vidí přes její sestru Bohumilu Markovou i Martinovu rodinu – jen jména
+Příklad: větev A (kořen osoba A) vidí přes její sestru, osobu C, i rodinu správce webu – jen jména
 a roky narození, ani s právem `soukrome` víc.
 
 ## 5. Práva přístupu
@@ -152,5 +152,5 @@ Každý přístup má objekt **`prava`**; nevyplněné právo = `false`. Obecný
 
 ## Související nález v datech (mimo zadání)
 
-- **Culkovi, osoba 37:** opraveno 9. 11. 2026 – matkou Josefa Culka (18) je Josefa Ronnerová (37), její rodiče 74 a 75;
-  Marie Stehnová a její rodiče přesunuti mezi příbuzné (první žena Ignáce Culka).
+- **Rod X, osoba 37:** opraveno 9. 11. 2026 – matkou osoby 18 je osoba 37 (druhá žena otce), její rodiče 74 a 75;
+  První žena otce (osoba 18) a její rodiče přesunuti mezi příbuzné.

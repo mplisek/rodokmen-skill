@@ -44,7 +44,7 @@ Jedna hlavičková řádka čitelná skriptem + volný text pod ní:
 
 ```text
 ### U-0412 | P1 | os:57,114,115 | typ:křest | cíl:krest:115 | rodič:U-0398 | stav:otevřeno
-Cecílie Voláková: křest ~1801, Smiřice 42-8 sn. 21 (kandidát) …
+Anna Vzorová: křest ~1801, Smiřice 42-8 sn. 21 (kandidát) …
 ```
 
 - **Duplicity:** při zápisu se porovná `typ`, osoby a místo. Překryv → sloučení (sjednocení osob, doplnění textu, priorita =
@@ -133,7 +133,7 @@ Cecílie Voláková: křest ~1801, Smiřice 42-8 sn. 21 (kandidát) …
 6. ~~**Čtení nejistých údajů v noci**~~ **Rozhodnuto (12. 11. 2026): varianta A.** Do dat jdou jen **jisté** údaje (shoduje se jméno, rodiče, místo a datum).
    Nejisté (jeden z údajů nesedí nebo je čten s „?“) se zapíše jen jako **kandidát v poznámce** osoby (stav zůstane `prob`) a do
    `ukoly_k_rozhodnuti.md` přibude otázka s možnostmi: potvrdit, zamítnout, přečíst znovu v plném rozlišení.
-   Příklad: nemanželská Cäcilia Katharina 22. 4. 1801 (matka Matiek × Martin) × Cecílie Voláková.
+   Příklad: nemanželská Cäcilia Katharina 22. 4. 1801 (matka Matiek × Martin) × Anna Vzorová.
 7. ~~**Chyba portálu**~~ **Rozhodnuto (12. 11. 2026): ano** – úkol zůstane `otevřeno`, zapíše se do deníku (bez interních detailů, kap. 7) a běh skončí.
 8. ~~**Úpravy skillu v noci**~~ **Rozhodnuto (12. 11. 2026): princip souhlasí.** Úprava skillu se děje **v samostatné feature větvi** (bez push, vydání a nasazení); ráno
    se rozhodne, co se s větví stane. **Pojmenování `noc/<datum>` ne** – nic neříká. Název větve i zprávy commitů určují šablony v kap. 7.
