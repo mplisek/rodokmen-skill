@@ -23,7 +23,7 @@ Rozhodnutí jsou v kap. 7.
 "pristupy": [
   {
     "nazev": "Větev B",
-    "koren": ["libuse_patkova_1932"],
+    "koren": ["osoba_b"],
     "odpoved": "…",
     "odkazy": [{"id": "p3", "jmeno": "Jana", "otisk": "…", "vytvoreno": "2026-11-10"}],
     "prava": {"soukrome": true, "texty": false, "poznamky": true},

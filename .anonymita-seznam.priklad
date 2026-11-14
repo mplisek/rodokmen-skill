@@ -6,6 +6,7 @@
 # Vyjmout cestu (např. testovací data s vymyšlenými jmény): řádek začíná !
 #
 # Vymyšlené příklady formátu:
+
 Příjmeníprojektu
 re:číslo osoby \d{2,3}
 !skills/rodokmen/template/ukazka/
