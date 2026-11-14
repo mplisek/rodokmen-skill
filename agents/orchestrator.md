@@ -32,6 +32,18 @@ everything else. Talk to the user in Czech.
    message that says what was verified. One commit per completed verification; unverified or failed work is not committed. Files that other
    work left in the tree are not on the ticket.
 
+## Decision queue
+
+A decision is a choice only a person can make (two candidates with equal evidence, a name variant, cost or manner of a big job, privacy,
+anything sent outside). Not a decision: confirming your own change, comparing or checking data, re-reading, or a factual question that sources answer.
+File a decision only when the next step is blocked and everything reachable was read (a second blind reading included), as one ticket with
+`Otázka`, `Možnosti` (at least two, `;`-separated) and `Výchozí postup` (what happens without an answer), plus `Důkazy`, `Zkoušeno`, `Doporučení`
+(`fronta.py pridej rozhodnuti --otazka … --moznosti … --vychozi …`, done through the fixer).
+
+Audit: at the start of the session and before showing the queue to the user run `tools/fronta.py seznam rozhodnuti` and test each item: can
+re-reading, a data comparison or an archive query settle it? If yes, route it to the right queue and tell the user in one sentence.
+Present only the true decisions.
+
 ## Branch
 
 At the start read the branch with `git branch --show-current` and tell the user which branch the commits go to. The default is `main`; when

@@ -7,6 +7,8 @@ Použití (z kořene projektu): python3 -I tools/fronta.py <příkaz> …
                   [--zavisi U-0001,U-0002]
                                           nový úkol; podobný (stejný typ a překryv osob/cíle, v kterékoli frontě) se
                                           NEZALOŽÍ, ale doplní (osoby, text, vyšší priorita)
+                                          u fronty rozhodnuti povinně --otazka T --moznosti "A) …; B) …" --vychozi T (a doporučeně --dukazy,
+                                          --zkuseno, --doporuceni); bez nich se úkol odmítne (reference/nocni_rezim.md)
   uprav <id> [--p P2] [--text T] [--stav odloženo] [--os …] [--cil …] [--zavisi …] [--pridat-text T]
   hotovo <id> | hotovo --cil krest:115    úkol smaže (jeho výsledek je v datech nebo v následných úkolech)
   presun <id> <fronta>                    přesune úkol do jiné fronty
@@ -46,6 +48,58 @@ STAVY = ("otevřeno", "odloženo", "probíhá")
 TYPY_RUN = {"bádání": "badani", "skill": "skill", "test": "skill", "údržba": "skill"}   # typ úkolu → druh běhu (brzda)
 VYCHOZI_REZIM = {"pracovni_dny": [1, 2, 3, 4, 5], "pracovni_od": "06:00", "pracovni_do": "22:00", "svatky": [],
                  "pomocniku": 2, "dod": {}}
+
+
+# Úkol k rozhodnutí (reference/nocni_rezim.md, analyza/navrh-router-uloh.md kap. 2): rozhoduje člověk, ne stroj. Proto musí mít otázku, možnosti
+# a výchozí postup (co se stane, když uživatel neodpoví); důkazy, co se zkusilo a doporučení se doporučují.
+POVINNA_ROZHODNUTI = ("Otázka", "Možnosti", "Výchozí postup")
+POLE_ROZHODNUTI = (("otazka", "Otázka"), ("moznosti", "Možnosti"), ("dukazy", "Důkazy"), ("zkuseno", "Zkoušeno"),
+                   ("doporuceni", "Doporučení"), ("vychozi", "Výchozí postup"))
+POLE_RADEK = re.compile(r"^\s*(Otázka|Možnosti|Důkazy|Zkoušeno|Doporučení|Výchozí postup)\s*:\s*(.*\S)\s*$")
+PRACE = re.compile(r"^\s*(?:ověřit|zkontrolovat|porovnat|přečíst|potvrdit|prověřit|dohledat|zjistit)\b", re.I)
+
+
+def pole_rozhodnuti(text):
+    """{název pole: hodnota} z řádků „Otázka: …“ v textu úkolu."""
+    out = {}
+    for radek in (text or "").splitlines():
+        m = POLE_RADEK.match(radek)
+        if m:
+            out.setdefault(m.group(1), m.group(2))
+    return out
+
+
+def chyby_rozhodnuti(text):
+    """Seznam chybějících nebo špatných povinných polí úkolu k rozhodnutí (prázdný = v pořádku)."""
+    pole, chyby = pole_rozhodnuti(text), []
+    for p in POVINNA_ROZHODNUTI:
+        if p not in pole:
+            chyby.append(f"chybí pole „{p}“")
+    if "Možnosti" in pole and len([x for x in re.split(r"\s*;\s*", pole["Možnosti"]) if x.strip()]) < 2:
+        chyby.append("Možnosti: aspoň dvě, oddělené středníkem (A) …; B) …)")
+    return chyby
+
+
+def vypada_jako_prace(text):
+    """Otázka začíná slovesem práce (ověřit, zkontrolovat, porovnat…): pravděpodobně to není rozhodnutí člověka."""
+    prvni = (text or "").strip().splitlines()[0] if (text or "").strip() else ""
+    return bool(PRACE.match(pole_rozhodnuti(text).get("Otázka") or prvni))
+
+
+def text_rozhodnuti(a):
+    """Text úkolu z přepínačů --otazka, --moznosti … (jinak None)."""
+    radky = [f"{nazev}: {getattr(a, attr)}" for attr, nazev in POLE_ROZHODNUTI if getattr(a, attr, None)]
+    return "\n".join(radky) if radky else None
+
+
+def vyzaduj_rozhodnuti(text):
+    chyby = chyby_rozhodnuti(text)
+    if chyby:
+        sys.exit("ODMÍTNUTO: úkol k rozhodnutí potřebuje otázku, možnosti a výchozí postup (" + "; ".join(chyby) + "). "
+                 "fronta.py pridej rozhodnuti --otazka … --moznosti \"A) …; B) …\" --vychozi … [--dukazy … --zkuseno … --doporuceni …]. "
+                 "Věc, kterou jde vyřešit čtením nebo porovnáním dat, patří do fronty noc, badani nebo dotazy (reference/nocni_rezim.md).")
+    if vypada_jako_prace(text):
+        print("pozor: otázka vypadá jako práce (ověřit, zkontrolovat, porovnat…), ne jako rozhodnutí člověka – patří do noc, badani nebo dotazy?")
 
 
 def cesta(f):
@@ -273,6 +327,13 @@ def kontrola():
             if stejny(a, b):
                 upoz.append(f"{a.id} ({f1}) a {b.id} ({f2}) se překrývají – sluč: fronta.py pridej (doplní) nebo hotovo")
     for f, u in vsechny:
+        if f == "rozhodnuti":
+            ch = chyby_rozhodnuti(u.text)
+            if ch:
+                upoz.append(f"{u.id} (rozhodnuti): úkol nemá povinná pole ({'; '.join(ch)}) – doplň otázku, možnosti a výchozí postup")
+            elif vypada_jako_prace(u.text):
+                upoz.append(f"{u.id} (rozhodnuti): otázka začíná slovesem práce – není rozhodnutí člověka? (noc, badani nebo dotazy)")
+    for f, u in vsechny:
         if u.cil and cil_splnen(u.cil):
             upoz.append(f"{u.id} ({f}): cíl {u.cil} už je v datech splněn – `fronta.py hotovo {u.id}`")
     for ch in chyby:
@@ -289,7 +350,8 @@ def main(argv=None):
     sp = ap.add_subparsers(dest="cmd", required=True)
     s = sp.add_parser("seznam"); s.add_argument("fronta", nargs="?", choices=list(FRONTY))
     s = sp.add_parser("pridej"); s.add_argument("fronta", choices=list(FRONTY))
-    for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--zavisi"):
+    for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--zavisi", "--otazka", "--moznosti", "--dukazy", "--zkuseno",
+              "--doporuceni", "--vychozi"):
         s.add_argument(a)
     s = sp.add_parser("uprav"); s.add_argument("id")
     for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--zavisi", "--pridat-text"):
@@ -385,10 +447,13 @@ def main(argv=None):
         print("žádný úkol")
         return 3
     if a.cmd == "pridej":
-        if not a.text:
-            sys.exit("pridej: chybí --text")
+        text = (text_rozhodnuti(a) if a.fronta == "rozhodnuti" else None) or a.text
+        if not text:
+            sys.exit("pridej: chybí --text" + (" (u rozhodnutí --otazka, --moznosti, --vychozi)" if a.fronta == "rozhodnuti" else ""))
+        if a.fronta == "rozhodnuti":
+            vyzaduj_rozhodnuti(text)
         novy = Ukol(dalsi_id(data), a.p or "P2", [x for x in re.split(r"[,\s]+", a.os or "") if x], a.typ or "", a.cil or "",
-                    a.rodic or "", a.stav or "otevřeno", a.text, [x for x in re.split(r"[,\s]+", a.zavisi or "") if x])
+                    a.rodic or "", a.stav or "otevřeno", text, [x for x in re.split(r"[,\s]+", a.zavisi or "") if x])
         if not re.fullmatch(r"P[1-3]", novy.p):
             sys.exit("priorita P1–P3")
         for f, (uv, uk) in data.items():
@@ -421,6 +486,8 @@ def main(argv=None):
             if a.cmd == "presun":
                 uv2, uk2 = data[a.fronta]
                 if a.fronta != f:
+                    if a.fronta == "rozhodnuti":
+                        vyzaduj_rozhodnuti(u.text)
                     uk2.append(u)
                     uloz(a.fronta, uv2 or "", uk2)
                     print(f"{u.id}: {f} → {a.fronta}")

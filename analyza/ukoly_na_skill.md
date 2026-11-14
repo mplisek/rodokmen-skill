@@ -8,17 +8,6 @@ v projektu. Hotový úkol se maže, výsledek je v CHANGELOG. Návrh a zdůvodn�
 Router úkolů: vstupní fronta `ukoly_vstup.md`, krok routeru v `agents/orchestrator.md`, příkazy `fronta.py smeruj | rozdel | zaparkuj`,
 zákaz zakládání přímo do cílové fronty. DOD povinná. Testy v `skills/rodokmen/tests/`.
 
-## S-002 | P1 | typ:skill
-
-`reference/nocni_rezim.md`: nahradit směrování rozhodovacím postupem z kap. 2 návrhu (včetně pravidla pro rodinu: nejvýš 3–4 generace a zajímavosti,
-a pravidla „věcné otázky se zdroji nejsou rozhodnutí“). Přepsat odstavec „Nejisté čtení v noci“ (druhé čtení naslepo, teprve spor do rozhodnutí).
-Přezkoumat pravidla agentů, jejichž zdrojový oddíl se změní (`pravidla.py overit`).
-
-## S-003 | P1 | typ:skill
-
-Struktura úkolu v `ukoly_k_rozhodnuti.md`: povinná pole otázka, možnosti, důkazy, co se zkusilo, doporučení a výchozí postup. `fronta.py pridej`
-úkol bez nich odmítne; `fronta.py kontrola` varuje u úkolů začínajících slovesy ověřit, zkontrolovat, porovnat, přečíst, potvrdit.
-
 ## S-004 | P2 | typ:skill
 
 Selhání: tabulka přechodů (kap. 4.1), počet opakování v `rezim.json` (`opakovani`), společné rozhodnutí za portál po vyčerpání pokusů, zákaz automatického

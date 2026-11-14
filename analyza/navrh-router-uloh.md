@@ -22,7 +22,7 @@ z auditu fronty „k rozhodnutí“ a z pozorování běhu orchestrátora. Pří
    uložené doklady, fotografie) a **zajímavosti** (příběhy, souvislosti). Starší otázky patří archivu. Odpověď rodiny je důkaz stupně `fam`:
    nikdy nepřebije zápis v matrice, jen založí úkol k ověření ve zdrojích (rodina uvádí jednu matku, matrika jinou).
 6. **Je to nejasné a rozhodnout může badatel?** → **k rozhodnutí**. Jen výběr, který stroj nemůže udělat:
-   - nejasná identita nebo podoba jména („Culek, nebo Čulek“), dva kandidáti se stejnými důkazy, spor zdrojů,
+   - nejasná identita nebo podoba jména („Vzor, nebo Wzor“), dva kandidáti se stejnými důkazy, spor zdrojů,
    - cena a způsob („celý svazek má 123 listů, nákladné: automaticky, nebo ručně?“),
    - selhání serveru, které se neopraví opakováním (viz 4.3),
    - soukromí a vše, co se odesílá ven.

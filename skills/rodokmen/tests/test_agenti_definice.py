@@ -103,6 +103,13 @@ class DefiniceAgentu(unittest.TestCase):
         self.assertIn("-deskew", r)                                    # narovnaný
         self.assertIn("2000", self.texty["orchestrator"])              # karta verifieru žádá plné rozlišení a malý výřez
 
+    def test_orchestrator_audituje_frontu_rozhodnuti_a_zaklada_je_se_strukturou(self):
+        o = self.texty["orchestrator"]
+        self.assertRegex(o, r"(?i)audit")
+        self.assertIn("fronta.py seznam rozhodnuti", o)
+        self.assertIn("Výchozí postup", o)                              # povinná pole úkolu k rozhodnutí (S-003)
+        self.assertRegex(o, r"(?i)only .*decision")                     # předloží jen skutečná rozhodnutí
+
     def test_orchestrator_zajistuje_commit_po_kazdem_overeni(self):
         o = self.texty["orchestrator"]
         self.assertIn("rodokmen:committer", o)

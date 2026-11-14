@@ -13,14 +13,37 @@ Nástroj: `python3 -I tools/fronta.py --help`. Konfigurace: `data/rezim.json`.
 | `ukoly_dotazy_na_archivy.md` | co online není | žádost archivu |
 | `ukoly_na_rodinu.md` | nápad na otázku pro rodinu | rodina |
 
-**Směrování nálezu** (kam co zapsat, když při práci narazíš na něco nového):
+**Směrování nálezu** (kam co zapsat, když při práci narazíš na něco nového). Úkol jde první větví, na kterou odpovíš „ano“:
 
-1. Jde to skriptem z ARONu bez úsudku → **na noc**.
-2. Je třeba rozhodnout (spor zdrojů, dva kandidáti, změna jména v datech, soukromí, cokoli odesílaného ven) → **k rozhodnutí**;
-   původní úkol se odloží (`stav:odloženo`) a odkazuje na rozhodnutí.
-3. Online jen v prohlížeči → **k bádání**.
-4. Online není → **archivní dotaz**.
-5. Může to vědět rodina → **otázka pro rodinu**.
+1. **Je to už v datech nebo v dříve přečtených zdrojích** (cache, stažené svazky) a stačí to zapsat? → hotovo, zapsat do dat.
+2. **Jde to vyřešit čtením online zdrojů, které smí skript** (i z cache)? → **na noc** (automatické bádání).
+3. **Je to online, ale skript tam nesmí, nebo musí pomoct člověk?** → **k bádání** (ruční hledání, např. přes Playwright).
+4. **Online to není?** → **archivní dotaz**.
+5. **Může to vědět rodina?** → **otázka pro rodinu**. Ptej se jen na to, co rodina může pamatovat: **nejvýš 3–4 generace** zpět
+   a **zajímavosti** (příběhy, souvislosti). Starší otázky patří archivu. Odpověď rodiny je důkaz stupně `fam`: nepřebije zápis v matrice,
+   jen založí úkol k ověření ve zdrojích.
+6. **Je to nejasné a rozhodnout může badatel?** → **k rozhodnutí**; původní úkol se odloží (`stav:odloženo`) a odkazuje na rozhodnutí.
+
+**Do rozhodnutí patří jen výběr, který stroj udělat nemůže:** nejasná podoba jména nebo ztotožnění („Vzor, nebo Wzor“), dva kandidáti
+se stejnými důkazy, spor zdrojů, cena a způsob („celý svazek má 123 listů, nákladné: automaticky, nebo ručně?“), soukromí a vše, co se odesílá ven.
+**Nepatří tam:** potvrzení vlastní změny, kontrola nebo porovnání dat, „přečíst znovu“ a věcné otázky, na které odpovídají zdroje
+(„v roce 1895 se ženil Jan, bral si Marii, nebo Janu?“ se zjistí čtením). Nejistotu zapiš jako `prob` s kandidátem v poznámce a úkol dej do fronty 2–4.
+
+**Úkol k rozhodnutí má povinná pole** (`fronta.py pridej rozhodnuti` bez nich úkol odmítne):
+
+```text
+Otázka: jedna věta
+Možnosti: A) …; B) …
+Důkazy: odkazy na zápisy a řádky deníku
+Zkoušeno: co už se zkusilo (včetně druhého čtení naslepo)
+Doporučení: A
+Výchozí postup: co se stane, když uživatel neodpoví (práce tím nestojí)
+```
+
+Povinné jsou Otázka, Možnosti (aspoň dvě, oddělené středníkem) a Výchozí postup; Důkazy, Zkoušeno a Doporučení se doporučují.
+`fronta.py kontrola` varuje u starých úkolů bez těchto polí a u otázek, které začínají slovesem práce (ověřit, zkontrolovat, porovnat…).
+Zakládá je jen hlavní agent (orchestrátor) na konci pracovní jednotky, když je další krok zablokovaný; podagenti vrací „potřebuje rozhodnutí“
+ve výsledkovém souboru.
 
 **Noční fronta je jen na to, co jde skriptem a bez člověka** (ARON a jiné portály, které skript smí). Úkol, který vyžaduje prohlížeč,
 archiv, rodinu nebo čeká na lhůtu, se nezakládá do `ukoly_na_noc.md` s poznámkou „nelze v noci“, ale rovnou do správné fronty
@@ -80,6 +103,11 @@ Brzda `slusne.py` a limit souběžných pomocníků (`rezim.json`) platí dál. 
 ## Nejisté čtení v noci
 
 Do dat jdou jen **jisté** údaje (shoduje se jméno, rodiče, místo a datum). Nejisté se zapíše jako **kandidát v poznámce** osoby
-(stav zůstane `prob`) a do `ukoly_k_rozhodnuti.md` přibude otázka: potvrdit, zamítnout, nebo přečíst znovu v plném rozlišení.
+(stav zůstane `prob`). Pak:
+
+1. **druhé čtení naslepo** (agent `verifier`, bez cizího přepisu), případně čtení ve větším rozlišení (úkol na noc nebo k bádání);
+2. pokud se čtení shodují, údaj se potvrdí; pokud ne, nebo když chybí zdroj online, jde úkol do fronty podle směrování výše (archivní dotaz,
+   ruční bádání);
+3. **do `ukoly_k_rozhodnuti.md` jde jen trvalý rozpor mezi kandidáty**, který čtením nevyřešíš, s povinnými poli úkolu k rozhodnutí.
 
 Šablony a zakázané údaje o procesu: `zapisy.md`.
