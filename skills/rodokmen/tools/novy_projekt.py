@@ -320,6 +320,8 @@ KOD = ("import os,runpy;p=os.path.join(os.environ.get('CLAUDE_PROJECT_DIR','.'),
 PY = sys.executable.replace("\\", "/") if os.name == "nt" else "python3"
 HLIDAC = f'"{PY}" -I -c "{KOD}"'   # tvar se shellem (macOS, Linux)
 MATCHER = "Bash|PowerShell|Monitor"   # Monitor spouští příkaz v bashi stejně jako Bash
+MATCHER_ZAPISU = "Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell|Monitor"   # hlidac_zapisu.py hlídá i úpravy souborů
+HOOKY = (("hlidac_site.py", MATCHER), ("hlidac_zapisu.py", MATCHER_ZAPISU))
 
 
 def _python_windows():
@@ -329,12 +331,13 @@ def _python_windows():
     return sys.executable
 
 
-def hook_hlidace():
+def hook_hlidace(skript="hlidac_site.py"):
     """Hook hlídače. Na Windows bez shellu (command + args): hooky tam běží v Git Bashi, nebo v PowerShellu, když
     Git Bash chybí – a tam by příkaz s uvozovkami byl chyba syntaxe a Claude Code by pak zamítal každý příkaz."""
+    kod = KOD.replace("hlidac_site.py", skript)
     if os.name == "nt":
-        return {"type": "command", "command": _python_windows(), "args": ["-I", "-X", "utf8", "-c", KOD], "timeout": 10}
-    return {"type": "command", "command": HLIDAC, "timeout": 10}
+        return {"type": "command", "command": _python_windows(), "args": ["-I", "-X", "utf8", "-c", kod], "timeout": 10}
+    return {"type": "command", "command": f'"{PY}" -I -c "{kod}"', "timeout": 10}
 
 
 def nastaveni(dst, hlidac):
@@ -360,16 +363,19 @@ def nastaveni(dst, hlidac):
         if not data["permissions"]:
             del data["permissions"]
     pre = data.setdefault("hooks", {}).setdefault("PreToolUse", [])
-    nase = [h for h in pre if "hlidac_site.py" in json.dumps(h)]
-    if hlidac is None and not nase and (nove or mel_zakaz):
+    nase = {skript: [h for h in pre if skript in json.dumps(h)] for skript, _ in HOOKY}
+    if hlidac is None and not nase["hlidac_site.py"] and (nove or mel_zakaz):
         hlidac = True   # ochrana archivů se nezmenšuje: místo plošného zákazu úzký hook
-    for h in nase:   # aktualizace projektu: hook obnovit (cesta k Pythonu i tvar se mohly změnit)
-        h["matcher"] = MATCHER
-        h["hooks"] = [hook_hlidace()]
-    if hlidac is True and not nase:
-        pre.append({"matcher": MATCHER, "hooks": [hook_hlidace()]})
-    elif hlidac is False:
-        pre[:] = [h for h in pre if h not in nase]
+    if hlidac is None and nase["hlidac_site.py"] and not nase["hlidac_zapisu.py"]:
+        hlidac = True   # projekt s hlídačem sítě dostane i hlídač zápisů (Q2); vypnutý zůstane vypnutý
+    for skript, matcher in HOOKY:
+        for h in nase[skript]:   # aktualizace projektu: hook obnovit (cesta k Pythonu i tvar se mohly změnit)
+            h["matcher"] = matcher
+            h["hooks"] = [hook_hlidace(skript)]
+        if hlidac is True and not nase[skript]:
+            pre.append({"matcher": matcher, "hooks": [hook_hlidace(skript)]})
+        elif hlidac is False:
+            pre[:] = [h for h in pre if h not in nase[skript]]
     if not pre:
         del data["hooks"]["PreToolUse"]
     if not data["hooks"]:
@@ -381,6 +387,8 @@ def nastaveni(dst, hlidac):
     zapnuty = any("hlidac_site.py" in json.dumps(h) for h in data.get("hooks", {}).get("PreToolUse", []))
     print("Hlídač sítě:", "zapnutý (jen weby archivů mimo brzdu; localhost a vlastní nasazení neblokuje)" if zapnuty
           else "vypnutý (zapnout: --hlidac)")
+    print("Hlídač zápisů:", "zapnutý (ručně se nepřepisuje denik.jsonl, verejne_otazky.json a generované soubory webu)"
+          if any("hlidac_zapisu.py" in json.dumps(h) for h in data.get("hooks", {}).get("PreToolUse", [])) else "vypnutý")
 
 
 def _verze(text):
