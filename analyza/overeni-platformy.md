@@ -252,4 +252,4 @@ Co dokumentace říká: pole `skills` je u pluginových agentů podporované (�
 
 Důsledek: při použití holého názvu u pluginového agenta je třeba ověřit prakticky (debug log), jinak se skill může tiše nenačíst.
 
-URL: https://code.claude.com/docs/en/sub-agents (sekce Preload skills into subagents), https://code.claude.com/docs/en/plugins/components.md (sekce Agents, Frontmatter fields in plugin agents)
+URL: <https://code.claude.com/docs/en/sub-agents> (sekce Preload skills into subagents), <https://code.claude.com/docs/en/plugins/components.md> (sekce Agents, Frontmatter fields in plugin agents)
