@@ -161,7 +161,8 @@ pro každý web pro všechny procesy na počítači.
 
 - **Síť jen přes brzdu, i u pomocníků:** vlastní skript `python3 -I tools/slusne.py pracovni/x.py …`, curl
   `python3 -I tools/slusne.py curl …` (jedna adresa na příkaz), shellový skript `python3 -I tools/slusne.py bash pracovni/x.sh`.
-  Přímé `curl`/`wget` má projekt zakázané (`.claude/settings.json`); i místní náhled webu zkoušej přes `slusne.py curl`.
+  Přímé `curl`/`wget` na weby archivů zastaví hlídač sítě (`.claude/settings.json`); `localhost` a vlastní nasazený web
+  (Netlify, Cloudflare) jde testovat normálně.
 - **Hláška „slusne: … je zastavený“ (kód 3)** = archiv dal najevo, že ho zatěžujeme (429/503/403, stránka
   „zablokováno“, spojení odmítnuto). Nezkoušej to znovu, neobcházej to (jiný nástroj, prohlížeč), řekni to uživateli
   a dělej jinou práci. Stav: `slusne.py stav`. `slusne.py odblokuj` jen když víš, že šlo o tvou chybu (špatná adresa).

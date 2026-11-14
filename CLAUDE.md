@@ -20,5 +20,11 @@ na Linuxu i Windows spolu s buildem ukázkového webu, `.github/workflows/testy.
 v `skills/rodokmen/tests/` (dočasný projekt založí `pomocne.novy_projekt`). Před vydáním navíc
 `python -X utf8 skills/rodokmen/tools/smoke_test.py` proti živým portálům – z domácí sítě, ne z firemní (blokace, certifikáty).
 
+Pravidla pro agenty (`skills/rodokmen-agents/rules/`, anglicky) vycházejí z oddílů českého zrcadla originálu (`SKILL.md`, `reference/*.md`).
+Po každém `git merge upstream/main` spusť `python -X utf8 scripts/pravidla.py overit`: zastaralé pravidlo (změnil se jeho zdrojový oddíl)
+přezkoumej a potvrď `pravidla.py potvrdit <id>`; co z originálu patří do pravidel, přelož do angličtiny. Test `test_agenti_skill.py`
+bez potvrzení neprojde. Veřejný repozitář nesmí obsahovat údaje z projektu: před pushem `python scripts/anonymita.py pred-pushem`
+(lokální seznam `.anonymita-seznam`, vzor `.anonymita-seznam.priklad`; hook `pre-push` zapíná uživatel příkazem `anonymita.py nainstaluj`).
+
 Markdown: `.markdownlint.yaml` a `.editorconfig` v kořeni; kontrola `npx -y markdownlint-cli2@0.18.1 "**/*.md" "!**/node_modules/**"`
 (v CI i před commitem, `--fix` jen s kontrolou `git diff`). MD037 je vypnuté kvůli „* 1890“ (narozen).

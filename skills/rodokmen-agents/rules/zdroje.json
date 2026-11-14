@@ -1,0 +1,110 @@
+{
+ "R-ARCH-001": {
+  "checked": "9eff351e729f6a24",
+  "source": "SKILL.md#Šetrně k archivům – brzda `tools/slusne.py`"
+ },
+ "R-ARCH-002": {
+  "checked": "9eff351e729f6a24",
+  "source": "SKILL.md#Šetrně k archivům – brzda `tools/slusne.py`"
+ },
+ "R-ARCH-003": {
+  "checked": "1b9ffccd618bea24",
+  "source": "SKILL.md#Co nikdy"
+ },
+ "R-BOOK-001": {
+  "checked": "e0e757a4a02b2a4c",
+  "source": "reference/matriky.md#Jak vypadá hledání v praxi"
+ },
+ "R-BOOK-002": {
+  "checked": "e0e757a4a02b2a4c",
+  "source": "reference/matriky.md#Jak vypadá hledání v praxi"
+ },
+ "R-BOOK-003": {
+  "checked": "e0e757a4a02b2a4c",
+  "source": "reference/matriky.md#Jak vypadá hledání v praxi"
+ },
+ "R-BOOK-004": {
+  "checked": "e0e757a4a02b2a4c",
+  "source": "reference/matriky.md#Jak vypadá hledání v praxi"
+ },
+ "R-CONF-001": {
+  "checked": "c19ad140a90dc1ad",
+  "source": "reference/matriky.md#Stavy údajů v datech"
+ },
+ "R-CONF-002": {
+  "checked": "c704bf46b9133436",
+  "source": "SKILL.md#Pomocníci (subagenti) – šetrně"
+ },
+ "R-CONF-003": {
+  "checked": "de8db3b49e1a83ce",
+  "source": "reference/matriky.md#Typické pasti (ze skutečného výzkumu)"
+ },
+ "R-HELP-001": {
+  "checked": "c704bf46b9133436",
+  "source": "SKILL.md#Pomocníci (subagenti) – šetrně"
+ },
+ "R-HELP-002": {
+  "checked": "c704bf46b9133436",
+  "source": "SKILL.md#Pomocníci (subagenti) – šetrně"
+ },
+ "R-HELP-003": {
+  "checked": "c704bf46b9133436",
+  "source": "SKILL.md#Pomocníci (subagenti) – šetrně"
+ },
+ "R-HELP-004": {
+  "checked": "c704bf46b9133436",
+  "source": "SKILL.md#Pomocníci (subagenti) – šetrně"
+ },
+ "R-HELP-005": {
+  "checked": "c704bf46b9133436",
+  "source": "SKILL.md#Pomocníci (subagenti) – šetrně"
+ },
+ "R-ID-001": {
+  "checked": "43ea16337f115120",
+  "source": "reference/metodika.md#Ztotožnění – kdy je to tatáž osoba"
+ },
+ "R-ID-002": {
+  "checked": "43ea16337f115120",
+  "source": "reference/metodika.md#Ztotožnění – kdy je to tatáž osoba"
+ },
+ "R-ID-003": {
+  "checked": "43ea16337f115120",
+  "source": "reference/metodika.md#Ztotožnění – kdy je to tatáž osoba"
+ },
+ "R-ID-004": {
+  "checked": "43ea16337f115120",
+  "source": "reference/metodika.md#Ztotožnění – kdy je to tatáž osoba"
+ },
+ "R-ID-005": {
+  "checked": "43ea16337f115120",
+  "source": "reference/metodika.md#Ztotožnění – kdy je to tatáž osoba"
+ },
+ "R-NEG-001": {
+  "checked": "de8db3b49e1a83ce",
+  "source": "reference/matriky.md#Typické pasti (ze skutečného výzkumu)"
+ },
+ "R-NEG-002": {
+  "checked": "43f807f9e40daeb8",
+  "source": "reference/matriky.md#Knihy řazené po vsích (časté 1784–1900, všechny archivy)"
+ },
+ "R-NEG-003": {
+  "checked": "43f807f9e40daeb8",
+  "source": "reference/matriky.md#Knihy řazené po vsích (časté 1784–1900, všechny archivy)"
+ },
+ "R-NEG-004": {
+  "checked": "a8c04e80824c049a",
+  "source": "reference/matriky.md#Čtení písma"
+ },
+ "R-PROC-001": {
+  "checked": "732abbbe2c0af5a3",
+  "source": "reference/zapisy.md#Co nepatří do dat ani na web"
+ },
+ "R-WRITE-002": {
+  "checked": "1b9ffccd618bea24",
+  "source": "SKILL.md#Co nikdy"
+ },
+ "R-WRITE-003": {
+  "checked": "732abbbe2c0af5a3",
+  "source": "reference/zapisy.md#Co nepatří do dat ani na web"
+ }
+}

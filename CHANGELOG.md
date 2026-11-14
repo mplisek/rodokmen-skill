@@ -28,6 +28,12 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 - **Jednotná značka rodu na celém webu (Fáze B):** po `astro build` (před `pagefind`) nahradí `tools/znackuj_rody.py` holý název
   rodu v textech všech stránek značkou (barevný kruh a název s odkazem); autor textu nic neznačkuje. `tools/kontrola_webu.py`
   hlídá holé názvy, barvu a pořadí značek a procesní text na stránkách a běží i v CI nad ukázkovým webem.
+- **Pravidla pro agenty v angličtině** (`skills/rodokmen-agents/rules/`, 30 pravidel v osmi tématech: jistota údajů, ztotožnění, „nenalezeno“,
+  knihy a stránky, pomocníci, zápis dat, procesní údaje, archivy) a tenký anglický skill `rodokmen-agents` pro agenty. Každé pravidlo
+  odkazuje na zdrojový oddíl českých návodů a `scripts/pravidla.py` hlídá otisk oddílu: změní-li se oddíl (třeba po sloučení z originálu),
+  pravidlo je zastaralé, dokud se nepřezkoumá. Návody a `SKILL.md` zůstávají česky. `scripts/jazyk.py` hlídá, že anglická vrstva je anglicky.
+- **Kontrola anonymity před pushem** (`scripts/anonymita.py`, `.githooks/pre-push`): lokální seznam zakázaných řetězců (jména, čísla osob),
+  kontrola všech commitů určených k pushi včetně zpráv, maskovaný nález, nikdy nepřepisuje historii. Instalaci hooku provádí uživatel.
 - **Hlídač zápisů** (`tools/hlidac_zapisu.py`): hook zamítne ruční úpravu `data/denik.jsonl`, `data/verejne_otazky.json` a
   generovaných souborů webu a napíše, kterým skriptem se to dělá; čtení, kopie z nich, zápis skriptem, git ani build neblokuje.
   Zapisuje ho `novy_projekt.py` vedle hlídače sítě a vypíná se stejně (`--bez-hlidace`).
