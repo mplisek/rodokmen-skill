@@ -1,5 +1,5 @@
 """Definice agentů v agents/ (Fáze C, Q-C1, 4.1–4.7 návrhu): povinná pole, povolené nástroje, orchestrátor bez zápisu a webu, anglicky,
-kritérium dokončení, odkazy na existující pravidla a nástroje, jen počáteční sada 9 agentů. Test běží nad skutečnými soubory."""
+kritérium dokončení, odkazy na existující pravidla a nástroje, jen počáteční sada 10 agentů. Test běží nad skutečnými soubory."""
 import re
 import subprocess
 import sys
@@ -9,7 +9,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 AGENTI = REPO / "agents"
 POCATECNI = {"orchestrator", "researcher", "browser-reader", "verifier", "upstream-sync", "test-runner", "failure-analyst", "fixer",
-             "test-author"}
+             "test-author", "committer"}
 NASTROJE = {"Read", "Glob", "Grep", "Bash", "PowerShell", "Edit", "Write", "Agent", "WebFetch", "WebSearch", "Monitor"}
 MODELY = {"haiku", "sonnet", "opus", "inherit"}
 
@@ -28,7 +28,7 @@ class DefiniceAgentu(unittest.TestCase):
         cls.ids = set(re.findall(r"(?m)^## (R-[A-Z]+-\d{3})$",
                                  "\n".join(p.read_text(encoding="utf-8") for p in (REPO / "skills/rodokmen-agents/rules").glob("*.md"))))
 
-    def test_pocatecni_sada_je_presne_devet_agentu(self):
+    def test_pocatecni_sada_je_presne_deset_agentu(self):
         self.assertEqual(set(self.soubory), POCATECNI)
 
     def test_povinna_pole(self):
@@ -81,6 +81,24 @@ class DefiniceAgentu(unittest.TestCase):
         o = self.texty["orchestrator"]
         self.assertRegex(o, r"(?i)name the (exact )?row|single row|one row")
 
+    def test_committer_jen_commituje_vyjmenovane_soubory_na_zadane_vetvi(self):
+        fm = frontmatter(self.texty["committer"])
+        nastroje = {n.split("(")[0].strip() for n in re.split(r"\s*,\s*", fm["tools"])}
+        self.assertFalse(nastroje & {"Edit", "Write", "Agent", "WebFetch", "WebSearch"}, nastroje)
+        t = self.texty["committer"].lower()
+        for slovo in ("branch", "git add <", "never", "push", "-a"):
+            self.assertIn(slovo, t, slovo)
+
+    def test_fixer_hlasi_presny_seznam_souboru_pro_commit(self):
+        self.assertIn("exact list of files", self.texty["fixer"])
+
+    def test_orchestrator_zajistuje_commit_po_kazdem_overeni(self):
+        o = self.texty["orchestrator"]
+        self.assertIn("rodokmen:committer", o)
+        self.assertRegex(o, r"(?i)after (each|every) (completed )?verif")
+        self.assertIn("git branch --show-current", o)                  # drží aktuální větev, nepřepíná ji
+        self.assertRegex(o, r"(?i)never switch")
+
     def test_kazdy_agent_ma_kriterium_dokonceni(self):
         for jmeno, text in self.texty.items():
             self.assertRegex(text, r"(?mi)^#+\s+(Done when|Definition of done)", jmeno)
@@ -95,7 +113,7 @@ class DefiniceAgentu(unittest.TestCase):
 
     def test_kazdy_agent_ma_jednu_spoustecí_podminku_v_popisu(self):
         for jmeno, text in self.texty.items():
-            self.assertRegex(frontmatter(text)["description"], r"^(Use|Run|Read|Verify|Decide|Analy|Fix|Write|Sync|Orchestrate)", jmeno)
+            self.assertRegex(frontmatter(text)["description"], r"^(Use|Run|Read|Verify|Decide|Analy|Fix|Write|Sync|Orchestrate|Commit)", jmeno)
 
     def test_anglicky(self):
         r = subprocess.run([sys.executable, "-I", "-X", "utf8", str(REPO / "scripts" / "jazyk.py"), str(AGENTI)], capture_output=True,

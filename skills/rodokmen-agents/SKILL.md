@@ -25,6 +25,7 @@ repeats a rule: read the rule by its id in `rules/`. The human-facing guide and 
 | verifier | second reading of one crop without seeing the first answer | decides identity |
 | failure-analyst | turns a failure into a fix ticket | edits files |
 | fixer | applies the ticket to the listed files | decides scope |
+| committer | commits the files a ticket lists, on the branch it names, after a completed verification | pushes, switches branches, adds anything unlisted |
 | test-runner, test-author | run tests and report; write tests from templates | analyse or change product code |
 
 ## Files agents exchange

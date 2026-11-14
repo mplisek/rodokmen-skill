@@ -8,7 +8,7 @@ Práci řídí jedno sezení, které hledá, zapisuje i testuje; pravidla se por
 
 ## Rozhodnutí
 
-Devět agentů (orchestrátor, researcher, browser-reader, verifier, upstream-sync, test-runner, failure-analyst, fixer, test-author). Orchestrátor nic nezapisuje; jeho Bash omezí hook v pluginu podle `agent_type`, a když selže v testu, nahradí ho agent `clerk`. Hooky a oprávnění patří do pluginu, nikdy do definice agenta.
+Deset agentů (orchestrátor, researcher, browser-reader, verifier, upstream-sync, test-runner, failure-analyst, fixer, test-author, committer). Commit po každém dokončeném ověření dělá `committer` (jen vyjmenované soubory na zadané větvi, hook mu povolí jen bezpečné git příkazy); orchestrátor větev jen čte a nepřepíná. Orchestrátor nic nezapisuje; jeho Bash omezí hook v pluginu podle `agent_type`, a když selže v testu, nahradí ho agent `clerk`. Hooky a oprávnění patří do pluginu, nikdy do definice agenta.
 
 ## Důsledek
 

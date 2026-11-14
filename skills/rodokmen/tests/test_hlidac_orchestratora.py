@@ -39,6 +39,31 @@ class HlidacOrchestratora(unittest.TestCase):
             self.assertIn("fronta.py", duvod)
             self.assertIn("kontext.py", duvod)
 
+    def test_orchestrator_smi_cist_vetev_a_stav_gitu(self):
+        for p in ("git branch --show-current", "git status --short", "git log --oneline -5", "git log --oneline"):
+            self.assertEqual(hook("orchestrator", p)[0], "allow", p)
+
+    def test_orchestrator_nesmi_menit_git(self):
+        for p in ("git commit -m x", "git add -A", "git checkout main", "git switch x", "git push", "git status --short; git push",
+                  "git branch -D x", "git log --oneline | head"):
+            self.assertEqual(hook("orchestrator", p)[0], "deny", p)
+
+    def test_committer_smi_jen_bezpecne_git_prikazy(self):
+        for p in ("git status --short", "git diff --stat", "git branch --show-current", "git log --oneline -3",
+                  "git add data/denik.jsonl data/osoby.py vyrezy/x.jpg",
+                  'git commit -m "Deník 366: ověřeno (Libice, sn. 54)"', 'git commit -m "A" -m "B: (x) y"'):
+            self.assertEqual(hook("committer", p)[0], "allow", p)
+        self.assertEqual(hook("rodokmen:committer", "git add data/x.json")[0], "allow")
+
+    def test_committer_nesmi_nic_nebezpecneho(self):
+        for p in ("git add -A", "git add .", "git add --all", "git add -u", "git add -f pracovni/x", "git add ../x", "git add /etc/passwd",
+                  "git commit -a -m x", "git commit --amend -m x", "git commit --no-verify -m x", "git commit -m x --allow-empty",
+                  'git commit -m "$(rm -rf data)"', 'git commit -m "`id`"', "git commit -m x; git push", "git commit -m x && git push",
+                  "git push", "git checkout main", "git switch main", "git reset --hard", "git merge x", "git rebase x", "git stash",
+                  "git branch -D x", "git tag x", "git clean -fd", "git commit", "rm -rf data", "cat data/osoby.py",
+                  "git add data/x.json > /dev/null"):
+            self.assertEqual(hook("committer", p)[0], "deny", p)
+
     def test_jmeno_agenta_s_pluginem_je_taky_orchestrator(self):
         self.assertEqual(hook("rodokmen:orchestrator", "rm -rf data")[0], "deny")
 

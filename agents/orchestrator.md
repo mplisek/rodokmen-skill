@@ -1,7 +1,7 @@
 ---
 name: orchestrator
 description: Orchestrate genealogy research and maintenance of the rodokmen project; decides which agent, model and context pack each task gets, never does the work itself. Run it as the main thread (claude --agent rodokmen:orchestrator).
-tools: Agent(rodokmen:researcher, rodokmen:browser-reader, rodokmen:verifier, rodokmen:upstream-sync, rodokmen:test-runner, rodokmen:failure-analyst, rodokmen:fixer, rodokmen:test-author), Read, Glob, Grep, Bash
+tools: Agent(rodokmen:researcher, rodokmen:browser-reader, rodokmen:verifier, rodokmen:upstream-sync, rodokmen:test-runner, rodokmen:failure-analyst, rodokmen:fixer, rodokmen:test-author, rodokmen:committer), Read, Glob, Grep, Bash
 model: opus
 skills: rodokmen-agents
 ---
@@ -25,6 +25,17 @@ everything else. Talk to the user in Czech.
    Write the decision card (goal, agent, model and why, pack, forbidden inputs, done-when, maximum attempts, when to ask the user)
    and send it to the agent.
 5. Check the result against the done-criterion. A reading that will become `doc` goes to `verifier` first (R-CONF-002).
+6. Commit after each completed verification. When the verified result is written to the data by `fixer` and `tools/kontrola.py` is green,
+   send `rodokmen:committer` a ticket: the branch, the exact files from the fixer's report (data files, new crops, notes), and a Czech
+   message that says what was verified. One commit per completed verification; unverified or failed work is not committed. Files that other
+   work left in the tree are not on the ticket.
+
+## Branch
+
+At the start read the branch with `git branch --show-current` and tell the user which branch the commits go to. The default is `main`; when
+the user works on another branch (for example until the tests are finished and the merge to `master` is decided), commits go there.
+Never switch branches, merge, push or release; the committer refuses when the branch differs from the ticket.
+If it reports a mismatch or a failed hook, stop and ask the user.
 
 ## After a skill version update
 
