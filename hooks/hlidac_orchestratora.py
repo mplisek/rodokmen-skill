@@ -24,8 +24,31 @@ def jmeno_agenta(typ):
     return typ.split(":")[-1] if isinstance(typ, str) else ""
 
 
+# Nástroje s textem v uvozovkách (otázka zadání, důvod rozšíření): nástroj → dovolené podpříkazy. Zapisují jen do pracovni/ a vstup si kontrolují.
+NASTROJE_ORCH = {"vysledek.py": {"over", "souhrn", "porovnej", "vzor"}, "zadani.py": {"novy", "rozsir", "ukaz"}}
+
+
+def orchestrator_nastroj(prikaz):
+    """Jeden příkaz `python [-I -X utf8] tools/<nástroj>.py <podpříkaz> …` z NASTROJE_ORCH; řetězení jen uvnitř uvozovek, bez `$` a zpětných apostrofů."""
+    if re.search(r"[`$]", prikaz) or not operatory_jen_v_uvozovkach(prikaz):
+        return False
+    try:
+        t = shlex.split(prikaz, posix=True)
+    except ValueError:
+        return False
+    if not t or t[0] not in ("python", "python3", "py"):
+        return False
+    i = 1
+    while i < len(t) and t[i].startswith("-"):
+        i += 2 if t[i] == "-X" else 1
+    if i + 1 >= len(t):
+        return False
+    m = re.fullmatch(r"(?:\./)?tools/([a-z_]+\.py)", t[i])
+    return bool(m and t[i + 1] in NASTROJE_ORCH.get(m.group(1), ()))
+
+
 def orchestrator_smi(prikaz):
-    return bool((POVOLENE.match(prikaz) or GIT_CTENI.match(prikaz)) and not NEBEZPECNE.search(prikaz))
+    return bool((POVOLENE.match(prikaz) or GIT_CTENI.match(prikaz)) and not NEBEZPECNE.search(prikaz)) or orchestrator_nastroj(prikaz)
 
 
 def operatory_jen_v_uvozovkach(prikaz):
@@ -41,7 +64,7 @@ def operatory_jen_v_uvozovkach(prikaz):
                 q = None
         elif c in "'\"":
             q = c
-        elif c in ";&|<>\n\r":
+        elif c in ";&|<>()\n\r":
             return False
         i += 1
     return q is None
@@ -76,6 +99,7 @@ def committer_smi(prikaz):
 ORCH_DUVOD = ("Orchestrator guard: the orchestrator may run only read-only listings of `tools/fronta.py` "
               "(seznam, frontier, kontrola, rezim, dalsi, cekajici, plan, historie, kalibrace), `tools/kontext.py --osoba N --tema …`, `tools/mapa.py hledej|stav` and read-only git "
               "(`git branch --show-current`, `git status --short`, `git log --oneline -N`), "
+              "`tools/vysledek.py over|souhrn|porovnej|vzor` and `tools/zadani.py novy|rozsir|ukaz` (text arguments in quotes, no `$` or backticks), "
               "one command without pipes, redirects or chaining. Delegate everything else to a specialist agent.")
 COMMIT_DUVOD = ("Committer guard: only `git status|diff|log`, `git branch --show-current`, `git add <exact files>` "
                 "(no -A, -u, `.`, `..`, absolute paths) and `git commit -m \"…\"` (no -a, --amend, --no-verify, --allow-empty), "

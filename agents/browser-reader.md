@@ -26,8 +26,10 @@ In the result file give the address, the volume and the image number of every pa
 
 ## Result
 
-The same file as the researcher (`pracovni/vysledky/<id>.json`), including what you searched and the crops you read from.
+The same finding file as the researcher: `pracovni/vysledky/<id>.json`, schema `nalez/1` (states, `cteni`, `kandidati` with person keys, `prohledano`,
+`stranky`, `cerpani`; filled example `python -I -X utf8 tools/vysledek.py vzor nalez`). Check it with `python -I -X utf8 tools/vysledek.py over
+pracovni/vysledky/<id>.json` before you finish. A stopped or unreachable portal is the state `nedostupné`, never `nenalezeno`.
 
 ## Done when
 
-The result file exists with sources and crops, or the task was handed back to the user with the reason.
+`tools/vysledek.py over` accepts the finding, or the task was handed back to the user with the reason.

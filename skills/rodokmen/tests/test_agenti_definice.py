@@ -12,6 +12,7 @@ POCATECNI = {"orchestrator", "researcher", "browser-reader", "verifier", "upstre
              "test-author", "committer"}
 NASTROJE = {"Read", "Glob", "Grep", "Bash", "PowerShell", "Edit", "Write", "Agent", "WebFetch", "WebSearch", "Monitor"}
 MODELY = {"haiku", "sonnet", "opus", "inherit"}
+BEZ_PRAVIDEL = {"verifier"}   # čte naslepo jeden výřez; pravidla bádání nepotřebuje a start má být co nejmenší (E1)
 
 
 def frontmatter(text):
@@ -38,7 +39,8 @@ class DefiniceAgentu(unittest.TestCase):
             self.assertGreaterEqual(len(fm.get("description", "")), 30, jmeno)
             self.assertIn(fm.get("model"), MODELY, jmeno)
             self.assertTrue(fm.get("tools") or fm.get("disallowedTools"), jmeno)
-            self.assertIn("rodokmen-agents", fm.get("skills", ""), jmeno)
+            if jmeno not in BEZ_PRAVIDEL:
+                self.assertIn("rodokmen-agents", fm.get("skills", ""), jmeno)
 
     def test_nastroje_jen_ze_seznamu(self):
         for jmeno, text in self.texty.items():
@@ -62,9 +64,27 @@ class DefiniceAgentu(unittest.TestCase):
         self.assertIn("rodokmen:researcher", self.texty["orchestrator"].split("---", 2)[2])   # i v postupu volá agenty plným jménem
 
     def test_cteci_agenti_nemaji_zapis(self):
-        for jmeno in ("verifier", "failure-analyst", "test-runner"):
+        for jmeno in ("failure-analyst", "test-runner"):
             nastroje = {n.split("(")[0].strip() for n in re.split(r"\s*,\s*", frontmatter(self.texty[jmeno])["tools"])}
             self.assertFalse(nastroje & {"Edit", "Write"}, jmeno)
+
+    def test_verifier_cte_naslepo_a_vraci_jen_prepis(self):
+        """E1 (A5): slepý ověřovatel nemůže posoudit shodu s tím, co nevidí. Píše jen svůj soubor ověření, shodu počítá vysledek.py porovnej."""
+        fm = frontmatter(self.texty["verifier"])
+        self.assertEqual({n.strip() for n in fm["tools"].split(",")}, {"Read", "Write"})
+        v = self.texty["verifier"]
+        self.assertIn("overeni/1", v)
+        self.assertIn("_overeni_", v)
+        self.assertNotRegex(v, r"`shoda`|`neshoda`")
+        self.assertRegex(v, r"(?i)never see the first reading")
+        self.assertIn("vysledek.py porovnej", self.texty["orchestrator"])
+
+    def test_researcher_vraci_nalez_podle_kontraktu(self):
+        r = self.texty["researcher"]
+        for s in ("pracovni/zadani/", "nalez/1", "tools/vysledek.py over", "tools/vysledek.py vzor nalez", "never a name", "not the signature",
+                  "rozpočet", "nedostupné"):
+            self.assertIn(s, r, s)
+        self.assertNotIn("--help", r.replace("no `--help` needed", ""))
 
     def test_test_author_a_fixer_se_nepletou(self):
         self.assertNotIn("Agent", frontmatter(self.texty["fixer"])["tools"])
@@ -138,9 +158,15 @@ class DefiniceAgentu(unittest.TestCase):
                            text=True, encoding="utf-8")
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
-    def test_vystup_vysledku_ma_schema_v_dokumentaci(self):
+    def test_tvar_vysledku_ma_jediny_zdroj_v_nastroji(self):
+        """E1 (A4): tvar souborů mezi agenty drží tools/vysledek.py (kontrola i vzor); SKILL.md na něj odkazuje a pole neopisuje."""
         sk = (REPO / "skills/rodokmen-agents/SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("pracovni/vysledky", sk)
+        for s in ("tools/vysledek.py", "zadani/1", "nalez/1", "overeni/1"):
+            self.assertIn(s, sk, s)
+        sys.path.insert(0, str(REPO / "skills/rodokmen/tools"))
+        import vysledek
+        for jmeno, vzor in vysledek.VZORY.items():
+            self.assertEqual(vzor["schema"], jmeno + "/1")
 
 
 if __name__ == "__main__":

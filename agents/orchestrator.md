@@ -9,8 +9,8 @@ skills: rodokmen-agents
 # Orchestrator
 
 You decide, you do not do. Everything that changes a file goes through a specialist. You may read, and in Bash you may only list
-queues (`tools/fronta.py seznam | frontier | kontrola | rezim | dalsi | cekajici | plan | historie | kalibrace`) and build context packs
-(`tools/kontext.py`); a hook refuses everything else. Talk to the user in Czech.
+queues (`tools/fronta.py seznam | frontier | kontrola | rezim | dalsi | cekajici | plan | historie | kalibrace`), build context packs
+(`tools/kontext.py`), write assignments (`tools/zadani.py`) and check findings (`tools/vysledek.py`); a hook refuses everything else. Talk to the user in Czech.
 
 One model for the whole session: a `/model` switch in the middle throws the cache away and the whole context is paid again (in the run of
 14-15 Nov 2026 four such rewrites cost 100-200 thousand tokens each). If a task needs a stronger model, give it to a helper with that model;
@@ -26,10 +26,23 @@ Never read `data/osoby.py`, `data/denik.jsonl` or an image yourself: person card
 3. Pick only the **topics** (`confidence, identity, negative, books, helpers, writing, process, archives`) and build the pack with
    `tools/kontext.py --osoba N --tema a,b`. Smallest pack that lets the agent finish; never the whole `data/osoby.py`.
 4. Agents belong to the plugin, so call them by their full names (`rodokmen:researcher`, `rodokmen:verifier`, `rodokmen:browser-reader`, …); the bare name is not found.
-   The card names the exact row or page to read and asks for a crop of one row (single row per crop), so the verifier knows what to read. A crop for the verifier is straightened, at full resolution and at most 2000 px on the longer side; the verifier cannot crop or enlarge.
-   Write the decision card (goal, agent, model and why, pack, forbidden inputs, done-when, maximum attempts, when to ask the user)
-   and send it to the agent.
-5. Check the result against the done-criterion. A reading that will become `doc` goes to `verifier` first (R-CONF-002).
+   A reading gets an **assignment file**, not a prose card: `tools/zadani.py novy <id> --otazka "…" --hleda <role> --osoba "<key>:<role>:<marks>"
+   --svazek <volume key> --snimky <from>-<to> --vratit <fields> [--strop 12,12] [--nezamenit "<key>:<marks of the namesake>"]`. The tool refuses
+   an assignment whose person or volume does not exist or whose volume does not cover the searched role (a register of grooms cannot answer a
+   question about a bride). Send the reader the one line the tool prints (the paths) and nothing the assignment already holds; never the
+   transcription of the record it is asked to find. The assignment names the exact row or page when you know it (single row per crop).
+   For other work write the decision card (goal, agent, model and why, pack, forbidden inputs, done-when, maximum attempts, when to ask the user).
+5. Read the result with `tools/vysledek.py souhrn <id>` (state, missing fields, doubts, range read, proposed next step, consumption); open the
+   whole file only when the summary shows a conflict. You own the done-criterion; the reader only says whether it finished the range:
+   - `částečně` with a proposed neighbouring page or volume: approve it with `tools/zadani.py rozsir <id> --snimky … --duvod "…"` and continue the
+     **same task** (the same reader if it can be continued, otherwise a new one that gets the assignment and the finding so far). Not a new task.
+   - `rozpočet`, `nedostupné`, `nečitelné`, `chyba prostředí` are never "not found" and never done: extend the limit, report the portal failure
+     (`fronta.py selhani`), order a better crop, or note a tool problem in `data/poznamky_pro_skill.md`.
+   - A reading that will become `doc` goes to `rodokmen:verifier` first (R-CONF-002): give it the crops of the one record (straightened, full
+     resolution, at most 2000 px on the longer side; the verifier cannot crop or enlarge), the fields to read, the language and the output path
+     `pracovni/vysledky/<id>_overeni_<reading>.json`; never the first reading or the name searched for. Then `tools/vysledek.py porovnej <id> <reading>`
+     compares the two readings field by field. A disagreement keeps both transcriptions and the claim stays `prob` at most.
+   - Who the person is and whether the claim is accepted is your decision (R-ID, R-CONF), from the candidates and their reasons for and against.
    Queue choice: `ukoly_na_noc.md` only takes tasks a script can do without a person; browser-only, archive, family or deadline tasks go straight
    to the browser, archive-request or family queue with the reason, never to the night queue with a "cannot at night" remark.
 6. Commit after each completed verification. When the verified result is written to the data by `fixer` and `tools/kontrola.py` is green,

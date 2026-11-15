@@ -81,8 +81,8 @@ def nacti(portal, svazek):
     return out
 
 
-def zapis_stranu(s, kdo="", nastroj=""):
-    """Popis stránky z čtení; ValueError při špatném tvaru."""
+def zapis_stranu(s, kdo="", nastroj="", jen_over=False):
+    """Popis stránky z čtení; ValueError při špatném tvaru. jen_over=True nic nezapíše (kontrola celého souboru před zápisem)."""
     if not isinstance(s, dict):
         raise ValueError("strana: objekt")
     portal, svazek = _jmeno(s.get("portal"), "portal"), _jmeno(s.get("svazek"), "svazek")
@@ -102,7 +102,27 @@ def zapis_stranu(s, kdo="", nastroj=""):
             ud[pole] = s[pole]
     if isinstance(s.get("sloupce"), list):
         ud["sloupce"] = [str(x)[:30] for x in s["sloupce"]][:12]
-    _pripoj(portal, svazek, ud)
+    if not jen_over:
+        _pripoj(portal, svazek, ud)
+
+
+def svazek_ze_signatury(stranky):
+    """Čtenář někdy uvede signaturu místo klíče svazku: je-li v data/svazky.json právě jeden svazek té signatury, klíč se doplní;
+    jinak ValueError s nápovědou. Bez svazky.json se nic nemění."""
+    try:
+        import vysledek
+        sv = vysledek.svazky()
+    except Exception:   # noqa: BLE001
+        sv = None
+    if not sv:
+        return
+    for s in stranky:
+        if isinstance(s, dict) and isinstance(s.get("svazek"), str) and s["svazek"] not in sv:
+            kand = vysledek.podle_signatury(s["svazek"], sv)
+            if len(kand) == 1:
+                s["svazek"] = kand[0]
+            elif kand:
+                raise ValueError(f"svazek: signatura {s['svazek']} odpovídá víc svazkům ({', '.join(kand)}); uveď klíč svazku")
 
 
 def snimek(portal, svazek, n, zdroj="cache"):
@@ -267,7 +287,18 @@ def main(argv=None):
         if a[0] == "zapis":
             with open(a[1], encoding="utf-8-sig") as f:
                 d = json.load(f)
-            for s in d.get("stranky") or []:
+            stranky = d.get("stranky") or []
+            try:   # nejdřív celý soubor zkontrolovat, pak teprve psát: buď všechny stránky, nebo žádná
+                svazek_ze_signatury(stranky)
+                for i, s in enumerate(stranky):
+                    try:
+                        zapis_stranu(s, jen_over=True)
+                    except ValueError as e:
+                        raise ValueError(f"stranky[{i}]: {e}") from None
+            except ValueError as e:
+                print(f"ODMÍTNUTO, nic se nezapsalo: {e}", file=sys.stderr)
+                return 2
+            for s in stranky:
                 zapis_stranu(s, kdo=d.get("model", "neznámý"), nastroj=d.get("nastroj", ""))
             print(f"zapsáno {len(d.get('stranky') or [])} stránek")
             return 0

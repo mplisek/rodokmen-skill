@@ -21,8 +21,8 @@ repeats a rule: read the rule by its id in `rules/`. The human-facing guide and 
 | Role | Does | Never does |
 |---|---|---|
 | orchestrator | decides: who, which model, which context, when it is done | writes, searches, builds |
-| researcher, browser-reader | reads registers and returns findings as a result file | writes to `data/` |
-| verifier | second reading of one crop without seeing the first answer | decides identity |
+| researcher, browser-reader | reads the assigned range and returns observations as a finding file | writes to `data/`, decides identity, closes the task |
+| verifier | second reading of one record without seeing the first answer; returns only its transcription | judges agreement, decides identity |
 | failure-analyst | turns a failure into a fix ticket | edits files |
 | fixer | applies the ticket to the listed files | decides scope |
 | committer | commits the files a ticket lists, on the branch it names, after a completed verification | pushes, switches branches, adds anything unlisted |
@@ -30,9 +30,10 @@ repeats a rule: read the rule by its id in `rules/`. The human-facing guide and 
 
 ## Files agents exchange
 
-- **Result file** `pracovni/vysledky/<id>.json` from researchers: task, outcome (`nalezeno`, `vyvráceno`, `nenalezeno`, `částečně`,
-  `nečitelné`), persons, record key, source (book, signature, image, page), confidence, quote, notes, crops. It also lists what was
-  searched, also when nothing was found.
+- **Assignment** `pracovni/zadani/<id>.json` (schema `zadani/1`) from the orchestrator, **finding** `pracovni/vysledky/<id>.json` (`nalez/1`) from
+  a reader, **verification** `pracovni/vysledky/<id>_overeni_<reading>.json` (`overeni/1`) from the verifier. Their shape lives in one place,
+  `tools/vysledek.py` (`vzor` prints a filled example, `over` checks a file, `souhrn` summarises a finding, `porovnej` compares two readings);
+  `tools/zadani.py` writes and extends an assignment. Persons are always keys from `data/osoby.py`, volumes keys from `data/svazky.json`.
 - **Decision card** from the orchestrator: goal, agent, model and why, context pack, forbidden inputs, done-when, maximum attempts,
   when to ask the user.
 - **Fix ticket** from the analyst: symptom, root cause with evidence, change, allowed files, tests to run, regression test, size

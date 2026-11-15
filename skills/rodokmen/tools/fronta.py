@@ -5,12 +5,13 @@ Použití (z kořene projektu): python3 -I tools/fronta.py <příkaz> …
   seznam [fronta]                         vypíše úkoly (fronta: noc | rozhodnuti | badani | dotazy | rodina)
   pridej <fronta> --text T [--p P1] [--os 57,114] [--typ krest] [--cil krest:115] [--rodic U-0001] [--stav otevřeno]
                   [--zavisi U-0001,U-0002]
-                                          nový úkol; podobný (stejný typ a překryv osob/cíle, v kterékoli frontě) se
-                                          NEZALOŽÍ, ale doplní (osoby, text, vyšší priorita)
+                                          nový úkol; tentýž úkol ve stejné frontě (shodný cíl, nebo stejný typ a stejné
+                                          osoby) se NEZALOŽÍ, ale doplní (text, vyšší priorita); --nove sloučení zakáže
                                           u fronty rozhodnuti povinně --otazka T --moznosti "A) …; B) …" --vychozi T (a doporučeně --dukazy,
                                           --zkuseno, --doporuceni); bez nich se úkol odmítne (reference/nocni_rezim.md)
   smeruj <id> --do <fronta> --dod "…" [--cena S|M|L|XL] [--p P1]   router: úkol ze vstupu do cílové fronty (DOD povinná)
-  rozdel <id> --cast FRONTA "text" "DOD" [--cast …]                   rozdělí úkol na části v různých frontách
+  rozdel <id> --cast FRONTA "text" "DOD" [os=1,2] [typ=…] [cena=S] [--cast …]   rozdělí úkol na části; má-li rodič víc osob, každá část
+                                          uvede své (os=…), mlčky se nedědí
   zaparkuj <id> --do RRRR-MM-DD [--duvod T]                           stav:čeká do data
   selhani <id> --druh prechodna|zakaz --portal P [--kdy "RRRR-MM-DD HH:MM"]   opakování podle rezim.json, pak rozhodnutí za portál
   hotovo <id> [--denik 12,13] [--soubory a,b] [--spotreba S|M|L|XL] [--poznamka T]   zapíše do historie, co úkol vyřešilo
@@ -20,7 +21,7 @@ Použití (z kořene projektu): python3 -I tools/fronta.py <příkaz> …
   kalibrace                                                           odhady cen při směrování × skutečná spotřeba z historie
   cekajici [fronta]                                                   čekající úkoly seřazené podle data s důvodem (seznam je jen počítá; seznam --vse ukáže všechny)
   odeslano <id> --uzivatel "kdo" [--odpoved-do RRRR-MM-DD]            dotaz nebo otázka pro rodinu odeslána (jen na pokyn uživatele): stav čeká do odpovědi
-  uprav <id> [--p P2] [--text T] [--stav odloženo] [--os …] [--cil …] [--zavisi …] [--pridat-text T]
+  uprav <id> [--p P2] [--text T] [--stav odloženo] [--os …] [--cil …] [--zavisi …] [--pridat-text T] [--cena S] [--dod "…"]
   hotovo <id> | hotovo --cil krest:115    úkol smaže (jeho výsledek je v datech nebo v následných úkolech)
   presun <id> <fronta>                    přesune úkol do jiné fronty
   trid                                    setřídí všechny fronty (priorita, id)
@@ -614,7 +615,7 @@ def main(argv=None):
         s.add_argument(a)
     s.add_argument("--nove", action="store_true")   # nesloučit s podobným úkolem, založit vždy nový
     s = sp.add_parser("uprav"); s.add_argument("id")
-    for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--zavisi", "--pridat-text", "--cena"):
+    for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--zavisi", "--pridat-text", "--cena", "--dod"):
         s.add_argument(a)
     s = sp.add_parser("frontier"); s.add_argument("fronta", nargs="?", choices=list(FRONTY))
     sp.add_parser("prejmenuj")
@@ -636,7 +637,7 @@ def main(argv=None):
     s.add_argument("--cena"); s.add_argument("--p"); s.add_argument("--schvaleno", action="store_true")
     s.add_argument("--nove", action="store_true")
     s = sp.add_parser("rozdel"); s.add_argument("id")
-    s.add_argument("--cast", nargs=3, action="append", metavar=("FRONTA", "TEXT", "DOD"), required=True)
+    s.add_argument("--cast", nargs="+", action="append", metavar="ČÁST", required=True)
     s = sp.add_parser("zaparkuj"); s.add_argument("id"); s.add_argument("--do", required=True); s.add_argument("--duvod")
     s = sp.add_parser("selhani"); s.add_argument("id"); s.add_argument("--druh", choices=("prechodna", "zakaz"), required=True)
     s.add_argument("--portal", required=True); s.add_argument("--kdy")
@@ -902,12 +903,25 @@ def main(argv=None):
             sys.exit(f"{a.id} nenalezeno")
         f0, rodic = nalezeno
         deti = []
-        for i, (fronta_, text, dod) in enumerate(a.cast):
+        for i, cast in enumerate(a.cast):
+            if len(cast) < 3:
+                sys.exit("rozdel --cast FRONTA TEXT DOD [os=1,2] [typ=…] [cena=S|M|L|XL]")
+            fronta_, text, dod = cast[:3]
+            navic = dict(x.split("=", 1) for x in cast[3:] if "=" in x)
+            if len(navic) != len(cast) - 3 or set(navic) - {"os", "typ", "cena"}:
+                sys.exit("rozdel --cast: za definicí hotového smí být jen os=…, typ=…, cena=…")
             if fronta_ not in FRONTY or fronta_ == "vstup":
                 sys.exit(f"rozdel --cast: neznámá fronta „{fronta_}“")
             if not text.strip() or not dod.strip():
                 sys.exit("ODMÍTNUTO: každá část potřebuje text a definici hotového")
-            dite = Ukol(nova_id(data, i), rodic.p, rodic.os, rodic.typ, "", rodic.id, "otevřeno", text)
+            if "os" not in navic and len(rodic.os) > 1 and len(a.cast) > 1:
+                sys.exit(f"ODMÍTNUTO: {rodic.id} má víc osob ({', '.join(rodic.os)}); u každé části uveď její osoby (os=…), "
+                         "části je po rodiči mlčky nedědí")
+            if navic.get("cena") and navic["cena"] not in CENY:
+                sys.exit(f"rozdel --cast: cena {', '.join(CENY)}")
+            osoby = [x for x in re.split(r"[,\s]+", navic["os"]) if x] if "os" in navic else list(rodic.os)
+            dite = Ukol(nova_id(data, i), rodic.p, osoby, navic.get("typ", rodic.typ), "", rodic.id, "otevřeno", text)
+            dite.cena = navic.get("cena") or ""
             nastav_dod(dite, dod)
             if fronta_ == "rozhodnuti":
                 vyzaduj_rozhodnuti(dite.text)
@@ -1018,6 +1032,8 @@ def main(argv=None):
                     u.p = a.p
                 if a.text is not None:
                     u.text = a.text
+                if a.dod:
+                    nastav_dod(u, a.dod)
                 if a.pridat_text:
                     u.text = (u.text + "\n\n" + a.pridat_text).strip("\n")
                 if (a.typ or "") in ZRUSENE_TYPY:

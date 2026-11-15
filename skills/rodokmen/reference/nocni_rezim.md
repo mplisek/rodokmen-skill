@@ -115,6 +115,29 @@ Platí pro každé čtení, v noci i přes den. Cílem je stahovat z archivu jen
 - **Další zdroje, které se zeptají před stažením:** `pracovni_prehled.py --hledej`, `cache.py najdi <adresa>` a historie čtení (`fronta.py znovu`).
 - **Měření:** `cache.py stav` ukáže „Stažených snímků na nalezený záznam“; klesá-li, mapa archivy šetří.
 
+## Zadání, nález a ověření: jeden kontrakt
+
+Čtení pramene se předává třemi soubory, jejichž tvar drží jediný nástroj `tools/vysledek.py` (`vzor` vypíše vyplněný příklad a dovolené hodnoty):
+
+- **Zadání** `pracovni/zadani/<úkol>.json` sestaví řídicí agent příkazem `tools/zadani.py novy` (otázka, hledaná role, osoby klíčem a znaky, podle
+  kterých se poznají, jmenovci k nezaměnění, svazek klíčem, rozsah snímků, pole k přečtení, strop kroků a snímků). Nástroj zadání odmítne dřív,
+  než se čtenář spustí: neznámá osoba, signatura místo klíče svazku, nebo pramen, který hledanou roli nevede.
+- **Pokrytí pramene** se zapisuje ke svazku v `data/svazky.json` jako `"pokryva": {"role": ["ženich"]}` (koho rejstřík vede; přes `tools/zapis.py svazky`).
+  Rejstřík ženichů tak nejde zadat k hledání nevěsty a „nenalezeno“ z něj se nepřijme. Svazek bez `pokryva` se nekontroluje.
+- **Nález** `pracovni/vysledky/<úkol>.json` píše čtenář a před koncem ho sám ověří (`vysledek.py over`). Vrací pozorování: doslovný přepis,
+  normalizaci, nejistotu, chybějící pole, kandidáty s důvody pro a proti, přečtený rozsah, popis stránek pro mapu knihy, návrh dalšího kroku
+  a čerpání. O identitě osoby a o hotovém úkolu nerozhoduje.
+- **Stavy:** `nalezeno`, `částečně`, `nečitelné`, `nenalezeno`, `nedostupné`, `rozpočet`, `vyvráceno`, `chyba prostředí`. „Nenalezeno“ jen po dočtení
+  celého zadaného rozsahu; dosažený strop (`rozpočet`), nedostupný portál a nečitelný snímek jsou jiné stavy a úkol neuzavírají.
+- **Pokračování:** zápis přetéká na další stranu nebo je potřeba další snímek → čtenář to navrhne, řídicí agent schválí `tools/zadani.py rozsir`
+  a pokračuje se v **témže úkolu**; čtení mimo schválený rozsah nález neprojde.
+- **Ověření naslepo** `pracovni/vysledky/<úkol>_overeni_<čtení>.json`: ověřovatel dostane jen výřezy a seznam polí a vrací vlastní přepis.
+  Shodu vyhodnotí `tools/vysledek.py porovnej <úkol> <čtení>` po polích; při neshodě zůstávají oba přepisy a tvrzení je nejvýš `prob`.
+- **Souhrn pro řízení:** `tools/vysledek.py souhrn <úkol>` (stav, co chybí, nejistoty, kandidáti, rozsah, návrh, čerpání); přepis zůstává v souboru.
+
+**Dělení úkolu:** `fronta.py rozdel <id> --cast FRONTA "text" "DOD" os=… [typ=…] [cena=…]`; má-li rodič víc osob, každá část uvede své, mlčky je
+nedědí. Definici hotového mění `fronta.py uprav <id> --dod "…"`.
+
 ## Historie úkolů a opakované čtení
 
 - **Historie:** každá změna úkolu (vznik, doplnění, směrování, dělení, parkování, selhání, přesun, hotovo) se připíše do `data/ukoly_historie.jsonl`

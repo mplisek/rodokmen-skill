@@ -71,7 +71,7 @@ class Fronta(unittest.TestCase):
 
     def test_casti_rozdeleneho_ukolu_nejsou_duplicity(self):
         self.run_("pridej", "noc", "--text", "velký úkol", "--os", "44,45", "--typ", "krest")
-        self.run_("rozdel", "U-0001", "--cast", "noc", "kniha 1", "řádek deníku", "--cast", "noc", "kniha 2", "řádek deníku")
+        self.run_("rozdel", "U-0001", "--cast", "noc", "kniha 1", "řádek deníku", "os=44,45", "--cast", "noc", "kniha 2", "řádek deníku", "os=44,45")
         self.assertEqual(len(self.ids("noc")), 2)
         self.run_("kontrola")
         self.assertNotIn("překrývají", self.out)

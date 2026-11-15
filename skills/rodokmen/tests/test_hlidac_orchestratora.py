@@ -49,6 +49,20 @@ class HlidacOrchestratora(unittest.TestCase):
                   "python3 -I tools/mapa.py naplnit-z-pracovni", "python3 -I tools/mapa.py hledej aron x --pismeno F; rm -rf data"):
             self.assertEqual(hook("orchestrator", p)[0], "deny", p)
 
+    def test_orchestrator_smi_zadani_a_kontrakt_s_textem_v_uvozovkach(self):
+        """E1: zadání pro čtenáře a kontrola nálezů bez dalšího agenta; text jen v uvozovkách."""
+        for p in ('python -I -X utf8 tools/zadani.py novy U-0101 --otazka "Najdi křest osoby 88 (rodiče; kmotři)." --hleda křtěnec '
+                  '--osoba "88:křtěnec:* asi 1812, čp. 5" --svazek 0a1b2c3d --snimky 40-52 --vratit datum,otec',
+                  'python -I tools/zadani.py rozsir U-0101 --snimky 53 --duvod "řádek pokračuje vpravo"',
+                  "python -I -X utf8 tools/vysledek.py souhrn U-0101", "python -I tools/vysledek.py porovnej U-0101 c1 --json",
+                  "python3 -I tools/vysledek.py over pracovni/vysledky/U-0101.json"):
+            self.assertEqual(hook("orchestrator", p)[0], "allow", p)
+        for p in ('python -I tools/zadani.py novy U-0101 --otazka "x" ; rm -rf data', 'python -I tools/zadani.py novy U-0101 --otazka "$(id)"',
+                  'python -I tools/zadani.py novy U-0101 --otazka "x" > data/osoby.py', "python -I tools/zadani.py smaz U-0101",
+                  "python -I tools/zapis.py zaznam x.json", "python -I /tmp/tools/zadani.py novy U-0101", 'python -c "import os"',
+                  "python -I tools/vysledek.py souhrn U-0101 | tee x", 'python -I tools/zadani.py novy U-0101 --otazka "neuzavřená'):
+            self.assertEqual(hook("orchestrator", p)[0], "deny", p)
+
     def test_orchestrator_smi_cist_vetev_a_stav_gitu(self):
         for p in ("git branch --show-current", "git status --short", "git log --oneline -5", "git log --oneline"):
             self.assertEqual(hook("orchestrator", p)[0], "allow", p)
