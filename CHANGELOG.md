@@ -14,6 +14,8 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
 ### Nové
 
+- Zmírnění škod z prvního běhu orchestrátoru (E0, `analyza/navrh-optimalizace.md`): úkoly se slučují jen ve stejné frontě a jen při shodném cíli nebo stejném typu a stejných osobách (ne při pouhém překryvu osob), `--nove` sloučení zakáže; `denik.py pridej` odmítne osobu, která není v `data/osoby.py` (jméno místo klíče); `aron_img.py` bez zadaného výstupu ukládá do `pracovni/snimky/`, ne do aktuální složky; `data/.rozpocet.json` je v `.gitignore`; hook pluginu volá nejdřív `python`; `browser-reader` má výčet nástrojů; orchestrátor smí číst `fronta.py cekajici | plan | historie | kalibrace` a drží jeden model po celé sezení.
+- `tools/spotreba.py`: skutečná spotřeba sezení podle rolí a úkolů ze záznamů Claude Code (jen čte); výchozí měření v `analyza/baseline-2026-11-15.md`.
 - `tools/pracovni_prehled.py`: soupis stažených svazků ARONu a ostatních snímků v `pracovni/` s vazbou na deník; `--hledej` před stažením, `--json`. Jen čte, bez sítě.
 - Deník: zakázaný vzor „mnou“ (první osoba); nahrazený záznam (`--opravuje`) se na zakázané vzory nekontroluje a oprava projde i při starším záznamu, který nový vzor porušuje.
 - Hook `committer`a: `<`, `>`, `;`, `&`, `|` a víc řádků jsou povolené uvnitř uvozovek zprávy (řádek `Co-Authored-By: Jméno <e-mail>`); mimo uvozovky a `$` či zpětné apostrofy dál ne.

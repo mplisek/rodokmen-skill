@@ -37,8 +37,7 @@ class Fronty(unittest.TestCase):
 
     def test_duplicita_se_doplni(self):
         self.run_("pridej", "noc", "--text", "křest Anny", "--p", "P2", "--os", "7", "--typ", "krest", "--cil", "krest:7")
-        self.run_("pridej", "badani", "--text", "ověřit na portálu", "--p", "P1", "--os", "7,8", "--typ", "krest")
-        self.assertEqual(fronta.nacti("badani")[1], [])
+        self.run_("pridej", "noc", "--text", "ověřit na portálu", "--p", "P1", "--os", "7,8", "--typ", "krest", "--cil", "krest:7")
         _, uk = fronta.nacti("noc")
         self.assertEqual(len(uk), 1)
         self.assertEqual((uk[0].p, uk[0].os), ("P1", ["7", "8"]))

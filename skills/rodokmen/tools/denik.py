@@ -160,6 +160,29 @@ def vykresli(zaznamy):
     return "\n".join(radky) + "\n"
 
 
+def zname_osoby():
+    """Klíče osob z data/osoby.py (čísla předků, zkratky z RODINA, aliasy SAME) jako texty; None, když soubor není nebo nejde načíst."""
+    try:
+        ns = {}
+        with open(os.path.join(DATA, "osoby.py"), encoding="utf-8-sig") as f:
+            exec(f.read(), ns)
+    except Exception:
+        return None
+    return {str(k) for n in ("P", "RODINA", "SAME") for k in (ns.get(n) or {})}
+
+
+def over_osoby(osoby):
+    """Nový záznam smí jmenovat jen osoby, které v data/osoby.py jsou, a to klíčem, ne jménem (řádek se jménem jinak nejde dohledat)."""
+    zname = zname_osoby()
+    if zname is None or not osoby:
+        return []
+    spatne = [x for x in osoby if x not in zname]
+    if not spatne:
+        return []
+    return ["osoby: " + ", ".join(f"„{x}“" for x in spatne) + " není v data/osoby.py; uveď klíče osob oddělené čárkou "
+            "(číslo předka nebo zkratka z RODINA, např. --osoby 160,anna-novakova), ne jména"]
+
+
 def cmd_pridej(a):
     zaznamy, chyby = nacti_zaznamy()
     if a.opravuje is not None:   # oprava smí projít, i když starý záznam porušuje zakázaný vzor přidaný později (právě ho nahrazuje)
@@ -190,7 +213,7 @@ def cmd_pridej(a):
             z["snimky"] = parse_snimky(a.snimky)
         except ValueError as e:
             sys.exit(f"Záznam se neuložil:\n  {e}")
-    ch = over_zaznam(z, {x["id"] for x in zaznamy})
+    ch = over_zaznam(z, {x["id"] for x in zaznamy}) + over_osoby(z.get("osoby", []))
     if ch:
         sys.exit("Záznam se neuložil:\n  " + "\n  ".join(ch))
     with store.Zamek(LOG):

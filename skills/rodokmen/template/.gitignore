@@ -22,3 +22,4 @@ web/cloudflare/worker.js
 web/wrangler.jsonc
 web/.wrangler/
 data/.beh.json
+data/.rozpocet.json

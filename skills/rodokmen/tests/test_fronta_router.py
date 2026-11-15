@@ -107,11 +107,11 @@ class Smeruj(Zaklad):
 
     def test_duplicita_se_slouci_do_existujiciho(self):
         self.run_("pridej", "vstup", "--text", "jiné", "--os", "9", "--typ", "krest")
-        self.run_("smeruj", "U-0001", "--do", "badani", "--dod", "hotovo")
-        self.run_("uprav", "U-0002", "--os", "7")                       # po úpravě se podobá úkolu v badani
+        self.run_("smeruj", "U-0001", "--do", "noc", "--dod", "hotovo")
+        self.run_("uprav", "U-0002", "--os", "7")                       # po úpravě je to tentýž úkol jako v cílové frontě (typ i osoby)
         self.run_("smeruj", "U-0002", "--do", "noc", "--dod", "hotovo")
-        self.assertEqual(self.ukoly("noc"), [])
-        self.assertEqual(len(self.ukoly("badani")), 1)
+        self.assertEqual(len(self.ukoly("noc")), 1)
+        self.assertEqual(self.ukoly("badani"), [])
         self.assertEqual(self.ukoly("vstup"), [])
         self.assertIn("doplněno", self.out)
 

@@ -64,6 +64,10 @@ složce `data/` není, platí starší chování a lze zakládat přímo). **Rou
 Cena `S`, `M`, `L`, `XL` je odhad nákladu (složitost, počet snímků, model); `XL` patří do rozhodnutí („provést, odložit, nebo ručně?“),
 aby první dva velké úkoly nespálily limit na noc.
 
+**Slučování:** nový úkol se doplní do existujícího jen **ve stejné frontě** a jen když jde o tentýž úkol: shodný cíl (`cíl:`), nebo (bez cíle
+u obou) stejný typ a přesně stejné osoby. Pouhý překryv osob nestačí, dva úkoly o téže osobě mívají jiný záměr. `--nove` (u `pridej` i `smeruj`)
+sloučení zakáže.
+
 ## Selhání portálu
 
 Hlásí se příkazem `fronta.py selhani <id> --druh prechodna|zakaz --portal ARON`.
@@ -87,7 +91,7 @@ a modelu; `fronta.py smeruj … --cena`, nebo `uprav --cena`) a okno má rozpoč
   na rozhodnutí („provést, odložit, nebo ručně?“); po schválení se zařadí s `--schvaleno` a v textu přibude řádek `Schváleno: …`.
   `fronta.py dalsi` neschválený úkol z prahu nepřidělí.
 - **Čerpání:** `fronta.py dalsi` přidělí úkol, označí ho `stav:probíhá` (podruhé se nepřidělí ani nepočítá) a přičte jeho váhu k spotřebě okna
-  (`data/.rozpocet.json`). Co se do zbytku okna nevejde, počká na další okno; vyčerpaný rozpočet `dalsi` oznámí.
+  (`data/.rozpocet.json`, pracovní stav mimo git). Co se do zbytku okna nevejde, počká na další okno; vyčerpaný rozpočet `dalsi` oznámí.
 - **Plán okna:** `fronta.py plan [fronta]` ukáže pořadí, kumulativní váhu a které úkoly jsou mimo rozpočet nebo čekají na schválení.
 - **Kalibrace:** `fronta.py hotovo <id> --spotreba S|M|L|XL` zapíše skutečnou cenu; `fronta.py kalibrace` porovná odhady při směrování se skutečností
   a řekne, které pásmo je podhodnoceno nebo nadhodnoceno.
@@ -122,6 +126,10 @@ Platí pro každé čtení, v noci i přes den. Cílem je stahovat z archivu jen
 - **Opakované čtení podle schopností:** `fronta.py znovu --starsi-nez <verze> [--vysledek nečitelné,nenalezeno] [--zaloz]` najde v deníku
   neúspěšná čtení, která dělal starší (nebo neznámý) nástroj, a založí na ně úkoly (do vstupu, jinak do fronty noc). Úspěšná, ověřená čtení se
   neopakují. Spouští se po zlepšení nástroje nebo modelu.
+
+**Skutečná spotřeba:** `tools/spotreba.py sezeni` sečte ze záznamů sezení, kolik stálo hlavní vlákno a kolik pomocníci podle role a modelu
+(„ekv“ = vstup + 1,25 × zápis mezipaměti + 0,1 × čtení mezipaměti + 5 × výstup; vážené číslo pro srovnání, ne účet), `spotreba.py ukol U-…`
+pomocníky jednoho úkolu (zadání pomocníka proto vždy jmenuje ID úkolu). Jen čte. Podle toho se opravují pásma S až XL.
 
 ## Fronta na noc
 

@@ -1,7 +1,7 @@
 ---
 name: browser-reader
 description: Use for reading registers on portals that scripts must not touch (archives with a script ban), in a browser of its own started by tools/prohlizec.py, one portal session at a time; returns the same result file as the researcher.
-disallowedTools: Edit, WebFetch, WebSearch
+tools: Read, Glob, Grep, Bash, Write
 model: sonnet
 skills: rodokmen-agents
 ---

@@ -26,7 +26,9 @@ def hook(agent, prikaz, nastroj="Bash"):
 class HlidacOrchestratora(unittest.TestCase):
     def test_povolene_prikazy_orchestratora(self):
         for p in ("python3 -I tools/fronta.py seznam", "python3 -I tools/fronta.py frontier dotazy", "python -X utf8 tools/fronta.py kontrola",
-                  "python3 -I tools/kontext.py --osoba 17 --tema identity,books", "python3 tools/fronta.py seznam rodina"):
+                  "python3 -I tools/kontext.py --osoba 17 --tema identity,books", "python3 tools/fronta.py seznam rodina",
+                  "python -I -X utf8 tools/fronta.py cekajici", "python -I tools/fronta.py plan noc", "python -I tools/fronta.py historie U-0001",
+                  "python -I tools/fronta.py kalibrace"):
             self.assertEqual(hook("orchestrator", p)[0], "allow", p)
 
     def test_ostatni_prikazy_orchestratora_se_zamitnou(self):

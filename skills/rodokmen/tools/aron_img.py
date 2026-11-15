@@ -159,6 +159,11 @@ def fetch_sken(url, level_offset=1, out="page.jpg", crop=None):
     return out, (W, H)
 
 
+def vychozi_vystup(apu, n):
+    """Bez zadaného výstupu jde snímek do pracovni/snimky/ projektu, nikdy do aktuální složky (kořen repozitáře, veřejné složky webu)."""
+    return os.path.join(ROOT, "pracovni", "snimky", f"{apu[:8]}_{n:04d}.jpg")
+
+
 def bez_snimku(vol, tiles, n):
     """Snímek n ve svazku není: srozumitelná hláška místo KeyError."""
     if not tiles:
@@ -278,7 +283,7 @@ if __name__ == "__main__":
         sys.exit(0)
     n = int(sys.argv[2])
     lo = int(sys.argv[3]) if len(sys.argv) > 3 else 0
-    out = sys.argv[4] if len(sys.argv) > 4 else f"{apu[:8]}_{n:04d}.jpg"
+    out = sys.argv[4] if len(sys.argv) > 4 else vychozi_vystup(apu, n)
     crop = tuple(float(v) for v in sys.argv[5].split(",")) if len(sys.argv) > 5 else None
     if n not in tiles:
         bez_snimku(vol, tiles, n)

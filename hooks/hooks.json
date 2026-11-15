@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "(python3 -I \"${CLAUDE_PLUGIN_ROOT}/hooks/hlidac_orchestratora.py\" || python -I \"${CLAUDE_PLUGIN_ROOT}/hooks/hlidac_orchestratora.py\")"
+            "command": "(python -I \"${CLAUDE_PLUGIN_ROOT}/hooks/hlidac_orchestratora.py\" || python3 -I \"${CLAUDE_PLUGIN_ROOT}/hooks/hlidac_orchestratora.py\")"
           }
         ]
       }
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "(python3 -I \"${CLAUDE_PLUGIN_ROOT}/hooks/zapis_koren.py\" || python -I \"${CLAUDE_PLUGIN_ROOT}/hooks/zapis_koren.py\")"
+            "command": "(python -I \"${CLAUDE_PLUGIN_ROOT}/hooks/zapis_koren.py\" || python3 -I \"${CLAUDE_PLUGIN_ROOT}/hooks/zapis_koren.py\")"
           }
         ]
       }

@@ -257,10 +257,13 @@ def frontier(data, dnes=None):
 
 
 def stejny(a, b):
-    """Podobné úkoly: stejný typ (nebo jeden bez typu) a shodný cíl, nebo překryv osob při shodném typu."""
-    if a.cil and a.cil == b.cil:
-        return True
-    return bool(a.typ) and a.typ == b.typ and bool(set(a.os) & set(b.os)) and (not a.cil or not b.cil or a.cil == b.cil)
+    """Tentýž úkol: shodný cíl, nebo (bez cíle u obou) stejný typ a přesně stejné osoby. Pouhý překryv osob nestačí: dva úkoly
+    o téže osobě mívají jiný záměr (běh 15. 11. 2026 tak sloučil noční čtení do dotazů na archiv)."""
+    if a.rodic and a.rodic == b.rodic:   # části téhož rozděleného úkolu jsou z definice různé úkoly (osoby zdědily po rodiči)
+        return False
+    if a.cil or b.cil:
+        return bool(a.cil) and a.cil == b.cil
+    return bool(a.typ) and a.typ == b.typ and bool(a.os) and set(a.os) == set(b.os)
 
 
 def sluc(stary, novy):
@@ -609,6 +612,7 @@ def main(argv=None):
     for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--zavisi", "--otazka", "--moznosti", "--dukazy", "--zkuseno",
               "--doporuceni", "--vychozi"):
         s.add_argument(a)
+    s.add_argument("--nove", action="store_true")   # nesloučit s podobným úkolem, založit vždy nový
     s = sp.add_parser("uprav"); s.add_argument("id")
     for a in ("--text", "--p", "--os", "--typ", "--cil", "--rodic", "--stav", "--zavisi", "--pridat-text", "--cena"):
         s.add_argument(a)
@@ -630,6 +634,7 @@ def main(argv=None):
     sp.add_parser("kalibrace")
     s = sp.add_parser("smeruj"); s.add_argument("id"); s.add_argument("--do", required=True); s.add_argument("--dod")
     s.add_argument("--cena"); s.add_argument("--p"); s.add_argument("--schvaleno", action="store_true")
+    s.add_argument("--nove", action="store_true")
     s = sp.add_parser("rozdel"); s.add_argument("id")
     s.add_argument("--cast", nargs=3, action="append", metavar=("FRONTA", "TEXT", "DOD"), required=True)
     s = sp.add_parser("zaparkuj"); s.add_argument("id"); s.add_argument("--do", required=True); s.add_argument("--duvod")
@@ -872,7 +877,7 @@ def main(argv=None):
         if a.do == "rozhodnuti":
             vyzaduj_rozhodnuti(u.text)
         for f2, (uv2, uk2) in data.items():
-            if f2 == "vstup":
+            if f2 != a.do or a.nove:   # slučuje se jen v cílové frontě
                 continue
             for x in uk2:
                 if stejny(x, u):
@@ -966,6 +971,8 @@ def main(argv=None):
         if not re.fullmatch(r"P[1-3]", novy.p):
             sys.exit("priorita P1–P3")
         for f, (uv, uk) in data.items():
+            if f != a.fronta or a.nove:   # slučuje se jen ve stejné frontě
+                continue
             for u in uk:
                 if stejny(u, novy):
                     sluc(u, novy)
