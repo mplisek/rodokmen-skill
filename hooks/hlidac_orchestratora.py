@@ -27,7 +27,26 @@ def jmeno_agenta(typ):
 # Nástroje řídicího agenta: nástroj → podmínka na argumenty. Všechny si vstup kontrolují samy a zapisují jen validovaně (E1, E2):
 # fronty přes fronta.py, přijatý výsledek přes zapis_vysledku.py (vstup ze souboru v pracovni/), commit přes commit.py (nikdy push).
 FRONTA_ZAPIS = {"pridej", "smeruj", "rozdel", "zaparkuj", "selhani", "hotovo", "uprav", "presun", "odeslano", "znovu"}
+
+
+def v_pracovni(cesta):
+    c = cesta.replace("\\", "/")
+    return c.startswith("pracovni/") and ".." not in c.split("/")
+
+
+def ucastnici_smi(a):
+    """stav; navrh [--out pracovni/…]; zapis pracovni/… (zapíše jen úplné položky, sám kontroluje osoby a role)."""
+    if a[:1] == ["stav"]:
+        return len(a) == 1
+    if a[:1] == ["navrh"]:
+        return a[1:] == [] or (len(a) == 3 and a[1] == "--out" and v_pracovni(a[2]))
+    return len(a) == 2 and a[0] == "zapis" and v_pracovni(a[1])
+
+
 NASTROJE_ORCH = {
+    "ucastnici.py": ucastnici_smi,
+    # opravný řádek deníku (nahrazuje starší řádek); nový nález jde jen přes zapis_vysledku.py
+    "denik.py": lambda a: a[:1] == ["pridej"] and "--opravuje" in a,
     "vysledek.py": lambda a: a[:1] and a[0] in {"over", "souhrn", "porovnej", "vzor"},
     "zadani.py": lambda a: a[:1] and a[0] in {"novy", "rozsir", "ukaz"},
     "fronta.py": lambda a: a[:1] and a[0] in FRONTA_ZAPIS,
@@ -59,13 +78,13 @@ def orchestrator_nastroj(prikaz):
 
 
 def orchestrator_soubor(cesta, cwd):
-    """Řídicí agent smí nástrojem Write psát jen pracovní soubory (rozhodnutí pro zapis_vysledku.py, zadání), nikdy data, nástroje ani web."""
+    """Řídicí agent smí nástrojem Write psát jen pracovní soubory (rozhodnutí pro zapis_vysledku.py, zadání) a soubory měření (mereni/:
+    hodnocení běhu, sada případů), nikdy data, nástroje ani web."""
     import os
     if not cesta:
         return False
     plna = os.path.normcase(os.path.abspath(os.path.join(cwd or os.getcwd(), cesta)))
-    koren = os.path.normcase(os.path.abspath(os.path.join(cwd or os.getcwd(), "pracovni")))
-    return plna.startswith(koren + os.sep)
+    return any(plna.startswith(os.path.normcase(os.path.abspath(os.path.join(cwd or os.getcwd(), k))) + os.sep) for k in ("pracovni", "mereni"))
 
 
 def orchestrator_smi(prikaz):
@@ -121,11 +140,13 @@ ORCH_DUVOD = ("Orchestrator guard: the orchestrator may run only read-only listi
               "(seznam, frontier, kontrola, rezim, dalsi, cekajici, plan, historie, kalibrace), `tools/kontext.py --osoba N --tema …`, `tools/mapa.py hledej|stav` and read-only git "
               "(`git branch --show-current`, `git status --short`, `git log --oneline -N`), "
               "`tools/vysledek.py over|souhrn|porovnej|vzor`, `tools/zadani.py novy|rozsir|ukaz`, the queue commands of `tools/fronta.py`, "
-              "`tools/zapis_vysledku.py pracovni/…json`, `tools/commit.py`, `tools/stav.py`, `tools/spotreba.py`, `tools/podnet.py` "
+              "`tools/zapis_vysledku.py pracovni/…json`, `tools/ucastnici.py stav|navrh|zapis pracovni/…json`, "
+              "`tools/denik.py pridej --opravuje N …` (a correction row only), `tools/commit.py`, `tools/stav.py`, `tools/spotreba.py`, `tools/podnet.py` "
               "(text arguments in quotes, no `$` or backticks), "
               "one command without pipes, redirects or chaining. Delegate everything else to a specialist agent.")
-SOUBOR_DUVOD = ("Orchestrator guard: you may write only working files under `pracovni/` (a decision for `tools/zapis_vysledku.py`, notes). "
-                "Data change only through the validating tools: `tools/zapis_vysledku.py`, `tools/fronta.py`, `tools/zadani.py`.")
+SOUBOR_DUVOD = ("Orchestrator guard: you may write only working files under `pracovni/` (a decision for `tools/zapis_vysledku.py`, notes) "
+                "and measurement files under `mereni/`. Data change only through the validating tools: `tools/zapis_vysledku.py`, "
+                "`tools/fronta.py`, `tools/zadani.py`, `tools/ucastnici.py zapis`, `tools/denik.py pridej --opravuje`.")
 COMMIT_DUVOD = ("Committer guard: only `git status|diff|log`, `git branch --show-current`, `git add <exact files>` "
                 "(no -A, -u, `.`, `..`, absolute paths) and `git commit -m \"…\"` (no -a, --amend, --no-verify, --allow-empty), "
                 "one command, no chaining, pipes or redirects outside the quotes of the message, no `$` or backticks. Never push, switch branches, reset or merge.")

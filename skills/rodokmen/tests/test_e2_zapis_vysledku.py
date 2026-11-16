@@ -251,6 +251,23 @@ class StavACommit(Projekt):
         self.assertIn("cizi.md", self.git("status", "--short").stdout)       # cizí práce zůstala nedotčená
         self.assertEqual(self.py("commit.py", U).returncode, 1)              # podruhé není co commitovat
 
+    def test_commit_souboru_mereni_bez_ukolu(self):
+        """Hodnocení měření a sada případů (mereni/) se commitují stejně jako fronty; nástroje ani web ne."""
+        self.git("init", "-q", "-b", "prace")
+        self.git("config", "user.email", "test@example.org")
+        self.git("config", "user.name", "Test")
+        (self.root / ".gitignore").write_text("pracovni/\n__pycache__/\n", encoding="utf-8")
+        (self.root / "mereni").mkdir()
+        (self.root / "mereni" / "v0_hodnoceni.json").write_text("{}\n", encoding="utf-8")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "start")
+        (self.root / "mereni" / "v0_hodnoceni.json").write_text('{"hodnoceni": "správně"}\n', encoding="utf-8")
+        r = self.py("commit.py", "--soubory", "mereni/v0_hodnoceni.json", "--zprava", "Hodnocení měření v0")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("mereni/v0_hodnoceni.json", self.git("show", "--name-only", "--format=%s", "HEAD").stdout)
+        r = self.py("commit.py", "--soubory", "tools/stav.py", "--zprava", "x")
+        self.assertNotEqual(r.returncode, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

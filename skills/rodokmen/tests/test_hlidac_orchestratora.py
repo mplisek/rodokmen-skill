@@ -78,6 +78,19 @@ class HlidacOrchestratora(unittest.TestCase):
         self.assertEqual(hook("rodokmen:badatel", "python -I tools/stav.py")[0], "allow")
         self.assertEqual(hook("rodokmen:badatel", "rm -rf data")[0], "deny")
 
+    def test_badatel_ma_cestu_k_ukolum_od_metodiky(self):
+        """Podnět z bádání 16. 11. 2026: role účastníků, opravný řádek deníku a soubory měření nešly zapsat ničím povoleným."""
+        for p in ("python -I -X utf8 tools/ucastnici.py stav", "python -I tools/ucastnici.py navrh",
+                  "python -I tools/ucastnici.py navrh --out pracovni/ucastnici_navrh.json",
+                  "python -I -X utf8 tools/ucastnici.py zapis pracovni/ucastnici_navrh.json",
+                  'python -I tools/denik.py pridej --opravuje 379 --hledano "křest" --zdroj "ARON 744" --vysledek nenalezeno --rozsah "sn. 66-70" --osoby 160',
+                  'python -I tools/commit.py --soubory mereni/v0_hodnoceni.json --zprava "Hodnocení měření v0"'):
+            self.assertEqual(hook("rodokmen:badatel", p)[0], "allow", p)
+        for p in ("python -I tools/ucastnici.py zapis data/zaznamy.json", "python -I tools/ucastnici.py zapis pracovni/../data/x.json",
+                  "python -I tools/ucastnici.py navrh --out data/x.json", 'python -I tools/denik.py pridej --hledano "x" --vysledek nalezeno',
+                  "python -I tools/denik.py smaz 12"):
+            self.assertEqual(hook("rodokmen:badatel", p)[0], "deny", p)
+
     def test_orchestrator_pise_soubory_jen_do_pracovni(self):
         import tempfile
         with tempfile.TemporaryDirectory() as t:
@@ -88,7 +101,9 @@ class HlidacOrchestratora(unittest.TestCase):
                 return "deny" if r.stdout.strip() else "allow"
             self.assertEqual(zapis("pracovni/vysledky/U-0001_rozhodnuti.json"), "allow")
             self.assertEqual(zapis(t + "/pracovni/x.json"), "allow")
-            for c in ("data/osoby.py", "data/denik.jsonl", "tools/fronta.py", "pracovni/../data/x.json", "web/src/x.astro", "../jinde.txt"):
+            self.assertEqual(zapis("mereni/v0_hodnoceni.json", "Edit"), "allow")     # měření není rodinná data ani web
+            for c in ("data/osoby.py", "data/denik.jsonl", "tools/fronta.py", "pracovni/../data/x.json", "web/src/x.astro", "../jinde.txt",
+                      "mereni/../data/x.json"):
                 self.assertEqual(zapis(c), "deny", c)
                 self.assertEqual(zapis(c, "Edit"), "deny", c)
             self.assertEqual(zapis("data/osoby.py", agent="rodokmen:badatel"), "deny")

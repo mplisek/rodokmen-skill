@@ -6,7 +6,7 @@ Použití (z kořene projektu):
   python3 -I tools/commit.py U-0101 [--vetev migrace-test] [--zprava "…"] [--nanecisto]
         soubory a zprávu vezme z historie úkolu (události „zapsano“ od tools/zapis_vysledku.py, které ještě nejsou v commitu)
   python3 -I tools/commit.py --soubory data/ukoly_na_noc.md,data/ukoly_historie.jsonl --zprava "Fronty: směrování nových úkolů"
-        změny front bez výsledku čtení; jen soubory v data/
+        změny front bez výsledku čtení, role účastníků, opravný řádek deníku, hodnocení měření; jen soubory v data/ a mereni/
 
 Pravidla: zpráva říká, co bylo zjištěno a kde, bez čísel úkolů a jmen agentů; --vetev (je-li zadána) se musí shodovat s aktivní větví,
 jinak se necommituje; soubor beze změny se přeskočí; nic ke commitu = kód 1. Podpis (řádek Co-Authored-By) jednotně z data/rezim.json
@@ -79,8 +79,8 @@ def main(argv=None):
     else:
         soubory = [x.strip().replace("\\", "/") for x in (a.soubory or "").split(",") if x.strip()]
         zprava = a.zprava
-        if not soubory or any(not s.startswith("data/") for s in soubory):
-            sys.exit("bez úkolu: --soubory jen z data/ (oddělené čárkou) a --zprava")
+        if not soubory or any(not s.startswith(("data/", "mereni/")) for s in soubory):
+            sys.exit("bez úkolu: --soubory jen z data/ nebo mereni/ (oddělené čárkou) a --zprava")
     if not zprava or not zprava.strip():
         sys.exit("chybí --zprava (co bylo zjištěno a kde)")
     if UKOL.search(zprava) or PROCES.search(zprava):

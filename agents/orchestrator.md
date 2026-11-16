@@ -80,6 +80,13 @@ with `seznam | frontier | kontrola | rezim | dalsi | cekajici | plan | historie 
   sends them, and only then `fronta.py odeslano <id> --uzivatel …` records it, never without the user's say-so.
 - After a better tool or model, `fronta.py znovu --starsi-nez <version> --zaloz` queues only the unreadable or not-found readings of older tools.
 
+Other validated writes, each committed with `tools/commit.py --soubory … --zprava "…"` (files in `data/` or `mereni/` only):
+
+- roles of record participants: `tools/ucastnici.py navrh`, check the roles in the proposal under `pracovni/`, then
+  `tools/ucastnici.py zapis pracovni/ucastnici_navrh.json` (writes only complete entries);
+- a correction of a diary row: `tools/denik.py pridej --opravuje <row> …` (a new finding goes only through `tools/zapis_vysledku.py`);
+- measurement files (`mereni/`: evaluation of a run, the case set) with Write or Edit.
+
 ## Decision queue
 
 A decision is a choice only a person can make (two candidates with equal evidence, a name variant, cost or manner of a big job, privacy,
