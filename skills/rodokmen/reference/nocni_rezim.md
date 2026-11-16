@@ -108,8 +108,8 @@ Platí pro každé čtení, v noci i přes den. Cílem je stahovat z archivu jen
 - **Co se ukládá:** jen navigační údaje o stránce (typ, od–do, sloupce, kvalita, kdo a čím četl), žádné přepisy a jména. Proto je mapa společná pro
   všechny projekty na počítači: `rodokmen_mapy/<portál>/<svazek>.jsonl` vedle mezipaměti snímků (mimo její úklid; jen přidávání, poslední čtení snímku platí).
   Přepisy a deník zůstávají v projektu.
-- **Kdo zapisuje:** čtenář (`researcher`, `browser-reader`) vrací údaje o stránkách ve výsledkovém souboru (`stranky`); orchestrátor je nechá zapsat přes `fixer`
-  (`mapa.py zapis`). Agent nezapisuje mimo `pracovni/vysledky/`.
+- **Kdo zapisuje:** čtenář (`researcher`, `browser-reader`) vrací údaje o stránkách ve výsledkovém souboru (`stranky`); do mapy je zapíše
+  `tools/zapis_vysledku.py` spolu s výsledkem (jednotlivě `mapa.py zapis`). Čtenář nezapisuje mimo `pracovni/vysledky/`.
 - **Identita:** snímek, který vstoupí do mezipaměti (`aron_img.py`; z prohlížeče výsledek `browser-readeru` s adresou, svazkem a číslem snímku), se zapíše do mapy;
   dříve stažené svazky doplní `mapa.py naplnit-z-pracovni`, eBadatelnu v mezipaměti `mapa.py naplnit-z-cache`.
 - **Další zdroje, které se zeptají před stažením:** `pracovni_prehled.py --hledej`, `cache.py najdi <adresa>` a historie čtení (`fronta.py znovu`).
@@ -242,10 +242,15 @@ V jednom běhu jede **buď bádání, nebo úprava skillu**, nikdy obojí. Záme
 
 | Činnost | Kdo |
 | --- | --- |
-| směrování, priorita, slučování a dělení úkolů, ověření čtení, ztotožnění, spory zdrojů, zápis do dat, úpravy skillu | hlavní agent s plným kontextem |
+| směrování, priorita, dělení úkolů, zadání čtení, ztotožnění, spory zdrojů, rozhodnutí o přijetí a o hotovém úkolu, zápis validujícími nástroji | **badatel** (`claude --agent rodokmen:badatel` v projektu; dřívější jméno `orchestrator`) |
+| pravidla, kontrakty mezi agenty, nástroje, definice agentů, testy; z technických podnětů (`tools/podnet.py`) | **metodik** (`claude --agent rodokmen:metodik` v repozitáři skillu); nebádá a rodinná data nečte |
 | rutinní čtení snímků a rejstříků, hledání knih v ARONu | podagent na středním modelu (`sonnet`) |
 | mechanické práce (stahování, hromadné přejmenování, oprava lintu, migrace podle šablony) | podagent na nižším modelu |
 | složité čtení (kurent, špatné snímky), nejasné ztotožnění | hlavní agent, případně podagent na vyšším modelu s přesným zadáním |
+
+Komu co zadat: co se týká předků, patří badateli; co se týká toho, jak se pracuje, patří metodikovi. Badatel pravidla ani nástroje nemění
+(narazí-li na chybu, zapíše podnět a pokračuje obchvatem) a novou verzi nástrojů přebírá mezi úkoly, nikdy uprostřed. Metodik neschvaluje
+nálezy a nerozhoduje badatelské otázky.
 
 Model odpovídá složitosti úkolu. Podagent **nikdy nezapisuje do `data/` ani do skillu**, píše jen do `pracovni/pom_<téma>/`.
 Brzda `slusne.py` a limit souběžných pomocníků (`rezim.json`) platí dál. Jen ARON, nic se neodesílá ven.

@@ -9,7 +9,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 AGENTI = REPO / "agents"
 POCATECNI = {"orchestrator", "researcher", "browser-reader", "verifier", "upstream-sync", "test-runner", "failure-analyst", "fixer",
-             "test-author", "committer"}
+             "test-author", "committer", "badatel", "metodik"}
+HLAVNI = {"orchestrator", "badatel", "metodik"}   # hlavní vstupy uživatele; ostatní jsou jejich pomocníci
 NASTROJE = {"Read", "Glob", "Grep", "Bash", "PowerShell", "Edit", "Write", "Agent", "WebFetch", "WebSearch", "Monitor"}
 MODELY = {"haiku", "sonnet", "opus", "inherit"}
 BEZ_PRAVIDEL = {"verifier"}   # čte naslepo jeden výřez; pravidla bádání nepotřebuje a start má být co nejmenší (E1)
@@ -28,6 +29,22 @@ class DefiniceAgentu(unittest.TestCase):
         cls.texty = {k: p.read_text(encoding="utf-8") for k, p in cls.soubory.items()}
         cls.ids = set(re.findall(r"(?m)^## (R-[A-Z]+-\d{3})$",
                                  "\n".join(p.read_text(encoding="utf-8") for p in (REPO / "skills/rodokmen-agents/rules").glob("*.md"))))
+
+    def test_dva_hlavni_vstupy_badatel_a_metodik(self):
+        """E6: bádání řídí badatel (v projektu), metodiku metodik (ve skillu). Každý má jen své pomocníky; orchestrator je staré jméno badatele."""
+        def pomocnici(jmeno):
+            return set(re.findall(r"rodokmen:([a-z-]+)", frontmatter(self.texty[jmeno])["tools"]))
+        self.assertEqual(pomocnici("badatel"), {"researcher", "browser-reader", "verifier"})
+        self.assertEqual(pomocnici("metodik"), {"test-runner", "test-author", "fixer", "failure-analyst", "upstream-sync"})
+        self.assertFalse(pomocnici("badatel") & pomocnici("metodik"))
+        telo = lambda j: self.texty[j].split("---", 2)[2].split(chr(10), 3)[3]   # noqa: E731 – bez nadpisu
+        self.assertEqual(telo("orchestrator"), telo("badatel"))            # jedno znění, dvě jména (staré jméno jen jednu verzi)
+        m = self.texty["metodik"]
+        for s in ("never read family data", "data/poznamky_pro_skill.md", "anonymita.py", "between", "Test first", "never approve a finding"):
+            self.assertIn(s, m.replace("Never read family data", "never read family data"), s)
+        b = self.texty["badatel"]
+        for s in ("tools/podnet.py", "never here", "between tasks"):
+            self.assertIn(s, b, s)
 
     def test_pocatecni_sada_je_presne_deset_agentu(self):
         self.assertEqual(set(self.soubory), POCATECNI)

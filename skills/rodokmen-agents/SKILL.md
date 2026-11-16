@@ -20,7 +20,8 @@ repeats a rule: read the rule by its id in `rules/`. The human-facing guide and 
 
 | Role | Does | Never does |
 |---|---|---|
-| orchestrator | decides: plan, assignment, identity, what is accepted, when it is done; records it with the validating tools | reads images, edits data by hand, changes rules or tools |
+| badatel (former name orchestrator) | main entry for research in a project: plan, assignment, identity, what is accepted, when it is done; records it with the validating tools | reads images, edits data by hand, changes rules or tools |
+| metodik | main entry for the methodology in the skill repository: rules, contracts, tools, agent definitions, tests, from technical notes | researches, reads family data, approves findings |
 | researcher, browser-reader | reads the assigned range and returns observations as a finding file | writes to `data/`, decides identity, closes the task |
 | verifier | second reading of one record without seeing the first answer; returns only its transcription | judges agreement, decides identity |
 | failure-analyst | turns a failure into a fix ticket | edits files |

@@ -30,59 +30,31 @@ Každá etapa i každý jednotlivý úkol jde stejně:
 7. Po etapě stop: uživatel rozhodne o kopii do projektu a o další etapě. Mění-li etapa kontrakt nebo roli, do `STAV.md` projektu
    přibude věta, co se pro bádání mění.
 
-## Pořadí
+## Stav etap (16. 11. 2026)
 
-### E1 – kontrakt výsledku (příčiny P2, P5; na řadě)
+Hotové a commitnuté ve větvích `e0-zmirneni` → `e1-kontrakt` → `e2-zapis` → `e3-pokracovani` → `e4-ucastnici` → `e5-web-brana` →
+`e6-badatel-metodik` (každá navazuje na předchozí, nic není pushnuto ani sloučeno do `main`): E0 zmírnění, E1 kontrakt čtení, E2 zápis
+bez pomocných agentů, E3 pokračování a výřezy, E4 účastníci zápisu a tvrzení, E5 kontrola webu z obou stran a brána, E6 badatel a metodik.
+Popis je v CHANGELOG (Nepublikováno) a v `reference/nocni_rezim.md`.
 
-- Schémata `zadani/1`, `nalez/1`, `overeni/1`, `rozhodnuti/1` v `skills/rodokmen-agents/schemata/` (jeden zdroj pro validátor, role i testy).
-- `tools/vysledek.py over | souhrn | porovnej`: čtenář si výsledek ověří sám před koncem běhu; souhrn pro řídicího agenta dělá skript
-  z polí (stav, chybějící pole, rozpory, rozsah, návrh dalšího kroku, čerpání); shodu dvou čtení vyhodnotí `porovnej` po polích.
-- `mapa.py zapis` přijme `nalez/1`; signaturu převede na interní ID svazku, nebo odmítne s příkladem správné hodnoty.
-- `svazky.json`: pokrytí pramene (koho rejstřík vede: ženichy, nevěsty, obojí; roky). Zadání hledat roli, kterou pramen nevede, se odmítne
-  před spuštěním pomocníka.
-- `researcher.md`: výsledek podle schématu, přesné příkazy místo `--help`. `verifier.md`: vrací jen vlastní přepis po polích, ne „shodu“.
-- `fronta.py rozdel --cast` s vlastními osobami, typem a cenou (bez tichého dědění po rodiči), `uprav --dod`.
-- Testy: scénáře 5, 7, 8 z návrhu (oddíl 8.1).
+Do projektu se z toho zatím zkopírovalo jen E0 a `spotreba.py`. Nástroje E1–E6 čekají ve skillu na měřicí běh `mereni-v0` (má změřit
+dnešní postup dřív, než se změní).
 
-### E2 – transakční zápis (P3)
-
-- `tools/zapis_vysledku.py <rozhodnuti.json>`: deník, mapa, záznam, uzavření úkolu a navazující otázky jedním voláním, celé nebo vůbec,
-  opakování nic nezdvojí.
-- `tools/commit.py <úkol>`: soubory z historie úkolu, pevný tvar zprávy, kontrola větve.
-- `tools/stav.py`: stav bádání ze souborů bez historie rozhovoru (větev, rozpracované úkoly s posledním krokem, rozpočet, rozhodnutí).
-- Hook: řídicí agent smí spouštět výčet zapisovacích nástrojů se vstupem ze souboru v `pracovni/` (schváleno uživatelem 15. 11. 2026).
-  Fixer a committer z bádání pryč; rozpor `orchestrator.md` × `fixer.md` tím zaniká.
-- Testy: scénáře 6, 9, 13.
-
-### E3 – pokračování čtenáře a výřezy (P5)
-
-- Nejdřív pokus: jde v pomocníkovi pluginu pokračovat zprávou se zachovaným kontextem, i když je řídicí agent hlavní vlákno? Podle výsledku
-  buď `pokracovani/1`, nebo jen pokračovací balíček pro nový běh.
-- `vyrez.py`: řádek širší než limit dělit na díly s překryvem a se souřadnicemi; odmítnout výřez, který by se při čtení zmenšil.
-- Test: scénář 2.
-
-### E4 – účastníci zápisu a tvrzení (P1; schváleno uživatelem 15. 11. 2026)
-
-- `zaznamy.json` pole `ucastnici` (osoba, role), `data/tvrzeni.jsonl`, seznam `r` u osoby odvozený a hlídaný kontrolou.
-- Migrační nástroj pro existující projekt: návrh účastníků z dnešních `r` a druhu zápisu, sporné k ruční kontrole (tu dělá bádání).
-- Export a šablony podle tabulky projekcí (návrh, oddíl 7.2). Testy: scénáře 1, 3, 10.
-
-### E5 – web a brána
-
-- Ručně psaná matice vztahů na ukázkovém projektu, kontrola symetrie v `dist`, kontrola přístupů včetně indexů hledání.
-- Brána a hook nasazení: otisk dat, šablon a `dist`. Testy: scénáře 11, 12.
-
-### E6 – dva hlavní agenti
-
-- `orchestrator.md` rozdělit na `badatel.md` (projekt) a `metodik.md` (skill), formát podnětu, verze pravidel a její převzetí mezi úkoly.
-
-## Otevřené po E0–E3
+## Otevřené po E0–E6
 
 - Pokus na platformě: jde v pomocníkovi pluginu pokračovat zprávou se zachovaným kontextem (nástroj `SendMessage`), když je řídicí agent
   hlavní vlákno s vlastním seznamem `tools:`? Dnes je pokračování řešeno novým čtenářem, který dostane nález a čte jen rozšíření. Když pokus
   vyjde, přidat `SendMessage` do `tools:` řídicího agenta a do testu definic.
 - Úplná sada testů (včetně sestavení webu) po E1–E3 neproběhla celá: systém ji 16. 11. 2026 ukončil pro nedostatek paměti. Pustit před
   kopií nástrojů do projektu.
+
+- Přístupy a vyhledávání (scénář 11): kontrola vztahů běží jen nad celým webem (verze `vse`). Pro omezené přístupy chybí kontrola proti
+  jejich vlastním datům a hledání jmen, která přístup vidět nemá, v HTML a v indexu vyhledávání.
+- Tvrzení (`data/tvrzeni.jsonl`) se zatím jen ukládají a kontrolují; na web se nepromítají. Až bude vidět, kolik faktů v `f` z nich jde
+  generovat, rozhodnout o dalším kroku (návrh, oddíl 6.7, možnost c).
+- Role účastníků mimo zápisy: kmotr a svědek se na stránce osoby ukáže u zápisu („Role v zápisu“), samostatný oddíl „kmotřenci“ není.
+- Po měřicím běhu: zkopírovat nástroje E1–E6 do projektu, v projektu `tools/brana.py`, pak `tools/ucastnici.py navrh` (role k ruční
+  kontrole potvrzuje bádání) a měření `mereni-v1` na téže sadě.
 
 ## Drobnosti mimo etapy (z poznámek projektu 15. 11. 2026)
 
