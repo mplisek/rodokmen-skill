@@ -93,6 +93,12 @@ class Zapis(Projekt):
         self.assertTrue(list((Path(self.tmp.name) / "mapy").rglob("*.jsonl")))
         h = [json.loads(x) for x in (self.root / "data" / "ukoly_historie.jsonl").read_text(encoding="utf-8").splitlines()]
         z = [e for e in h if e["udalost"] == "zapsano"][0]
+        zz = json.loads((self.root / "data" / "zaznamy.json").read_text(encoding="utf-8"))[0]
+        self.assertEqual(zz["ucastnici"][0], {"osoba": "88", "role": "křtěnec"})                 # E4: účastníci jsou u zápisu
+        tv = [json.loads(x) for x in (self.root / "data" / "tvrzeni.jsonl").read_text(encoding="utf-8").splitlines()]
+        self.assertEqual((tv[0]["id"], tv[0]["typ"], tv[0]["osoby"], tv[0]["jistota"], tv[0]["denik"], tv[0]["zaznam"]),
+                         ("T-0001", "narozeni", ["88"], "doc", d[0]["id"], "lhota_krest_josef_vzorny_1812"))
+        self.assertIn("data/tvrzeni.jsonl", z["soubory"])
         self.assertIn("data/denik.jsonl", z["soubory"])
         self.assertIn("data/zaznamy.json", z["soubory"])
 
@@ -137,6 +143,7 @@ class Zapis(Projekt):
     def test_tri_nezdary_nejsou_nenalezeno_ani_hotovo(self):
         """Scénář 6: strop, nedostupný portál a nečitelný snímek."""
         self.rozh.pop("zaznam")
+        self.rozh.pop("tvrzeni")
         self.rozh["denik"].update(overeno=False)
         for stav, beh, vys in (("rozpočet", "strop", "nenalezeno"), ("nedostupné", "překážka", "nenalezeno"), ("nečitelné", "překážka", "nenalezeno")):
             self.nalez.update(stav=stav, stav_behu=beh, cteni=[], kandidati=[],
@@ -164,6 +171,24 @@ class Zapis(Projekt):
         self.assertIn("jmenovce", r.stdout)
         self.rozh["identita"] = {"osoba": "88", "proc": "čp. 5 a otec chalupník", "vylouceno": ["josef-vzorny-1809"]}
         self.assertEqual(self.py("zapis_vysledku.py", self.priprav()).returncode, 0)
+
+    def test_novy_zapis_bez_ucastniku_a_doc_bez_overeni_se_odmitne(self):
+        """E4: zápis bez účastníků by vazbu zápis ↔ osoba zase nechal na ručním `r`; tvrzení doc jen s ověřením."""
+        self.rozh["zaznam"].pop("ucastnici")
+        r = self.py("zapis_vysledku.py", self.priprav())
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("ucastnici", r.stdout)
+        self.rozh.pop("zaznam")
+        self.rozh["denik"]["overeno"] = False
+        r = self.py("zapis_vysledku.py", self.priprav(overeni=False))
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("jistota doc", r.stdout)
+        self.rozh["tvrzeni"][0].update(jistota="prob", nahrazuje="T-0099")
+        r = self.py("zapis_vysledku.py", self.priprav(overeni=False))
+        self.assertIn("T-0099", r.stdout)
+        self.rozh["tvrzeni"][0].pop("nahrazuje")
+        r = self.py("zapis_vysledku.py", self.priprav(overeni=False))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
     def test_nanecisto_nic_nezapise(self):
         r = self.py("zapis_vysledku.py", self.priprav(), "--nanecisto")

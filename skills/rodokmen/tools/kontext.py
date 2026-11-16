@@ -16,6 +16,8 @@ import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # python -I nepřidává složku skriptu do cesty
+
 for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -69,6 +71,11 @@ def nacti_osoby(data):
     ns = {}
     with open(cesta, encoding="utf-8-sig") as f:
         exec(f.read(), ns)
+    try:   # zápis patří všem svým účastníkům (zaznamy.json → ucastnici), i když ho v `r` nemají
+        import ucastnici
+        ucastnici.dopln_r(ns, list(nacti_zaznamy(data).values()))
+    except Exception:   # noqa: BLE001 – karta osoby musí jít sestavit i bez účastníků
+        pass
     return ns
 
 

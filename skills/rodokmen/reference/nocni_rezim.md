@@ -143,6 +143,14 @@ Platí pro každé čtení, v noci i přes den. Cílem je stahovat z archivu jen
   zapíše deník (včetně úkolu, osob a přečtených snímků), zápis a přepis, stránky do mapy knihy, uzavře úkol a založí navazující úkoly: buď
   všechno, nebo nic, a totéž rozhodnutí podruhé nic nezdvojí. Odmítne ověřený výsledek nebo nový zápis bez shodného druhého čtení, výsledek,
   který neodpovídá stavu nálezu, uzavření bez splněné definice hotového a nález se jmenovcem bez zdůvodnění identity.
+- **Účastníci zápisu:** nový zápis nese `ucastnici` – každou osobu z rodokmenu, která v něm vystupuje, s rolí (křtěnec, otec, matka, ženich,
+  nevěsta, zemřelý, kmotr, svědek, jiné), a jménem ty, kdo v rodokmenu nejsou. Píše se **jednou u zápisu**; web, kontrola i karta osoby z toho
+  zápis přiřadí všem účastníkům (stránka každého z nich zápis ukáže s rolí, stránka zápisu ukáže všechny). Seznam `r` u osoby tak už není třeba
+  doplňovat u každého zvlášť. Starší zápisy: `tools/ucastnici.py navrh` navrhne účastníky z dnešních `r` (roli, kterou nejde poznat z názvu,
+  nechá prázdnou k ruční kontrole), `ucastnici.py zapis` zapíše jen úplné, `ucastnici.py stav` ukáže, kolik zbývá.
+- **Tvrzení:** rozhodnutí může nést `tvrzeni` (typ, osoby klíčem, jistota, důkaz); zapíší se do `data/tvrzeni.jsonl` s vlastním ID (T-0001…),
+  úkolem a řádkem deníku. Soubor jen přibývá, oprava je nové tvrzení s `nahrazuje`. `doc` jen u ověřeného výsledku. Na web se zatím nepromítá;
+  je to dohledatelný záznam, co bylo přijato a na základě čeho.
 - **Commit:** `tools/commit.py <úkol>` commitne přesně soubory toho zápisu na aktivní větvi (`--vetev` jinou odmítne), zpráva bez čísel úkolů;
   změny front `tools/commit.py --soubory … --zprava "…"`. Nikdy nepushuje. Jednotný podpis lze dát do `rezim.json → commit_podpis`.
 - **Stav bez historie rozhovoru:** `tools/stav.py` vypíše větev, fronty, rozpočet, rozpracované úkoly s definicí hotového a dalším krokem

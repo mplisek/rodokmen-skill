@@ -50,8 +50,10 @@ The session can end at any moment: after every step the state is in files, and `
      A disagreement keeps both transcriptions and the claim stays `prob` at most.
 5. Decide (R-ID, R-CONF, R-NEG): who the person is, what is accepted, whether the done-criterion is met. Write the decision with `Write` to
    `pracovni/vysledky/<id>_rozhodnuti.json` (schema `rozhodnuti/1`, filled example `tools/vysledek.py vzor rozhodnuti`): the diary row, the new
-   record with its transcription if there is one, the identity reasoning (required when the assignment names a namesake), follow-up questions,
-   `dod_splneno` and `uzavrit`.
+   record with its transcription and its **participants** (`ucastnici`: every person of the tree in the record with the role, and by name those
+   who are not in the tree, such as godparents and witnesses; the record then shows on the page of each of them), the accepted claims (`tvrzeni`:
+   type, persons, certainty; `doc` only with a matching second reading), the identity reasoning (required when the assignment names a namesake),
+   follow-up questions, `dod_splneno` and `uzavrit`.
 6. Record: `python -I -X utf8 tools/zapis_vysledku.py pracovni/vysledky/<id>_rozhodnuti.json` (`--nanecisto` to check first). One call writes the
    diary row, the record, the pages into the book map (`mapa.py zapis` is part of it), closes the task and files the follow-ups; on any refusal
    nothing changes and the message says which field to fix. The same decision twice changes nothing.

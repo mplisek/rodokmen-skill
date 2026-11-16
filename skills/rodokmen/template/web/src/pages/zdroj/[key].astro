@@ -24,7 +24,8 @@ const recDomy = (domyData.zapisy[r.key] || []).map((id) => domById[id]).filter(B
       <tr><th>Svazek</th><td>{r.volume}</td></tr>
       <tr><th>Snímek</th><td>{r.scan}{r.url && <> – <a href={r.url} target="_blank" rel="noopener">otevřít na portálu {r.portal}</a></>}</td></tr>
       {recDomy.length > 0 && <tr><th>Domy</th><td>{recDomy.map((d, i) => <>{i > 0 && ', '}<a href={`/domy/#${d.id}`}>{d.obec} čp. {d.cp}</a></>)}</td></tr>}
-      {r.people.length > 0 && <tr><th>Týká se</th><td>{r.people.map((s, i) => <>{i > 0 && ', '}<PersonLink slug={s} /></>)}</td></tr>}
+      {r.people.length > 0 && <tr><th>Týká se</th><td>{r.people.map((s, i) => <>{i > 0 && ', '}<PersonLink slug={s} />{r.roles?.[s] && <> ({r.roles[s]})</>}</>)}</td></tr>}
+      {r.others?.length > 0 && <tr><th>Další účastníci</th><td>{r.others.map((o, i) => <>{i > 0 && ', '}{o.name} ({o.role})</>)}</td></tr>}
     </tbody>
   </table></div>
   {r.img && (

@@ -17,6 +17,7 @@ for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (
         _s.reconfigure(encoding="utf-8", errors="replace")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # python -I nepřidává složku skriptu do cesty
 import chronologie  # noqa: E402 – data a pravidla časové osy (tools/chronologie.py)
+import ucastnici  # noqa: E402 – vazba zápis ↔ osoba z účastníků zápisu (tools/ucastnici.py)
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(TOOLS)
@@ -63,6 +64,8 @@ def load_people():
     exec(open(os.path.join(DATA, "osoby.py"), encoding="utf-8-sig").read(), ns)
     for name, default in (("P", {}), ("SIDE", []), ("LINES", {}), ("ISSUES", []), ("HYPOTEZY", []), ("SAME", {}), ("RODINA", {}), ("PARTNERI", [])):
         ns.setdefault(name, default)
+    # Účastníci zápisů (zaznamy.json → ucastnici): zápis patří všem svým účastníkům, i když ho v `r` má jen jeden z nich (tools/ucastnici.py).
+    ns["_role_v_zapisech"] = ucastnici.dopln_r(ns, jload("zaznamy.json", []))
     return ns
 
 
@@ -77,6 +80,7 @@ def record_rows():
             summary=z.get("shrnuti", ""), scan=z.get("snimek", ""), cause=z.get("pricina_umrti"),
             archive=sv.get("archiv", ""), volume=sv.get("svazek", ""), vdesc=sv.get("popis", ""),
             portal=sv.get("portal", "archivu"), url=z.get("odkaz") or sv.get("url", ""),
+            ucastnici=[u for u in z.get("ucastnici") or [] if isinstance(u, dict)],
             img=os.path.exists(os.path.join(VYREZY, key + ".jpg")),
             full=os.path.exists(os.path.join(ZDROJE, key + ".jpg")),
         ))
@@ -1002,7 +1006,7 @@ def main():
         people[slugs[k]] = dict(
             k=k, slug=slugs[k], name=puvodni(p), modern=p["n"], zap=p.get("zap", []), y=p.get("y", ""), years=years(p.get("y")), dates=full_dates(p), st=p.get("st", "unk"),
             status=STATUS.get(p.get("st"), ""), gen=gen(k), sex="M" if k == 1 and p.get("sex", "M") == "M" or k > 1 and k % 2 == 0 else "F",
-            rel=relation(k), line=line_of(k), facts=p.get("f", []), note=p.get("note", ""), vyz=p.get("vyz", ""), records=[r for r in p.get("r", []) if r in recs],
+            rel=relation(k), line=line_of(k), facts=p.get("f", []), note=p.get("note", ""), vyz=p.get("vyz", ""), records=[r for r in p.get("r", []) if r in recs], recRoles=dict(p.get("_role") or {}),
             father=slugs.get(2 * k), mother=slugs.get(2 * k + 1),
             fatherUnknown=(2 * k in P and placeholder(P[2 * k])), motherUnknown=(2 * k + 1 in P and placeholder(P[2 * k + 1])),
             child=slugs.get(k // 2) if k > 1 else None, spouse=slugs.get(k ^ 1) if k > 1 else None,
@@ -1049,7 +1053,7 @@ def main():
         others.append(dict(id=f"o:{oid}", name=o["n"], y=o.get("y", ""), years=years(o.get("y")), sex=o.get("sex", ""),
                            st=o.get("st", ""), status=STATUS.get(o.get("st"), ""), father=ref(o.get("otec")),
                            mother=ref(o.get("matka")), partners=[x for x in map(ref, o.get("partner", [])) if x],
-                           facts=o.get("f", []), note=o.get("note", ""), records=[r for r in o.get("r", []) if r in recs]))
+                           facts=o.get("f", []), note=o.get("note", ""), records=[r for r in o.get("r", []) if r in recs], recRoles=dict(o.get("_role") or {})))
         if oid in skryti_r:
             others[-1].update(facts=[], records=[], note=pozn_skryti(o))
             skryto += 1
@@ -1090,7 +1094,7 @@ def main():
         people[s] = dict(
             k=0, slug=s, name=o["name"], modern=o["name"], zap=[], y=o["y"], years=o["years"], st=src.get("st", "fam"),
             status=o["status"], gen=0, sex=o["sex"], rel=src.get("v") or src.get("rel") or o.get("rel") or "příbuzný mimo přímou linii", line=None,
-            facts=o["facts"], note=o["note"], vyz="", records=o["records"], father=None, mother=None,
+            facts=o["facts"], note=o["note"], vyz="", records=o["records"], recRoles=o.get("recRoles", {}), father=None, mother=None,
             fatherUnknown=False, motherUnknown=False, child=None, spouse=None, family=None, ownFamily=None, path=[s],
             side=[], sibStatus="none", docs=[dict(img=d["img"], caption=d.get("popis", "")) for d in docs_cfg if oid in d.get("osoby", [])],
             children=[], also=[], extra=True)
@@ -1218,6 +1222,9 @@ def main():
         r["orig"], r["cs"] = tr.get("orig", ""), tr.get("cs", "")
         r["kindName"] = KINDS.get(r["kind"], r["kind"])
         r["people"] = list(dict.fromkeys(refs.get(key, [])))
+        r["roles"] = {s: people[s].get("recRoles", {}).get(key) for s in r["people"] if people[s].get("recRoles", {}).get(key)}
+        # účastníci, kteří v rodokmenu nejsou (kmotr, svědek jen jménem): na stránce zápisu jako text
+        r["others"] = [dict(name=u["jmeno"], role=u.get("role", "")) for u in r.pop("ucastnici", []) if u.get("jmeno") and "osoba" not in u]
         records.append(r)
 
     lines = {}

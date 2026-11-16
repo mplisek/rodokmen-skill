@@ -162,6 +162,28 @@ def main():
         sys.exit(f"CHYBA: data/osoby.py nejde načíst: {e}")
     P, SIDE, LINES, SAME = ns.get("P", {}), ns.get("SIDE", []), ns.get("LINES", {}), ns.get("SAME", {})
     zaz = jload("zaznamy.json", [])
+    import ucastnici   # účastníci zápisu: kontrola tvaru a odvození vazby zápis ↔ osoba (tools/ucastnici.py)
+    for z in zaz:
+        for c in ucastnici.over(z, ns) if isinstance(z, dict) else []:
+            err.append(f"zápis {z.get('klic')}: {c}")
+    ucastnici.dopln_r(ns, zaz)
+    try:   # deník přijatých tvrzení (tools/zapis_vysledku.py): osoby existují, ID jsou jedinečná, „nahrazuje“ míří na existující
+        with open(os.path.join(DATA, "tvrzeni.jsonl"), encoding="utf-8") as fh:
+            tv = [json.loads(x) for x in fh if x.strip()]
+    except OSError:
+        tv = []
+    except ValueError as e:
+        tv = []
+        err.append(f"data/tvrzeni.jsonl nejde přečíst: {e}")
+    tid = [t.get("id") for t in tv]
+    for t in tv:
+        if tid.count(t.get("id")) > 1:
+            err.append(f"tvrzení {t.get('id')}: ID není jedinečné")
+        for o in t.get("osoby") or []:
+            if ucastnici.klic_osoby(o, ns) is None:
+                err.append(f"tvrzení {t.get('id')}: osoba „{o}“ není v data/osoby.py")
+        if t.get("nahrazuje") and t["nahrazuje"] not in tid:
+            err.append(f"tvrzení {t.get('id')}: nahrazuje {t['nahrazuje']}, které neexistuje")
     svazky, prep, hl = jload("svazky.json", {}), jload("prepisy.json", {}), jload("zvyrazneni.json", {})
     keys = [z.get("klic") for z in zaz]
     dup = {k for k in keys if keys.count(k) > 1}

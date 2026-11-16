@@ -104,10 +104,58 @@ def over(d):
         if chybi or not str((d.get("identita") or {}).get("proc") or "").strip():
             ch.append("identita: zadání má jmenovce k nezaměnění (" + ", ".join(str(x.get("id")) for x in zadani["nezamenit_s"])
                       + "); uveď identita.proc a identita.vylouceno se všemi")
+    tv = nacti_tvrzeni()
+    for i, t in enumerate(d.get("tvrzeni") or []):
+        if t.get("jistota") == "doc" and not d["denik"].get("overeno"):
+            ch.append(f"tvrzeni[{i}]: jistota doc jen u ověřeného výsledku (denik.overeno a shodné druhé čtení); jinak prob")
+        if t.get("nahrazuje") and t["nahrazuje"] not in {x.get("id") for x in tv}:
+            ch.append(f"tvrzeni[{i}].nahrazuje: {t['nahrazuje']} v data/tvrzeni.jsonl není")
+        for c in t.get("dukaz") or []:
+            if c not in cteni:
+                ch.append(f"tvrzeni[{i}].dukaz: čtení {c} v nálezu není")
     f, _ = najdi_ukol(ukol)
     if uzavrit and f is None:
         ch.append(f"úkol {ukol} není ve frontách, nejde uzavřít")
     return ch, nalez
+
+
+def cesta_tvrzeni():
+    return os.path.join(ROOT, "data", "tvrzeni.jsonl")
+
+
+def nacti_tvrzeni():
+    out = []
+    try:
+        with open(cesta_tvrzeni(), encoding="utf-8") as f:
+            for radek in f:
+                if radek.strip():
+                    out.append(json.loads(radek))
+    except (OSError, ValueError):
+        pass
+    return out
+
+
+def zapis_tvrzeni(d, cislo_deniku):
+    """Přijatá tvrzení do data/tvrzeni.jsonl (jen přibývá; oprava = nové tvrzení s „nahrazuje“). Vrací přidělená ID."""
+    nove = d.get("tvrzeni") or []
+    if not nove:
+        return []
+    stara = nacti_tvrzeni()
+    n = max([int(x["id"][2:]) for x in stara if isinstance(x.get("id"), str) and x["id"][2:].isdigit()], default=0)
+    ids = []
+    with open(cesta_tvrzeni(), "a", encoding="utf-8", newline="\n") as f:
+        for t in nove:
+            n += 1
+            z = {"id": f"T-{n:04d}", "datum": datetime.date.today().isoformat(), "typ": t["typ"], "osoby": [str(x) for x in t["osoby"]],
+                 "jistota": t["jistota"], "ukol": d["ukol"], "denik": cislo_deniku}
+            for pole in ("text", "dukaz", "nahrazuje"):
+                if t.get(pole):
+                    z[pole] = t[pole]
+            if (d.get("zaznam") or {}).get("klic"):
+                z["zaznam"] = d["zaznam"]["klic"]
+            f.write(json.dumps(z, ensure_ascii=False) + "\n")
+            ids.append(z["id"])
+    return ids
 
 
 def radek_deniku(d, nalez, zaznamy):
@@ -139,7 +187,7 @@ def radek_deniku(d, nalez, zaznamy):
 
 
 def soubory_k_zaloze(nalez):
-    out = [os.path.join(ROOT, "data", n) for n in ("denik.jsonl", "zaznamy.json", "prepisy.json", "ukoly_historie.jsonl")]
+    out = [os.path.join(ROOT, "data", n) for n in ("denik.jsonl", "zaznamy.json", "prepisy.json", "ukoly_historie.jsonl", "tvrzeni.jsonl")]
     out += [fronta.cesta(f) for f in fronta.FRONTY]
     for s in nalez.get("stranky") or []:
         with contextlib.suppress(Exception):
@@ -203,6 +251,7 @@ def proved(d, nalez, klic):
         tise(zapis.zapis, "zaznamy", zz["klic"], {k: v for k, v in zz.items() if k != "prepis"})
         if prepis:
             tise(zapis.zapis, "prepisy", zz["klic"], prepis)
+    zapis_tvrzeni(d, z["id"])
     stranky = [dict(s) for s in nalez.get("stranky") or []]
     try:
         mapa.svazek_ze_signatury(stranky)

@@ -18,6 +18,7 @@ import sys
 
 CHRANENE = (
     ("data/denik.jsonl", "python3 -I tools/denik.py pridej … (oprava záznamu: --opravuje <id>)"),
+    ("data/tvrzeni.jsonl", "python3 -I tools/zapis_vysledku.py <rozhodnutí.json> (tvrzení jen přibývají; oprava = nové tvrzení s „nahrazuje“)"),
     ("data/verejne_otazky.json", "python3 -I tools/otazky.py pridej | uprav | potvrd | smaz"),
     ("web/src/generated/", "python3 -I tools/export_web.py (npm run data) – soubory se generují z dat"),
     ("web/src/data/", "python3 -I tools/export_web.py (npm run data) – soubory se generují z dat"),

@@ -68,13 +68,18 @@ VZORY["rozhodnuti"] = {
               "nalez": "Křest 17. 3. 1812 ve Lhotě čp. 5, rodiče Jan a Anna.", "rozsah": "snímky 44–47", "osoby": ["88"], "overeno": True},
     "zaznam": {"klic": "lhota_krest_josef_vzorny_1812", "svazek": "0a1b2c3d", "snimek": 46, "druh": "N", "datum": "17. 3. 1812",
                "nazev": "Křest Josefa Vzorného, Lhota čp. 5", "shrnuti": "Rodiče Jan Vzorný, chalupník, a Anna.", "odkaz": "https://…",
+               "ucastnici": [{"osoba": "88", "role": "křtěnec"}, {"jmeno": "Václav Ukázka", "role": "kmotr"}],
                "prepis": {"orig": "17. Martii 1812 …", "cs": "17. března 1812 …"}},
     "identita": {"osoba": "88", "proc": "jméno, rok, čp. 5 a povolání otce; jmenovec z čp. 12 má otce mlynáře", "vylouceno": ["josef-vzorny-1809"]},
+    "tvrzeni": [{"typ": "narozeni", "osoby": ["88"], "jistota": "doc", "text": "* 17. 3. 1812 Lhota čp. 5", "dukaz": ["c1"]}],
     "navazujici": [{"text": "Kdo byl kmotr Václav Ukázka?", "os": ["88"], "typ": "kmotr"}],
     "hotovo": {"spotreba": "M"}}
 VYSLEDKY_DENIKU = ("nalezeno", "vyvráceno", "nenalezeno", "částečně", "nečitelné")
 DRUHY_ZAPISU = ("N", "O", "Z", "S")
-VYCTY = {"stav": STAVY, "stav_behu": STAVY_BEHU, "typ stránky": TYPY_STRAN, "kvalita": KVALITY, "role": ROLE}
+TYPY_TVRZENI = ("narozeni", "umrti", "snatek", "rodic", "partner", "kmotr", "svedek", "totozny", "bydliste", "povolani", "jine")
+JISTOTY = ("doc", "prob", "fam", "mh")
+VYCTY = {"stav": STAVY, "stav_behu": STAVY_BEHU, "typ stránky": TYPY_STRAN, "kvalita": KVALITY, "role": ROLE, "typ tvrzení": TYPY_TVRZENI,
+         "jistota": JISTOTY}
 
 
 # ---------- data projektu ----------
@@ -366,6 +371,17 @@ def over_rozhodnuti(d):
                 ch.append("zaznam.klic: malá písmena bez diakritiky, číslice a podtržítka")
             if z.get("prepis") is not None and not (isinstance(z["prepis"], dict) and z["prepis"].get("orig")):
                 ch.append("zaznam.prepis: {orig, cs}")
+            uc = z.get("ucastnici")
+            if not (isinstance(uc, list) and any(isinstance(x, dict) and "osoba" in x for x in uc)):
+                ch.append("zaznam.ucastnici: kdo v zápisu vystupuje a v jaké roli [{osoba, role}, {jmeno, role}] – aspoň jedna osoba z rodokmenu")
+            else:
+                for i, x in enumerate(uc):
+                    if not isinstance(x, dict) or x.get("role") not in ROLE:
+                        ch.append(f"zaznam.ucastnici[{i}].role: {', '.join(ROLE)}")
+                    elif "osoba" in x:
+                        over_osobu(x["osoba"], f"zaznam.ucastnici[{i}].osoba", zname, ch)
+                    elif not (isinstance(x.get("jmeno"), str) and x["jmeno"].strip()):
+                        ch.append(f"zaznam.ucastnici[{i}]: osoba (klíč), nebo jmeno (kdo v rodokmenu není)")
         if d.get("vysledek") != "nalezeno":
             ch.append("zaznam: nový zápis jen u výsledku nalezeno")
     idn = d.get("identita")
@@ -374,6 +390,22 @@ def over_rozhodnuti(d):
             ch.append("identita: {osoba, proc, vylouceno}")
         else:
             over_osobu(idn.get("osoba"), "identita.osoba", zname, ch)
+    for i, t in enumerate(d.get("tvrzeni") or []):
+        kde = f"tvrzeni[{i}]"
+        if not isinstance(t, dict) or t.get("typ") not in TYPY_TVRZENI:
+            ch.append(f"{kde}.typ: {', '.join(TYPY_TVRZENI)}")
+            continue
+        if t.get("jistota") not in JISTOTY:
+            ch.append(f"{kde}.jistota: {', '.join(JISTOTY)}")
+        if not (isinstance(t.get("osoby"), list) and t["osoby"]):
+            ch.append(f"{kde}.osoby: aspoň jedna osoba klíčem (vztah má dvě)")
+        else:
+            for j, o in enumerate(t["osoby"]):
+                over_osobu(o, f"{kde}.osoby[{j}]", zname, ch)
+        if t.get("typ") in ("rodic", "partner", "kmotr", "svedek", "totozny") and len(t.get("osoby") or []) < 2 and not t.get("text"):
+            ch.append(f"{kde}: vztah „{t['typ']}“ má dvě osoby (nebo druhou stranu popiš v text, když v rodokmenu není)")
+        if t.get("nahrazuje") is not None and not (isinstance(t["nahrazuje"], str) and re.fullmatch(r"T-\d{4}", t["nahrazuje"])):
+            ch.append(f"{kde}.nahrazuje: ID tvrzení ve tvaru T-0042")
     for i, n in enumerate(d.get("navazujici") or []):
         if not (isinstance(n, dict) and isinstance(n.get("text"), str) and n["text"].strip()):
             ch.append(f"navazujici[{i}]: {{text, os, typ}} – text otázky je povinný")

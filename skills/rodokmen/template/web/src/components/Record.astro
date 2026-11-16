@@ -13,8 +13,9 @@ const r = records[id];
       <div class="small">{r.summary}</div>
       <Cause cause={r.cause} />
       {showPeople && r.people.filter((s) => s !== exclude).length > 0 && (
-        <div class="small muted">Týká se: {r.people.filter((s) => s !== exclude).map((s, i) => <>{i > 0 && ', '}<PersonLink slug={s} /></>)}</div>
+        <div class="small muted">Týká se: {r.people.filter((s) => s !== exclude).map((s, i) => <>{i > 0 && ', '}<PersonLink slug={s} />{r.roles?.[s] && <> ({r.roles[s]})</>}</>)}</div>
       )}
+      {exclude && r.roles?.[exclude] && <div class="small muted">Role v zápisu: {r.roles[exclude]}</div>}
     </div>
     {r.img && (
       <a class="scan" href={r.full ? `/zdroje/${r.key}.jpg` : `/img/${r.key}.jpg`} target="_blank" rel="noopener">
