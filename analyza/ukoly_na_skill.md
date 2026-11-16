@@ -101,6 +101,17 @@ Kroky (každý s testem, který chybu vyvolá):
 4. **H4 kontroly:** jeden kontejner na rod, prameny po archivech, žádný nepotvrzený text na webu, omezené přístupy neprozradí skrytou
    osobu (navazuje na scénář 11).
 
+## Cesta badatele ke všem datům (16. 11. 2026)
+
+Příčina opakovaných podnětů „nemám nástroj“: hook povoloval jen cesty z naměřeného průchodu čtení → nález → deník, ne všechna data,
+která bádání mění (osoby, dokumenty, místa, otázky, STAV a další texty); dlouhé sezení navíc mělo definici agenta z doby startu.
+Opraveno najednou: tabulka „What you change and with which tool“ v definici badatele, `oprava.py` pro všechny strukturované
+položky, texty přímo, `stav.py` vypisuje platná oprávnění z hooku. Pravidlo pro další změny: nový druh dat = řádek v té tabulce,
+nástroj s kontrolou a povolení v hooku v jednom kroku, test v `test_hlidac_orchestratora.py`.
+
+Audit dat (`audit_dat.py`) zatím nekontroluje: místo mimo kraj farnosti, tvary příjmení napříč zápisy, otevřené otázky vyřešené
+zápisem, odkaz zápisu proti svazku, tvrzení doc bez druhého čtení; kontrola roku zápisu potřebuje potvrzené účastníky zápisů.
+
 ## Drobnosti mimo etapy (z poznámek projektu 15. 11. 2026)
 
 - Hook proti holému `rm` (alias `rm -iv` čeká na potvrzení a běh visí) a proti `find .` z kořene projektu (15 GB `pracovni/` na OneDrivu);
