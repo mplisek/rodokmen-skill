@@ -60,9 +60,12 @@ class JednotnostWeb(unittest.TestCase):
     def test_kontrola_webu_projde_na_vsech_verzich(self):
         for v in self.verze():
             site = str(self.site) if v.name == "vse" else str(v / "neexistuje.json")   # názvy rodů přístupu mají jiná data
-            r = subprocess.run([sys.executable, "-I", "-X", "utf8", str(TOOLS / "kontrola_webu.py"), str(v), "--site", site],
-                               capture_output=True, text=True, encoding="utf-8")
+            r = subprocess.run([sys.executable, "-I", "-X", "utf8", str(TOOLS / "kontrola_webu.py"), str(v), "--site", site,
+                                "--data", str(self.p / "data")], capture_output=True, text=True, encoding="utf-8")
             self.assertEqual(r.returncode, 0, f"{v.name}:\n{r.stdout[-1500:]}")
+            if v.name == "vse":   # E5: vztahy a účasti v zápisech jsou na skutečně sestaveném webu z obou stran
+                m = re.search(r"(\d+) vztahů a účastí v zápisech ověřeno z obou stran", r.stdout)
+                self.assertTrue(m and int(m.group(1)) > 50, r.stdout[-400:])
 
     def test_nazev_rodu_v_textech_je_znacka(self):
         n = self.rod["name"]

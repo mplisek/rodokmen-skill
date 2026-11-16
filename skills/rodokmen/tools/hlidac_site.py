@@ -183,6 +183,21 @@ def koren_projektu(cwd):
         d = nad
 
 
+def zmeny_od_brany(kor, znacka):
+    """Co se od zelené brány změnilo (data, zdroje webu, sestavený web); prázdný seznam = nic. Otisky počítá tools/brana.py projektu."""
+    import importlib.util
+    try:
+        spec = importlib.util.spec_from_file_location("_brana_projektu", os.path.join(kor, "tools", "brana.py"))
+        brana = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(brana)
+        brana.ROOT = kor
+        ted = brana.otisky()
+    except Exception:   # noqa: BLE001 – bez nástroje nejde čerstvost ověřit: raději bránu pustit znovu
+        return ["nástroj brány (tools/brana.py nejde načíst)"]
+    nazvy = {"otisk_dat": "data", "otisk_webu": "šablony a zdroje webu (web/src)", "otisk_dist": "sestavený web (web/dist)"}
+    return [n for k, n in nazvy.items() if znacka.get(k) != ted.get(k)]
+
+
 def brana_duvod(tool, cmd, cwd):
     """Důvod zamítnutí nasazení (testovacího i ostrého), dokud pracovni/brana.json není zelený pro verzi projektu; jinak None.
     Projekt bez .skill_verze a příkazy mimo projekt se nehlídají."""
@@ -200,8 +215,12 @@ def brana_duvod(tool, cmd, cwd):
         with open(os.path.join(kor, "pracovni", "brana.json"), encoding="utf-8-sig") as f:
             znacka = json.load(f)
         if znacka.get("vysledek") == "zelena" and znacka.get("verze") == verze:
-            return None
-        stav = f"výsledek brány je „{znacka.get('vysledek')}“ pro verzi {znacka.get('verze')}, projekt je ve verzi {verze}"
+            zmeny = zmeny_od_brany(kor, znacka)
+            if not zmeny:
+                return None
+            stav = "od zelené brány se změnilo: " + ", ".join(zmeny) + " (web by neodpovídal tomu, co brána zkontrolovala)"
+        else:
+            stav = f"výsledek brány je „{znacka.get('vysledek')}“ pro verzi {znacka.get('verze')}, projekt je ve verzi {verze}"
     except (OSError, ValueError, AttributeError):
         stav = "brána ještě neběžela (chybí nebo je poškozený pracovni/brana.json)"
     return (f"Hlídač nasazení: {stav}. Před nasazením (i testovacím) musí být brána zelená pro aktuální verzi:\n"

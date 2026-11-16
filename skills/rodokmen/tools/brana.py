@@ -56,6 +56,37 @@ def otisk_dat():
     return h.hexdigest()[:16]
 
 
+TEXTOVE = (".html", ".js", ".mjs", ".css", ".json", ".xml", ".txt", ".svg", ".astro", ".ts", ".md")
+
+
+def _otisk(koren, preskoc=(), jen_obsah_textu=False):
+    """Otisk stromu souborů: cesta a obsah; u binárních souborů sestaveného webu (obrázky) stačí cesta a velikost."""
+    h = hashlib.sha256()
+    if not os.path.isdir(koren):
+        return ""
+    for slozka, podslozky, soubory in os.walk(koren):
+        rel = os.path.relpath(slozka, koren).replace("\\", "/")
+        podslozky[:] = sorted(d for d in podslozky if (d if rel == "." else f"{rel}/{d}") not in preskoc and d != "node_modules")
+        for j in sorted(soubory):
+            cesta = os.path.join(slozka, j)
+            h.update((j if rel == "." else f"{rel}/{j}").encode("utf-8"))
+            if jen_obsah_textu and not j.lower().endswith(TEXTOVE):
+                h.update(str(os.path.getsize(cesta)).encode())
+                continue
+            with open(cesta, "rb") as f:
+                h.update(f.read())
+    return h.hexdigest()[:16]
+
+
+def otisky():
+    """Otisk dat, zdrojů webu a sestaveného webu: brána je zelená jen pro přesně tento stav. Hlídač nasazení je před nasazením spočítá
+    znovu; změna dat, šablony nebo dist po bráně znamená bránu pustit znovu (starý web by neodpovídal datům)."""
+    web = os.path.join(ROOT, "web")
+    return {"otisk_dat": otisk_dat(),
+            "otisk_webu": _otisk(os.path.join(web, "src"), preskoc=("data", "generated")),   # data/ a generated/ vyrábí export z data/
+            "otisk_dist": _otisk(os.path.join(web, "dist"), jen_obsah_textu=True)}
+
+
 def verze_webu():
     """Složky sestavených stránek: dist/_p/<přístup>/ (každý přístup zvlášť), jinak dist/."""
     dist = os.path.join(ROOT, "web", "dist")
@@ -92,7 +123,7 @@ def main(argv=None):
                       "vystup": "" if ok else poslednich(vystup, 25)})
     selhalo = [k for k in kroky if not k["ok"]]
     vysledek = "cervena" if selhalo else ("zelena" if weby else "nepokryto")
-    znacka = {"vysledek": vysledek, "verze": verze_projektu(), "otisk_dat": otisk_dat(), "cas": time.strftime("%Y-%m-%dT%H:%M:%S")}
+    znacka = {"vysledek": vysledek, "verze": verze_projektu(), **otisky(), "cas": time.strftime("%Y-%m-%dT%H:%M:%S")}
     os.makedirs(os.path.join(ROOT, "pracovni"), exist_ok=True)
     with open(os.path.join(ROOT, "pracovni", "brana.json"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(znacka, f, ensure_ascii=False, indent=1)

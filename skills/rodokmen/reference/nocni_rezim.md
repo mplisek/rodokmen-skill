@@ -158,6 +158,12 @@ Platí pro každé čtení, v noci i přes den. Cílem je stahovat z archivu jen
 - **Podnět pro skill:** `tools/podnet.py "co se stalo; co se čekalo; obchvat"` připíše technickou poznámku do `data/poznamky_pro_skill.md`;
   text s příjmením z rodokmenu nebo číslem úkolu odmítne.
 
+- **Kontrola webu z obou stran:** `tools/kontrola_webu.py` (součást brány) na sestaveném webu ověří, že rodič je na stránce dítěte a dítě
+  na stránce rodiče, partneři u sebe navzájem a každý zápis na stránce každého svého účastníka i účastník na stránce zápisu. Co má být vidět,
+  bere z dat projektu, ne z exportu. Vztah, který web neuvádí ani z jedné strany (skrytá osoba), je jen upozornění.
+- **Brána platí pro přesný stav:** `tools/brana.py` uloží otisk dat, šablon (`web/src`) a sestaveného webu (`web/dist`); hlídač nasazení ho
+  před každým nasazením přepočítá. Po změně dat, šablony nebo po novém sestavení se brána pouští znovu.
+
 **Dělení úkolu:** `fronta.py rozdel <id> --cast FRONTA "text" "DOD" os=… [typ=…] [cena=…]`; má-li rodič víc osob, každá část uvede své, mlčky je
 nedědí. Definici hotového mění `fronta.py uprav <id> --dod "…"`.
 

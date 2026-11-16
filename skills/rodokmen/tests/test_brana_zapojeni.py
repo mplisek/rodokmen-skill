@@ -30,7 +30,10 @@ class Zapojeni(unittest.TestCase):
         self._tmp.cleanup()
 
     def zapis(self, vysledek="zelena", verze=None):
-        self.znacka.write_text(json.dumps({"vysledek": vysledek, "verze": verze or self.verze, "otisk_dat": "x", "cas": "2026-01-01"}),
+        r = subprocess.run([sys.executable, "-I", "-X", "utf8", "-c",
+                            "import sys, json; sys.path.insert(0, 'tools'); import brana; print(json.dumps(brana.otisky()))"],
+                           cwd=self.p, capture_output=True, text=True, encoding="utf-8")
+        self.znacka.write_text(json.dumps({"vysledek": vysledek, "verze": verze or self.verze, **json.loads(r.stdout), "cas": "2026-01-01"}),
                                encoding="utf-8")
 
     def hlidac(self, prikaz, cwd=None, nastroj="Bash"):
@@ -63,6 +66,27 @@ class Zapojeni(unittest.TestCase):
         self.zapis()
         for p in NASAZENI:
             self.assertEqual(self.hlidac(p)[0], "allow", p)
+
+    def test_zmena_po_zelene_brane_nasazeni_zamitne(self):
+        """E5, scénář 12: zelená brána platí jen pro stav, který zkontrolovala – data, šablony i sestavený web."""
+        dist = self.p / "web" / "dist"
+        dist.mkdir(parents=True, exist_ok=True)
+        (dist / "index.html").write_text("<html><body>a</body></html>", encoding="utf-8")
+        sablona = self.p / "web" / "src" / "pages" / "index.astro"
+        for nazev, soubor, co in (("data", self.p / "data" / "pribeh.md", "data"), ("šablona", sablona, "web/src"),
+                                  ("dist", dist / "index.html", "web/dist")):
+            self.zapis()
+            self.assertEqual(self.hlidac("npm run nasadit")[0], "allow", nazev)
+            puvodni = soubor.read_bytes() if soubor.exists() else b""
+            soubor.write_bytes(puvodni + b" <!-- zmena -->")
+            rozhodnuti, duvod = self.hlidac("npm run nasadit")
+            self.assertEqual(rozhodnuti, "deny", nazev)
+            self.assertIn(co, duvod)
+            self.assertIn("brana.py", duvod)
+
+    def test_znacka_ze_starsi_brany_bez_otisku_nestaci(self):
+        self.znacka.write_text(json.dumps({"vysledek": "zelena", "verze": self.verze, "otisk_dat": "x", "cas": "2026-01-01"}), encoding="utf-8")
+        self.assertEqual(self.hlidac("npm run nasadit")[0], "deny")
 
     def test_ostatni_prikazy_se_pousti_i_bez_znacky(self):
         for p in JINE:
