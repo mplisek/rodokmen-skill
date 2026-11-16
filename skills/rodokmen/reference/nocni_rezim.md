@@ -135,6 +135,18 @@ Platí pro každé čtení, v noci i přes den. Cílem je stahovat z archivu jen
   Shodu vyhodnotí `tools/vysledek.py porovnej <úkol> <čtení>` po polích; při neshodě zůstávají oba přepisy a tvrzení je nejvýš `prob`.
 - **Souhrn pro řízení:** `tools/vysledek.py souhrn <úkol>` (stav, co chybí, nejistoty, kandidáti, rozsah, návrh, čerpání); přepis zůstává v souboru.
 
+- **Rozhodnutí a zápis:** řídicí agent sepíše rozhodnutí `pracovni/vysledky/<úkol>_rozhodnuti.json` (`rozhodnuti/1`: řádek deníku, případný nový
+  zápis s přepisem, zdůvodnění identity, navazující otázky, `dod_splneno`, `uzavrit`) a spustí `tools/zapis_vysledku.py <soubor>`. Jedno volání
+  zapíše deník (včetně úkolu, osob a přečtených snímků), zápis a přepis, stránky do mapy knihy, uzavře úkol a založí navazující úkoly: buď
+  všechno, nebo nic, a totéž rozhodnutí podruhé nic nezdvojí. Odmítne ověřený výsledek nebo nový zápis bez shodného druhého čtení, výsledek,
+  který neodpovídá stavu nálezu, uzavření bez splněné definice hotového a nález se jmenovcem bez zdůvodnění identity.
+- **Commit:** `tools/commit.py <úkol>` commitne přesně soubory toho zápisu na aktivní větvi (`--vetev` jinou odmítne), zpráva bez čísel úkolů;
+  změny front `tools/commit.py --soubory … --zprava "…"`. Nikdy nepushuje. Jednotný podpis lze dát do `rezim.json → commit_podpis`.
+- **Stav bez historie rozhovoru:** `tools/stav.py` vypíše větev, fronty, rozpočet, rozpracované úkoly s definicí hotového a dalším krokem
+  a přerušené zápisy. Jím začíná každé sezení; sezení jde kdykoli ukončit a začít nové.
+- **Podnět pro skill:** `tools/podnet.py "co se stalo; co se čekalo; obchvat"` připíše technickou poznámku do `data/poznamky_pro_skill.md`;
+  text s příjmením z rodokmenu nebo číslem úkolu odmítne.
+
 **Dělení úkolu:** `fronta.py rozdel <id> --cast FRONTA "text" "DOD" os=… [typ=…] [cena=…]`; má-li rodič víc osob, každá část uvede své, mlčky je
 nedědí. Definici hotového mění `fronta.py uprav <id> --dod "…"`.
 

@@ -52,7 +52,7 @@ class DefiniceAgentu(unittest.TestCase):
     def test_orchestrator_nezapisuje_a_nema_web(self):
         fm = frontmatter(self.texty["orchestrator"])
         nastroje = {n.strip() for n in re.split(r"\s*,\s*", re.sub(r"\([^)]*\)", "", fm["tools"]))}
-        self.assertFalse(nastroje & {"Edit", "Write", "WebFetch", "WebSearch", "PowerShell"}, nastroje)
+        self.assertFalse(nastroje & {"Edit", "WebFetch", "WebSearch", "PowerShell"}, nastroje)   # Write jen do pracovni/ (hlídá hook, E2)
         self.assertIn("Agent", nastroje)
         self.assertIn("Bash", nastroje)               # úzce hlídá hooks/hlidac_orchestratora.py
         povoleni = set(re.findall(r"Agent\(([^)]*)\)", fm["tools"]))
@@ -132,8 +132,12 @@ class DefiniceAgentu(unittest.TestCase):
 
     def test_orchestrator_zajistuje_commit_po_kazdem_overeni(self):
         o = self.texty["orchestrator"]
-        self.assertIn("rodokmen:committer", o)
+        self.assertIn("tools/commit.py", o)                             # E2: commit dělá nástroj, ne agent
+        self.assertNotIn("rodokmen:committer", o)
+        self.assertNotIn("rodokmen:fixer", o)                           # zápis dat dělá zapis_vysledku.py
+        self.assertIn("tools/zapis_vysledku.py", o)
         self.assertRegex(o, r"(?i)after (each|every) (completed )?verif")
+        self.assertIn("tools/stav.py", o)
         self.assertIn("git branch --show-current", o)                  # drží aktuální větev, nepřepíná ji
         self.assertRegex(o, r"(?i)never switch")
 

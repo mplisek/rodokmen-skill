@@ -61,7 +61,7 @@ class NocniRezimPravidla(unittest.TestCase):
             self.assertIn(s, self.t, s)
         repo = Path(__file__).resolve().parents[3]
         o = (repo / "agents/orchestrator.md").read_text(encoding="utf-8")
-        for s in ("--ukol", "--snimky", "fronta.py znovu"):
+        for s in ("zapis_vysledku.py", "fronta.py znovu"):   # metadata čtení do deníku zapisuje zapis_vysledku.py z nálezu (E2)
             self.assertIn(s, o, s)
 
     def test_rozpocet_a_identita_id_jsou_popsane(self):
@@ -82,7 +82,7 @@ class NocniRezimPravidla(unittest.TestCase):
         self.assertNotIn("`skill` (úprava skillu), `test`, `údržba`", self.t)             # typy zrušeny
         repo = Path(__file__).resolve().parents[3]
         o = (repo / "agents/orchestrator.md").read_text(encoding="utf-8")
-        for s in ("fronta.py cekajici", "odeslano", "poznamky_pro_skill.md"):
+        for s in ("fronta.py cekajici", "odeslano", "tools/podnet.py"):   # podněty pro skill zapisuje podnet.py do poznamky_pro_skill.md
             self.assertIn(s, o, s)
 
 

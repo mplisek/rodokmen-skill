@@ -6,7 +6,7 @@ Použití (z kořene projektu):
   python3 -I tools/vysledek.py over <soubor.json>        zkontroluje zadání, nález nebo ověření (podle pole "schema"); kód 1 a seznam chyb
   python3 -I tools/vysledek.py souhrn <U-0042|soubor>    krátký souhrn nálezu pro řídicího agenta (stav, co chybí, rozpory, rozsah, další krok)
   python3 -I tools/vysledek.py porovnej <U-0042> <čtení> porovná první čtení s ověřením naslepo po polích; kód 1 při neshodě
-  python3 -I tools/vysledek.py vzor zadani|nalez|overeni vyplněný příklad a výčty dovolených hodnot
+  python3 -I tools/vysledek.py vzor zadani|nalez|overeni|rozhodnuti   vyplněný příklad a výčty dovolených hodnot
   (souhrn a porovnej umí --json)
 
 Soubory: zadání `pracovni/zadani/<úkol>.json`, nález `pracovni/vysledky/<úkol>.json`, ověření `pracovni/vysledky/<úkol>_overeni_<čtení>.json`.
@@ -61,6 +61,18 @@ VZORY = {
         "doslova": {"datum": "17. Martii 1812", "dite": "Josephus", "otec": "Joannes Wzorny"},
         "nejistota": {"otec": "konec slova v hřbetu knihy"}, "necitelne": []},
 }
+VZORY["rozhodnuti"] = {
+    "schema": "rozhodnuti/1", "ukol": "U-0101", "vysledek": "nalezeno", "dod_splneno": True, "uzavrit": True, "dukaz": ["c1"], "model": "sonnet",
+    "denik": {"zdroj": "ARON, Lhota: kniha narozených 1800–1825, sn. 46", "hledano": "Křest Josefa Vzorného (88)",
+              "nalez": "Křest 17. 3. 1812 ve Lhotě čp. 5, rodiče Jan a Anna.", "rozsah": "snímky 44–47", "osoby": ["88"], "overeno": True},
+    "zaznam": {"klic": "lhota_krest_josef_vzorny_1812", "svazek": "0a1b2c3d", "snimek": 46, "druh": "N", "datum": "17. 3. 1812",
+               "nazev": "Křest Josefa Vzorného, Lhota čp. 5", "shrnuti": "Rodiče Jan Vzorný, chalupník, a Anna.", "odkaz": "https://…",
+               "prepis": {"orig": "17. Martii 1812 …", "cs": "17. března 1812 …"}},
+    "identita": {"osoba": "88", "proc": "jméno, rok, čp. 5 a povolání otce; jmenovec z čp. 12 má otce mlynáře", "vylouceno": ["josef-vzorny-1809"]},
+    "navazujici": [{"text": "Kdo byl kmotr Václav Ukázka?", "os": ["88"], "typ": "kmotr"}],
+    "hotovo": {"spotreba": "M"}}
+VYSLEDKY_DENIKU = ("nalezeno", "vyvráceno", "nenalezeno", "částečně", "nečitelné")
+DRUHY_ZAPISU = ("N", "O", "Z", "S")
 VYCTY = {"stav": STAVY, "stav_behu": STAVY_BEHU, "typ stránky": TYPY_STRAN, "kvalita": KVALITY, "role": ROLE}
 
 
@@ -321,8 +333,60 @@ def over_overeni(d):
     return ch
 
 
+def over_rozhodnuti(d):
+    """Tvar rozhodnutí řídicího agenta; souvislosti s nálezem a daty hlídá tools/zapis_vysledku.py."""
+    ch, zname, sv = [], zname_osoby(), svazky()
+    if not (isinstance(d.get("ukol"), str) and UKOL.fullmatch(d["ukol"])):
+        ch.append("ukol: ID úkolu ve tvaru U-0042")
+    if d.get("vysledek") not in VYSLEDKY_DENIKU:
+        ch.append(f"vysledek: {', '.join(VYSLEDKY_DENIKU)}")
+    for pole in ("dod_splneno", "uzavrit"):
+        if not isinstance(d.get(pole), bool):
+            ch.append(f"{pole}: true nebo false (rozhoduje řídicí agent, ne čtenář)")
+    dn = d.get("denik")
+    if not isinstance(dn, dict) or not all(isinstance(dn.get(k), str) and dn[k].strip() for k in ("zdroj", "hledano")):
+        ch.append("denik: {zdroj, hledano, nalez, rozsah, osoby, overeno} – zdroj a hledano jsou povinné")
+    else:
+        for i, o in enumerate(dn.get("osoby") or []):
+            over_osobu(o, f"denik.osoby[{i}]", zname, ch)
+        if not (dn.get("osoby") or []):
+            ch.append("denik.osoby: aspoň jedna osoba klíčem (koho se hledání týká)")
+    z = d.get("zaznam")
+    if z is not None:
+        if not isinstance(z, dict) or not all(isinstance(z.get(k), str) and z[k].strip() for k in ("klic", "datum", "nazev", "shrnuti")):
+            ch.append("zaznam: {klic, svazek, snimek, druh, datum, nazev, shrnuti, odkaz[, prepis]}")
+        else:
+            over_svazek(z.get("svazek"), "zaznam.svazek", sv, ch)
+            if not (isinstance(z.get("snimek"), int) and z["snimek"] >= 1):
+                ch.append("zaznam.snimek: číslo snímku")
+            if z.get("druh") not in DRUHY_ZAPISU:
+                ch.append(f"zaznam.druh: {', '.join(DRUHY_ZAPISU)}")
+            if not re.fullmatch(r"[a-z0-9_]+", z["klic"]):
+                ch.append("zaznam.klic: malá písmena bez diakritiky, číslice a podtržítka")
+            if z.get("prepis") is not None and not (isinstance(z["prepis"], dict) and z["prepis"].get("orig")):
+                ch.append("zaznam.prepis: {orig, cs}")
+        if d.get("vysledek") != "nalezeno":
+            ch.append("zaznam: nový zápis jen u výsledku nalezeno")
+    idn = d.get("identita")
+    if idn is not None:
+        if not isinstance(idn, dict):
+            ch.append("identita: {osoba, proc, vylouceno}")
+        else:
+            over_osobu(idn.get("osoba"), "identita.osoba", zname, ch)
+    for i, n in enumerate(d.get("navazujici") or []):
+        if not (isinstance(n, dict) and isinstance(n.get("text"), str) and n["text"].strip()):
+            ch.append(f"navazujici[{i}]: {{text, os, typ}} – text otázky je povinný")
+    if d.get("dukaz") is not None and not (isinstance(d["dukaz"], list) and all(isinstance(x, str) for x in d["dukaz"])):
+        ch.append("dukaz: seznam označení čtení z nálezu (c1, …)")
+    if d.get("zprava") is not None and (not isinstance(d["zprava"], str) or UKOL.search(d["zprava"])):
+        ch.append("zprava: text commitu bez čísla úkolu (co bylo ověřeno a kde)")
+    return ch
+
+
 def over(d):
     sch = str(d.get("schema") or "")
+    if sch == "rozhodnuti/1":
+        return over_rozhodnuti(d)
     if sch == "zadani/1":
         return over_zadani(d)
     if sch == "nalez/1":
@@ -330,7 +394,7 @@ def over(d):
         return over_nalez(d, nacti(z) if os.path.exists(z) else None)
     if sch == "overeni/1":
         return over_overeni(d)
-    return ["schema: zadani/1, nalez/1 nebo overeni/1 (vzor: vysledek.py vzor nalez)"]
+    return ["schema: zadani/1, nalez/1, overeni/1 nebo rozhodnuti/1 (vzor: vysledek.py vzor nalez)"]
 
 
 # ---------- souhrn a porovnání ----------

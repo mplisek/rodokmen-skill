@@ -24,8 +24,19 @@ def jmeno_agenta(typ):
     return typ.split(":")[-1] if isinstance(typ, str) else ""
 
 
-# Nástroje s textem v uvozovkách (otázka zadání, důvod rozšíření): nástroj → dovolené podpříkazy. Zapisují jen do pracovni/ a vstup si kontrolují.
-NASTROJE_ORCH = {"vysledek.py": {"over", "souhrn", "porovnej", "vzor"}, "zadani.py": {"novy", "rozsir", "ukaz"}}
+# Nástroje řídicího agenta: nástroj → podmínka na argumenty. Všechny si vstup kontrolují samy a zapisují jen validovaně (E1, E2):
+# fronty přes fronta.py, přijatý výsledek přes zapis_vysledku.py (vstup ze souboru v pracovni/), commit přes commit.py (nikdy push).
+FRONTA_ZAPIS = {"pridej", "smeruj", "rozdel", "zaparkuj", "selhani", "hotovo", "uprav", "presun", "odeslano", "znovu"}
+NASTROJE_ORCH = {
+    "vysledek.py": lambda a: a[:1] and a[0] in {"over", "souhrn", "porovnej", "vzor"},
+    "zadani.py": lambda a: a[:1] and a[0] in {"novy", "rozsir", "ukaz"},
+    "fronta.py": lambda a: a[:1] and a[0] in FRONTA_ZAPIS,
+    "zapis_vysledku.py": lambda a: a[:1] and a[0].replace("\\", "/").startswith("pracovni/") and ".." not in a[0],
+    "commit.py": lambda a: bool(a),
+    "stav.py": lambda a: True,
+    "spotreba.py": lambda a: True,
+    "podnet.py": lambda a: bool(a),
+}
 
 
 def orchestrator_nastroj(prikaz):
@@ -41,10 +52,20 @@ def orchestrator_nastroj(prikaz):
     i = 1
     while i < len(t) and t[i].startswith("-"):
         i += 2 if t[i] == "-X" else 1
-    if i + 1 >= len(t):
+    if i >= len(t):
         return False
     m = re.fullmatch(r"(?:\./)?tools/([a-z_]+\.py)", t[i])
-    return bool(m and t[i + 1] in NASTROJE_ORCH.get(m.group(1), ()))
+    return bool(m and m.group(1) in NASTROJE_ORCH and NASTROJE_ORCH[m.group(1)](t[i + 1:]))
+
+
+def orchestrator_soubor(cesta, cwd):
+    """Řídicí agent smí nástrojem Write psát jen pracovní soubory (rozhodnutí pro zapis_vysledku.py, zadání), nikdy data, nástroje ani web."""
+    import os
+    if not cesta:
+        return False
+    plna = os.path.normcase(os.path.abspath(os.path.join(cwd or os.getcwd(), cesta)))
+    koren = os.path.normcase(os.path.abspath(os.path.join(cwd or os.getcwd(), "pracovni")))
+    return plna.startswith(koren + os.sep)
 
 
 def orchestrator_smi(prikaz):
@@ -99,8 +120,12 @@ def committer_smi(prikaz):
 ORCH_DUVOD = ("Orchestrator guard: the orchestrator may run only read-only listings of `tools/fronta.py` "
               "(seznam, frontier, kontrola, rezim, dalsi, cekajici, plan, historie, kalibrace), `tools/kontext.py --osoba N --tema …`, `tools/mapa.py hledej|stav` and read-only git "
               "(`git branch --show-current`, `git status --short`, `git log --oneline -N`), "
-              "`tools/vysledek.py over|souhrn|porovnej|vzor` and `tools/zadani.py novy|rozsir|ukaz` (text arguments in quotes, no `$` or backticks), "
+              "`tools/vysledek.py over|souhrn|porovnej|vzor`, `tools/zadani.py novy|rozsir|ukaz`, the queue commands of `tools/fronta.py`, "
+              "`tools/zapis_vysledku.py pracovni/…json`, `tools/commit.py`, `tools/stav.py`, `tools/spotreba.py`, `tools/podnet.py` "
+              "(text arguments in quotes, no `$` or backticks), "
               "one command without pipes, redirects or chaining. Delegate everything else to a specialist agent.")
+SOUBOR_DUVOD = ("Orchestrator guard: you may write only working files under `pracovni/` (a decision for `tools/zapis_vysledku.py`, notes). "
+                "Data change only through the validating tools: `tools/zapis_vysledku.py`, `tools/fronta.py`, `tools/zadani.py`.")
 COMMIT_DUVOD = ("Committer guard: only `git status|diff|log`, `git branch --show-current`, `git add <exact files>` "
                 "(no -A, -u, `.`, `..`, absolute paths) and `git commit -m \"…\"` (no -a, --amend, --no-verify, --allow-empty), "
                 "one command, no chaining, pipes or redirects outside the quotes of the message, no `$` or backticks. Never push, switch branches, reset or merge.")
@@ -110,7 +135,16 @@ def main():
     try:
         data = json.load(sys.stdin)
         agent = jmeno_agenta(data.get("agent_type"))
-        if agent not in ("orchestrator", "committer") or data.get("tool_name") not in ("Bash", "PowerShell", "Monitor"):
+        nastroj = data.get("tool_name")
+        if agent in ("orchestrator", "badatel") and nastroj in ("Write", "Edit"):
+            if orchestrator_soubor(str((data.get("tool_input") or {}).get("file_path", "")), data.get("cwd")):
+                return 0
+            print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
+                                                     "permissionDecisionReason": SOUBOR_DUVOD}}))
+            return 0
+        if agent == "badatel":
+            agent = "orchestrator"
+        if agent not in ("orchestrator", "committer") or nastroj not in ("Bash", "PowerShell", "Monitor"):
             return 0
         prikaz = str((data.get("tool_input") or {}).get("command", "")).strip()
     except Exception:

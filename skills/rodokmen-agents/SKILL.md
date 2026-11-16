@@ -20,12 +20,12 @@ repeats a rule: read the rule by its id in `rules/`. The human-facing guide and 
 
 | Role | Does | Never does |
 |---|---|---|
-| orchestrator | decides: who, which model, which context, when it is done | writes, searches, builds |
+| orchestrator | decides: plan, assignment, identity, what is accepted, when it is done; records it with the validating tools | reads images, edits data by hand, changes rules or tools |
 | researcher, browser-reader | reads the assigned range and returns observations as a finding file | writes to `data/`, decides identity, closes the task |
 | verifier | second reading of one record without seeing the first answer; returns only its transcription | judges agreement, decides identity |
 | failure-analyst | turns a failure into a fix ticket | edits files |
-| fixer | applies the ticket to the listed files | decides scope |
-| committer | commits the files a ticket lists, on the branch it names, after a completed verification | pushes, switches branches, adds anything unlisted |
+| fixer | applies a fix ticket to the listed files of the skill | decides scope, writes research data |
+| committer | (kept for one version; research commits are done by `tools/commit.py`) commits the files a ticket lists | pushes, switches branches, adds anything unlisted |
 | test-runner, test-author | run tests and report; write tests from templates | analyse or change product code |
 
 ## Files agents exchange
@@ -41,8 +41,10 @@ repeats a rule: read the rule by its id in `rules/`. The human-facing guide and 
 
 ## Writing data
 
-All writes go through scripts: `zapis.py` (records, volumes, transcripts, documents), `denik.py` (research log), `otazky.py` (public
-questions). Queue files `data/ukoly_*.md` are internal and never reach the web. Hooks refuse manual writes to protected files and
+All writes go through scripts. An accepted reading is written by one call of `tools/zapis_vysledku.py` from the orchestrator's decision
+(`rozhodnuti/1`): diary row, record and transcription, book map, task closure, follow-ups, all or nothing; `tools/commit.py` commits exactly
+those files. Single items: `zapis.py` (records, volumes, transcripts, documents), `denik.py` (research log), `otazky.py` (public questions),
+`fronta.py` (queues), `podnet.py` (a technical note for the skill). Queue files `data/ukoly_*.md` are internal and never reach the web. Hooks refuse manual writes to protected files and
 tell you which script to use. Rule ids: R-WRITE, R-PROC.
 
 ## Rules by topic

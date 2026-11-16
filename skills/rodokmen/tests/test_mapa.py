@@ -165,9 +165,10 @@ class Dokumentace(unittest.TestCase):
             self.assertIn(s, r, s)
         self.assertIn("stranky", self.cti("agents/browser-reader.md"))
 
-    def test_orchestrator_pta_se_mapy_a_zapisuje_pres_fixera(self):
+    def test_orchestrator_pta_se_mapy_a_stranky_zapisuje_zapis_vysledku(self):
+        """E2: stránky z nálezu jdou do mapy jako součást zápisu výsledku, bez dalšího agenta."""
         o = self.cti("agents/orchestrator.md")
-        for s in ("tools/mapa.py hledej", "mapa.py zapis", "reading card", "fixer"):
+        for s in ("tools/mapa.py hledej", "mapa.py zapis", "zapis_vysledku.py", "never closes a search"):
             self.assertIn(s, o, s)
 
     def test_metodika(self):

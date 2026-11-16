@@ -33,7 +33,7 @@ class HlidacOrchestratora(unittest.TestCase):
 
     def test_ostatni_prikazy_orchestratora_se_zamitnou(self):
         for p in ("rm -rf data", "git push", "curl https://example.org", "cat data/osoby.py", "python3 tools/zapis.py x",
-                  "python3 tools/fronta.py pridej dotazy --text x", "python3 tools/fronta.py hotovo U-0001",
+                  "python3 tools/fronta.py smaz U-0001", "python3 tools/denik.py pridej --hledano x", "python3 tools/zapis.py zaznamy k x.json",
                   "python3 tools/fronta.py seznam; rm -rf data", "python3 tools/kontext.py --osoba 1 --tema a && git push",
                   "python3 tools/kontext.py --osoba 1 --tema a > data/x.json", "python3 tools/fronta.py seznam | tee data/x"):
             rozhodnuti, duvod = hook("orchestrator", p)
@@ -62,6 +62,37 @@ class HlidacOrchestratora(unittest.TestCase):
                   "python -I tools/zapis.py zaznam x.json", "python -I /tmp/tools/zadani.py novy U-0101", 'python -c "import os"',
                   "python -I tools/vysledek.py souhrn U-0101 | tee x", 'python -I tools/zadani.py novy U-0101 --otazka "neuzavřená'):
             self.assertEqual(hook("orchestrator", p)[0], "deny", p)
+
+    def test_orchestrator_zapisuje_jen_validujicimi_nastroji(self):
+        """E2 (rozhodnutí uživatele 15. 11. 2026): fronty, přijatý výsledek a commit bez dalšího agenta; vstup zápisu jen ze souboru v pracovni/."""
+        for p in ('python -I -X utf8 tools/fronta.py pridej vstup --text "křest osoby 88" --os 88', "python -I tools/fronta.py hotovo U-0001 --denik 12",
+                  'python -I tools/fronta.py smeruj U-0002 --do noc --dod "řádek deníku" --cena S',
+                  "python -I -X utf8 tools/zapis_vysledku.py pracovni/vysledky/U-0001_rozhodnuti.json --nanecisto",
+                  "python -I tools/commit.py U-0001 --vetev migrace-test", "python -I -X utf8 tools/stav.py", "python -I tools/spotreba.py ukol U-0001",
+                  'python -I tools/podnet.py "nástroj skončil chybou cesty; obchvat byl zadat --rules" --dopad cena'):
+            self.assertEqual(hook("orchestrator", p)[0], "allow", p)
+        for p in ("python -I tools/zapis_vysledku.py data/osoby.py", "python -I tools/zapis_vysledku.py pracovni/../data/x.json",
+                  "python -I tools/zapis_vysledku.py /tmp/x.json", "python -I tools/commit.py", "git commit -m x", "git push",
+                  "python -I tools/commit.py U-0001 && git push"):
+            self.assertEqual(hook("orchestrator", p)[0], "deny", p)
+        self.assertEqual(hook("rodokmen:badatel", "python -I tools/stav.py")[0], "allow")
+        self.assertEqual(hook("rodokmen:badatel", "rm -rf data")[0], "deny")
+
+    def test_orchestrator_pise_soubory_jen_do_pracovni(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as t:
+            def zapis(cesta, nastroj="Write", agent="orchestrator"):
+                data = {"tool_name": nastroj, "tool_input": {"file_path": cesta, "content": "x"}, "agent_type": agent, "cwd": t}
+                r = subprocess.run([sys.executable, "-I", "-X", "utf8", str(HOOK)], input=json.dumps(data), capture_output=True, text=True,
+                                   encoding="utf-8")
+                return "deny" if r.stdout.strip() else "allow"
+            self.assertEqual(zapis("pracovni/vysledky/U-0001_rozhodnuti.json"), "allow")
+            self.assertEqual(zapis(t + "/pracovni/x.json"), "allow")
+            for c in ("data/osoby.py", "data/denik.jsonl", "tools/fronta.py", "pracovni/../data/x.json", "web/src/x.astro", "../jinde.txt"):
+                self.assertEqual(zapis(c), "deny", c)
+                self.assertEqual(zapis(c, "Edit"), "deny", c)
+            self.assertEqual(zapis("data/osoby.py", agent="rodokmen:badatel"), "deny")
+            self.assertEqual(zapis("data/x.json", agent="fixer"), "allow")       # jiné agenty tenhle hlídač neřeší (data chrání hlidac_zapisu)
 
     def test_orchestrator_smi_cist_vetev_a_stav_gitu(self):
         for p in ("git branch --show-current", "git status --short", "git log --oneline -5", "git log --oneline"):
@@ -123,7 +154,7 @@ class HlidacOrchestratora(unittest.TestCase):
         text = json.dumps(pre)
         self.assertIn("hlidac_orchestratora.py", text)
         self.assertIn("CLAUDE_PLUGIN_ROOT", text)
-        self.assertTrue(any("Bash" in x.get("matcher", "") for x in pre))
+        self.assertTrue(any("Bash" in x.get("matcher", "") and "Write" in x.get("matcher", "") for x in pre))
 
 
 if __name__ == "__main__":
