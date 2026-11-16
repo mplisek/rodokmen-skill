@@ -93,6 +93,10 @@ def main(argv=None):
         sys.exit("ODMÍTNUTO: HEAD není na větvi; větev nepřepínám, rozhodne uživatel")
     if a.vetev and a.vetev != vetev:
         sys.exit(f"ODMÍTNUTO: aktivní větev je {vetev}, čekala se {a.vetev}; větev nepřepínám, rozhodne uživatel")
+    ignor = [x for x in git("check-ignore", "--", *soubory, check=False).stdout.splitlines() if x.strip()]
+    if ignor:   # git status je neukáže a commit by je tiše vynechal
+        sys.exit("ODMÍTNUTO, nic se necommitlo: git tyto soubory ignoruje (.gitignore): " + ", ".join(ignor)
+                 + "; o výjimce v .gitignore rozhodne uživatel, nebo patří do pracovni/")
     k = zmenene(soubory)
     if not k:
         print("není co commitovat: soubory jsou beze změny")

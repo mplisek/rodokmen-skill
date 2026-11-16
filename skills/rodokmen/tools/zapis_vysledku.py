@@ -87,12 +87,13 @@ def over(d):
             ch.append(f"dukaz: čtení {c} v nálezu není")
     if d["denik"].get("overeno") or d.get("zaznam"):
         for c in [c for c in dukaz if c in cteni]:
-            po = vysledek.cesta_overeni(ukol, c)
-            if not os.path.exists(po):
+            cesty = vysledek.cesty_overeni(ukol, c)
+            if not cesty:
+                po = vysledek.cesta_overeni(ukol, c)
                 ch.append(f"čtení {c} nemá ověření naslepo ({os.path.relpath(po, ROOT)}); bez něj nejde zapsat ověřený výsledek ani nový zápis")
                 continue
             prvni = next(x for x in nalez["cteni"] if x.get("id") == c)
-            rozdil = [r["pole"] for r in vysledek.porovnej(prvni, vysledek.nacti(po)) if r["vysledek"] != "shoda"]
+            rozdil = sorted({r["pole"] for po in cesty for r in vysledek.porovnej(prvni, vysledek.nacti(po)) if r["vysledek"] != "shoda"})
             if rozdil:
                 ch.append(f"čtení {c}: první a druhé čtení se neshodují v polích {', '.join(rozdil)}; zapiš výsledek bez „overeno“ a bez nového "
                           "zápisu (tvrzení nejvýš prob), nebo nech pole přečíst znovu")

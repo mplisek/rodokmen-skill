@@ -157,6 +157,15 @@ def cesta_overeni(ukol, cteni):
     return os.path.join(ROOT, "pracovni", "vysledky", f"{ukol}_overeni_{cteni}.json")
 
 
+def cesty_overeni(ukol, cteni):
+    """Všechna ověření naslepo jednoho čtení: `<úkol>_overeni_<čtení>.json` a dodatečná `<úkol>_overeni_<čtení>_<cokoli>.json`
+    (třetí čtení z lepších výřezů, silnějším modelem)."""
+    import glob
+    zaklad = cesta_overeni(ukol, cteni)
+    dalsi = sorted(glob.glob(os.path.join(ROOT, "pracovni", "vysledky", glob.escape(f"{ukol}_overeni_{cteni}_") + "*.json")))
+    return ([zaklad] if os.path.exists(zaklad) else []) + dalsi
+
+
 def nacti(path):
     try:
         with open(path, encoding="utf-8") as f:
@@ -512,18 +521,33 @@ def cmd_porovnej(a):
     prvni = next((c for c in nalez.get("cteni") or [] if isinstance(c, dict) and c.get("id") == a.cteni), None)
     if prvni is None:
         sys.exit(f"{a.ukol}: čtení {a.cteni} v nálezu není")
-    druhe = nacti(cesta_overeni(a.ukol, a.cteni))
-    ch = over_overeni(druhe)
-    if ch:
-        sys.exit("ověření má chyby (vysledek.py over):\n  " + "\n  ".join(ch))
-    radky = porovnej(prvni, druhe)
-    shoda = all(r["vysledek"] == "shoda" for r in radky)
+    cesty = cesty_overeni(a.ukol, a.cteni)
+    if not cesty:
+        sys.exit(f"{a.ukol}: čtení {a.cteni} nemá ověření ({os.path.relpath(cesta_overeni(a.ukol, a.cteni), ROOT)})")
+    overeni = []
+    for p in cesty:
+        druhe = nacti(p)
+        ch = over_overeni(druhe)
+        if ch:
+            sys.exit(f"{os.path.basename(p)} má chyby (vysledek.py over):\n  " + "\n  ".join(ch))
+        radky = porovnej(prvni, druhe)
+        overeni.append({"soubor": os.path.basename(p), "shoda": all(r["vysledek"] == "shoda" for r in radky), "pole": radky})
+    shoda = all(o["shoda"] for o in overeni)   # ověřené jen při shodě se všemi ověřeními; přehlasování by bylo změnou pravidla R-CONF
     if a.json:
-        print(json.dumps({"ukol": a.ukol, "cteni": a.cteni, "shoda": shoda, "pole": radky}, ensure_ascii=False, indent=1))
-    else:
+        print(json.dumps({"ukol": a.ukol, "cteni": a.cteni, "shoda": shoda, "pole": overeni[0]["pole"], "overeni": overeni},
+                         ensure_ascii=False, indent=1))
+        return 0 if shoda else 1
+    if len(overeni) == 1:
         print(f"{a.ukol} čtení {a.cteni}: " + ("obě čtení se shodují" if shoda else "čtení se NEshodují – tvrzení nejvýš prob, oba přepisy zůstávají"))
-        for r in radky:
-            print(f"  {r['pole']}: {r['vysledek']}" + ("" if r["vysledek"] == "shoda" else f" | první: {r['prvni']} | druhé: {r['druhe']}"))
+    else:
+        print(f"{a.ukol} čtení {a.cteni}: s prvním čtením se shoduje {sum(o['shoda'] for o in overeni)} z {len(overeni)} ověření"
+              + ("" if shoda else " – tvrzení nejvýš prob, všechny přepisy zůstávají"))
+    for o in overeni:
+        if len(overeni) > 1:
+            print(f"  {o['soubor'][len(a.ukol) + 9:-5]}: " + ("shoda" if o["shoda"] else "neshoda"))
+        for r in o["pole"]:
+            print(("    " if len(overeni) > 1 else "  ") + f"{r['pole']}: {r['vysledek']}"
+                  + ("" if r["vysledek"] == "shoda" else f" | první: {r['prvni']} | ověření: {r['druhe']}"))
     return 0 if shoda else 1
 
 

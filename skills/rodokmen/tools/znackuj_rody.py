@@ -11,6 +11,7 @@ Opakované spuštění nic nemění. Volá ho sestavení webu (scripts/build.mjs
 """
 import html as _html
 import os
+import re
 import sys
 
 for _s in (sys.stdout, sys.stderr):
@@ -26,6 +27,15 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def znacka(r):
     return (f'<span class="rod-znak"><span class="dot" style="background:{r["color"]}"></span>'
             f'<a href="/rod/{r["slug"]}/">{_html.escape(r["name"])}</a></span>')
+
+
+# Šablona (jména, domy, mapa) dává před název rodu vlastní kruh v barvě rodu; značka rodu má kruh taky. Kruh šablony těsně před
+# značkou stejné barvy se proto vynechá – jeden kruh na rod. Jiná barva znamená něco jiného a zůstane.
+DVOJI_KRUH = re.compile(r'<span class="dot" style="background:([^";]+)"[^>]*></span>(<span class="rod-znak"><span class="dot" style="background:\1"></span>)')
+
+
+def bez_dvojiho_kruhu(text):
+    return DVOJI_KRUH.sub(r"\2", text)
 
 
 def main():
@@ -55,7 +65,7 @@ def main():
     stranek = 0
     for cesta in rh.html_soubory(slozka):
         puvodni = rh.cti(cesta)
-        nove = rh.projdi(puvodni, nahrad)
+        nove = bez_dvojiho_kruhu(rh.projdi(puvodni, nahrad))
         if nove != puvodni:
             with open(cesta, "w", encoding="utf-8", newline="") as f:
                 f.write(nove)

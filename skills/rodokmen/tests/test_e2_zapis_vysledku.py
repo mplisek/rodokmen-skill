@@ -140,6 +140,17 @@ class Zapis(Projekt):
         self.assertIn("neshodují", r.stdout)
         self.assertIn("datum", r.stdout)
 
+    def test_dodatecne_overeni_v_rozporu_brani_zapisu_doc(self):
+        """Ověřené jen při shodě se všemi ověřeními téhož čtení (i `_overeni_c1_v2.json`); přehlasování by bylo změnou pravidla."""
+        rozh = self.priprav()
+        jine = json.loads(json.dumps(self.overeni))
+        jine["doslova"]["datum"] = "17. Maii 1812"
+        self.uloz(f"pracovni/vysledky/{U}_overeni_c1_v2.json", jine)
+        r = self.py("zapis_vysledku.py", rozh)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("datum", r.stdout)
+        self.assertEqual(self.denik(), [])
+
     def test_tri_nezdary_nejsou_nenalezeno_ani_hotovo(self):
         """Scénář 6: strop, nedostupný portál a nečitelný snímek."""
         self.rozh.pop("zaznam")
@@ -267,6 +278,23 @@ class StavACommit(Projekt):
         self.assertIn("mereni/v0_hodnoceni.json", self.git("show", "--name-only", "--format=%s", "HEAD").stdout)
         r = self.py("commit.py", "--soubory", "tools/stav.py", "--zprava", "x")
         self.assertNotEqual(r.returncode, 0)
+
+    def test_commit_ignorovany_soubor_odmitne_nahlas(self):
+        """Podnět z bádání 16. 11. 2026: soubor ignorovaný gitem commit.py tiše vynechal a hlásil méně souborů."""
+        self.git("init", "-q", "-b", "prace")
+        self.git("config", "user.email", "test@example.org")
+        self.git("config", "user.name", "Test")
+        (self.root / ".gitignore").write_text("pracovni/\n__pycache__/\nmereni/*.json\n", encoding="utf-8")
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", "start")
+        (self.root / "mereni").mkdir(exist_ok=True)
+        (self.root / "mereni" / "v0_prevod.json").write_text("{}\n", encoding="utf-8")
+        (self.root / "data" / "ukoly_vstup.md").write_text("# Vstup\n", encoding="utf-8")
+        r = self.py("commit.py", "--soubory", "data/ukoly_vstup.md,mereni/v0_prevod.json", "--zprava", "Převod poznání")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("ignor", r.stdout + r.stderr)
+        self.assertIn("mereni/v0_prevod.json", r.stdout + r.stderr)
+        self.assertEqual(self.git("log", "--oneline").stdout.count("\n"), 1)     # nic se necommitlo
 
 
 if __name__ == "__main__":

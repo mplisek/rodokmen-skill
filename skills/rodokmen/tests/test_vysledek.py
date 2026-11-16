@@ -5,6 +5,7 @@ import contextlib
 import copy
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -178,6 +179,22 @@ class OvereniAPorovnani(Zaklad):
         self.run_("porovnej", "U-0101", "c1", "--json")
         v = {r["pole"]: r["vysledek"] for r in json.loads(self.out)["pole"]}
         self.assertEqual((v["otec"], v["matka"]), ("nečitelné při druhém čtení", "jen druhé čtení"))
+
+    def test_vic_overeni_jednoho_cteni(self):
+        """Podnět z bádání 16. 11. 2026: třetí slepé čtení z lepších výřezů (`_overeni_c1_v2.json`) se porovná s prvním čtením taky."""
+        self.priprav(datum="17. Maii 1812")                                   # druhé čtení nesouhlasí
+        treti = json.loads(json.dumps(self.overeni))
+        treti["doslova"] = dict(self.nalez["cteni"][0]["doslova"])            # třetí čtení souhlasí s prvním ve všech polích
+        self.uloz("pracovni/vysledky/U-0101_overeni_c1_v2.json", treti)
+        self.assertEqual(self.run_("porovnej", "U-0101", "c1", "--json"), 1)    # ověřené jen při shodě všech ověření
+        d = json.loads(self.out)
+        self.assertEqual([o["soubor"] for o in d["overeni"]], ["U-0101_overeni_c1.json", "U-0101_overeni_c1_v2.json"])
+        self.assertEqual([o["shoda"] for o in d["overeni"]], [False, True])
+        self.run_("porovnej", "U-0101", "c1")
+        self.assertIn("c1_v2", self.out)
+        self.assertIn("1 z 2", self.out)
+        os.remove(self.root / "pracovni/vysledky/U-0101_overeni_c1.json")       # jen dodatečné ověření stačí, když je jediné
+        self.assertEqual(self.run_("porovnej", "U-0101", "c1"), 0)
 
 
 class Souhrn(Zaklad):

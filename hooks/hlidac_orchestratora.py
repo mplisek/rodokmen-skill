@@ -45,6 +45,9 @@ def ucastnici_smi(a):
 
 NASTROJE_ORCH = {
     "ucastnici.py": ucastnici_smi,
+    # oprava pole existujícího zápisu nebo místa (druh zápisu, obec na mapě): jen --sloucit ze souboru v pracovni/; přepis celé položky
+    # a mazání ne; přepisy čtení jdou jen přes zapis_vysledku.py
+    "zapis.py": lambda a: len(a) == 4 and a[0] in ("zaznamy", "mista") and v_pracovni(a[2]) and a[3] == "--sloucit",
     # svazek do katalogu ze souboru v pracovni/ (portály, kam skript nesmí); bez sítě, sám kontroluje pole
     "svazky.py": lambda a: (len(a) == 2 and a[0] == "ukaz") or (a[:1] == ["pridej"] and len(a) in (2, 3) and v_pracovni(a[1])
                                                                  and (len(a) == 2 or a[2] == "--doplnit")),
@@ -144,7 +147,7 @@ ORCH_DUVOD = ("Orchestrator guard: the orchestrator may run only read-only listi
               "(`git branch --show-current`, `git status --short`, `git log --oneline -N`), "
               "`tools/vysledek.py over|souhrn|porovnej|vzor`, `tools/zadani.py novy|rozsir|ukaz`, the queue commands of `tools/fronta.py`, "
               "`tools/zapis_vysledku.py pracovni/…json`, `tools/ucastnici.py stav|navrh|zapis pracovni/…json`, "
-              "`tools/svazky.py pridej pracovni/…json [--doplnit]|ukaz`, "
+              "`tools/svazky.py pridej pracovni/…json [--doplnit]|ukaz`, `tools/zapis.py zaznamy|mista <key> pracovni/…json --sloucit`, "
               "`tools/denik.py pridej --opravuje N …` (a correction row only), `tools/commit.py`, `tools/stav.py`, `tools/spotreba.py`, `tools/podnet.py` "
               "(text arguments in quotes, no `$` or backticks), "
               "one command without pipes, redirects or chaining. Delegate everything else to a specialist agent.")

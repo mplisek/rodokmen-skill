@@ -82,6 +82,21 @@ class Znackovani(Zaklad):
         self.znackuj()
         self.assertEqual(c.read_text(encoding="utf-8"), pred)
 
+    def test_kruh_sablony_pred_nazvem_se_nezdvoji(self):
+        """Podnět z bádání 16. 11. 2026: stránky jmen, domů a mapy mají před názvem rodu vlastní kruh rodu a značka přidala druhý."""
+        telo = ('<span class="chip" data-astro-cid-x><span class="dot" style="background:#EFB45F" data-astro-cid-x></span>Novákové</span>'
+                '<span><span class="dot" style="background:#5FA8EF"></span>Králové 4</span>'
+                '<span><span class="dot" style="background:#111111"></span>Novákové</span>')   # jiná barva = jiný význam, zůstane
+        c = self.stranka("e.html", telo)
+        self.znackuj()
+        t = c.read_text(encoding="utf-8")
+        self.assertEqual(t.count('style="background:#EFB45F"'), 2, t)                    # jeden kruh na každý ze dvou výskytů
+        self.assertIn(f'<span class="chip" data-astro-cid-x>{znacka()}</span>', t)
+        self.assertIn(f'<span>{znacka("kralove", "Králové", "#5FA8EF")} 4</span>', t)
+        self.assertIn(f'<span class="dot" style="background:#111111"></span>{znacka()}', t)
+        self.znackuj()
+        self.assertEqual(c.read_text(encoding="utf-8"), t)                                # opakování nic nemění
+
     def test_opakovani_nic_nemeni(self):
         c = self.stranka("d.html", "<p>Novákové</p><ul><li>Králové</li></ul>")
         self.znackuj()
