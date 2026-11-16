@@ -40,7 +40,8 @@ const choices = Object.values(people).filter((p) => p.fan)
 
   stage.addEventListener('wheel', (e) => {
     e.preventDefault();
-    fan.zoomAt(wheelFactor(e.deltaY, e.deltaMode), e.clientX, e.clientY);
+    // Kolečko zachovává aktuální střed pohledu i po posunutí nebo vyhledání předka (sarsonj/rodokmen-skill#197).
+    fan.zoomAt(wheelFactor(e.deltaY, e.deltaMode));
   }, { passive: false });
 
   // tažení = posun (myš i jeden prst), dva prsty = přiblížení
