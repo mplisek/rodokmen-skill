@@ -77,13 +77,16 @@ zhruba po roce 1910 často online nebudou (kniha pokračuje za rok 1926, lhůta 
    nejdřív v katolické matrice, syna v evangelické.
 
 ## Rekonstrukce rodiny a víc kandidátů stejného jména (`tools/rodiny.py`)
+
 Dvě situace, kde jeden zápis nestačí a pomůže skládat celou rodinu:
+
 - **Sourozenci předka.** Rodina měla často 8–15 dětí. Křty sourozenců doplní, co v zápisu předka chybí nebo je nečitelné:
   rodné příjmení matky, dům, prarodiče, řemeslo. Přes děti z druhého manželství se najde i druhá žena a její rodiče.
 - **Víc kandidátů.** V 18. století bývá v jedné vsi několik párů stejných jmen (skutečně: dva páry „Václav Novák ×
   Kateřina“ křtily děti ve stejných letech 1754–1764). Zápis „syn Václava a Kateřiny“ pak sedí na všechny. **Nevybírej toho, koho najdeš první.**
 
 Postup jako hledání do šířky (BFS). Případ je soubor `data/rodiny/<případ>.json` (stav výzkumu, patří do gitu; web ho nečte), vede ho `rodiny.py`:
+
 1. `rodiny.py novy <případ> "cíl" --osoba N`. Pak **kotvy**: zápisy, které o předkovi víme jistě (`zapis` s `"patri": "kotva"`).
 2. Každého kandidáta zapiš (`kandidat`). Kdo zjevně nesedí věkem nebo místem, hned `stav … vyloucen "důvod"`.
 3. **Vrstva 1**: vlastní zápisy kandidáta (křest, svatba, úmrtí). **Vrstva 2**: jeho děti a jejich kmotři, svědci na svatbě,
