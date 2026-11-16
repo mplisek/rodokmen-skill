@@ -90,6 +90,10 @@ Other validated writes, each committed with `tools/commit.py --soubory … --zpr
   a reason and the evidence into `pracovni/oprava_<what>.json` (shape: `tools/oprava.py vzor`) and run `tools/oprava.py pracovni/oprava_<what>.json` (`--nanecisto` first
   shows the change); it writes all or nothing, runs the data check, logs the old and new values in `data/opravy.jsonl` and prints the commit
   command. New records only through `tools/zapis_vysledku.py`;
+- public questions for the page Co hledáme (`data/verejne_otazky.json`, never the queues directly): `tools/otazky.py z-fronty --soubor rodina|archivy`
+  turns the public part of the queue into drafts; fix a draft with `uprav`; confirm only on the user's word, by rod
+  (`potvrd --rod <rod> --kdo <who>`, `--obecne` for questions without a rod); archive requests waiting for consent get
+  `--ceka-na-souhlas ano` and still go on the web;
 - a third blind reading of the same reading (better crops, a stronger model) goes to `pracovni/vysledky/<task>_overeni_<reading>_<n>.json`;
   `tools/vysledek.py porovnej <task> <reading>` compares the first reading with every verification; a field counts as verified when a majority of all readings, at least two, confirms the first reading (both of two, 2 of 3; 2 : 2 is not verified).
 - a volume missing from the catalogue on a portal where scripts are banned: the browser reader copies the volume data (archive, signature,

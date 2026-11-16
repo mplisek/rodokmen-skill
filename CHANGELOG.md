@@ -32,6 +32,12 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   (poloha, dotaz) ze souboru v `pracovni/` – s důvodem a dokladem, všechno nebo nic, po změně kontrola dat (nová chyba = vrácení),
   historie oprav v `data/opravy.jsonl` (chráněná před ručním zápisem).
   Tvar vstupu vypíše `oprava.py vzor`; nápověda `--help` povolených nástrojů už není blokovaná.
+- Web, stránka Co hledáme (ADR 0009): otázky pro rodinu a otevřené otázky v kontejnerech po rodech (Obecné první, jeden kontejner na
+  rod v barvě rodu), prameny v archivech podle archivů s barvou rodu u každé položky, i dotazy čekající na odeslání. Vrací se sekce,
+  které po převodu front na úkoly zmizely: `otazky.py z-fronty` převede veřejnou část front na nepotvrzené koncepty, `potvrd --rod`
+  je potvrdí po rodech; rod jde zadat i názvem.
+- Web: kontejner vázaný na rod má barvu rodu na celém webu (komponenta `RodBox`, zajímavosti v kontejneru svého rodu); kontrola webu
+  hlásí kontejner bez barvy rodu, obecný s barvou, víc kontejnerů téhož rodu na stránce Co hledáme a nepotvrzenou otázku na webu.
 - Porovnání čtení: kopie téhož ověření pod jiným názvem se nepočítá jako další čtení (upozorní na ni); u polí s datem se měsíc
   porovnává jako měsíc (`Februar` = `Febrr.`, `9ber` = `Novembris`), ne jako text.
 - Kontrakt čtení (E1, `analyza/navrh-optimalizace.md`): `tools/vysledek.py` (kontrola zadání, nálezu a ověření; souhrn nálezu; porovnání dvou čtení po polích) a `tools/zadani.py` (zadání pro čtenáře jako soubor, rozšíření rozsahu jako pokračování téhož úkolu). Odmítne osobu jménem, signaturu místo klíče svazku, čtení mimo rozsah, hledání v prameni, který roli nevede (`svazky.json → pokryva`), a „nenalezeno“ bez dočtení; dosažený strop, nedostupný portál a nečitelný snímek jsou vlastní stavy. Ověřovatel vrací jen vlastní přepis. `mapa.py zapis` zapíše buď všechny stránky, nebo žádnou, a signaturu převede na klíč svazku. `fronta.py rozdel` s vlastními osobami, typem a cenou části, `uprav --dod`.

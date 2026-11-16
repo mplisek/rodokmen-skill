@@ -121,6 +121,59 @@ class Znackovani(Zaklad):
         self.assertIn("&amp; " + znacka("kralove", "Králové", "#5FA8EF") + ",\nnebo ne.", t)
 
 
+class KontejnerRodu(Zaklad):
+    """Rozhodnutí uživatele 16. 11. 2026: kontejner vázaný na rod má barvu rodu (jako /rody/), obecný je neutrální; na stránce
+    Co hledáme jeden kontejner na rod v otázkách pro rodinu a v otevřených otázkách."""
+    def box(self, rod="novakove", barva="#EFB45F", obsah="x"):
+        styl = f' style="--c:{barva}"' if barva else ""
+        return f'<section class="card rod-box" data-rod="{rod}"{styl}>{obsah}</section>'
+
+    def test_spravny_kontejner_projde(self):
+        self.stranka("a.html", self.box() + self.box("kralove", "#5FA8EF") + self.box("", None)
+                     + '<section class="card rod-box" data-rod="obecne" data-astro-cid-x><div class="rod-box-hlava">Obecné</div></section>')   # komponenta RodBox
+        r = self.kontrola()
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_chyby_kontejneru(self):
+        for telo, stopa in ((self.box(barva=None), "bez barvy"), (self.box(barva="#000000"), "barva kontejneru"),
+                            (self.box("cizi"), "neznámého rodu"), (self.box("", "#EFB45F"), "obecný kontejner"),
+                            ('<div class="card rod-box">x</div>', "data-rod")):
+            with self.subTest(stopa=stopa):
+                self.stranka("b.html", telo)
+                r = self.kontrola()
+                self.assertNotEqual(r.returncode, 0, telo)
+                self.assertIn(stopa, r.stdout)
+
+    def test_hledame_jeden_kontejner_na_rod(self):
+        dvakrat = self.box() + self.box()
+        self.stranka("hledame/index.html", f'<section data-hledame="rodina">{dvakrat}</section>'
+                                           f'<section data-hledame="prameny">{dvakrat}</section>')
+        r = self.kontrola()
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("rodina", r.stdout)
+        self.assertNotIn("prameny", r.stdout)                                    # v pramenech je rod u každé položky
+        self.stranka("hledame/index.html", f'<section data-hledame="rodina">{self.box()}</section>'
+                                           f'<section data-hledame="otevrene">{self.box()}</section>')
+        self.assertEqual(self.kontrola().returncode, 0)
+
+
+class NepotvrzeneOtazky(Zaklad):
+    def test_nepotvrzeny_text_na_strance_je_chyba(self):
+        data = Path(self._tmp.name) / "data"
+        data.mkdir()
+        (data / "verejne_otazky.json").write_text(json.dumps({"otazky": [
+            {"id": 1, "druh": "rodina", "otazka": "Kde se narodil prapradědeček Josef?"},
+            {"id": 2, "druh": "rodina", "otazka": "Je doma oddací list babičky?", "potvrzeno": {"datum": "2026-11-16", "kdo": "u"}},
+        ]}, ensure_ascii=False), encoding="utf-8")
+        self.stranka("hledame/index.html", "<ul><li>Je doma oddací list babičky?</li></ul>")
+        r = self.nastroj("kontrola_webu.py", "--data", str(data), "--bez-vazeb")
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.stranka("hledame/index.html", "<ul><li>Je doma oddací list babičky?</li><li>Kde se narodil  prapradědeček Josef?</li></ul>")
+        r = self.nastroj("kontrola_webu.py", "--data", str(data), "--bez-vazeb")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("nepotvrzená", r.stdout)
+
+
 class KontrolaWebu(Zaklad):
     def test_cista_stranka_projde(self):
         self.stranka("index.html", f"<p>Rod {znacka()} žil v Holicích.</p>")

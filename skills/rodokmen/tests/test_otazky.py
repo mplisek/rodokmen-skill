@@ -127,5 +127,85 @@ class OtazkyTest(unittest.TestCase):
         self.assertNotEqual(self.otazky("z-ukolu", "U-9999", "--druh", "rodina").returncode, 0)   # neexistující úkol
 
 
+class CoHledame(OtazkyTest):
+    """Rozhodnutí uživatele 16. 11. 2026 (analyza/ukoly_na_skill.md, H2): rod jménem i číslem, převod veřejných částí front na
+    nepotvrzené koncepty, potvrzování po rodech, všechny dotazy na archivy včetně čekajících na souhlas s odesláním."""
+    RODINA = ("# Úkoly na rodinu\n\nÚvod pro rodinu.\n\n## Dokumenty doma\n- Je doma oddací list prababičky?\n\n"
+              "## Novákové\n- Kde se narodil Jan Novák (* 1850)?\n- Kdo byl kmotrem\n  jeho syna?\n\n"
+              "## Králové z Lhoty\n- Odkud přišla Anna Králová?\n\n"
+              "## U-0040 | P2 | os:3 | typ:rodina | stav:otevřeno\nInterní: zeptat se tety, snímek 45.\n")
+    ARCHIVY = ("# Dotazy na archivy\n\n## SOA Zámrsk\n- **Novákové – Jan Novák:** sňatek 1875, kniha není online.\n"
+               "- Pozemková kniha obce Lhota.\n\n## Matriční úřad Holice\n- **Králové – Anna Králová:** úmrtí 1950.\n\n"
+               "## U-0022 | P1 | os:9 | typ:archiv | stav:otevřeno\nŽádost jen po souhlasu, snímky 12–14.\n")
+
+    def setUp(self):
+        super().setUp()
+        (self.p / "data" / "osoby.py").write_text('LINES = {8: ("Novákové", "a"), 9: ("Králové z Lhoty", "b")}\n', encoding="utf-8")
+
+    def test_rod_jmenem_i_cislem(self):
+        for rod in ("8", "novakove", "Novákové"):
+            self.otazky("pridej", "--druh", "rodina", "--rod", rod, "--otazka", f"Otázka {rod}?")
+        self.assertEqual([z["rod"] for z in self.data()], [8, 8, 8])                # v datech číslo rodu (přístupy ho přečíslují)
+        self.assertEqual(self.otazky("pridej", "--druh", "rodina", "--rod", "kralove-z-lhoty", "--otazka", "X?").returncode, 0)
+        self.assertEqual(self.data()[-1]["rod"], 9)
+        r = self.otazky("pridej", "--druh", "rodina", "--rod", "neznami", "--otazka", "Y?")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("rod", (r.stdout + r.stderr).lower())
+
+    def test_proc_u_otazky_pro_rodinu_neni_povinne(self):
+        self.assertEqual(self.otazky("pridej", "--druh", "rodina", "--otazka", "Je doma rodný list?").returncode, 0)
+        self.assertEqual(self.otazky("potvrd", "1", "--kdo", "uživatel").returncode, 0)
+
+    def test_z_fronty_prevede_jen_verejnou_cast_a_je_idempotentni(self):
+        (self.p / "data" / "ukoly_na_rodinu.md").write_text(self.RODINA, encoding="utf-8")
+        (self.p / "data" / "ukoly_dotazy_na_archivy.md").write_text(self.ARCHIVY, encoding="utf-8")
+        pred = ((self.p / "data" / "ukoly_na_rodinu.md").read_bytes(), (self.p / "data" / "ukoly_dotazy_na_archivy.md").read_bytes())
+        for s in ("rodina", "archivy"):
+            r = self.otazky("z-fronty", "--soubor", s)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        z = self.data()
+        rod = [(x["druh"], x.get("rod"), x.get("oddil"), x.get("otazka") or x.get("co_hledat")) for x in z]
+        self.assertIn(("rodina", None, "Dokumenty doma", "Je doma oddací list prababičky?"), rod)
+        self.assertIn(("rodina", 8, None, "Kdo byl kmotrem jeho syna?"), rod)
+        self.assertIn(("rodina", 9, None, "Odkud přišla Anna Králová?"), rod)
+        pramen = next(x for x in z if x.get("osoba") == "Jan Novák")
+        self.assertEqual((pramen["archiv"], pramen["rod"], pramen["co_hledat"]), ("SOA Zámrsk", 8, "sňatek 1875, kniha není online."))
+        self.assertIn(("pramen", None, None, "Pozemková kniha obce Lhota."), rod)
+        self.assertFalse(any("U-00" in json.dumps(x, ensure_ascii=False) or "snímk" in json.dumps(x, ensure_ascii=False) for x in z))  # karty úkolů ne
+        self.assertTrue(all("potvrzeno" not in x and x.get("z_fronty") for x in z))
+        pocet = len(z)
+        self.otazky("z-fronty", "--soubor", "rodina")
+        self.assertEqual(len(self.data()), pocet)                                   # podruhé nic nového
+        self.assertEqual(((self.p / "data" / "ukoly_na_rodinu.md").read_bytes(),
+                          (self.p / "data" / "ukoly_dotazy_na_archivy.md").read_bytes()), pred)   # fronty se nemění
+
+    def test_potvrd_po_rodech_vse_nebo_nic(self):
+        self.otazky("pridej", "--druh", "rodina", "--rod", "8", "--otazka", "A?")
+        self.otazky("pridej", "--druh", "pramen", "--rod", "novakove", "--archiv", "SOA", "--co-hledat", "B")
+        self.otazky("pridej", "--druh", "rodina", "--rod", "9", "--otazka", "C?")
+        self.otazky("pridej", "--druh", "rodina", "--oddil", "Obecně", "--otazka", "D?")
+        r = self.otazky("potvrd", "--rod", "novakove", "--kdo", "uživatel")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(["potvrzeno" in z for z in self.data()], [True, True, False, False])
+        self.assertEqual(self.otazky("potvrd", "--obecne", "--kdo", "uživatel").returncode, 0)
+        self.assertEqual(["potvrzeno" in z for z in self.data()], [True, True, False, True])
+        d = json.loads(self.soubor.read_text(encoding="utf-8"))                      # koncept s vnitřním textem (např. z úkolu)
+        d["otazky"].append({"id": 9, "druh": "rodina", "rod": 9, "otazka": "Špatně (U-0013)?"})
+        self.soubor.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+        r = self.otazky("potvrd", "--rod", "9", "--kdo", "uživatel")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertEqual(["potvrzeno" in z for z in self.data()][2], False)            # ani dobrý záznam rodu 9 se nepotvrdil
+        self.assertNotEqual(self.otazky("potvrd", "--rod", "9").returncode, 0)          # bez --kdo ne
+
+    def test_ceka_na_souhlas_jde_na_web_s_priznakem(self):
+        self.otazky("pridej", "--druh", "pramen", "--archiv", "SOA", "--co-hledat", "B", "--ceka-na-souhlas", "ano")
+        self.assertTrue(self.data()[0]["ceka_na_souhlas"])
+        self.otazky("potvrd", "1", "--kdo", "uživatel")
+        md = self.otazky("vykresli", "--druh", "pramen").stdout
+        self.assertIn("<!-- ceka -->", md)
+        self.otazky("uprav", "1", "--ceka-na-souhlas", "ne")
+        self.assertNotIn("ceka_na_souhlas", self.data()[0])
+
+
 if __name__ == "__main__":
     unittest.main()

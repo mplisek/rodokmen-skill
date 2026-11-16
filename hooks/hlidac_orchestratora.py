@@ -43,7 +43,10 @@ def ucastnici_smi(a):
     return len(a) == 2 and a[0] == "zapis" and v_pracovni(a[1])
 
 
+OTAZKY = {"pridej", "uprav", "z-ukolu", "z-fronty", "potvrd", "smaz", "over", "vykresli"}
 NASTROJE_ORCH = {
+    # veřejné otázky (Co hledáme, ADR 0003, 0009): potvrzení jen se jménem toho, kdo potvrdil (uživatel)
+    "otazky.py": lambda a: a[:1] != [] and a[0] in OTAZKY and (a[0] != "potvrd" or "--kdo" in a),
     "ucastnici.py": ucastnici_smi,
     # oprava polí existujících zápisů a míst ze souboru v pracovni/: s důvodem a dokladem, vše nebo nic, kontrola dat, historie oprav
     "oprava.py": lambda a: a == ["vzor"] or (len(a) == 1 and v_pracovni(a[0])) or (len(a) == 2 and v_pracovni(a[0]) and a[1] == "--nanecisto"),
@@ -148,7 +151,7 @@ ORCH_DUVOD = ("Orchestrator guard: the orchestrator may run only read-only listi
               "(`git branch --show-current`, `git status --short`, `git log --oneline -N`), "
               "`tools/vysledek.py over|souhrn|porovnej|vzor`, `tools/zadani.py novy|rozsir|ukaz`, the queue commands of `tools/fronta.py`, "
               "`tools/zapis_vysledku.py pracovni/…json`, `tools/ucastnici.py stav|navrh|zapis pracovni/…json`, "
-              "`tools/svazky.py pridej pracovni/…json [--doplnit]|ukaz`, `tools/oprava.py pracovni/…json [--nanecisto]`, "
+              "`tools/svazky.py pridej pracovni/…json [--doplnit]|ukaz`, `tools/oprava.py pracovni/…json [--nanecisto]`, `tools/otazky.py pridej|uprav|z-ukolu|z-fronty|potvrd … --kdo …|smaz|over|vykresli`, "
               "`tools/denik.py pridej --opravuje N …` (a correction row only), `tools/commit.py`, `tools/stav.py`, `tools/spotreba.py`, `tools/podnet.py` "
               "(text arguments in quotes, no `$` or backticks), "
               "one command without pipes, redirects or chaining. Delegate everything else to a specialist agent.")

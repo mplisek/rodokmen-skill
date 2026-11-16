@@ -70,6 +70,38 @@ class Ukazka(unittest.TestCase):
                                             '/rod/kucerovi/">Kučerovi')]
         self.assertEqual(poradi, sorted(poradi))
 
+    def test_struktura_stranky_po_rodech_a_archivech(self):
+        """Rozhodnutí uživatele 16. 11. 2026: otázky pro rodinu a otevřené otázky jeden kontejner na rod (Obecné první, pak rody
+        podle čísla), prameny podle archivů s rodem u položky."""
+        spust(self.p, "export_web.py")
+        site = json.loads((self.p / "web" / "src" / "data" / "site.json").read_text(encoding="utf-8"))
+        h = site["hledame"]
+        poradi = {s: l["k"] for s, l in site["lines"].items()}
+        for cast in ("rodina", "otevrene"):
+            rody = [c["rod"] for c in h[cast]]
+            self.assertTrue(rody, cast)
+            self.assertEqual(len(rody), len(set(rody)), cast)                        # jeden kontejner na rod
+            if None in rody:
+                self.assertEqual(rody[0], None, cast)                                # Obecné první
+            ciselne = [poradi[r] for r in rody if r is not None]
+            self.assertEqual(ciselne, sorted(ciselne), cast)
+        obecne = h["rodina"][0]
+        self.assertIsNone(obecne["rod"])
+        self.assertIn("Dokumenty doma", [s["nadpis"] for s in obecne["skupiny"]])
+        self.assertTrue(all(isinstance(p, str) and p for c in h["rodina"] for s in c["skupiny"] for p in s["polozky"]))
+        self.assertTrue(h["prameny"])
+        self.assertTrue(all(a["archiv"] and a["polozky"] for a in h["prameny"]))
+        self.assertTrue(any(p["rod"] in poradi for a in h["prameny"] for p in a["polozky"]))
+        self.assertFalse(any("<!--" in p["html"] for a in h["prameny"] for p in a["polozky"]))
+
+    def test_zajimavosti_v_kontejneru_rodu(self):
+        spust(self.p, "export_web.py")
+        site = json.loads((self.p / "web" / "src" / "data" / "site.json").read_text(encoding="utf-8"))
+        md = (self.p / "web" / "src" / "generated" / "zajimavosti.md").read_text(encoding="utf-8")
+        barva = site["lines"]["novakove"]["color"]
+        self.assertIn(f'<div class="card rod-box" data-rod="novakove" style="--c:{barva}">', md)
+        self.assertEqual(md.count('class="card rod-box"'), md.count("\n## ") + md.startswith("## "))   # každá zajímavost v kontejneru
+
     def test_kontrola_hlida_tvar(self):
         d = self.p / "data"
         puvodni = {f: (d / f).read_text(encoding="utf-8") for f in ("otazky_pro_rodinu.md", "archivni_dotazy.md", "osoby.py")}

@@ -37,6 +37,45 @@ ZNACKA = re.compile(r'<span class="rod-znak"><span class="dot" style="background
 NADPIS = re.compile(r"<h([23])\b[^>]*>(.*?)</h\1>", re.S | re.I)
 
 
+KONTEJNER = re.compile(r'<[a-z]+\b[^>]*\bclass="(?:[^"]*\s)?rod-box(?:\s[^"]*)?"[^>]*>', re.I)   # přesně třída rod-box, ne rod-box-hlava
+CAST_HLEDAME = re.compile(r'data-hledame="([a-z]+)"')
+DATA_ROD = re.compile(r'\bdata-rod(?:="([^"]*)")?(?=[\s/>])')
+
+
+def kontroluj_kontejnery(html, jmeno, podle_slugu, chyby):
+    """Kontejner vázaný na rod (class rod-box, data-rod=<slug>) má barvu rodu (--c), obecný (data-rod="") žádnou; na stránce Co hledáme
+    má každý rod v otázkách pro rodinu a v otevřených otázkách jen jeden kontejner (rozhodnutí uživatele 16. 11. 2026)."""
+    for m in KONTEJNER.finditer(html):
+        tag = m.group(0)
+        rod = DATA_ROD.search(tag)
+        barva = re.search(r"--c:\s*([^;\"]+)", tag)
+        if not rod:
+            chyby.append(f"{jmeno}: kontejner rodu bez data-rod (obecný má data-rod=\"\")")
+            continue
+        if rod.group(1) in (None, "", "obecne"):   # obecný: data-rod="obecne" (komponenta), "" (Markdown) nebo holý atribut
+            if barva:
+                chyby.append(f"{jmeno}: obecný kontejner má barvu rodu {barva.group(1).strip()}")
+            continue
+        if podle_slugu is None:
+            continue
+        r = podle_slugu.get(rod.group(1))
+        if not r:
+            chyby.append(f"{jmeno}: kontejner neznámého rodu {rod.group(1)}")
+        elif not barva:
+            chyby.append(f"{jmeno}: kontejner rodu {r['name']} je bez barvy rodu")
+        elif barva.group(1).strip().lower() != r["color"].lower():
+            chyby.append(f"{jmeno}: barva kontejneru rodu {r['name']} je {barva.group(1).strip()}, rod má {r['color']}")
+    casti = list(CAST_HLEDAME.finditer(html))
+    for i, c in enumerate(casti):
+        if c.group(1) not in ("rodina", "otevrene"):
+            continue
+        usek = html[c.end():casti[i + 1].start() if i + 1 < len(casti) else len(html)]
+        rody = [DATA_ROD.search(t.group(0)) for t in KONTEJNER.finditer(usek)]
+        rody = ["" if x.group(1) in (None, "obecne") else x.group(1) for x in rody if x]
+        for r in sorted({x for x in rody if rody.count(x) > 1}):
+            chyby.append(f"{jmeno}: v části {c.group(1)} má rod {r or 'Obecné'} víc kontejnerů (má být jeden)")
+
+
 def kontroluj(cesta, rody, rx, podle_slugu, chyby, upozorneni):
     html = rh.cti(cesta)
     jmeno = os.path.relpath(cesta)
@@ -60,6 +99,7 @@ def kontroluj(cesta, rody, rx, podle_slugu, chyby, upozorneni):
         if k2 < k1:
             chyby.append(f"{jmeno}: pořadí rodů v nadpisech: {n2} (č. {k2}) je za {n1} (č. {k1})")
             break
+    kontroluj_kontejnery(html, jmeno, podle_slugu if rody else None, chyby)
     texty = []
     rh.projdi(html, lambda t: texty.append(t) or t, skip=rh.SKIP_JEN_KOD, preskoc_znacku=False)
     text = " ".join(texty)
@@ -203,6 +243,32 @@ def kontroluj_vazby(slozka, site_data, data, chyby, upozorneni):
     return n
 
 
+def kontroluj_nepotvrzene(slozka, data, chyby):
+    """Na stránce Co hledáme nesmí být text veřejné otázky, kterou uživatel nepotvrdil (ADR 0003, 0009). Očekávání z dat projektu."""
+    import json
+    p = os.path.join(data, "verejne_otazky.json")
+    try:
+        with open(p, encoding="utf-8-sig") as f:
+            zaznamy = json.load(f).get("otazky") or []
+    except (OSError, ValueError, AttributeError):
+        return
+    norm = lambda s: " ".join(str(s).split()).casefold()
+    tajne = [(z.get("id"), norm(z.get("otazka") or z.get("co_hledat") or "")) for z in zaznamy
+             if isinstance(z, dict) and "potvrzeno" not in z]
+    tajne = [(i, t) for i, t in tajne if len(t) >= 12]
+    if not tajne:
+        return
+    for cesta in rh.html_soubory(slozka):
+        if os.path.basename(os.path.dirname(cesta)) != "hledame":
+            continue
+        texty = []
+        rh.projdi(rh.cti(cesta), lambda t: texty.append(t) or t, skip=rh.SKIP_JEN_KOD, preskoc_znacku=False)
+        text = norm(" ".join(texty))
+        for i, t in tajne:
+            if t in text:
+                chyby.append(f"{os.path.relpath(cesta)}: nepotvrzená veřejná otázka {i} je na webu (otazky.py potvrd)")
+
+
 def main():
     args = sys.argv[1:]
     if not args or args[0] in ("-h", "--help"):
@@ -218,6 +284,8 @@ def main():
     for cesta in rh.html_soubory(slozka):
         n += 1
         kontroluj(cesta, rody, rx, podle_slugu, chyby, upozorneni)
+    data_dir = args[args.index("--data") + 1] if "--data" in args else os.path.join(ROOT, "data")
+    kontroluj_nepotvrzene(slozka, data_dir, chyby)
     vazeb = None
     if os.path.exists(site) and "--bez-vazeb" not in args:
         import json

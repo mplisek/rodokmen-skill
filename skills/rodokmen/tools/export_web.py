@@ -1309,13 +1309,13 @@ def main():
             if rod_radek:
                 zakl += [rody_spravce[x]["k"] for x in re.findall(r"/rod/([^/)\s]+)", rod_radek.group(1)) if x in rody_spravce]
             if not zakl and not rod_radek:
-                out += o
+                out += kontejner_rodu(o, [])
                 continue
             if not zakl:   # řádek Rod: bez platného odkazu na rod (překlep, chybí odkaz)
                 print(f"POZOR: zajímavost „{o.splitlines()[0][3:].strip()}“: řádek Rod: neodkazuje na rod (/rod/<slug>/ "
                       "z LINES)" + (" – v přístupu se neukáže" if prevod is not None else ""))
                 if prevod is None:
-                    out += o
+                    out += kontejner_rodu(o, [])
                 continue
             vidi, rr = rody_zakladatelu(zakl)
             if not vidi:
@@ -1326,8 +1326,78 @@ def main():
             elif znaky:
                 hlava, _, telo = o.partition("\n")
                 o = f"{hlava}\n\n{znaky}\n{telo}"
-            out += o
+            out += kontejner_rodu(o, rr)
         return out
+
+    def kontejner_rodu(md, rr):
+        """Oddíl Markdownu v kontejneru rodu (barva rodu jako na /rody/); víc rodů nebo žádný = obecný (neutrální) kontejner.
+        Prázdné řádky kolem obsahu: Markdown uvnitř HTML bloku se vykreslí."""
+        l = rod_k.get(rr[0]) if len(rr) == 1 else None
+        hlava = (f'<div class="card rod-box" data-rod="{l["slug"]}" style="--c:{l["color"]}">' if l
+                 else '<div class="card rod-box" data-rod="">')
+        return f"{hlava}\n\n{md.strip()}\n\n</div>\n\n"
+
+    ZNAK_ODKAZ = re.compile(r'<span class="rod-znak">.*?href="/rod/([^/"]+)/?".*?</a></span>', re.S)
+
+    def md_radek(t):
+        """Odrážka otázky → krátké HTML: odkazy a tučné písmo, značky rodů zůstanou; komentáře pryč."""
+        t = strip_comments(prepis_odkazy_rodu(t)).strip()
+        t = re.sub(r"^\s{0,3}[-*]\s+", "", t)
+        out = []
+        for i, c in enumerate(re.split(r'(<span class="rod-znak">.*?</a></span>)', t, flags=re.S)):
+            if i % 2:
+                out.append(c)
+                continue
+            c = html.escape(c, quote=False)
+            c = re.sub(r"\[([^\]]+)\]\(((?:/|https://)[^)\s]*)\)", lambda m: f'<a href="{html.escape(m.group(2))}">{m.group(1)}</a>', c)
+            out.append(re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", c))
+        return " ".join("".join(out).split())
+
+    def hledame_struktura(md_rodina, md_prameny, issues):
+        """Stránka Co hledáme (rozhodnutí uživatele 16. 11. 2026): otázky pro rodinu a otevřené otázky jako kontejnery po rodech
+        (Obecné první, pak rody podle čísla, jeden kontejner na rod), prameny jako archivy s rodem u položky. Vstup je Markdown
+        už filtrovaný podle přístupu (filtr_oddilu), takže přístup vidí jen své rody."""
+        poradi = lambda r: -1 if r is None else lines[r]["k"]
+        rodina = {}
+        for o in oddily_md(md_rodina)[1]:
+            hlava, _, telo = o.partition("\n")
+            z = ZNAK_ODKAZ.search(hlava)
+            rod = z.group(1) if z and z.group(1) in lines else None
+            polozky = [md_radek(b) for druh, b in polozky_oddilu(telo) if druh == "odrazka" and md_radek(b)]
+            if not polozky:
+                continue
+            c = rodina.setdefault(rod, {"rod": rod, "skupiny": []})
+            nadpis = None if rod else strip_comments(hlava[3:]).strip()
+            skup = next((s for s in c["skupiny"] if s["nadpis"] == nadpis), None)
+            if skup is None:
+                c["skupiny"].append({"nadpis": nadpis, "polozky": polozky})
+            else:
+                skup["polozky"] += polozky
+        prameny = []
+        for o in oddily_md(md_prameny)[1]:
+            hlava, _, telo = o.partition("\n")
+            polozky = []
+            for druh, b in polozky_oddilu(telo):
+                if druh != "odrazka" or not md_radek(b):
+                    continue
+                zakl = zakladatele_v_textu(b)
+                rr = rody_zakladatelu(zakl)[1] if zakl else []
+                rod = rod_k[rr[0]]["slug"] if rr and rr[0] in rod_k else None
+                if rod is None and not zakl:   # starší tvar bez <!-- rody -->: rod z předpony „**Rod – osoba:**“
+                    m = re.match(r"\s*[-*]\s+\*\*(.+?)(?:\s+–\s+.*?)?:\*\*", b)
+                    l = rod_nadpisu(m.group(1), lines) if m else None
+                    rod = l["slug"] if l else None
+                polozky.append({"rod": rod, "html": md_radek(b), "ceka": "<!-- ceka -->" in b})
+            if polozky:
+                prameny.append({"archiv": strip_comments(hlava[3:]).strip(), "polozky": polozky})
+        otevrene = {}
+        for i in issues:
+            if i.get("stav") == "vyřešeno":
+                continue
+            rod = i.get("rod") if i.get("rod") in lines else None
+            otevrene.setdefault(rod, {"rod": rod, "polozky": []})["polozky"].append(i)
+        return {"rodina": sorted(rodina.values(), key=lambda c: poradi(c["rod"])), "prameny": prameny,
+                "otevrene": sorted(otevrene.values(), key=lambda c: poradi(c["rod"]))}
 
     def filtr_oddilu(md, razeni_rodu):
         """Otázky pro rodinu / prameny: oddíl „## <rod správce>“ jen přístupu se zakladatelem v přímé linii (nadpis = rod
@@ -1554,7 +1624,7 @@ def main():
                       for d in docs_cfg if os.path.exists(os.path.join(VYREZY, d["img"] + ".jpg"))],
                 timeline=timeline_data(P, SAME, slugs, people, line_of, {k for k in skryti_p if k in slugs}))
 
-    generovane = {}
+    generovane, hledame_md = {}, {}
     # Zdroje textů pro web (ADR 0002, 0003): deník z data/denik.jsonl a veřejné otázky z data/verejne_otazky.json; dokud nejsou,
     # platí dosavadní soubory (zpětná kompatibilita do migrace). Fronty úkolů (data/ukoly_*.md) se sem NIKDY nečtou.
     import denik as denik_mod
@@ -1591,9 +1661,12 @@ def main():
             text = filtr_oddilu(text, dst == "otazky.md")
         elif not texty:
             text = ""
+        if dst in ("otazky.md", "dotazy.md"):
+            hledame_md[dst] = text   # filtrovaný podle přístupu, ještě s komentáři <!-- rody --> a <!-- ceka -->
         text = hvezdicky_narozeni(strip_comments(prepis_odkazy_rodu(text)))
         write(os.path.join(gen_dir, dst), text)
         generovane[dst] = bool(text.strip())
+    site["hledame"] = hledame_struktura(hledame_md.get("otazky.md", ""), hledame_md.get("dotazy.md", ""), site["issues"])
     site["stranky"] = stranky_s_daty(site, generovane, texty)
     write(os.path.join(WEB, "src", "data", "site.json"), json.dumps(site, ensure_ascii=False, indent=1))
     shutil.rmtree(os.path.join(gen_dir, "pribehy"), ignore_errors=True)

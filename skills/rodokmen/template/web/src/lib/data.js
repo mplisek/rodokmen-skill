@@ -9,6 +9,7 @@ export const others = site.others ?? [];
 // přístup (export_web.py): id, název, výchozí osoby, práva; stránky s daty (menu ukáže jen je)
 export const pristup = site.pristup ?? { id: 'vse', koreny: [site.root], prava: { soukrome: true, texty: true, poznamky: !!config.poznamky } };
 export const stranky = site.stranky ?? null;
+export const hledame = site.hledame ?? { rodina: [], prameny: [], otevrene: [] };
 /** Počet rodů slovem pro nadpisy („Osm rodů“). */
 export const linesTitle = (n) => (['Žádný rod', 'Jeden rod', 'Dva rody', 'Tři rody', 'Čtyři rody', 'Pět rodů', 'Šest rodů', 'Sedm rodů', 'Osm rodů'][n] ?? `${n} rodů`);
 export const root = people[site.root];
