@@ -39,7 +39,8 @@ Popis je v CHANGELOG (Nepublikováno) a v `reference/nocni_rezim.md`.
 
 Do projektu se z toho zatím zkopírovalo jen E0 a `spotreba.py`. Zkušební měřicí běh `mereni-v0` proběhl 16. 11. 2026
 (`analyza/mereni-v0-2026-11-16.md`: 7 837 tis. ekv, stav 9 z 11 případů podle očekávání; přesnost čeká na hodnocení bádáním).
-Nástroje E1–E6 tím mohou do projektu, až to uživatel schválí.
+Nástroje E1–E6 uživatel schválil a 16. 11. 2026 jsou zkopírované do projektu; brána zelená, kontrola webu ověřila přes tisíc vztahů
+z obou stran. Další měření `mereni-v1` až po dokončení sady bádáním a se stejnými modely rolí jako v `mereni-v0`.
 
 ## Otevřené po E0–E6
 
