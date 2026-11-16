@@ -49,11 +49,17 @@ P = {
   `fam` od rodiny (i strom, který si rodina vede sama, např. GEDCOM z jejího MyHeritage), `mh` cizí strom z internetu, `unk`.
 - `vyz` (volitelné) – krátký popis, proč je předek významný (farář, starosta, legionář…); jde na stránku „Osobnosti“ nahoru.
   Bez něj stránka vybírá osobnosti sama podle slov ve faktech (`tools/osobnosti.py`).
+- Data v `y` a ve faktech čtou všechny kontroly stejně (`tools/datumy.py`, zkouška: `datumy.py "* asi 1760–64, † 1814"`):
+  `14. 2. 1890`, `3/1867`, `1890`, `asi 1720` (±5 let), `před 1740`, `po 1921`, `mezi 1700 a 1710`, `1805/06`, `1850 (?)`.
+  V `y` značka `*` nebo `†` říká, že rozmezí je jedno datum (`"* asi 1620–1630"` = narozen 1620–1630, ne zemřel 1630);
+  bez značky je pomlčka mezi narozením a úmrtím (`"1720–85"`). Za narození se bere i fakt `pokřtěn 4. 12. 1786`, za úmrtí
+  `pohřben …`. `kontrola.py` podle toho hlídá časovou návaznost (`tools/chronologie.py`: otec zemřel dřív, než se dítě
+  mohlo narodit, matce by bylo 12 let…); hlásí se jen rozpor, který platí pro všechna možná data.
 - `overeno` (nepovinné) – neobvyklý údaj, který jsi ověřil(a), a varování časové návaznosti u téže osoby
   (u pravidel o rodičích a dítěti u dítěte) pak zmizí z `kontrola.py` i z webu:
   `overeno={"vek-matky": "věk 51 let potvrzuje křest i úmrtí matky"}`. Klíče: `umrti-pred-narozenim`, `snatek-mlady`,
-  `snatek-po-umrti`, `otec-zemrel`, `matka-zemrela`, `vek-matky`, `vek-otce` – `kontrola.py` u každého upozornění
-  vypíše, co přesně doplnit. Důvod piš vždy, ať je za rok jasné, proč to platí.
+  `snatek-po-umrti`, `otec-zemrel`, `matka-zemrela`, `vek-matky`, `vek-otce`, `vysoky-vek` – `kontrola.py` u každého
+  upozornění vypíše, co přesně doplnit. Důvod piš vždy, ať je za rok jasné, proč to platí.
 - `LINES = {8: ("Novákové", "Kováři z Holic…"), …}` – jen čísla 8–15; název rodu = příjmení v množném čísle. Vyplň hned, jak znáš pradědečka nebo prababičku – bez LINES web neukáže rody a nepřijde rada k příběhu.
 - `RODINA` – osoby mimo přímou linii (sourozenci předků, jejich partneři a děti, děti výchozí osoby, předci partnerů):
   `"zkratka": dict(n="Marie Nováková", y="1892–1970", sex="F", otec=16, matka=17, partner=[...], st="doc", f=[...], r=[...], note="…")`.
@@ -80,8 +86,7 @@ P = {
   Jde na web – nepiš sem citlivé věci (příčiny úmrtí, rodinné spory) bez souhlasu.
 - `HYPOTEZY` – `dict(rod=8, nadpis="…", text="…", polozky=[("jméno", "text")], zaznamy=[klíče])` → stránka rodu.
 - `SAME = {350: 140}` – předek, který je v rodokmenu dvakrát (alias → hlavní číslo; alias v `P` může mít `f=["TÁŽ OSOBA jako 140"]`).
-  `kontrola.py` (přes `tools/graf.py`) upozorní na stejné jméno a rok narození na dvou číslech bez `SAME` a na věk
-  rodičů 2k a 2k+1 při narození dítěte k mimo 15–50 let u matky a 16–75 let u otce.
+  `kontrola.py` (přes `tools/graf.py`) upozorní na stejné jméno a rok narození na dvou číslech bez `SAME`.
 
 ## `zaznamy.json` – zápisy
 
@@ -244,6 +249,9 @@ v příbězích; potom spusť kontrolu a znovu vytvoř web.
   vypíše předky s čísly, všechny události a poznámky a **frontu zápisů** (nejmladší známá událost u každého předka,
   a jestli už je v archivu). `--osoby` dá kostru pro `osoby.py`. Poznámky ve stromu bývají plné rodinných historek –
   přečti je a vytěž do `udaje_od_rodiny.md`.
+  Předtím `python3 -I tools/graf.py strom dokumenty/strom.ged "Jméno Příjmení"`: cizí stromy mívají dvojníky (táž osoba
+  dvakrát, třeba u obou manželek otce) a nemožné vazby (matce by bylo 6 let). Nástroj u dítěte ve dvou rodinách ukáže,
+  kterou bere `ged_import.py` a která je podle dat možná, a u předka, který je v rodokmenu víckrát, navrhne `SAME`.
 - Starší strom z **Brother's Keeper** (kódování ANSI a česká data „SRPEN 1945“ nástroj převede sám): místa tam bývají
   v 6. pádě („Táboře“) – do `osoby.py` je přepiš do 1. pádu. Kořenem takového stromu často nejsou uživatel, ale jeho
   děti (oba rody) – výchozí osobu proto vyber jménem.

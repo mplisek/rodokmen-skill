@@ -122,6 +122,9 @@ Základní smyčka pro každou osobu:
    **Zjevně související výskyt** po cestě (vzácné příjmení rodu, stejný dům, jméno z rodinného vyprávění) zapiš do
    výsledku se snímkem – je to stopa, ne doklad. Když se hledání zasekne, projdi deník právě kvůli takovým stopám.
 7. Spusť `python3 -I tools/kontrola.py` a oprav chyby.
+   Hlásí i časovou návaznost (`chronologie.py`: věk rodičů, dítě po smrti rodiče, sňatek po úmrtí…) a stejnou osobu
+   na dvou číslech bez `SAME` (`graf.py predci`). Všechny kontroly čtou data stejně (`datumy.py`: „asi 1760–64“,
+   „před 1740“, „pokřtěn 4. 12. 1786“). Ověřený neobvyklý údaj odškrtni polem `overeno` (`reference/data.md`).
 
 Pravidla, která chrání kvalitu:
 
@@ -142,6 +145,9 @@ Pravidla, která chrání kvalitu:
 - **Rodina přes čísla domů**: stejné číslo popisné a řemeslo přes generace je silná stopa; v knize hledej celé domácnosti.
   U **sčítání lidu** vytěž celou domácnost (i další domy stejného příjmení) a pak dohledej křty – sčítání rodiče
   nejmenuje (`portaly.md` → Sčítání lidu).
+- **Celá rodina a víc kandidátů** (`tools/rodiny.py`, postup v `reference/matriky.md`): křty sourozenců doplní, co v zápisu
+  předka chybí. Když na předka sedí víc lidí stejného jména (18. století), zapiš všechny jako kandidáty a čti po vrstvách,
+  dokud se jejich kmotři, svědci nebo dům nepotkají s doloženými údaji. Nevybírej prvního nalezeného.
 - **Ztotožnění míst ověř** podle panství/kraje v zápisu (německé „Langenau“ je v Čechách několikrát – rozhodne
   „bey Hohenelbe“ = u Vrchlabí).
 - U úředníků, vojáků, lékařů, učitelů, farářů zkus noviny a ročenky (`portaly.md` → Noviny); pro 17. století soupis
@@ -336,6 +342,10 @@ rozlišení), `dokumenty/` (originály od rodiny), `pracovni/` (nejde na web), `
 | `smoke_test.py` | když nástroj selže: ověří síťové nástroje jedním dotazem (OK / CHYBA = portál se změnil / NEDOSTUPNÉ / ZASTAVENO) |
 | `mista.py` | místa pro mapu (OpenStreetMap) |
 | `napady.py` | náměty na zajímavosti z dat |
-| `kontrola.py` | kontrola dat; hlásí i citlivé údaje na webu, časovou návaznost (narození, sňatky, úmrtí) a kdy psát příběh |
+| `kontrola.py` | kontrola dat; hlásí i citlivé údaje na webu, časovou návaznost a kdy psát příběh |
+| `chronologie.py` | časová návaznost (věk rodičů, dítě po smrti rodiče, sňatek mladší 15 let / po úmrtí, věk přes 105 let) – volá ji `kontrola.py` i web |
+| `graf.py strom strom.ged ["Jméno"]`, `graf.py predci` | cizí strom před importem: cykly, dítě ve dvou rodinách, dvojníci, věk rodičů, předek víckrát (návrh `SAME`); `predci` = stejná osoba na dvou číslech bez `SAME` |
+| `rodiny.py novy/kandidat/zapis/ukol/prehled/prunik/rodiny …` | rekonstrukce rodiny ze sourozenců, rozhodování mezi kandidáty stejného jména (`matriky.md`) |
+| `datumy.py "text"` | jak kontroly čtou datum nebo `y` (společné pro všechny kontroly) |
 | `slusne.py` | brzda proti zablokování archivem (`stav`, `zastav`, `odblokuj`) |
 | `export_web.py`, `fan_chart.py` | data → web (volá ho `npm run data`); vějíř jako plakát k tisku |

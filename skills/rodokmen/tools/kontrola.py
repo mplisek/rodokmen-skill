@@ -3,10 +3,13 @@
 
 Použití: kontrola.py
 Vypíše CHYBY (rozbijí web nebo jsou věcně špatně) a UPOZORNĚNÍ (něco chybí, doplnit).
-Hlídá i časovou návaznost narození, sňatků a úmrtí (pravidla v tools/chronologie.py, stejná jako na webu).
+Hlídá i časovou návaznost narození, sňatků a úmrtí (pravidla v tools/chronologie.py, stejná jako na webu),
+stejnou osobu na dvou číslech bez SAME (tools/graf.py).
 Návratový kód 1, pokud jsou chyby.
 """
 import datetime, json, os, re, sys, unicodedata
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidá složku skriptu: chronologie.py, graf.py…
 if sys.argv[1:2] in (["-h"], ["--help"]):   # nápověda místo pádu
     sys.exit(__doc__.strip())
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
@@ -382,6 +385,7 @@ def main():
     for v in chronologie.kontrola(P, SAME):
         warn.append(f"časová návaznost u osoby {v.k}: {v.text} Pokud údaj platí, přidej k osobě {v.k} "
                     f"do overeno: \"{v.pravidlo}\": \"proč údaj platí\"")
+    # stejnou osobu na dvou číslech bez SAME (tools/graf.py) hlídá kontrola níž („rodina jako graf“), jednou
 
     mista = jload("mista.json", {})
     vzory = []
