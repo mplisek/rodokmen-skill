@@ -118,6 +118,21 @@ def over(d):
     f, _ = najdi_ukol(ukol)
     if uzavrit and f is None:
         ch.append(f"úkol {ukol} není ve frontách, nejde uzavřít")
+    a = d.get("audit")
+    if a is not None:   # audit už zapsaného zápisu: potvrzení nebo zpochybnění přepisu, nový zápis ani tvrzení nevzniká
+        if not isinstance(a, dict) or a.get("vysledek") not in ("potvrzeno", "rozpor"):
+            ch.append('audit: {"zaznam": "<klíč zápisu>", "vysledek": "potvrzeno" | "rozpor"}')
+        else:
+            if d.get("zaznam"):
+                ch.append("audit: nový zápis se při auditu nezakládá (vynech zaznam); oprava stávajícího jde přes tools/oprava.py")
+            if a.get("vysledek") == "potvrzeno" and not d["denik"].get("overeno"):
+                ch.append("audit potvrzeno: jen se shodným druhým čtením (denik.overeno); jinak „rozpor“ nebo nechat otevřené")
+            klice = {z.get("klic") for z in (vysledek._json("data", "zaznamy.json") or []) if isinstance(z, dict)}
+            if a.get("zaznam") not in klice:
+                ch.append(f"audit: zápis „{a.get('zaznam')}“ v data/zaznamy.json není")
+    zaznamy_d, _ = denik.nacti_zaznamy()   # řádek deníku zkontrolovat už teď, ať nanečisto odpovídá ostrému zápisu
+    zd = radek_deniku(d, nalez, zaznamy_d)
+    ch += [f"řádek deníku: {x}" for x in denik.over_zaznam(zd, {x["id"] for x in zaznamy_d}) + denik.over_osoby(zd.get("osoby", []))]
     return ch, nalez
 
 
@@ -172,6 +187,8 @@ def radek_deniku(d, nalez, zaznamy):
             z[pole] = dn[pole]
     if (d.get("zaznam") or {}).get("klic"):
         z["odkaz"] = d["zaznam"]["klic"]
+    if isinstance(d.get("audit"), dict):
+        z["odkaz"], z["audit"] = d["audit"].get("zaznam"), d["audit"].get("vysledek")
     if dn.get("osoby"):
         z["osoby"] = [str(x) for x in dn["osoby"]]
     if dn.get("opravuje") is not None:

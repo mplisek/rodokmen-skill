@@ -43,6 +43,7 @@ def ucastnici_smi(a):
     return len(a) == 2 and a[0] == "zapis" and v_pracovni(a[1])
 
 
+TEXTY_BADATELE = ("STAV.md", "historie_kol.md", "udaje_od_rodiny.md", "zajimavosti.md", "pribeh.md", "zadosti.md")
 OTAZKY = {"pridej", "uprav", "z-ukolu", "z-fronty", "potvrd", "smaz", "over", "vykresli"}
 REJSTRIK = {"hledej", "osoba", "zapis", "svazek", "denik", "misto", "rod", "tema", "chybi", "druhy", "sql", "podklady"}
 
@@ -59,8 +60,17 @@ def rejstrik_smi(a):
     return True
 
 
+def vyrez_smi(a):
+    """Snímek rodinného dokumentu z dokumenty/ do vyrezy/ a zdroje/, začernění rodných čísel (--zacernit); čtení matrik dělá čtenář."""
+    if a[:1] == ["--zacernit"]:
+        return len(a) >= 3
+    return len(a) >= 2 and a[0].replace("\\", "/").startswith("dokumenty/") and ".." not in a[0].replace("\\", "/").split("/")
+
+
 NASTROJE_ORCH = {
+    "audit_dat.py": lambda a: True,   # jen čte a vypisuje rozpory
     "rejstrik.py": rejstrik_smi,
+    "vyrez.py": vyrez_smi,
     # veřejné otázky (Co hledáme, ADR 0003, 0009): potvrzení jen se jménem toho, kdo potvrdil (uživatel)
     "otazky.py": lambda a: a[:1] != [] and a[0] in OTAZKY and (a[0] != "potvrd" or "--kdo" in a),
     "ucastnici.py": ucastnici_smi,
@@ -109,8 +119,15 @@ def orchestrator_soubor(cesta, cwd):
     import os
     if not cesta:
         return False
-    plna = os.path.normcase(os.path.abspath(os.path.join(cwd or os.getcwd(), cesta)))
-    return any(plna.startswith(os.path.normcase(os.path.abspath(os.path.join(cwd or os.getcwd(), k))) + os.sep) for k in ("pracovni", "mereni"))
+    koren = cwd or os.getcwd()
+    plna = os.path.normcase(os.path.abspath(os.path.join(koren, cesta)))
+    if any(plna.startswith(os.path.normcase(os.path.abspath(os.path.join(koren, k))) + os.sep) for k in ("pracovni", "mereni")):
+        return True
+    # texty, které badatel vede sám (strukturovaná data jen validujícími nástroji): stav a historie práce, údaje od rodiny,
+    # zajímavosti, příběhy, žádosti
+    texty = [os.path.normcase(os.path.abspath(os.path.join(koren, "data", f))) for f in TEXTY_BADATELE]
+    pribehy = os.path.normcase(os.path.abspath(os.path.join(koren, "data", "pribehy"))) + os.sep
+    return plna in texty or (plna.startswith(pribehy) and plna.endswith(".md"))
 
 
 def orchestrator_smi(prikaz):
@@ -172,7 +189,7 @@ ORCH_DUVOD = ("Orchestrator guard: the orchestrator may run only read-only listi
               "(text arguments in quotes, no `$` or backticks), "
               "one command without pipes, redirects or chaining. Delegate everything else to a specialist agent.")
 SOUBOR_DUVOD = ("Orchestrator guard: you may write only working files under `pracovni/` (a decision for `tools/zapis_vysledku.py`, notes) "
-                "and measurement files under `mereni/`. Data change only through the validating tools: `tools/zapis_vysledku.py`, "
+                "and measurement files under `mereni/`; with Edit or Write also the texts you keep yourself: `data/STAV.md`, `historie_kol.md`, `udaje_od_rodiny.md`, `zajimavosti.md`, `pribeh.md`, `pribehy/*.md`, `zadosti.md`. Data change only through the validating tools: `tools/zapis_vysledku.py`, "
                 "`tools/fronta.py`, `tools/zadani.py`, `tools/ucastnici.py zapis`, `tools/denik.py pridej --opravuje`, `tools/oprava.py`.")
 COMMIT_DUVOD = ("Committer guard: only `git status|diff|log`, `git branch --show-current`, `git add <exact files>` "
                 "(no -A, -u, `.`, `..`, absolute paths) and `git commit -m \"…\"` (no -a, --amend, --no-verify, --allow-empty), "

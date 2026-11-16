@@ -139,5 +139,106 @@ class Oprava(unittest.TestCase):
         self.assertEqual(self.zaznam("ukazka_snatek_1801")["druh"], "S")
 
 
+OSOBY = '''# Osoby (ukázka)
+P = {
+ 1: dict(n="Petr Ukázka", y="* 1950", st="fam", f=["* 1950 Holice"]),
+ 8: dict(n="Josef Vzorný", y="1812–1870", st="doc", f=["* 17. 3. 1812 Lhota", "kovář"]),  # poznámka u řádku
+ 9: dict(n="Anna Vzorná", y="* 1815", st="doc", f=[]),
+}
+LINES = {8: ("Vzorní", "rod")}
+RODINA = {
+}
+ISSUES = [
+ dict(k=8, otazka="Kdo byli rodiče Josefa?", stav="otevřené", text="Křest nenalezen."),
+]
+'''
+
+
+class OsobyUpravy(unittest.TestCase):
+    """tools/osoby_upravy.py: nahradí jen text jedné položky (i za řádkem s českými znaky – pozice v ast jsou v bajtech UTF-8)."""
+    def test_nahrada_a_pridani_jen_dotcene_polozky(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+        import ast
+        import osoby_upravy as ou
+        text = 'P = {\n 8: dict(n="Šťastný Žluťoučký", f=["kůň"]),  # ěščř\n 9: dict(n="Anna")\n}\nISSUES = []\n'
+        t2 = ou.uloz_osobu(text, "P", 9, {"n": "Anna Řeháková", "f": ["* 1815"]})
+        self.assertIn(' 8: dict(n="Šťastný Žluťoučký", f=["kůň"]),  # ěščř\n', t2)
+        self.assertEqual(ast.literal_eval(ast.parse(t2).body[0].value.values[1].keywords[0].value), "Anna Řeháková")
+        t3 = ou.uloz_osobu(t2, "P", 10, {"n": "Nový"})
+        self.assertEqual(ou.nacti_osobu(t3, "P", 10), {"n": "Nový"})
+        t4 = ou.uloz_otazku(t3, None, {"k": 9, "otazka": "Kdy?", "stav": "otevřené"})
+        self.assertEqual(ou.otazky(t4)[0][0]["otazka"], "Kdy?")
+        compile(t4, "osoby.py", "exec")
+
+
+class OpravaOsobDokumentuMist(Oprava):
+    """Požadavek uživatele 16. 11. 2026: badatel sám doplní a opraví osoby (fakta, nová osoba, bydliště), rodinné dokumenty, místa
+    a otevřené otázky – se stejnými zárukami jako oprava zápisu (důvod, doklad, vše nebo nic, kontrola dat, historie)."""
+    def setUp(self):
+        super().setUp()
+        (self.root / "data" / "osoby.py").write_text(OSOBY, encoding="utf-8")
+        (self.root / "data" / "dokumenty.json").write_text("[]\n", encoding="utf-8")
+
+    def osoby(self):
+        import runpy
+        return runpy.run_path(str(self.root / "data" / "osoby.py"))
+
+    def test_osoba_fakta_a_bydliste_zbytek_souboru_beze_zmeny(self):
+        r = self.oprav({"duvod": "rodinné schéma", "doklad": "dokumenty/schema_novakovi.jpg", "zmeny": [
+            {"soubor": "osoby", "klic": 8, "fakta_pridej": ["bydliště Lhota čp. 5 (1840–1870, podle rodinného schématu)"],
+             "fakta_nahrad": [["kovář", "kovář a hostinský"]]}]})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        p = self.osoby()["P"]
+        self.assertEqual(p[8]["f"], ["* 17. 3. 1812 Lhota", "kovář a hostinský", "bydliště Lhota čp. 5 (1840–1870, podle rodinného schématu)"])
+        text = self.data("osoby.py")
+        self.assertIn(' 1: dict(n="Petr Ukázka", y="* 1950", st="fam", f=["* 1950 Holice"]),', text)   # ostatní řádky doslova
+        self.assertIn("# Osoby (ukázka)", text)
+        self.assertEqual(self.historie()[-1]["zmeny"][0]["soubor"], "osoby")
+
+    def test_nova_osoba_v_rodine(self):
+        r = self.oprav({"duvod": "dcera podle schématu", "doklad": "schéma", "zmeny": [
+            {"soubor": "osoby", "skupina": "RODINA", "klic": "marie-vzorna-1840", "nove": True,
+             "pole": {"n": "Marie Vzorná", "y": "* 1840", "sex": "F", "otec": 8, "matka": 9, "st": "fam", "f": ["* 1840 Lhota"]}}]})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.osoby()["RODINA"]["marie-vzorna-1840"]["otec"], 8)
+
+    def test_otazka_nova_a_vyresena(self):
+        r = self.oprav({"duvod": "rozpor s rodinným listem", "doklad": "úmrtní list 1906", "zmeny": [
+            {"soubor": "issues", "nove": True, "pole": {"k": 9, "otazka": "Kdy zemřela Anna?", "stav": "otevřené", "text": "List 1906 × rodina 1907."}},
+            {"soubor": "issues", "klic": "Kdo byli rodiče Josefa?", "pole": {"stav": "vyřešeno"}}]})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        iss = self.osoby()["ISSUES"]
+        self.assertEqual([(i["otazka"], i["stav"]) for i in iss], [("Kdo byli rodiče Josefa?", "vyřešeno"), ("Kdy zemřela Anna?", "otevřené")])
+
+    def test_dokument_a_nove_misto(self):
+        r = self.oprav({"duvod": "rodinný dokument", "doklad": "sken od rodiny 15. 11.", "zmeny": [
+            {"soubor": "dokumenty", "klic": "schema_vzorni", "nove": True,
+             "pole": {"popis": "Schéma potomků Josefa a Anny", "osoby": [8, 9, 1], "druh": "schema", "rc": [], "autor": "rodina", "datum": "1960"}},
+            {"soubor": "mista", "klic": "Lhota", "nove": True,
+             "pole": {"re": "Lhot", "dotaz": "Lhota, okres Chrudim", "lat": 49.9, "lon": 15.8}}]})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        d = json.loads(self.data("dokumenty.json"))
+        self.assertEqual(d[0]["img"], "schema_vzorni")
+        self.assertIn("Lhota", json.loads(self.data("mista.json")))
+
+    def test_chyby_osob_a_dokumentu_nic_nezmeni(self):
+        pred = (self.data("osoby.py"), self.data("dokumenty.json"))
+        spatne = [
+            {"soubor": "osoby", "klic": 8, "pole": {"st": "jiste"}},
+            {"soubor": "osoby", "klic": 8, "pole": {"souhlas": {"kdo": "x"}}},                       # souhlas dává uživatel
+            {"soubor": "osoby", "skupina": "RODINA", "klic": "x-1900", "nove": True, "pole": {"n": "X", "otec": 777}},
+            {"soubor": "osoby", "klic": 8, "fakta_nahrad": [["neexistující fakt", "nový"]]},
+            {"soubor": "osoby", "klic": 99, "pole": {"n": "Nikdo"}},                                 # existující osoba, ne nová
+            {"soubor": "dokumenty", "klic": "d1", "nove": True, "pole": {"popis": "x", "osoby": [8], "zacerneno": [8]}},
+            {"soubor": "dokumenty", "klic": "d2", "nove": True, "pole": {"popis": "x", "osoby": [8], "soukrome": False}},
+            {"soubor": "dokumenty", "klic": "d3", "nove": True, "pole": {"popis": "x", "osoby": [404]}},
+            {"soubor": "issues", "nove": True, "pole": {"k": 8, "otazka": "Q?", "stav": "nevim"}},
+        ]
+        for i, z in enumerate(spatne):
+            r = self.oprav({"duvod": "x", "doklad": "y", "zmeny": [z]}, jmeno=f"o{i}.json")
+            self.assertNotEqual(r.returncode, 0, z)
+        self.assertEqual((self.data("osoby.py"), self.data("dokumenty.json")), pred)
+
+
 if __name__ == "__main__":
     unittest.main()

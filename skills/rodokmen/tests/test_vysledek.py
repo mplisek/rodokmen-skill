@@ -220,6 +220,12 @@ class OvereniAPorovnani(Zaklad):
                                     ("4. Xbris 1790", "4. Decembr. 1790", True), ("5. července 1850", "5. června 1850", False)):
             r = vysledek.porovnej({"doslova": {"datum": prvni}}, {"doslova": {"datum": druhe}})
             self.assertEqual(r[0]["vysledek"] == "shoda", shoda, (prvni, druhe))
+        for pole, prvni, druhe, shoda in (("narozeni", "27. 9. 1866", "27 Sept 1866", True),            # měsíc i mimo pole „datum“
+                                           ("dum", "Křemenice č. 2", "Křemenice čp. 2", True),          # č. = čp.
+                                           ("dum", "Křemenice č. 2", "2", False),                       # kratší čtení není totéž
+                                           ("narozeni", "29.", "29 června 1866", False)):
+            r = vysledek.porovnej({"doslova": {pole: prvni}}, {"doslova": {pole: druhe}})
+            self.assertEqual(r[0]["vysledek"] == "shoda", shoda, (prvni, druhe))
         r = vysledek.porovnej({"doslova": {"otec": "Febr"}}, {"doslova": {"otec": "Februar"}})   # mimo data se měsíce nenormalizují
         self.assertEqual(r[0]["vysledek"], "neshoda")
 

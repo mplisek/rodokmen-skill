@@ -32,6 +32,16 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   (poloha, dotaz) ze souboru v `pracovni/` – s důvodem a dokladem, všechno nebo nic, po změně kontrola dat (nová chyba = vrácení),
   historie oprav v `data/opravy.jsonl` (chráněná před ručním zápisem).
   Tvar vstupu vypíše `oprava.py vzor`; nápověda `--help` povolených nástrojů už není blokovaná.
+- Badatel má cestu ke všem datům, která bádání mění (dřív narážel na jednu chybějící cestu za druhou): `tools/oprava.py` umí
+  i osoby (pole, fakta včetně bydliště, nová osoba v P i RODINA), rodinné dokumenty, nová místa a otevřené otázky – vždy s důvodem
+  a dokladem, vše nebo nic, s kontrolou dat a historií; u `osoby.py` mění jen text dotčené položky (`tools/osoby_upravy.py`).
+  Texty, které vede sám (`STAV.md`, historie, údaje od rodiny, zajímavosti, příběhy, žádosti), smí upravovat přímo; snímky rodinných
+  dokumentů ukládá a začerňuje `vyrez.py`. `stav.py` vypíše, co badatel smí zapisovat podle platného hooku (dlouhé sezení má definici
+  agenta z doby startu).
+- Nový `tools/audit_dat.py`: kontrola historických dat bez čtení snímků (druh zápisu, svazek v katalogu, rok zápisu proti faktu osoby,
+  osoby u řádku deníku proti účastníkům zápisu, doc bez zápisu, negativ bez rozsahu) s návrhem opravy; jen čte.
+- `zapis_vysledku.py`: nanečisto kontroluje i řádek deníku (délka polí); audit už zapsaného zápisu (`"audit": {"zaznam", "vysledek"}`)
+  potvrdí nebo zpochybní přepis bez nového zápisu. Porovnání čtení bere měsíc jako měsíc u každé hodnoty s rokem a „č.“ = „čp.“.
 - Z originálu (#203) s úpravami pro fork: `tools/rejstrik.py` – rejstřík dat jen pro čtení (osoba, svazek, hledání, zápis, deník,
   podklady) za stovky tokenů místo čtení celých souborů. Deník čte z `denik.jsonl`, osoby u řádku deníku a účastníci zápisu jsou
   jisté vazby (odhad podle jména jen tam, kde vazba chybí), platí jen pro přesný obsah dat, `sql` jen čte, u svazku ukáže i mapu

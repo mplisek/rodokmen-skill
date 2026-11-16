@@ -80,27 +80,34 @@ with `seznam | frontier | kontrola | rezim | dalsi | cekajici | plan | historie 
   sends them, and only then `fronta.py odeslano <id> --uzivatel …` records it, never without the user's say-so.
 - After a better tool or model, `fronta.py znovu --starsi-nez <version> --zaloz` queues only the unreadable or not-found readings of older tools.
 
-Other validated writes, each committed with `tools/commit.py --soubory … --zprava "…"` (files in `data/` or `mereni/` only):
+## What you change and with which tool
 
-- roles of record participants: `tools/ucastnici.py navrh`, check the roles in the proposal under `pracovni/`, then
-  `tools/ucastnici.py zapis pracovni/ucastnici_navrh.json` (writes only complete entries);
-- a correction of a diary row: `tools/denik.py pridej --opravuje <row> …` (a new finding goes only through `tools/zapis_vysledku.py`);
-- measurement files (`mereni/`: evaluation of a run, the case set) with Write or Edit.
-- a wrong field of an existing record or place (kind, date, title, summary, image, volume; a village on the map): write the correction with
-  a reason and the evidence into `pracovni/oprava_<what>.json` (shape: `tools/oprava.py vzor`) and run `tools/oprava.py pracovni/oprava_<what>.json` (`--nanecisto` first
-  shows the change); it writes all or nothing, runs the data check, logs the old and new values in `data/opravy.jsonl` and prints the commit
-  command. New records only through `tools/zapis_vysledku.py`;
-- before reading big data files (persons, the diary, transcriptions) ask the read-only index: `tools/rejstrik.py osoba <n>`,
-  `svazek <key>` (which images were already read), `hledej "…"`, `zapis <key>`, `denik --posledni 3`; links marked as a name match
-  only are hints, never identity;
-- public questions for the page Co hledáme (`data/verejne_otazky.json`, never the queues directly): `tools/otazky.py z-fronty --soubor rodina|archivy`
-  turns the public part of the queue into drafts; fix a draft with `uprav`; confirm only on the user's word, by rod
-  (`potvrd --rod <rod> --kdo <who>`, `--obecne` for questions without a rod); archive requests waiting for consent get
-  `--ceka-na-souhlas ano` and still go on the web;
-- a third blind reading of the same reading (better crops, a stronger model) goes to `pracovni/vysledky/<task>_overeni_<reading>_<n>.json`;
-  `tools/vysledek.py porovnej <task> <reading>` compares the first reading with every verification; a field counts as verified when a majority of all readings, at least two, confirms the first reading (both of two, 2 of 3; 2 : 2 is not verified).
-- a volume missing from the catalogue on a portal where scripts are banned: the browser reader copies the volume data (archive, signature,
-  url, number of images, which roles it records) into `pracovni/svazek_<key>.json`, then `tools/svazky.py pridej pracovni/svazek_<key>.json`.
+Every kind of project data has exactly one way in; each tool checks first and writes all or nothing. Commit with
+`tools/commit.py <task>` after a finding, otherwise `tools/commit.py --soubory … --zprava "…"` (files in `data/` or `mereni/`).
+Permissions change between versions and this definition may be older than your session: the hook decides, not your memory.
+`tools/stav.py` prints what you may write right now; if unsure, run the tool – a denial says what is allowed. Never tell the user
+"I may not" without having tried.
+
+| Data | Tool |
+|---|---|
+| finding from a register (diary row, new record, transcription, claims, book map, follow-ups) | `tools/zapis_vysledku.py pracovni/…_rozhodnuti.json`; an audit of an existing record: `"audit": {"zaznam": "<key>", "vysledek": "potvrzeno"\|"rozpor"}`, no new record |
+| person: fields, facts (residence too: `bydliště <village> čp. <n> (<years>, <source>)`), new person in P or RODINA | `tools/oprava.py` (shape: `tools/oprava.py vzor`, `--nanecisto` first) |
+| record fields, place on the map (also a new place), open question in ISSUES (new, solved) | `tools/oprava.py` |
+| family document: entry in `data/dokumenty.json` (new or changed), image `tools/vyrez.py dokumenty/<scan>.jpg <img>`, birth numbers blacked out `tools/vyrez.py --zacernit <img> x0,y0,x1,y1 --osoby …` | `tools/oprava.py`, `tools/vyrez.py` |
+| everything a family document says: facts with `st` `fam` and the document as the source; conflicts as ISSUES | `tools/oprava.py` (all data are written, living people included; only the web limits what is shown) |
+| roles of record participants | `tools/ucastnici.py navrh`, check the proposal in `pracovni/`, `tools/ucastnici.py zapis pracovni/ucastnici_navrh.json` |
+| correction of a diary row | `tools/denik.py pridej --opravuje <row> …` |
+| volume missing from the catalogue (portals where scripts are banned: the browser reader copies the data into `pracovni/svazek_<key>.json`) | `tools/svazky.py pridej pracovni/svazek_<key>.json` |
+| public questions for Co hledáme (never the queues directly) | `tools/otazky.py z-fronty --soubor rodina\|archivy`, `uprav`; `potvrd --rod <rod> --kdo <who>` only on the user's word |
+| queues | `tools/fronta.py` |
+| texts you keep: `data/STAV.md`, `historie_kol.md`, `udaje_od_rodiny.md`, `zajimavosti.md`, `pribeh.md`, `pribehy/*.md`, `zadosti.md`; measurement files in `mereni/` | Edit or Write |
+| settings, consent of living people, publishing (`web.json`, `souhlas`, `soukrome=false`) | the user only |
+
+Reading and checking without writing: `tools/rejstrik.py osoba <n> | svazek <key> | hledej "…" | zapis <key> | denik --posledni 3`
+before opening big data files (links marked as a name match only are hints, never identity); `tools/audit_dat.py` lists conflicts in the
+data with the tool that fixes each. A third blind reading goes to `pracovni/vysledky/<task>_overeni_<reading>_<n>.json`;
+`tools/vysledek.py porovnej <task> <reading>` counts a field as verified when a majority of all readings, at least two, confirms the
+first reading (both of two, 2 of 3; 2 : 2 is not verified).
 
 ## Decision queue
 

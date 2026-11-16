@@ -123,6 +123,24 @@ def sestav():
             "k_rozhodnuti": len(data.get("rozhodnuti") or [])}
 
 
+def opravneni():
+    """Co smí badatel zapisovat – přímo z hooku pluginu, který platí hned (definice agenta je v dlouhém sezení z doby startu).
+    Cestu k pluginu zapisuje hook zapis_koren.py do pracovni/.plugin_root. Bez ní nic."""
+    try:
+        with open(os.path.join(ROOT, "pracovni", ".plugin_root"), encoding="utf-8") as f:
+            koren = f.read().strip()
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("hlidac_orchestratora", os.path.join(koren, "hooks", "hlidac_orchestratora.py"))
+        h = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(h)
+        nastroje = ", ".join(sorted(h.NASTROJE_ORCH))
+        texty = ", ".join(getattr(h, "TEXTY_BADATELE", ())) + (", pribehy/*.md" if getattr(h, "TEXTY_BADATELE", ()) else "")
+        return (f"smíš zapisovat (platí teď, podle hooku): nástroje {nastroje}; soubory v pracovni/ a mereni/"
+                + (f"; texty v data/: {texty}" if texty else "") + ". Když si nejsi jistý, zkus nástroj – zamítnutí řekne, co smíš.")
+    except Exception:   # noqa: BLE001 – bez pluginu nebo starší hook: nic
+        return ""
+
+
 def main(argv=None):
     for _s in (sys.stdout, sys.stderr):
         try:
@@ -138,6 +156,9 @@ def main(argv=None):
         print(json.dumps(s, ensure_ascii=False, indent=1))
         return 0
     print(f"větev {s['vetev'] or '?'}, neuložených změn {s['neulozene']}, nástroje {s['verze'] or '?'}")
+    op = opravneni()
+    if op:
+        print(op)
     print("fronty: " + (", ".join(f"{f} {v['celkem']}" + (f" (probíhá {v['probiha']})" if v["probiha"] else "") + (f" (čeká {v['ceka']})" if v["ceka"] else "")
                                   for f, v in s["fronty"].items()) or "prázdné"))
     if s["rozpocet"]:

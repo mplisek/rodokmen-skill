@@ -140,6 +140,35 @@ class Zapis(Projekt):
         self.assertIn("neshodují", r.stdout)
         self.assertIn("datum", r.stdout)
 
+    def test_nanecisto_kontroluje_i_radek_deniku(self):
+        """Podnět z bádání 16. 11. 2026: nanečisto prošlo, naostro odmítnuto na délku polí deníku."""
+        self.rozh["denik"]["hledano"] = "x" * 200
+        r = self.py("zapis_vysledku.py", self.priprav(), "--nanecisto")
+        self.assertNotEqual(r.returncode, 0, r.stdout)
+        self.assertIn("hledano", r.stdout)
+
+    def test_audit_zapsaneho_zapisu_bez_noveho_zapisu(self):
+        """Podnět z bádání 16. 11. 2026: druhé slepé čtení už zapsaného zápisu potvrdí nebo zpochybní stávající přepis; nový zápis ani
+        tvrzení nevzniká, řádek deníku nese odkaz na zápis a výsledek auditu."""
+        stary = {"klic": "lhota_krest_josef_vzorny_1812", "svazek": "0a1b2c3d", "snimek": 44, "druh": "N", "datum": "17. 3. 1812",
+                 "nazev": "Křest", "shrnuti": "křest"}
+        (self.root / "data" / "zaznamy.json").write_text(json.dumps([stary], ensure_ascii=False), encoding="utf-8")
+        self.rozh.pop("zaznam", None)
+        self.rozh.pop("tvrzeni", None)
+        self.rozh["audit"] = {"zaznam": "lhota_krest_josef_vzorny_1812", "vysledek": "potvrzeno"}
+        r = self.py("zapis_vysledku.py", self.priprav())
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        d = self.denik()[-1]
+        self.assertEqual((d["odkaz"], d["audit"], d.get("overeno")), ("lhota_krest_josef_vzorny_1812", "potvrzeno", True))
+        self.assertEqual(len(json.loads((self.root / "data" / "zaznamy.json").read_text(encoding="utf-8"))), 1)   # žádný nový zápis
+
+    def test_audit_neexistujiciho_zapisu_odmitne(self):
+        self.rozh.pop("zaznam", None)
+        self.rozh["audit"] = {"zaznam": "neni_takovy_zapis_1800", "vysledek": "rozpor"}
+        r = self.py("zapis_vysledku.py", self.priprav(), "--nanecisto")
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("audit", r.stdout)
+
     def test_dve_ze_tri_cteni_staci_k_overeni(self):
         """Rozhodnutí uživatele 16. 11. 2026: pole je ověřené, když ho potvrdí 2 ze 3 čtení (i `_overeni_c1_v2.json`); dvě proti = ne."""
         jine = json.loads(json.dumps(self.overeni))
@@ -232,6 +261,16 @@ class StavACommit(Projekt):
         self.assertIn("ověřit naslepo", self.py("stav.py").stdout)
         self.assertEqual(self.py("zapis_vysledku.py", self.priprav()).returncode, 0)
         self.assertNotIn(f"{U} (", self.py("stav.py").stdout)               # uzavřený úkol už není rozpracovaný
+
+    def test_stav_vypise_opravneni_z_hooku(self):
+        """Podnět z bádání 16. 11. 2026: sezení běží hodiny a definici agenta má z doby startu; co smí zapisovat, se dozví z hooku,
+        který platí hned (cesta k pluginu v pracovni/.plugin_root)."""
+        repo = Path(__file__).resolve().parents[3]
+        (self.root / "pracovni").mkdir(exist_ok=True)
+        (self.root / "pracovni" / ".plugin_root").write_text(str(repo).replace("\\", "/"), encoding="utf-8")
+        out = self.py("stav.py").stdout
+        for s in ("smíš zapisovat", "oprava.py", "otazky.py", "STAV.md"):
+            self.assertIn(s, out, s)
 
     def test_stav_vysledek_ve_starem_tvaru_neni_nalez(self):
         """Výsledek z doby před kontraktem (bez "schema") zůstává čitelný, ale není nález: žádné „nález None“ ani „rozhodnout a zapsat“."""

@@ -92,6 +92,9 @@ class HlidacOrchestratora(unittest.TestCase):
                   "python -I tools/zapis_vysledku.py --help", "python -I tools/otazky.py z-fronty --soubor rodina",
                   'python -I tools/otazky.py uprav 3 --otazka "Kde se narodil Jan?"', 'python -I tools/otazky.py potvrd --rod novakove --kdo "uživatel"',
                   "python -I tools/otazky.py over", "python -I tools/rejstrik.py osoba 84", 'python -I tools/rejstrik.py hledej "kovář Novák" --zdroj denik',
+                  "python -I tools/audit_dat.py", "python -I -X utf8 tools/audit_dat.py --json --kontrola druh,datum",
+                  "python -I tools/vyrez.py dokumenty/schema_novakovi.jpg schema_novakovi",
+                  "python -I tools/vyrez.py --zacernit umrtni_list_x 10,20,300,60 --osoby 12",
                   "python -I tools/rejstrik.py svazek 0a1b2c3d", "python -I tools/rejstrik.py denik --posledni 3", "python -I tools/rejstrik.py",
                   'python -I tools/rejstrik.py sql "SELECT count(*) FROM denik"', "python -I tools/rejstrik.py podklady rod 8", "python -I tools/rejstrik.py chybi", 'python -I tools/otazky.py pridej --druh pramen --archiv "SOA" --co-hledat "x" --ceka-na-souhlas ano'):
             self.assertEqual(hook("rodokmen:badatel", p)[0], "allow", p)
@@ -106,7 +109,8 @@ class HlidacOrchestratora(unittest.TestCase):
                   "python -I tools/oprava.py pracovni/../x.json", "python -I tools/oprava.py pracovni/a.json pracovni/b.json",
                   "python -I tools/zapis.py --help", "python -I tools/oprava.py --help data/x.json",
                   "python -I tools/otazky.py potvrd --rod novakove", "python -I tools/otazky.py potvrd 3", "python -I tools/otazky.py jine",
-                  "python -I tools/rejstrik.py podklady rod 8 --do data/x", "python -I tools/rejstrik.py smaz"):
+                  "python -I tools/rejstrik.py podklady rod 8 --do data/x", "python -I tools/rejstrik.py smaz",
+                  "python -I tools/vyrez.py pracovni/snimky/x.jpg klic 1,2,3,4", "python -I tools/vyrez.py dokumenty/../data/x.jpg k"):
             self.assertEqual(hook("rodokmen:badatel", p)[0], "deny", p)
 
     def test_orchestrator_pise_soubory_jen_do_pracovni(self):
@@ -120,6 +124,11 @@ class HlidacOrchestratora(unittest.TestCase):
             self.assertEqual(zapis("pracovni/vysledky/U-0001_rozhodnuti.json"), "allow")
             self.assertEqual(zapis(t + "/pracovni/x.json"), "allow")
             self.assertEqual(zapis("mereni/v0_hodnoceni.json", "Edit"), "allow")     # měření není rodinná data ani web
+            for c in ("data/STAV.md", "data/historie_kol.md", "data/udaje_od_rodiny.md", "data/zajimavosti.md", "data/pribeh.md",
+                      "data/pribehy/rod-8.md", "data/zadosti.md"):   # texty, které badatel vede sám (STAV, příběhy, údaje od rodiny)
+                self.assertEqual(zapis(c, "Edit"), "allow", c)
+            for c in ("data/osoby.py", "data/zaznamy.json", "data/web.json", "data/pribehy/../osoby.py"):
+                self.assertEqual(zapis(c, "Edit"), "deny", c)
             for c in ("data/osoby.py", "data/denik.jsonl", "tools/fronta.py", "pracovni/../data/x.json", "web/src/x.astro", "../jinde.txt",
                       "mereni/../data/x.json"):
                 self.assertEqual(zapis(c), "deny", c)

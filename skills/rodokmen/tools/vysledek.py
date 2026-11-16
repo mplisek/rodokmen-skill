@@ -507,9 +507,11 @@ def _mesic(slovo):
 
 
 def norm_pole(pole, t):
-    """Normalizace pro porovnání čtení; u polí s datem navíc měsíc na číslo."""
-    n = norm(t)
-    return " ".join(_mesic(s) for s in n.split()) if "datum" in str(pole).casefold() else n
+    """Normalizace pro porovnání čtení: číslo domu „č.“ = „čp.“ = „č. p.“; u data (pole s „datum“ nebo hodnota s rokem 1500–1999)
+    navíc měsíc na číslo. Kratší čtení se za shodu nebere (podmnožina textu neříká totéž)."""
+    n = re.sub(r"(?<!\w)(?:čp|č p|č|cp|c p)(?=\s+\d)", "č", norm(t))
+    datum = "datum" in str(pole).casefold() or re.search(r"(?<!\d)1[5-9]\d\d(?!\d)", n)
+    return " ".join(_mesic(s) for s in n.split()) if datum else n
 
 
 def porovnej(prvni, druhe):
