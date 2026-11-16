@@ -71,6 +71,31 @@ z obou stran. Další měření `mereni-v1` až po dokončení sady bádáním a
   plátno) – z běhu čtenáře v prohlížeči (`prohlizec.py text`, výpis prvků), ne skriptem proti portálu. Do té doby obchůzka: plný snímek
   uloží uživatel do `pracovni/vlastni_snimky/`.
 
+## Stránka Co hledáme a barva rodu na celém webu (rozhodnutí uživatele 16. 11. 2026)
+
+Příčina: po migraci se veřejné části souborů otázek pro rodinu a dotazů na archivy staly frontami úkolů; export fronty správně
+nečte (ADR 0003), ale do `data/verejne_otazky.json` je nikdo nepřevedl, takže stránka přišla o dvě sekce. Rod se navíc vede dvojím
+klíčem (číslo k ve veřejných otázkách, slug v otevřených otázkách) a kontejnery vázané na rod mají barvu rodu jen někde.
+
+Rozhodnutí uživatele: bližší předci pod „Obecné“; veřejné otázky se potvrzují po rodech; na web všechny dotazy na archivy, i ty,
+které čekají na souhlas s odesláním; dotazy na archivy členěné podle archivů, rody uvnitř archivu barvou kontejneru; otázky pro
+rodinu a otevřené otázky jeden kontejner na rod v barvě rodu; obecné pravidlo celého webu: kontejner vázaný na rod má barvu rodu,
+obecný je neutrální.
+
+Kroky (každý s testem, který chybu vyvolá):
+
+1. **H1 barva rodu:** jeden zdroj barev (data rodů v exportu), jedna komponenta kontejneru rodu podle vzoru stránky Zajímavosti,
+   použitá na stránkách Co hledáme, Zajímavosti, Jména, Domy, Mapa, Příběh, Deník, Osoba, Rod; kontrola webu: kontejner s rodem bez
+   barvy rodu = chyba; pravidlo do dokumentace šablony.
+2. **H2 klíč rodu a veřejné otázky:** rod jedním klíčem (slug; číslo k se při čtení převede); `otazky.py z-fronty` převede veřejné
+   části obou front na nepotvrzené koncepty (rodina: rod podle nadpisu oddílu; archivy: archiv podle nadpisu, rod podle prefixu
+   položky; karty úkolů jen s ručně psaným veřejným textem); `potvrd --rod <slug>|--obecne --kdo …` po rodech; příznak „čeká na
+   souhlas s odesláním“; kontrola soukromí; badatel smí `z-fronty`, `uprav` a `potvrd` jen se jménem toho, kdo potvrdil.
+3. **H3 export a stránka:** jedna struktura pro stránku (rodina a otevřené otázky jako kontejnery po rodech s Obecné první, prameny
+   jako archivy s položkami nesoucími rod); stránka jen vykresluje; nepotvrzené a prázdné se nevykreslí.
+4. **H4 kontroly:** jeden kontejner na rod, prameny po archivech, žádný nepotvrzený text na webu, omezené přístupy neprozradí skrytou
+   osobu (navazuje na scénář 11).
+
 ## Drobnosti mimo etapy (z poznámek projektu 15. 11. 2026)
 
 - Hook proti holému `rm` (alias `rm -iv` čeká na potvrzení a běh visí) a proti `find .` z kořene projektu (15 GB `pracovni/` na OneDrivu);
