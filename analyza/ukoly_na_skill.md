@@ -45,9 +45,8 @@ dnešní postup dřív, než se změní).
 - Pokus na platformě: jde v pomocníkovi pluginu pokračovat zprávou se zachovaným kontextem (nástroj `SendMessage`), když je řídicí agent
   hlavní vlákno s vlastním seznamem `tools:`? Dnes je pokračování řešeno novým čtenářem, který dostane nález a čte jen rozšíření. Když pokus
   vyjde, přidat `SendMessage` do `tools:` řídicího agenta a do testu definic.
-- Úplná sada testů (včetně sestavení webu) po E1–E3 neproběhla celá: systém ji 16. 11. 2026 ukončil pro nedostatek paměti. Pustit před
-  kopií nástrojů do projektu.
-
+- Úplná sada testů po E6 prošla 16. 11. 2026 ve třech částech (662 testů, včetně sestavení ukázkového webu); na pozadí vcelku ji systém
+  jednou ukončil pro nedostatek paměti, proto po částech.
 - Přístupy a vyhledávání (scénář 11): kontrola vztahů běží jen nad celým webem (verze `vse`). Pro omezené přístupy chybí kontrola proti
   jejich vlastním datům a hledání jmen, která přístup vidět nemá, v HTML a v indexu vyhledávání.
 - Tvrzení (`data/tvrzeni.jsonl`) se zatím jen ukládají a kontrolují; na web se nepromítají. Až bude vidět, kolik faktů v `f` z nich jde
