@@ -124,10 +124,11 @@ class HlidacOrchestratora(unittest.TestCase):
             self.assertEqual(zapis("pracovni/vysledky/U-0001_rozhodnuti.json"), "allow")
             self.assertEqual(zapis(t + "/pracovni/x.json"), "allow")
             self.assertEqual(zapis("mereni/v0_hodnoceni.json", "Edit"), "allow")     # měření není rodinná data ani web
-            for c in ("data/STAV.md", "data/historie_kol.md", "data/udaje_od_rodiny.md", "data/zajimavosti.md", "data/pribeh.md",
-                      "data/pribehy/rod-8.md", "data/zadosti.md"):   # texty, které badatel vede sám (STAV, příběhy, údaje od rodiny)
+            for c in ("data/historie_kol.md", "data/udaje_od_rodiny.md", "data/zajimavosti.md", "data/pribeh.md",
+                      "data/pribehy/rod-8.md", "data/zadosti.md"):   # texty, které badatel vede sám (příběhy, údaje od rodiny)
                 self.assertEqual(zapis(c, "Edit"), "allow", c)
-            for c in ("data/osoby.py", "data/zaznamy.json", "data/web.json", "data/pribehy/../osoby.py"):
+            for c in ("data/osoby.py", "data/zaznamy.json", "data/web.json", "data/pribehy/../osoby.py",
+                      "data/STAV.md"):   # STAV.md jen přes tools/stav.py predani a pravidlo (E7)
                 self.assertEqual(zapis(c, "Edit"), "deny", c)
             for c in ("data/osoby.py", "data/denik.jsonl", "tools/fronta.py", "pracovni/../data/x.json", "web/src/x.astro", "../jinde.txt",
                       "mereni/../data/x.json"):

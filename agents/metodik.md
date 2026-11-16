@@ -42,7 +42,9 @@ Talk to the user in Czech.
 
 A change of rules never changes a research task in progress. The project carries `.skill_verze`; `badatel` takes a new version over **between
 tasks**, runs the gate (`tools/brana.py`) and only then continues. When a version changes a contract, older finding files stay readable.
-What research must do because of a change (confirm data, migrate records) is written for it into the project's `data/STAV.md`; you do not do it.
+What research must do because of a change (confirm data, migrate records) becomes a task in the project's queue
+(`tools/fronta.py pridej`, without family data in the text) and a line in the CHANGELOG; you do not do it. `data/STAV.md` is the hand-over
+between research sessions, written only by `tools/stav.py`; you do not write into it.
 
 ## Fork and upstream
 

@@ -10,8 +10,8 @@ výchozí měření: `analyza/baseline-2026-11-15.md`. Hotový úkol se odsud ma
 - **Badatel** = sezení nad projektem. O pořadí jeho práce rozhoduje fronta úkolů. Pravidla a nástroje nemění.
 - **Od badatele k metodikovi:** technický podnět bez rodinných údajů do `data/poznamky_pro_skill.md` projektu. Metodik ho převezme sem
   (nebo rovnou vyřeší) a v projektu smaže.
-- **Od metodika k badateli:** co metodika od bádání potřebuje, se zapíše do `data/STAV.md` projektu (oddíl Rozpracováno, „Předání od
-  metodiky“). Nové nástroje jdou do projektu jako kopie až po zelených testech; rozpracovaný úkol dojede podle verze, se kterou začal.
+- **Od metodika k badateli:** co metodika od bádání potřebuje, je úkol ve frontě projektu (`fronta.py pridej`, bez rodinných údajů)
+  a řádek v CHANGELOG. `data/STAV.md` je od E7 jen předání mezi bádacími sessions a zapisuje ho `tools/stav.py`. Nové nástroje jdou do projektu jako kopie až po zelených testech; rozpracovaný úkol dojede podle verze, se kterou začal.
 - Metodika **nečeká** na bádání. Jediná vazba: měřicí běh `mereni-v0` má proběhnout dřív, než se do projektu zkopírují nástroje E1.
   Do té doby zůstávají E1 a další ve větvi skillu.
 
@@ -41,6 +41,16 @@ Do projektu se z toho zatím zkopírovalo jen E0 a `spotreba.py`. Zkušební mě
 (`analyza/mereni-v0-2026-11-16.md`: 7 837 tis. ekv, stav 9 z 11 případů podle očekávání; přesnost čeká na hodnocení bádáním).
 Nástroje E1–E6 uživatel schválil a 16. 11. 2026 jsou zkopírované do projektu; brána zelená, kontrola webu ověřila přes tisíc vztahů
 z obou stran. Další měření `mereni-v1` až po dokončení sady bádáním a se stejnými modely rolí jako v `mereni-v0`.
+
+## E7 předání do další session (17. 11. 2026, větev `e7-predani`)
+
+Z poznámky projektu 16. 11. (jeden záznam o stavu a předání). Příčina potvrzená kódem: STAV.md se vedl ručně, `stav.py` ho nečetl,
+odkazy do `pracovni/` nikdo neodmítl. Hotovo: `stav.py predani|pravidlo|kontrola|vyrad|vzor|uklid` (uklid z podnětu 17. 11.: mazání v `pracovni/` hlídač zamítal), hlídač zamítá ruční Edit/Write STAV.md,
+šablona s oddílem Pravidla od uživatele, test `test_e7_predani.py`. Zbývá:
+
+- zkopírovat `tools/stav.py` a šablonu do projektu (rozhodne uživatel), v projektu `tools/brana.py`;
+- migraci STAV.md projektu dělá bádání (`stav.py kontrola`, úkoly do front, `vyrad`, `predani`), pak smazat poznámku v projektu;
+- zrušení nebo změna pravidla od uživatele zatím nemá příkaz (jen nové pravidlo, které starší nahrazuje).
 
 ## Otevřené po E0–E6
 

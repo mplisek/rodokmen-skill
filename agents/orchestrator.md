@@ -19,7 +19,10 @@ The session can end at any moment: after every step the state is in files, and `
 
 ## Start of a session
 
-1. `python -I -X utf8 tools/stav.py`: branch, queues, budget, tasks in progress with their done-criterion and the next step, unfinished writes.
+1. `python -I -X utf8 tools/stav.py`: branch, rules from the user and the hand-over from the last session (`data/STAV.md`), queues, budget,
+   tasks in progress with their done-criterion and the next step, unfinished writes. Rules from the user hold for the whole session.
+   If it reports that `STAV.md` does not match (`tools/stav.py kontrola`), migrate it between tasks: tasks into the queues
+   (`tools/fronta.py pridej`), extra sections out (`tools/stav.py vyrad "…"`), the hand-over rewritten with `tools/stav.py predani`.
    Tell the user the branch the commits go to (`git branch --show-current`; the default is `main`, but the user may work on another branch
    until a merge is decided). Continue what is in progress before taking a new task.
 2. Audit the decision queue (`tools/fronta.py seznam rozhodnuti`) before showing it: can re-reading, a data comparison or an archive query settle
@@ -100,7 +103,10 @@ Permissions change between versions and this definition may be older than your s
 | volume missing from the catalogue (portals where scripts are banned: the browser reader copies the data into `pracovni/svazek_<key>.json`) | `tools/svazky.py pridej pracovni/svazek_<key>.json` |
 | public questions for Co hledáme (never the queues directly) | `tools/otazky.py z-fronty --soubor rodina\|archivy`, `uprav`; `potvrd --rod <rod> --kdo <who>` only on the user's word |
 | queues | `tools/fronta.py` |
-| texts you keep: `data/STAV.md`, `historie_kol.md`, `udaje_od_rodiny.md`, `zajimavosti.md`, `pribeh.md`, `pribehy/*.md`, `zadosti.md`; measurement files in `mereni/` | Edit or Write |
+| hand-over of work in progress for the next session: `data/STAV.md` section Rozpracováno – what is open, the last step, what comes next, task ids only (the task text stays in the queue), sources in git (`pracovni/` is moved to `data/predani/`) | `tools/stav.py predani pracovni/predani.json` (shape: `tools/stav.py vzor`, `--nanecisto` first) |
+| a rule the user gave for the work (e.g. how to record family documents) | `tools/stav.py pravidlo "…"` (only on the user's word) |
+| deleting working files no longer needed (only in `pracovni/`; there is no `rm`) | `tools/stav.py uklid pracovni/<file> …` |
+| texts you keep: `historie_kol.md`, `udaje_od_rodiny.md`, `zajimavosti.md`, `pribeh.md`, `pribehy/*.md`, `zadosti.md`; measurement files in `mereni/` | Edit or Write |
 | settings, consent of living people, publishing (`web.json`, `souhlas`, `soukrome=false`) | the user only |
 
 Reading and checking without writing: `tools/rejstrik.py osoba <n> | svazek <key> | hledej "…" | zapis <key> | denik --posledni 3`
@@ -132,4 +138,5 @@ I expected; the way around"` (technical only, no family names) and go on. A new 
 ## Done when
 
 The task has a result that meets its done-criterion, written by `tools/zapis_vysledku.py` and committed by `tools/commit.py`, or it stays open
-with the next step visible in `tools/stav.py`, or the user has been asked because a limit above was reached.
+with the next step visible in `tools/stav.py`, or the user has been asked because a limit above was reached. Before the session ends,
+whatever is open and not visible from the queues alone is in the hand-over (`tools/stav.py predani`), never only in the chat or in `pracovni/`.

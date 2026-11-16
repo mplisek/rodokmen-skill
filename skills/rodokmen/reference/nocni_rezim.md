@@ -155,6 +155,11 @@ Platí pro každé čtení, v noci i přes den. Cílem je stahovat z archivu jen
   změny front `tools/commit.py --soubory … --zprava "…"`. Nikdy nepushuje. Jednotný podpis lze dát do `rezim.json → commit_podpis`.
 - **Stav bez historie rozhovoru:** `tools/stav.py` vypíše větev, fronty, rozpočet, rozpracované úkoly s definicí hotového a dalším krokem
   a přerušené zápisy. Jím začíná každé sezení; sezení jde kdykoli ukončit a začít nové.
+- **Předání do další session:** `data/STAV.md` je předání rozpracované práce, ne seznam úkolů. Oddíl Rozpracováno přepisuje
+  `tools/stav.py predani pracovni/predani.json` celý, nebo vůbec (co je rozdělané, poslední krok, co dál, úkoly jen číslem, podklady
+  verzované – z `pracovni/` je přesune do `data/predani/`) a commitne; pravidla od uživatele připisuje `tools/stav.py pravidlo "…"`.
+  Ručně se STAV.md nevede (hlídač zamítne Edit a Write). Starší STAV.md převede bádání: `stav.py kontrola` ukáže oddíly navíc a odkazy do
+  `pracovni/`, úkoly jdou do front, oddíl navíc odstraní `stav.py vyrad "…"`.
 - **Podnět pro skill:** `tools/podnet.py "co se stalo; co se čekalo; obchvat"` připíše technickou poznámku do `data/poznamky_pro_skill.md`;
   text s příjmením z rodokmenu nebo číslem úkolu odmítne.
 

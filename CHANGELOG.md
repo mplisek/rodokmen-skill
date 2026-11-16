@@ -14,6 +14,12 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
 ### Nové
 
+- Předání do další session (E7): `data/STAV.md` je předání rozpracované práce, úkoly zůstávají ve frontách. Oddíl Rozpracováno
+  zapisuje `tools/stav.py predani pracovni/predani.json` celý, nebo vůbec (úkoly jen odkazem a jen otevřené, podklady z `pracovni/`
+  přesune do `data/predani/`, pak commit); pravidla od uživatele mají vlastní oddíl (`stav.py pravidlo "…"`). `stav.py` obojí vypíše
+  na začátku sezení; `stav.py kontrola` a `vyrad` převedou starší STAV.md. Badatel už STAV.md ručně neupravuje (hlídač).
+  Pracovní soubory, které už nejsou potřeba, smaže badatel `stav.py uklid pracovni/<soubor>` (dřív mazání hlídač zamítl a `rm` nemá);
+  zadání a výsledky úkolů, které jsou ještě ve frontě, ani přerušené zápisy nesmaže.
 - Dva hlavní agenti (E6): `badatel` řídí bádání v projektu (dřívější `orchestrator`, jméno zůstává jednu verzi), `metodik` mění pravidla, kontrakty, nástroje a testy v repozitáři skillu z technických podnětů a rodinná data nečte. Pomocníci jsou rozděleni: badatel má čtenáře a ověřovatele, metodik testy, opravy a slučování z originálu.
 - Web a brána (E5): `tools/kontrola_webu.py` ověří na sestaveném webu, že každý vztah (rodič a dítě, partneři) a každá účast v zápisu je vidět z obou stran; očekávání bere z dat projektu, ne z exportu (`--data`, `--bez-vazeb`). Brána (`tools/brana.py`) ukládá otisk dat, šablon a sestaveného webu a hlídač nasazení ho před nasazením přepočítá: změna po zelené bráně znamená bránu pustit znovu.
 - Účastníci zápisu a tvrzení (E4): pole `ucastnici` u zápisu v `zaznamy.json` (osoba a role, nebo jméno a role) se píše jednou a zápis se z něj ukáže na stránce každého účastníka s jeho rolí; stránka zápisu ukáže i účastníky mimo rodokmen. `tools/ucastnici.py` (`stav`, `navrh`, `zapis`) doplní účastníky starším zápisům z dnešních seznamů `r`, nejisté role nechá k ruční kontrole. Nový zápis přes `zapis_vysledku.py` účastníky vyžaduje; přijatá tvrzení se ukládají do `data/tvrzeni.jsonl` (jen přibývá, oprava přes `nahrazuje`), kontrola hlídá osoby a odkazy.

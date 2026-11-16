@@ -1,7 +1,8 @@
 # Stav rodokmenu a pravidla práce
 
 Tento soubor je vstupní bod. Po každém restartu (nová konverzace, zkrácený kontext) ho Claude čte jako první,
-pak konec `research_log.md` a sekci „Rozpracováno“.
+pak konec `research_log.md` a sekci „Rozpracováno“ (předání z minulé session).
+Vypíše ho `tools/stav.py` spolu s frontami úkolů a zapisuje `tools/stav.py predani` – ručně se nevede.
 
 ## Pro koho
 
@@ -37,6 +38,12 @@ pak konec `research_log.md` a sekci „Rozpracováno“.
 5. Ke každému novému zápisu: výřez (`tools/vyrez.py`), rámeček (`tools/ramecek.py`) a přepis s překladem.
 6. Po změně dat spustím `python3 -I tools/kontrola.py`.
 
-## Rozpracováno (aktualizovat průběžně)
+## Pravidla od uživatele
 
-- (zatím nic)
+Co uživatel řekl, jak pracovat; připisuje tools/stav.py pravidlo.
+
+## Rozpracováno
+
+<!-- Vede tools/stav.py predani; ručně neupravovat. Úkoly jsou ve frontách, tady jen odkaz. -->
+
+- (nic rozpracovaného)

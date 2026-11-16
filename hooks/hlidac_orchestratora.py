@@ -43,7 +43,22 @@ def ucastnici_smi(a):
     return len(a) == 2 and a[0] == "zapis" and v_pracovni(a[1])
 
 
-TEXTY_BADATELE = ("STAV.md", "historie_kol.md", "udaje_od_rodiny.md", "zajimavosti.md", "pribeh.md", "zadosti.md")
+# data/STAV.md mezi nimi není (E7): předání a pravidla od uživatele zapisuje jen tools/stav.py, aby se STAV.md nevedl ručně souběžně
+TEXTY_BADATELE = ("historie_kol.md", "udaje_od_rodiny.md", "zajimavosti.md", "pribeh.md", "zadosti.md")
+
+
+def stav_smi(a):
+    """Bez argumentu, --json, kontrola, vzor jen čtou; predani jen ze souboru v pracovni/; pravidlo a vyrad s jedním textem."""
+    volby = {"--nanecisto", "--bez-commitu"}
+    if a in ([], ["--json"], ["kontrola"], ["vzor"]):
+        return True
+    if a[:1] == ["predani"]:
+        return len(a) >= 2 and v_pracovni(a[1]) and set(a[2:]) <= volby
+    if a[:1] == ["uklid"]:   # mazání jen v pracovni/ (rm badatel nemá); co je stav rozpracované práce, odmítne sám nástroj
+        return len(a) >= 2 and all(v_pracovni(x) for x in a[1:])
+    if a[:1] in (["pravidlo"], ["vyrad"]):
+        return len(a) >= 2 and not a[1].startswith("-") and set(a[2:]) <= {"--bez-commitu"}
+    return False
 OTAZKY = {"pridej", "uprav", "z-ukolu", "z-fronty", "potvrd", "smaz", "over", "vykresli"}
 REJSTRIK = {"hledej", "osoba", "zapis", "svazek", "denik", "misto", "rod", "tema", "chybi", "druhy", "sql", "podklady"}
 
@@ -86,7 +101,7 @@ NASTROJE_ORCH = {
     "fronta.py": lambda a: a[:1] and a[0] in FRONTA_ZAPIS,
     "zapis_vysledku.py": lambda a: a[:1] and a[0].replace("\\", "/").startswith("pracovni/") and ".." not in a[0],
     "commit.py": lambda a: bool(a),
-    "stav.py": lambda a: True,
+    "stav.py": stav_smi,
     "spotreba.py": lambda a: True,
     "podnet.py": lambda a: bool(a),
 }
@@ -185,12 +200,14 @@ ORCH_DUVOD = ("Orchestrator guard: the orchestrator may run only read-only listi
               "`tools/vysledek.py over|souhrn|porovnej|vzor`, `tools/zadani.py novy|rozsir|ukaz`, the queue commands of `tools/fronta.py`, "
               "`tools/zapis_vysledku.py pracovni/…json`, `tools/ucastnici.py stav|navrh|zapis pracovni/…json`, "
               "`tools/svazky.py pridej pracovni/…json [--doplnit]|ukaz`, `tools/oprava.py pracovni/…json [--nanecisto]`, `tools/otazky.py pridej|uprav|z-ukolu|z-fronty|potvrd … --kdo …|smaz|over|vykresli`, `tools/rejstrik.py osoba|hledej|svazek|zapis|denik|misto|rod|tema|chybi|sql|podklady` (read-only index), "
-              "`tools/denik.py pridej --opravuje N …` (a correction row only), `tools/commit.py`, `tools/stav.py`, `tools/spotreba.py`, `tools/podnet.py` "
+              "`tools/denik.py pridej --opravuje N …` (a correction row only), `tools/commit.py`, "
+              "`tools/stav.py [--json]|kontrola|vzor|predani pracovni/…json [--nanecisto]|pravidlo \"…\"|vyrad \"…\"|uklid pracovni/…` (deleting working files), `tools/spotreba.py`, `tools/podnet.py` "
               "(text arguments in quotes, no `$` or backticks), "
               "one command without pipes, redirects or chaining. Delegate everything else to a specialist agent.")
 SOUBOR_DUVOD = ("Orchestrator guard: you may write only working files under `pracovni/` (a decision for `tools/zapis_vysledku.py`, notes) "
-                "and measurement files under `mereni/`; with Edit or Write also the texts you keep yourself: `data/STAV.md`, `historie_kol.md`, `udaje_od_rodiny.md`, `zajimavosti.md`, `pribeh.md`, `pribehy/*.md`, `zadosti.md`. Data change only through the validating tools: `tools/zapis_vysledku.py`, "
-                "`tools/fronta.py`, `tools/zadani.py`, `tools/ucastnici.py zapis`, `tools/denik.py pridej --opravuje`, `tools/oprava.py`.")
+                "and measurement files under `mereni/`; with Edit or Write also the texts you keep yourself: `historie_kol.md`, `udaje_od_rodiny.md`, `zajimavosti.md`, `pribeh.md`, `pribehy/*.md`, `zadosti.md`. Data change only through the validating tools: `tools/zapis_vysledku.py`, "
+                "`tools/fronta.py`, `tools/zadani.py`, `tools/ucastnici.py zapis`, `tools/denik.py pridej --opravuje`, `tools/oprava.py`; "
+                "`data/STAV.md` only through `tools/stav.py predani pracovni/…json` (hand-over of work in progress) and `tools/stav.py pravidlo \"…\"` (a rule from the user).")
 COMMIT_DUVOD = ("Committer guard: only `git status|diff|log`, `git branch --show-current`, `git add <exact files>` "
                 "(no -A, -u, `.`, `..`, absolute paths) and `git commit -m \"…\"` (no -a, --amend, --no-verify, --allow-empty), "
                 "one command, no chaining, pipes or redirects outside the quotes of the message, no `$` or backticks. Never push, switch branches, reset or merge.")
