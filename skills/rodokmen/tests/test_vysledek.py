@@ -186,15 +186,28 @@ class OvereniAPorovnani(Zaklad):
         treti = json.loads(json.dumps(self.overeni))
         treti["doslova"] = dict(self.nalez["cteni"][0]["doslova"])            # třetí čtení souhlasí s prvním ve všech polích
         self.uloz("pracovni/vysledky/U-0101_overeni_c1_v2.json", treti)
-        self.assertEqual(self.run_("porovnej", "U-0101", "c1", "--json"), 1)    # ověřené jen při shodě všech ověření
+        # rozhodnutí uživatele 16. 11. 2026: stačí 2 ze 3 (hodnotu prvního čtení potvrdí většina všech čtení, aspoň dvě)
+        self.assertEqual(self.run_("porovnej", "U-0101", "c1", "--json"), 0)
         d = json.loads(self.out)
         self.assertEqual([o["soubor"] for o in d["overeni"]], ["U-0101_overeni_c1.json", "U-0101_overeni_c1_v2.json"])
         self.assertEqual([o["shoda"] for o in d["overeni"]], [False, True])
+        self.assertEqual(d["vetsina"]["datum"], {"potvrzuje": 2, "cteni": 3, "overeno": True})
         self.run_("porovnej", "U-0101", "c1")
         self.assertIn("c1_v2", self.out)
-        self.assertIn("1 z 2", self.out)
+        self.assertIn("datum: 2 z 3", self.out)
+        ctvrte = json.loads(json.dumps(self.overeni))                          # 2 : 2 = bez většiny, neověřeno
+        self.uloz("pracovni/vysledky/U-0101_overeni_c1_v3.json", ctvrte)
+        self.assertEqual(self.run_("porovnej", "U-0101", "c1", "--json"), 1)
+        self.assertFalse(json.loads(self.out)["vetsina"]["datum"]["overeno"])
+        os.remove(self.root / "pracovni/vysledky/U-0101_overeni_c1_v3.json")
         os.remove(self.root / "pracovni/vysledky/U-0101_overeni_c1.json")       # jen dodatečné ověření stačí, když je jediné
         self.assertEqual(self.run_("porovnej", "U-0101", "c1"), 0)
+
+    def test_dve_overeni_proti_prvnimu_cteni_neovereno(self):
+        self.priprav(datum="17. Maii 1812")
+        self.uloz("pracovni/vysledky/U-0101_overeni_c1_v2.json", self.overeni)  # obě ověření čtou jinak než první čtení
+        self.assertEqual(self.run_("porovnej", "U-0101", "c1", "--json"), 1)
+        self.assertEqual(json.loads(self.out)["vetsina"]["datum"], {"potvrzuje": 1, "cteni": 3, "overeno": False})
 
 
 class Souhrn(Zaklad):

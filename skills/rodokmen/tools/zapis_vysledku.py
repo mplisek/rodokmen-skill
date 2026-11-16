@@ -93,7 +93,8 @@ def over(d):
                 ch.append(f"čtení {c} nemá ověření naslepo ({os.path.relpath(po, ROOT)}); bez něj nejde zapsat ověřený výsledek ani nový zápis")
                 continue
             prvni = next(x for x in nalez["cteni"] if x.get("id") == c)
-            rozdil = sorted({r["pole"] for po in cesty for r in vysledek.porovnej(prvni, vysledek.nacti(po)) if r["vysledek"] != "shoda"})
+            vet = vysledek.vetsina(prvni, [vysledek.nacti(po) for po in cesty])   # 2 ze 3; při jednom ověření shoda obou
+            rozdil = sorted(p for p, v in vet.items() if not v["overeno"])
             if rozdil:
                 ch.append(f"čtení {c}: první a druhé čtení se neshodují v polích {', '.join(rozdil)}; zapiš výsledek bez „overeno“ a bez nového "
                           "zápisu (tvrzení nejvýš prob), nebo nech pole přečíst znovu")

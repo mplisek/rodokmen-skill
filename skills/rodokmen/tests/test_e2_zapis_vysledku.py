@@ -140,12 +140,15 @@ class Zapis(Projekt):
         self.assertIn("neshodují", r.stdout)
         self.assertIn("datum", r.stdout)
 
-    def test_dodatecne_overeni_v_rozporu_brani_zapisu_doc(self):
-        """Ověřené jen při shodě se všemi ověřeními téhož čtení (i `_overeni_c1_v2.json`); přehlasování by bylo změnou pravidla."""
-        rozh = self.priprav()
+    def test_dve_ze_tri_cteni_staci_k_overeni(self):
+        """Rozhodnutí uživatele 16. 11. 2026: pole je ověřené, když ho potvrdí 2 ze 3 čtení (i `_overeni_c1_v2.json`); dvě proti = ne."""
         jine = json.loads(json.dumps(self.overeni))
         jine["doslova"]["datum"] = "17. Maii 1812"
-        self.uloz(f"pracovni/vysledky/{U}_overeni_c1_v2.json", jine)
+        rozh = self.priprav()
+        self.uloz(f"pracovni/vysledky/{U}_overeni_c1_v2.json", jine)          # jedno ze dvou ověření nesouhlasí
+        r = self.py("zapis_vysledku.py", rozh, "--nanecisto")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.uloz(f"pracovni/vysledky/{U}_overeni_c1.json", jine)             # nesouhlasí obě: 1 ze 3
         r = self.py("zapis_vysledku.py", rozh)
         self.assertEqual(r.returncode, 1)
         self.assertIn("datum", r.stdout)

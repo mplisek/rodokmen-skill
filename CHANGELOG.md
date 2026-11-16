@@ -25,7 +25,7 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 - Nový nástroj `tools/svazky.py`: svazek do katalogu `data/svazky.json` ze souboru v `pracovni/`, bez sítě – pro portály, kam skript nesmí
   (eBadatelna, SOA Třeboň, MZA). Údaje o svazku opíše čtenář v prohlížeči, zapíše badatel; kontroluje povinná pole, adresu a role v `pokryva`.
 - `vysledek.py porovnej` porovná první čtení se všemi ověřeními naslepo téhož čtení (i třetí čtení `_overeni_c1_v2.json`); ověřené je jen
-  při shodě se všemi, `zapis_vysledku.py` hlídá totéž.
+  pole je ověřené, když hodnotu prvního čtení potvrdí většina všech čtení, aspoň dvě (2 ze 3; při 2 : 2 ne); `zapis_vysledku.py` hlídá totéž.
 - `commit.py` soubor ignorovaný gitem odmítne nahlas (dřív ho tiše vynechal).
 - Web: u rodu na stránkách Jména, Domy a Mapa jeden barevný kruh místo dvou (`znackuj_rody.py` nepřidá kruh, když ho šablona už dala).
 - Badatel smí opravit pole existujícího zápisu nebo místa: `zapis.py zaznamy|mista <klíč> pracovni/….json --sloucit`.

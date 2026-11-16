@@ -90,7 +90,7 @@ Other validated writes, each committed with `tools/commit.py --soubory … --zpr
   then `tools/zapis.py zaznamy|mista <key> pracovni/<name>.json --sloucit` (never `--prepsat` or `--smazat`; transcriptions only through
   `tools/zapis_vysledku.py`);
 - a third blind reading of the same reading (better crops, a stronger model) goes to `pracovni/vysledky/<task>_overeni_<reading>_<n>.json`;
-  `tools/vysledek.py porovnej <task> <reading>` compares the first reading with every verification, and it counts as verified only if all agree.
+  `tools/vysledek.py porovnej <task> <reading>` compares the first reading with every verification; a field counts as verified when a majority of all readings, at least two, confirms the first reading (both of two, 2 of 3; 2 : 2 is not verified).
 - a volume missing from the catalogue on a portal where scripts are banned: the browser reader copies the volume data (archive, signature,
   url, number of images, which roles it records) into `pracovni/svazek_<key>.json`, then `tools/svazky.py pridej pracovni/svazek_<key>.json`.
 

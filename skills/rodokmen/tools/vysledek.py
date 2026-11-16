@@ -490,6 +490,24 @@ def porovnej(prvni, druhe):
     return out
 
 
+def vetsina(prvni, overeni):
+    """Pole je ověřené, když hodnotu prvního čtení potvrdí většina všech čtení (první + ověření naslepo), aspoň dvě:
+    při jednom ověření shoda obou, při dvou 2 ze 3, při 2 : 2 neověřeno (rozhodnutí uživatele 16. 11. 2026).
+    Pole, které první čtení nemá, ověřené není. Vrací {pole: {"potvrzuje", "cteni", "overeno"}}."""
+    a = prvni.get("doslova") or {}
+    pole = set(a)
+    for o in overeni:
+        pole |= set(o.get("doslova") or {}) | set(o.get("necitelne") or [])
+    cteni = 1 + len(overeni)
+    out = {}
+    for p in sorted(pole):
+        potvrzuje = 0
+        if p in a:
+            potvrzuje = 1 + sum(1 for o in overeni if p in (o.get("doslova") or {}) and norm(o["doslova"][p]) == norm(a[p]))
+        out[p] = {"potvrzuje": potvrzuje, "cteni": cteni, "overeno": potvrzuje >= 2 and 2 * potvrzuje > cteni}
+    return out
+
+
 # ---------- příkazy ----------
 def cmd_over(a):
     d = nacti(a.soubor)
@@ -524,7 +542,7 @@ def cmd_porovnej(a):
     cesty = cesty_overeni(a.ukol, a.cteni)
     if not cesty:
         sys.exit(f"{a.ukol}: čtení {a.cteni} nemá ověření ({os.path.relpath(cesta_overeni(a.ukol, a.cteni), ROOT)})")
-    overeni = []
+    overeni, dokumenty = [], []
     for p in cesty:
         druhe = nacti(p)
         ch = over_overeni(druhe)
@@ -532,16 +550,20 @@ def cmd_porovnej(a):
             sys.exit(f"{os.path.basename(p)} má chyby (vysledek.py over):\n  " + "\n  ".join(ch))
         radky = porovnej(prvni, druhe)
         overeni.append({"soubor": os.path.basename(p), "shoda": all(r["vysledek"] == "shoda" for r in radky), "pole": radky})
-    shoda = all(o["shoda"] for o in overeni)   # ověřené jen při shodě se všemi ověřeními; přehlasování by bylo změnou pravidla R-CONF
+        dokumenty.append(druhe)
+    vet = vetsina(prvni, dokumenty)
+    shoda = all(v["overeno"] for v in vet.values())
     if a.json:
-        print(json.dumps({"ukol": a.ukol, "cteni": a.cteni, "shoda": shoda, "pole": overeni[0]["pole"], "overeni": overeni},
+        print(json.dumps({"ukol": a.ukol, "cteni": a.cteni, "shoda": shoda, "pole": overeni[0]["pole"], "overeni": overeni, "vetsina": vet},
                          ensure_ascii=False, indent=1))
         return 0 if shoda else 1
     if len(overeni) == 1:
         print(f"{a.ukol} čtení {a.cteni}: " + ("obě čtení se shodují" if shoda else "čtení se NEshodují – tvrzení nejvýš prob, oba přepisy zůstávají"))
     else:
-        print(f"{a.ukol} čtení {a.cteni}: s prvním čtením se shoduje {sum(o['shoda'] for o in overeni)} z {len(overeni)} ověření"
-              + ("" if shoda else " – tvrzení nejvýš prob, všechny přepisy zůstávají"))
+        print(f"{a.ukol} čtení {a.cteni}: {len(overeni) + 1} čtení; " + ("každé pole potvrdila většina čtení (ověřeno)" if shoda
+              else "některé pole většina nepotvrdila – tvrzení nejvýš prob, všechny přepisy zůstávají"))
+        for p, v in vet.items():
+            print(f"  {p}: {v['potvrzuje']} z {v['cteni']}" + ("" if v["overeno"] else " – NEOVĚŘENO"))
     for o in overeni:
         if len(overeni) > 1:
             print(f"  {o['soubor'][len(a.ukol) + 9:-5]}: " + ("shoda" if o["shoda"] else "neshoda"))
