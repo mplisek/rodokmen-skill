@@ -7,6 +7,7 @@ Použití (z kořene projektu):
   python3 -I tools/vysledek.py souhrn <U-0042|soubor>    krátký souhrn nálezu pro řídicího agenta (stav, co chybí, rozpory, rozsah, další krok)
   python3 -I tools/vysledek.py porovnej <U-0042> <čtení> porovná první čtení s ověřením naslepo po polích; kód 1 při neshodě
   python3 -I tools/vysledek.py vzor zadani|nalez|overeni|rozhodnuti   vyplněný příklad a výčty dovolených hodnot
+  python3 -I tools/vysledek.py pripoj <U-0042> <část.json>  pokračování: další část nálezu (cast o 1 vyšší) připojí k nálezu úkolu; první část zůstává
   (souhrn a porovnej umí --json)
 
 Soubory: zadání `pracovni/zadani/<úkol>.json`, nález `pracovni/vysledky/<úkol>.json`, ověření `pracovni/vysledky/<úkol>_overeni_<čtení>.json`.
@@ -494,6 +495,60 @@ def cmd_porovnej(a):
     return 0 if shoda else 1
 
 
+def spoj(stary, novy):
+    """Další část nálezu téhož úkolu: čtení se doplní (stejné označení = totéž čtení, pole se sloučí), rozsah a stránky přibudou,
+    stav, návrh a pořadí části jsou z nové části, čerpání se sčítá. Nic z první části se neztratí."""
+    out = dict(stary)
+    cteni = {c["id"]: dict(c) for c in stary.get("cteni") or []}
+    for c in novy.get("cteni") or []:
+        if c["id"] in cteni:
+            puv = cteni[c["id"]]
+            for pole in ("doslova", "normalizace", "nejistota"):
+                if c.get(pole) or puv.get(pole):
+                    puv[pole] = {**(puv.get(pole) or {}), **(c.get(pole) or {})}
+            puv["chybi"] = list(c.get("chybi") or [])
+            puv.setdefault("dalsi_vyrezy", []).append(c.get("vyrez"))
+            puv.setdefault("dalsi_zdroje", []).append(c.get("zdroj"))
+        else:
+            cteni[c["id"]] = dict(c)
+    out["cteni"] = list(cteni.values())
+    for pole in ("kandidati", "prohledano", "stranky"):
+        out[pole] = list(stary.get(pole) or []) + [x for x in novy.get(pole) or [] if x not in (stary.get(pole) or [])]
+    for pole in ("stav", "stav_behu", "cast"):
+        out[pole] = novy.get(pole)
+    out["navrh_dalsiho_kroku"] = novy.get("navrh_dalsiho_kroku")
+    a, b = stary.get("cerpani") or {}, novy.get("cerpani") or {}
+    out["cerpani"] = {k: int(a.get(k, 0)) + int(b.get(k, 0)) for k in ("kroku", "snimku")}
+    return out
+
+
+def cmd_pripoj(a):
+    cil = cesta_nalezu(a.ukol)
+    stary, novy = nacti(cil), nacti(a.cast)
+    zp = cesta_zadani(a.ukol)
+    zadani = nacti(zp) if os.path.exists(zp) else None
+    ch = over_nalez(novy, zadani)
+    if novy.get("ukol") != a.ukol:
+        ch.append(f"ukol: část je pro {novy.get('ukol')}, ne pro {a.ukol}")
+    if isinstance(novy.get("cast"), int) and isinstance(stary.get("cast"), int) and novy["cast"] != stary["cast"] + 1:
+        ch.append(f"cast: nález má část {stary['cast']}, další je {stary['cast'] + 1} (je {novy['cast']})")
+    if not ch:
+        spojeny = spoj(stary, novy)
+        ch = over_nalez(spojeny, zadani)
+    if ch:
+        print(f"{a.cast}: {len(ch)} chyb, část se nepřipojila:")
+        for c in ch:
+            print("  " + c)
+        return 1
+    tmp = cil + ".tmp"
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(spojeny, f, ensure_ascii=False, indent=1)
+        f.write("\n")
+    os.replace(tmp, cil)
+    print(f"{a.ukol}: část {spojeny['cast']} připojena, stav {spojeny['stav']}")
+    return 0
+
+
 def cmd_vzor(a):
     print(json.dumps(VZORY[a.co], ensure_ascii=False, indent=1))
     print("\nDovolené hodnoty: " + "; ".join(f"{k}: {', '.join(v)}" for k, v in VYCTY.items()))
@@ -507,8 +562,9 @@ def main(argv=None):
     s = sp.add_parser("souhrn"); s.add_argument("co"); s.add_argument("--json", action="store_true")
     s = sp.add_parser("porovnej"); s.add_argument("ukol"); s.add_argument("cteni"); s.add_argument("--json", action="store_true")
     s = sp.add_parser("vzor"); s.add_argument("co", choices=sorted(VZORY))
+    s = sp.add_parser("pripoj"); s.add_argument("ukol"); s.add_argument("cast")
     a = ap.parse_args(argv)
-    return {"over": cmd_over, "souhrn": cmd_souhrn, "porovnej": cmd_porovnej, "vzor": cmd_vzor}[a.cmd](a)
+    return {"over": cmd_over, "souhrn": cmd_souhrn, "porovnej": cmd_porovnej, "vzor": cmd_vzor, "pripoj": cmd_pripoj}[a.cmd](a)
 
 
 if __name__ == "__main__":

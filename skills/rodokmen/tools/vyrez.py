@@ -2,11 +2,14 @@
 """Výřez zápisu ze staženého snímku stránky (z jakéhokoli portálu).
 
 Použití:
-  vyrez.py <snimek.jpg> <klic> [x0,y0,x1,y1] [--kontrast | --vylepsit] [--out SLOŽKA]
+  vyrez.py <snimek.jpg> <klic> [x0,y0,x1,y1] [--kontrast | --vylepsit] [--out SLOŽKA [--dily]]
       x0..y1 = oblast zápisu jako zlomky šířky a výšky stránky (0..1); bez nich se bere celá stránka.
       Uloží zdroje/<klic>.jpg (plné rozlišení) a vyrezy/<klic>.jpg (zmenšeno na max. 1800 px pro web).
       --out SLOŽKA = jen náhled: uloží SLOŽKA/<klic>.jpg v plném rozlišení a nic víc (ne zdroje/, vyrezy/ ani pamatování oblasti);
       pro čtení bez zápisu do veřejných složek webu (agent smí zapisovat jen do pracovni/vysledky/). Web výřez udělá až zápis bez --out.
+      Výřez pro čtení smí mít delší stranu nejvýš 2000 px (větší se při čtení zmenší a čte se z něj nespolehlivě): delší nástroj odmítne.
+      --dily (jen s --out) = řádek širší než limit rozdělí na díly <klic>_a.jpg, _b.jpg … s překryvem a vypíše, kterou část stránky každý
+      pokrývá; ověřovatel dostane všechny díly téhož řádku najednou.
       --kontrast = vybledlý zápis: šedá škála, papír vybělit a písmo ztmavit (obojí ve zdroje/ i vyrezy/).
       --vylepsit = silnější úprava, když nepomůže ani --kontrast: navíc místní vyrovnání kontrastu a doostření
       (na zkoušku nejdřív overit.py … --vylepsit).
@@ -31,6 +34,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Vybledlé snímky: nejsvětlejších 35 % pixelů (papír) do bílé, nejtmavší 2 % do černé. Řídí se rozložením jasu,
 # takže funguje i vedle tmavých předtištěných linek (pevné -level by tam písmo skoro nezměnilo).
 KONTRAST = ["-colorspace", "Gray", "-contrast-stretch", "2%x35%"]
+LIMIT_CTENI = 2000   # delší strana výřezu pro čtení (--out): větší obrázek se při čtení zmenší; jiná hodnota: RODOKMEN_VYREZ_LIMIT
+PREKRYV = 200        # překryv sousedních dílů širokého řádku, aby slovo na švu bylo celé aspoň v jednom dílu
 
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
@@ -105,13 +110,14 @@ def main():
     if sys.argv[1:2] == ["--zacernit"]:
         return zacernit(sys.argv[2:])
     kontrast = "--kontrast" in sys.argv
+    dily = "--dily" in sys.argv
     vylepsit = "--vylepsit" in sys.argv
     out = None
     if "--out" in sys.argv:
         i = sys.argv.index("--out")
         out = sys.argv[i + 1] if i + 1 < len(sys.argv) else sys.exit("--out chce složku")
         del sys.argv[i:i + 2]
-    args = [a for a in sys.argv[1:] if a not in ("--vylepsit", "--kontrast")]
+    args = [a for a in sys.argv[1:] if a not in ("--vylepsit", "--kontrast", "--dily")]
     if len(args) < 2:
         sys.exit(__doc__)
     src, key = args[0], args[1]
@@ -138,7 +144,29 @@ def main():
         cmd += KONTRAST
     subprocess.run(cmd + ["+profile", "!icc,*", "+set", "comment", "-quality", "90", full], check=True)
     if out is not None:   # jen náhled do zadané složky
-        print("uloženo:", full, "(náhled; zdroje/ a vyrezy/ se nemění)" + (" (zvýšený kontrast)" if kontrast or vylepsit else ""))
+        w2, h2 = (int(v) for v in subprocess.run([MAGICK, full, "-format", "%w %h", "info:"], capture_output=True, text=True, check=True).stdout.split())
+        limit = int(os.environ.get("RODOKMEN_VYREZ_LIMIT") or LIMIT_CTENI)
+        if max(w2, h2) > limit:   # delší výřez by čtenář i ověřovatel viděl zmenšený a četl by z něj nespolehlivě
+            if not dily or h2 > limit:
+                os.remove(full)
+                sys.exit(f"ODMÍTNUTO: výřez má {w2}×{h2} px, delší strana nad {limit} px se při čtení zmenší. "
+                         + ("Zmenši výšku oblasti (jeden záznam)." if h2 > limit else
+                            "Zmenši oblast na jeden záznam, nebo přidej --dily (široký řádek rozdělí na díly s překryvem)."))
+            n = max(2, -(-(w2 - PREKRYV) // (limit - PREKRYV)))
+            krok = (w2 - limit) / (n - 1)
+            x0, y0, x1, y1 = oblast
+            casti = []
+            for i in range(n):
+                px = round(i * krok)
+                cil = os.path.join(os.path.dirname(full), f"{key}_{chr(97 + i)}.jpg")
+                subprocess.run([MAGICK, full, "-crop", f"{limit}x{h2}+{px}+0", "+repage", "-quality", "92", cil], check=True)
+                casti.append((cil, x0 + (x1 - x0) * px / w2, x0 + (x1 - x0) * (px + limit) / w2))
+            os.remove(full)
+            print(f"uloženo {n} dílů téhož řádku (zleva doprava, překryv aspoň {PREKRYV} px; oblast stránky y {y0:.4f}–{y1:.4f}):")
+            for cil, a0, a1 in casti:
+                print(f"  {cil}  x {a0:.4f}–{a1:.4f}")
+            return
+        print("uloženo:", full, f"({w2}×{h2} px, náhled; zdroje/ a vyrezy/ se nemění)" + (" (zvýšený kontrast)" if kontrast or vylepsit else ""))
         return
     subprocess.run([MAGICK, full, "-resize", "1800x1800>", "-quality", "85", small], check=True)
     zapamatuj_oblast(key, oblast)

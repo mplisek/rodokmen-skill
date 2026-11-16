@@ -130,7 +130,10 @@ Platí pro každé čtení, v noci i přes den. Cílem je stahovat z archivu jen
 - **Stavy:** `nalezeno`, `částečně`, `nečitelné`, `nenalezeno`, `nedostupné`, `rozpočet`, `vyvráceno`, `chyba prostředí`. „Nenalezeno“ jen po dočtení
   celého zadaného rozsahu; dosažený strop (`rozpočet`), nedostupný portál a nečitelný snímek jsou jiné stavy a úkol neuzavírají.
 - **Pokračování:** zápis přetéká na další stranu nebo je potřeba další snímek → čtenář to navrhne, řídicí agent schválí `tools/zadani.py rozsir`
-  a pokračuje se v **témže úkolu**; čtení mimo schválený rozsah nález neprojde.
+  a pokračuje se v **témže úkolu**; čtení mimo schválený rozsah nález neprojde. Čtenář pokračování dostane hotový nález, přečte jen rozšíření
+  a svou část připojí (`tools/vysledek.py pripoj <úkol> <část.json>`): první část zůstává, čerpání se sčítá.
+- **Výřez pro čtení** (`vyrez.py … --out`) smí mít delší stranu nejvýš 2000 px, delší nástroj odmítne (při čtení by se zmenšil). Široký řádek
+  rozdělí `--dily` na díly s překryvem; ověřovatel dostane všechny díly téhož řádku najednou.
 - **Ověření naslepo** `pracovni/vysledky/<úkol>_overeni_<čtení>.json`: ověřovatel dostane jen výřezy a seznam polí a vrací vlastní přepis.
   Shodu vyhodnotí `tools/vysledek.py porovnej <úkol> <čtení>` po polích; při neshodě zůstávají oba přepisy a tvrzení je nejvýš `prob`.
 - **Souhrn pro řízení:** `tools/vysledek.py souhrn <úkol>` (stav, co chybí, nejistoty, kandidáti, rozsah, návrh, čerpání); přepis zůstává v souboru.

@@ -76,6 +76,14 @@ Každá etapa i každý jednotlivý úkol jde stejně:
 
 - `orchestrator.md` rozdělit na `badatel.md` (projekt) a `metodik.md` (skill), formát podnětu, verze pravidel a její převzetí mezi úkoly.
 
+## Otevřené po E0–E3
+
+- Pokus na platformě: jde v pomocníkovi pluginu pokračovat zprávou se zachovaným kontextem (nástroj `SendMessage`), když je řídicí agent
+  hlavní vlákno s vlastním seznamem `tools:`? Dnes je pokračování řešeno novým čtenářem, který dostane nález a čte jen rozšíření. Když pokus
+  vyjde, přidat `SendMessage` do `tools:` řídicího agenta a do testu definic.
+- Úplná sada testů (včetně sestavení webu) po E1–E3 neproběhla celá: systém ji 16. 11. 2026 ukončil pro nedostatek paměti. Pustit před
+  kopií nástrojů do projektu.
+
 ## Drobnosti mimo etapy (z poznámek projektu 15. 11. 2026)
 
 - Hook proti holému `rm` (alias `rm -iv` čeká na potvrzení a běh visí) a proti `find .` z kořene projektu (15 GB `pracovni/` na OneDrivu);

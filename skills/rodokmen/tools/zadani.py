@@ -50,7 +50,15 @@ def uloz(ukol, d):
 
 def zprava(ukol):
     rel = lambda p: os.path.relpath(p, vysledek.ROOT).replace("\\", "/")   # noqa: E731
-    return (f"Assignment: {rel(cesta(ukol))}. Write the finding to {rel(vysledek.cesta_nalezu(ukol))} "
+    nalez = vysledek.cesta_nalezu(ukol)
+    if os.path.exists(nalez) and os.path.exists(cesta(ukol)) and vysledek.nacti(cesta(ukol)).get("rozsireni"):
+        cast = int(vysledek.nacti(nalez).get("cast") or 1) + 1
+        dil = rel(nalez)[:-len(".json")] + f"_cast{cast}.json"
+        return (f"Continuation of {ukol}: assignment {rel(cesta(ukol))} (read only the last entry of `rozsireni`). The finding so far is in "
+                f"{rel(nalez)}: start with `python -I -X utf8 tools/vysledek.py souhrn {ukol}`, do not read again what it already holds. "
+                f"Write part {cast} (schema nalez/1, \"cast\": {cast}, same reading id when you complete a reading) to {dil} and merge it with "
+                f"`python -I -X utf8 tools/vysledek.py pripoj {ukol} {dil}`.")
+    return (f"Assignment: {rel(cesta(ukol))}. Write the finding to {rel(nalez)} "
             f"and check it with tools/vysledek.py over before you finish.")
 
 

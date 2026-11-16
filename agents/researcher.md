@@ -20,9 +20,16 @@ Czech text in the finding; identifiers as they are.
 - Image: `python -I -X utf8 tools/slusne.py tools/aron_img.py <apu> <image> 0 pracovni/vysledky/<id>_snimky/<image>.jpg` (always through the
   brake, `tools/slusne.py tools/<script>.py <args>`; the hook refuses a direct download). Low resolution (`1` or `2` instead of `0`) only to find the row, never to read it.
 - Crop: `python -I -X utf8 tools/vyrez.py <image> <key> x0,y0,x1,y1 --out pracovni/vysledky/<id>_vyrezy`: one row or one record per crop
-  (one row, so the verifier reads exactly the row you mean), straightened (`magick … -deskew 40%`), full resolution, at most 2000 px on the longer side; a wider row goes into several overlapping crops. Never into `zdroje/` or `vyrezy/`.
+  (one row, so the verifier reads exactly the row you mean), straightened (`magick … -deskew 40%`), full resolution. The tool refuses a crop longer than 2000 px (it would be shrunk when read); for a wider row add `--dily` and it writes overlapping parts `<key>_a.jpg`, `<key>_b.jpg`, … of the same row. Never into `zdroje/` or `vyrezy/`.
 - Check before you finish: `python -I -X utf8 tools/vysledek.py over pracovni/vysledky/<id>.json`. Fix what it reports and run it again;
   a finding that does not pass is not delivered. The shape with a filled example: `python -I -X utf8 tools/vysledek.py vzor nalez`.
+
+## Continuation
+
+When the message says "Continuation", the task already has a finding. Read `python -I -X utf8 tools/vysledek.py souhrn <id>` first, read only
+the extension the assignment added (last entry of `rozsireni`), and do not read again what the finding already holds. Write the new part to
+`pracovni/vysledky/<id>_cast<N>.json` (`cast` one higher; when you complete a reading keep its `id` and give only the new fields) and merge it:
+`python -I -X utf8 tools/vysledek.py pripoj <id> pracovni/vysledky/<id>_cast<N>.json`.
 
 ## Finding
 

@@ -40,7 +40,8 @@ The session can end at any moment: after every step the state is in files, and `
    At most 2 archive readers at once, at most 1 browser reader.
 4. Result: `tools/vysledek.py souhrn <id>`; open the whole finding only when the summary shows a conflict.
    - `částečně` with a proposed neighbouring page or volume: `tools/zadani.py rozsir <id> --snimky … --duvod "…"` and continue the **same task**
-     (the same reader if it can be continued, otherwise a new one that gets the assignment and the finding so far). Not a new task.
+     (send the reader the "Continuation" line the tool prints: it reads only the extension and merges its part into the finding with
+     `vysledek.py pripoj`; the first part stays). Not a new task; the consumption adds up on the same task.
    - `rozpočet`, `nedostupné`, `nečitelné`, `chyba prostředí` are never "not found" and never done: extend the limit, report the portal
      (`fronta.py selhani <id> --druh prechodna|zakaz --portal …`), order a better crop, or file a tool problem with `tools/podnet.py "…"`.
    - A reading that will become `doc`, and every new record, goes to `rodokmen:verifier` first (R-CONF-002): the crops of the one record
