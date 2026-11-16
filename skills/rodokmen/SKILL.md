@@ -90,7 +90,7 @@ Základní smyčka pro každou osobu:
    úmrtí nebo sňatek. Není-li nejmladší událost online, začni nejmladším svazkem, který online je (křty sourozenců,
    sňatek rodičů, rejstříky), a chybějící zápis dej do `ukoly_dotazy_na_archivy.md`.
 2. **Ověř přístupnost**: matriky jsou v archivu až po uplynutí lhůty od *posledního* zápisu ve svazku (narození 100 let,
-   sňatky 75, úmrtí 30; `matriky.md` → Lhůty). Mladší údaje jsou na matričním úřadě – zápis starší lhůty tam
+   sňatky i úmrtí 75; `matriky.md` → Lhůty). Mladší údaje jsou na matričním úřadě – zápis starší lhůty tam
    dostane kdokoli, mladší jen rodina (`matriky.md` → Lhůty). Co jde jen přes úřad, zapiš do `data/ukoly_dotazy_na_archivy.md`;
    chce-li uživatel žádost poslat, viz „Žádosti“ níže a `reference/zadosti.md`.
 3. **Najdi svazek**: podle obce → farnost → archiv. ARON: `python3 -I tools/aron_search.py "Obec"`, SOA Plzeň:
