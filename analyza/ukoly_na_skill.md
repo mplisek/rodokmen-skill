@@ -82,6 +82,11 @@ které čekají na souhlas s odesláním; dotazy na archivy členěné podle arc
 rodinu a otevřené otázky jeden kontejner na rod v barvě rodu; obecné pravidlo celého webu: kontejner vázaný na rod má barvu rodu,
 obecný je neutrální.
 
+Stav 16. 11. 2026: H1–H4 hotové (ADR 0009, CHANGELOG), v projektu převzaté, brána zelená. Zbývá: stránky Domy, Příběh, Deník,
+Osoba a Rod projít, jestli mají kontejner vázaný na jeden rod (zatím jen Co hledáme a Zajímavosti; Jména mají karty jmen přes víc
+rodů = obecné, Mapa barví body rodu už dřív); kontrola omezených přístupů proti jejich vlastním datům a hledání skryté osoby v indexu
+vyhledávání (scénář 11).
+
 Kroky (každý s testem, který chybu vyvolá):
 
 1. **H1 barva rodu:** jeden zdroj barev (data rodů v exportu), jedna komponenta kontejneru rodu podle vzoru stránky Zajímavosti,
