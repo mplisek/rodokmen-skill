@@ -124,6 +124,14 @@ class Oprava(unittest.TestCase):
                            capture_output=True, text=True, encoding="utf-8")
         self.assertIn("oprava.py", r.stdout)                                     # zamítnuto s nápovědou, kterým nástrojem
 
+    def test_vzor_projde_kontrolou_tvaru(self):
+        """Podnět z bádání 16. 11. 2026: tvar vstupu šel zjistit jen z odmítnutí; `oprava.py vzor` ho vypíše."""
+        r = spust(self.root, "oprava.py", "vzor", check=False)
+        self.assertEqual(r.returncode, 0)
+        v = json.loads(r.stdout)
+        self.assertEqual(set(v), {"duvod", "doklad", "zmeny"})
+        self.assertEqual(set(v["zmeny"][0]), {"soubor", "klic", "pole"})
+
     def test_vstup_jen_z_pracovni(self):
         (self.root / "o.json").write_text(json.dumps({"duvod": "x", "doklad": "y", "zmeny": [
             {"soubor": "zaznamy", "klic": "ukazka_snatek_1801", "pole": {"druh": "O"}}]}), encoding="utf-8")

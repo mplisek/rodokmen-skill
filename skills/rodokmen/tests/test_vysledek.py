@@ -196,6 +196,7 @@ class OvereniAPorovnani(Zaklad):
         self.assertIn("c1_v2", self.out)
         self.assertIn("datum: 2 z 3", self.out)
         ctvrte = json.loads(json.dumps(self.overeni))                          # 2 : 2 = bez většiny, neověřeno
+        ctvrte["vyrezy"] = ["pracovni/vysledky/U-0101_vyrezy/c1_d.jpg"]           # jiné čtení (vlastní výřez), ne kopie
         self.uloz("pracovni/vysledky/U-0101_overeni_c1_v3.json", ctvrte)
         self.assertEqual(self.run_("porovnej", "U-0101", "c1", "--json"), 1)
         self.assertFalse(json.loads(self.out)["vetsina"]["datum"]["overeno"])
@@ -203,9 +204,29 @@ class OvereniAPorovnani(Zaklad):
         os.remove(self.root / "pracovni/vysledky/U-0101_overeni_c1.json")       # jen dodatečné ověření stačí, když je jediné
         self.assertEqual(self.run_("porovnej", "U-0101", "c1"), 0)
 
+    def test_kopie_overeni_pod_jinym_nazvem_se_nezapocte_dvakrat(self):
+        """Podnět z bádání 16. 11. 2026: tentýž soubor ověření pod dvěma názvy se počítal jako dvě čtení."""
+        self.priprav(datum="17. Maii 1812")
+        self.uloz("pracovni/vysledky/U-0101_overeni_c1_v2.json", self.overeni)  # kopie, ne nové čtení
+        self.assertEqual(self.run_("porovnej", "U-0101", "c1", "--json"), 1)
+        d = json.loads(self.out)
+        self.assertEqual(d["vetsina"]["datum"]["cteni"], 2)
+        self.assertIn("U-0101_overeni_c1_v2.json", d["kopie"])
+
+    def test_datum_s_jinym_zapisem_mesice_je_shoda(self):
+        """Podnět z bádání 16. 11. 2026: „1801 Februar 17“ × „1801 Febrr. 17“ byla neshoda; měsíc se porovnává jako měsíc."""
+        for prvni, druhe, shoda in (("1801 Februar 17", "1801 Febrr. 17", True), ("17. Martii 1812", "17. Mart. 1812", True),
+                                    ("17. Martii 1812", "17. Maii 1812", False), ("3. 9ber 1790", "3. Novembris 1790", True),
+                                    ("4. Xbris 1790", "4. Decembr. 1790", True), ("5. července 1850", "5. června 1850", False)):
+            r = vysledek.porovnej({"doslova": {"datum": prvni}}, {"doslova": {"datum": druhe}})
+            self.assertEqual(r[0]["vysledek"] == "shoda", shoda, (prvni, druhe))
+        r = vysledek.porovnej({"doslova": {"otec": "Febr"}}, {"doslova": {"otec": "Februar"}})   # mimo data se měsíce nenormalizují
+        self.assertEqual(r[0]["vysledek"], "neshoda")
+
     def test_dve_overeni_proti_prvnimu_cteni_neovereno(self):
         self.priprav(datum="17. Maii 1812")
-        self.uloz("pracovni/vysledky/U-0101_overeni_c1_v2.json", self.overeni)  # obě ověření čtou jinak než první čtení
+        druhe = dict(self.overeni, vyrezy=["pracovni/vysledky/U-0101_vyrezy/c1_b.jpg"])
+        self.uloz("pracovni/vysledky/U-0101_overeni_c1_v2.json", druhe)        # obě ověření čtou jinak než první čtení
         self.assertEqual(self.run_("porovnej", "U-0101", "c1", "--json"), 1)
         self.assertEqual(json.loads(self.out)["vetsina"]["datum"], {"potvrzuje": 1, "cteni": 3, "overeno": False})
 

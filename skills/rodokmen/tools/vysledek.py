@@ -166,6 +166,22 @@ def cesty_overeni(ukol, cteni):
     return ([zaklad] if os.path.exists(zaklad) else []) + dalsi
 
 
+def nacti_overeni(ukol, cteni):
+    """(cesty, dokumenty, kopie): ověření jednoho čtení; soubor se stejným obsahem jako dřívější (kopie pod jiným názvem) se
+    nepočítá jako další čtení a vrátí se v „kopie“."""
+    cesty, docs, kopie, videno = [], [], [], set()
+    for p in cesty_overeni(ukol, cteni):
+        d = nacti(p)
+        klic = json.dumps(d, sort_keys=True, ensure_ascii=False)
+        if klic in videno:
+            kopie.append(os.path.basename(p))
+            continue
+        videno.add(klic)
+        cesty.append(p)
+        docs.append(d)
+    return cesty, docs, kopie
+
+
 def nacti(path):
     try:
         with open(path, encoding="utf-8") as f:
@@ -473,6 +489,29 @@ def norm(t):
     return re.sub(r"[\s.,;:]+", " ", str(t)).strip().casefold()
 
 
+# Měsíc v datu se porovnává jako měsíc, ne jako text: „Februar“ = „Febrr.“ = „Februarii“, „9ber“ = „Novembris“, „července“ = 7.
+# Pořadí je důležité (července před června, Martii před Maii).
+MESICE = ((r"(7|sept?)b(e)?r", 9), (r"(8|oct|okt)b(e)?r", 10), (r"9b(e)?r", 11), (r"(x|10|dec)b(e)?r", 12),
+          (r"jan|ledn|leden", 1), (r"feb|únor|února", 2), (r"mart|marz|mär|břez", 3), (r"ma[ijy]|květ", 5), (r"apr|dub", 4),
+          (r"červenc|července", 7), (r"jun|červen|června", 6), (r"jul", 7), (r"aug|srp", 8), (r"sep|září", 9),
+          (r"oct|okt|říj|října", 10), (r"nov|listop", 11), (r"dec|dez|prosin", 12))
+
+
+def _mesic(slovo):
+    if not re.fullmatch(r"[^\W\d_]{3,}|(7|8|9|10|x)b(e)?r\w*", slovo):
+        return slovo
+    for vzor, cislo in MESICE:
+        if re.match(vzor, slovo):
+            return str(cislo)
+    return slovo
+
+
+def norm_pole(pole, t):
+    """Normalizace pro porovnání čtení; u polí s datem navíc měsíc na číslo."""
+    n = norm(t)
+    return " ".join(_mesic(s) for s in n.split()) if "datum" in str(pole).casefold() else n
+
+
 def porovnej(prvni, druhe):
     """První čtení × ověření naslepo, po polích."""
     a, b, nec = prvni.get("doslova") or {}, druhe.get("doslova") or {}, set(druhe.get("necitelne") or [])
@@ -485,7 +524,7 @@ def porovnej(prvni, druhe):
         elif pole not in a:
             vysl = "jen druhé čtení"
         else:
-            vysl = "shoda" if norm(a[pole]) == norm(b[pole]) else "neshoda"
+            vysl = "shoda" if norm_pole(pole, a[pole]) == norm_pole(pole, b[pole]) else "neshoda"
         out.append({"pole": pole, "vysledek": vysl, "prvni": a.get(pole), "druhe": b.get(pole)})
     return out
 
@@ -503,7 +542,7 @@ def vetsina(prvni, overeni):
     for p in sorted(pole):
         potvrzuje = 0
         if p in a:
-            potvrzuje = 1 + sum(1 for o in overeni if p in (o.get("doslova") or {}) and norm(o["doslova"][p]) == norm(a[p]))
+            potvrzuje = 1 + sum(1 for o in overeni if p in (o.get("doslova") or {}) and norm_pole(p, o["doslova"][p]) == norm_pole(p, a[p]))
         out[p] = {"potvrzuje": potvrzuje, "cteni": cteni, "overeno": potvrzuje >= 2 and 2 * potvrzuje > cteni}
     return out
 
@@ -539,12 +578,13 @@ def cmd_porovnej(a):
     prvni = next((c for c in nalez.get("cteni") or [] if isinstance(c, dict) and c.get("id") == a.cteni), None)
     if prvni is None:
         sys.exit(f"{a.ukol}: čtení {a.cteni} v nálezu není")
-    cesty = cesty_overeni(a.ukol, a.cteni)
+    cesty, docs, kopie = nacti_overeni(a.ukol, a.cteni)
     if not cesty:
         sys.exit(f"{a.ukol}: čtení {a.cteni} nemá ověření ({os.path.relpath(cesta_overeni(a.ukol, a.cteni), ROOT)})")
+    if kopie and not a.json:
+        print(f"POZOR: {', '.join(kopie)} je kopie dřívějšího ověření (stejný obsah), jako další čtení se nepočítá; kopii smaž")
     overeni, dokumenty = [], []
-    for p in cesty:
-        druhe = nacti(p)
+    for p, druhe in zip(cesty, docs):
         ch = over_overeni(druhe)
         if ch:
             sys.exit(f"{os.path.basename(p)} má chyby (vysledek.py over):\n  " + "\n  ".join(ch))
@@ -554,7 +594,7 @@ def cmd_porovnej(a):
     vet = vetsina(prvni, dokumenty)
     shoda = all(v["overeno"] for v in vet.values())
     if a.json:
-        print(json.dumps({"ukol": a.ukol, "cteni": a.cteni, "shoda": shoda, "pole": overeni[0]["pole"], "overeni": overeni, "vetsina": vet},
+        print(json.dumps({"ukol": a.ukol, "cteni": a.cteni, "shoda": shoda, "pole": overeni[0]["pole"], "overeni": overeni, "vetsina": vet, "kopie": kopie},
                          ensure_ascii=False, indent=1))
         return 0 if shoda else 1
     if len(overeni) == 1:

@@ -46,7 +46,7 @@ def ucastnici_smi(a):
 NASTROJE_ORCH = {
     "ucastnici.py": ucastnici_smi,
     # oprava polí existujících zápisů a míst ze souboru v pracovni/: s důvodem a dokladem, vše nebo nic, kontrola dat, historie oprav
-    "oprava.py": lambda a: (len(a) == 1 and v_pracovni(a[0])) or (len(a) == 2 and v_pracovni(a[0]) and a[1] == "--nanecisto"),
+    "oprava.py": lambda a: a == ["vzor"] or (len(a) == 1 and v_pracovni(a[0])) or (len(a) == 2 and v_pracovni(a[0]) and a[1] == "--nanecisto"),
     # svazek do katalogu ze souboru v pracovni/ (portály, kam skript nesmí); bez sítě, sám kontroluje pole
     "svazky.py": lambda a: (len(a) == 2 and a[0] == "ukaz") or (a[:1] == ["pridej"] and len(a) in (2, 3) and v_pracovni(a[1])
                                                                  and (len(a) == 2 or a[2] == "--doplnit")),
@@ -79,6 +79,8 @@ def orchestrator_nastroj(prikaz):
     if i >= len(t):
         return False
     m = re.fullmatch(r"(?:\./)?tools/([a-z_]+\.py)", t[i])
+    if m and m.group(1) in NASTROJE_ORCH and t[i + 1:] in (["--help"], ["-h"]):   # nápověda povoleného nástroje nic nemění
+        return True
     return bool(m and m.group(1) in NASTROJE_ORCH and NASTROJE_ORCH[m.group(1)](t[i + 1:]))
 
 

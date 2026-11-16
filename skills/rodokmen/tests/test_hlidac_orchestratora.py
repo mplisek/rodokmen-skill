@@ -87,7 +87,9 @@ class HlidacOrchestratora(unittest.TestCase):
                   'python -I tools/commit.py --soubory mereni/v0_hodnoceni.json --zprava "Hodnocení měření v0"',
                   "python -I tools/svazky.py pridej pracovni/svazek_ebad_14312.json", "python -I tools/svazky.py pridej pracovni/s.json --doplnit",
                   "python -I tools/svazky.py ukaz ebad_14312",
-                  "python -I tools/oprava.py pracovni/oprava_druhu.json", "python -I -X utf8 tools/oprava.py pracovni/o.json --nanecisto"):
+                  "python -I tools/oprava.py pracovni/oprava_druhu.json", "python -I -X utf8 tools/oprava.py pracovni/o.json --nanecisto",
+                  "python -I tools/oprava.py vzor", "python -I tools/oprava.py --help", "python -I tools/svazky.py -h",
+                  "python -I tools/zapis_vysledku.py --help"):
             self.assertEqual(hook("rodokmen:badatel", p)[0], "allow", p)
         for p in ("python -I tools/ucastnici.py zapis data/zaznamy.json", "python -I tools/ucastnici.py zapis pracovni/../data/x.json",
                   "python -I tools/ucastnici.py navrh --out data/x.json", 'python -I tools/denik.py pridej --hledano "x" --vysledek nalezeno',
@@ -97,7 +99,8 @@ class HlidacOrchestratora(unittest.TestCase):
                   "python -I tools/zapis.py --smazat k", "python -I tools/zapis.py prepisy k pracovni/x.json --sloucit",
                   "python -I tools/zapis.py zaznamy k - --sloucit", "python -I tools/zapis.py zaznamy k data/x.json --sloucit",
                   "python -I tools/zapis.py zaznamy k pracovni/x.json --sloucit", "python -I tools/oprava.py data/x.json",
-                  "python -I tools/oprava.py pracovni/../x.json", "python -I tools/oprava.py pracovni/a.json pracovni/b.json"):
+                  "python -I tools/oprava.py pracovni/../x.json", "python -I tools/oprava.py pracovni/a.json pracovni/b.json",
+                  "python -I tools/zapis.py --help", "python -I tools/oprava.py --help data/x.json"):
             self.assertEqual(hook("rodokmen:badatel", p)[0], "deny", p)
 
     def test_orchestrator_pise_soubory_jen_do_pracovni(self):

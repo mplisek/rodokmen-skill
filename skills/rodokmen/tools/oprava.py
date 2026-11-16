@@ -49,6 +49,9 @@ POLE = {
     "mista": {"re": _text(300), "dotaz": _text(300), "lat": _cislo(-90, 90), "lon": _cislo(-180, 180), "osm": _text(500)},
 }
 SOUBORY = {"zaznamy": "data/zaznamy.json", "mista": "data/mista.json"}
+VZOR = {"duvod": "sňatek označený jako soupis obyvatel", "doklad": "snímek 80: oddací zápis, výřez pracovni/vysledky/…",
+        "zmeny": [{"soubor": "zaznamy", "klic": "<klíč zápisu z data/zaznamy.json>", "pole": {"druh": "O"}},
+                  {"soubor": "mista", "klic": "<název místa z data/mista.json>", "pole": {"lat": 49.69, "lon": 15.81}}]}
 HISTORIE = "data/opravy.jsonl"
 
 
@@ -124,9 +127,12 @@ def main(argv=None):
     a = sys.argv[1:] if argv is None else argv
     nanecisto = "--nanecisto" in a
     a = [x for x in a if x != "--nanecisto"]
+    if a == ["vzor"]:
+        print(json.dumps(VZOR, ensure_ascii=False, indent=1))
+        return 0
     if len(a) != 1 or a[0] in ("-h", "--help"):
         print(__doc__)
-        return 2
+        return 0 if a in (["-h"], ["--help"]) else 2
     cesta = os.path.abspath(os.path.join(ROOT, a[0]))
     if not cesta.startswith(os.path.join(ROOT, "pracovni") + os.sep):
         print("ODMÍTNUTO: vstup jen ze souboru v pracovni/")
