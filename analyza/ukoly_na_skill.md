@@ -37,8 +37,9 @@ Hotové a commitnuté ve větvích `e0-zmirneni` → `e1-kontrakt` → `e2-zapis
 bez pomocných agentů, E3 pokračování a výřezy, E4 účastníci zápisu a tvrzení, E5 kontrola webu z obou stran a brána, E6 badatel a metodik.
 Popis je v CHANGELOG (Nepublikováno) a v `reference/nocni_rezim.md`.
 
-Do projektu se z toho zatím zkopírovalo jen E0 a `spotreba.py`. Nástroje E1–E6 čekají ve skillu na měřicí běh `mereni-v0` (má změřit
-dnešní postup dřív, než se změní).
+Do projektu se z toho zatím zkopírovalo jen E0 a `spotreba.py`. Zkušební měřicí běh `mereni-v0` proběhl 16. 11. 2026
+(`analyza/mereni-v0-2026-11-16.md`: 7 837 tis. ekv, stav 9 z 11 případů podle očekávání; přesnost čeká na hodnocení bádáním).
+Nástroje E1–E6 tím mohou do projektu, až to uživatel schválí.
 
 ## Otevřené po E0–E6
 
@@ -54,6 +55,15 @@ dnešní postup dřív, než se změní).
 - Role účastníků mimo zápisy: kmotr a svědek se na stránce osoby ukáže u zápisu („Role v zápisu“), samostatný oddíl „kmotřenci“ není.
 - Po měřicím běhu: zkopírovat nástroje E1–E6 do projektu, v projektu `tools/brana.py`, pak `tools/ucastnici.py navrh` (role k ruční
   kontrole potvrzuje bádání) a měření `mereni-v1` na téže sadě.
+
+## Z měřicího běhu mereni-v0 (16. 11. 2026)
+
+- `pracovni_prehled.py --hledej`: přepínač jen pro soubory, bez řádků deníku (prozrazuje dřívější nález při slepém čtení).
+- `kontext.py`: volba bez propojených zápisů a textové klíče osob v `--osoba`.
+- `aron_img.py`: osmiznakové apu vrací 404; sjednotit s ostatními nástroji, regresní test.
+- Zadání čtenáře: výčet snímků rozsahu a v nálezu výčet skutečně přečtených snímků, aby `nenalezeno` šlo zkontrolovat proti rozsahu.
+- Výřez pro ověřovatele: kontrola, že neuřízl sloupec (dnes hlídá jen rozměr).
+- Měření: pevně zadat modely rolí (v `mereni-v0` běžel ověřovatel a dva čtenáři na opus), aby `mereni-v1` šlo srovnat.
 
 ## Drobnosti mimo etapy (z poznámek projektu 15. 11. 2026)
 
