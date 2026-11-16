@@ -86,6 +86,8 @@ Other validated writes, each committed with `tools/commit.py --soubory … --zpr
   `tools/ucastnici.py zapis pracovni/ucastnici_navrh.json` (writes only complete entries);
 - a correction of a diary row: `tools/denik.py pridej --opravuje <row> …` (a new finding goes only through `tools/zapis_vysledku.py`);
 - measurement files (`mereni/`: evaluation of a run, the case set) with Write or Edit.
+- a volume missing from the catalogue on a portal where scripts are banned: the browser reader copies the volume data (archive, signature,
+  url, number of images, which roles it records) into `pracovni/svazek_<key>.json`, then `tools/svazky.py pridej pracovni/svazek_<key>.json`.
 
 ## Decision queue
 

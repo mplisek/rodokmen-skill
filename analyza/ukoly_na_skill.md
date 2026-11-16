@@ -66,6 +66,11 @@ z obou stran. Další měření `mereni-v1` až po dokončení sady bádáním a
 - Výřez pro ověřovatele: kontrola, že neuřízl sloupec (dnes hlídá jen rozměr).
 - Měření: pevně zadat modely rolí (v `mereni-v0` běžel ověřovatel a dva čtenáři na opus), aby `mereni-v1` šlo srovnat.
 
+- `prohlizec.py`: uložit celý snímek v plném rozlišení nebo posouvat zvětšený pohled (podnět z bádání 16. 11. 2026: kurent na eBadatelně
+  ze snímku obrazovky do 100 % přečíst nejde). Nejdřív zjistit, jak prohlížeč snímků portálu obrázek načítá (jeden obrázek, dlaždice,
+  plátno) – z běhu čtenáře v prohlížeči (`prohlizec.py text`, výpis prvků), ne skriptem proti portálu. Do té doby obchůzka: plný snímek
+  uloží uživatel do `pracovni/vlastni_snimky/`.
+
 ## Drobnosti mimo etapy (z poznámek projektu 15. 11. 2026)
 
 - Hook proti holému `rm` (alias `rm -iv` čeká na potvrzení a běh visí) a proti `find .` z kořene projektu (15 GB `pracovni/` na OneDrivu);
