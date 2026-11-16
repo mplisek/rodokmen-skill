@@ -219,6 +219,15 @@ class StavACommit(Projekt):
         self.assertEqual(self.py("zapis_vysledku.py", self.priprav()).returncode, 0)
         self.assertNotIn(f"{U} (", self.py("stav.py").stdout)               # uzavřený úkol už není rozpracovaný
 
+    def test_stav_vysledek_ve_starem_tvaru_neni_nalez(self):
+        """Výsledek z doby před kontraktem (bez "schema") zůstává čitelný, ale není nález: žádné „nález None“ ani „rozhodnout a zapsat“."""
+        self.uloz(f"pracovni/vysledky/{U}.json", {"task": U, "outcome": "not found", "searched": "sn. 1-5", "notes": "staré"})
+        r = self.py("stav.py")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertNotIn("None", r.stdout)
+        self.assertIn("starém tvaru", r.stdout)
+        self.assertNotIn("rozhodnout a zapsat", r.stdout)
+
     def test_commit_jen_soubory_zapisu_na_aktivni_vetvi(self):
         self.git("init", "-q", "-b", "prace")
         self.git("config", "user.email", "test@example.org")

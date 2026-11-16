@@ -45,6 +45,9 @@ def dalsi_krok(zadani, nalez, zapsano, overeni):
         return "čtenář ještě nevrátil nález (spustit nebo pokračovat podle zadání)"
     if not nalez:
         return "sestavit zadání (tools/zadani.py novy)"
+    if nalez.get("schema") != "nalez/1":
+        return ("výsledek ve starém tvaru (před kontraktem): přečíst a rozhodnout, nebo zadat čtení znovu (tools/zadani.py novy); "
+                "zapis_vysledku.py ho nepřijme")
     stav = nalez.get("stav")
     if zapsano and zapsano.get("uzavreno"):
         return "zapsáno a uzavřeno; zbývá commit, pokud neproběhl (tools/commit.py)"
@@ -95,8 +98,9 @@ def sestav():
         dod = next((r[len("Definice hotového:"):].strip() for r in (u.text.splitlines() if u else []) if r.startswith("Definice hotového:")), "")
         rozprac.append({"ukol": i, "fronta": f, "stav_ukolu": u.stav if u else None, "dod": dod, "osoby": u.os if u else [],
                         "posledni_udalost": f"{e.get('udalost')} {e.get('cas')}" if e else "", "rozsah": rozsah,
-                        "nalez": ({"stav": nalez.get("stav"), "cast": nalez.get("cast"), "cerpani": nalez.get("cerpani"),
-                                   "chybi": sorted({x for c in nalez.get("cteni") or [] if isinstance(c, dict) for x in c.get("chybi") or []})}
+                        "nalez": (({"stav": nalez.get("stav"), "cast": nalez.get("cast"), "cerpani": nalez.get("cerpani"),
+                                    "chybi": sorted({x for c in nalez.get("cteni") or [] if isinstance(c, dict) for x in c.get("chybi") or []})}
+                                   if nalez.get("schema") == "nalez/1" else {"stary_tvar": True})
                                   if nalez else None),
                         "overeni": overeni, "zapsano": bool(zapsano.get(i)),
                         "dalsi_krok": dalsi_krok(zadani, nalez, zapsano.get(i), overeni)})
@@ -150,7 +154,9 @@ def main(argv=None):
         casti = []
         if x["rozsah"]:
             casti.append("rozsah " + " + ".join(f"{a[0]}–{a[1]}" for a in x["rozsah"] if isinstance(a, list) and len(a) == 2))
-        if x["nalez"]:
+        if x["nalez"] and x["nalez"].get("stary_tvar"):
+            casti.append("výsledek ve starém tvaru")
+        elif x["nalez"]:
             n = x["nalez"]
             casti.append(f"nález {n['stav']} (část {n['cast']})" + (f", chybí {', '.join(n['chybi'])}" if n["chybi"] else ""))
         if x["overeni"]:
