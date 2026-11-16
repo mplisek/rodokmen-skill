@@ -32,6 +32,10 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   (poloha, dotaz) ze souboru v `pracovni/` – s důvodem a dokladem, všechno nebo nic, po změně kontrola dat (nová chyba = vrácení),
   historie oprav v `data/opravy.jsonl` (chráněná před ručním zápisem).
   Tvar vstupu vypíše `oprava.py vzor`; nápověda `--help` povolených nástrojů už není blokovaná.
+- Z originálu (#203) s úpravami pro fork: `tools/rejstrik.py` – rejstřík dat jen pro čtení (osoba, svazek, hledání, zápis, deník,
+  podklady) za stovky tokenů místo čtení celých souborů. Deník čte z `denik.jsonl`, osoby u řádku deníku a účastníci zápisu jsou
+  jisté vazby (odhad podle jména jen tam, kde vazba chybí), platí jen pro přesný obsah dat, `sql` jen čte, u svazku ukáže i mapu
+  knihy. Zdrojem pravdy zůstávají soubory v gitu; badatel smí jen čtecí příkazy.
 - Z originálu: lhůta pro předání svazků úmrtí do archivu je 75 let (#200), kolečko myši přibližuje vějíř kolem středu (#197), kontroly
   rodiny čtou data jednotně přes `datumy.py` – rozsahy jako „asi 1760–64“ nebo „* asi 1620–1630“ už nedávají falešné poplachy;
   nový `rodiny.py` pro rekonstrukci rodiny a výběr mezi kandidáty stejného jména (#201).

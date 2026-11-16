@@ -90,6 +90,9 @@ Other validated writes, each committed with `tools/commit.py --soubory … --zpr
   a reason and the evidence into `pracovni/oprava_<what>.json` (shape: `tools/oprava.py vzor`) and run `tools/oprava.py pracovni/oprava_<what>.json` (`--nanecisto` first
   shows the change); it writes all or nothing, runs the data check, logs the old and new values in `data/opravy.jsonl` and prints the commit
   command. New records only through `tools/zapis_vysledku.py`;
+- before reading big data files (persons, the diary, transcriptions) ask the read-only index: `tools/rejstrik.py osoba <n>`,
+  `svazek <key>` (which images were already read), `hledej "…"`, `zapis <key>`, `denik --posledni 3`; links marked as a name match
+  only are hints, never identity;
 - public questions for the page Co hledáme (`data/verejne_otazky.json`, never the queues directly): `tools/otazky.py z-fronty --soubor rodina|archivy`
   turns the public part of the queue into drafts; fix a draft with `uprav`; confirm only on the user's word, by rod
   (`potvrd --rod <rod> --kdo <who>`, `--obecne` for questions without a rod); archive requests waiting for consent get

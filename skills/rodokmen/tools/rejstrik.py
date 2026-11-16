@@ -23,13 +23,18 @@ Použití (z kořene projektu; na Windows `python -I -X utf8 tools/rejstrik.py �
   rejstrik.py chybi                   kontrolní seznamy pro knihu (bez přepisu, bez zajímavosti, nepropojené zápisy…)
   rejstrik.py sql "SELECT …"          libovolný dotaz (tabulky: rejstrik.py sql "SELECT name FROM sqlite_master")
 
+Fork: deník se čte z data/denik.jsonl (research_log.md jen bez něj); osoby u řádku deníku a účastníci zápisu jsou jisté vazby
+(jak='osoby', seznam zápisů osoby) a u řádku s osobami se nic neodhaduje podle jména; rejstřík platí jen pro přesný otisk obsahu
+zdrojů (ne čas souboru); `sql` je jen pro čtení; `svazek` ukáže i popsané stránky z mapy knihy (tools/mapa.py).
+
 Propojení textu s osobou: číslo osoby „č. 84“ / „#84“, klíč zápisu, štítek <!-- osoby: 84, 85 --> (zajímavosti).
 Čísla „č. N“ v textu mohou být i čísla zápisu v knize a stejné jméno může mít jiný člověk – zmínky z textu
 (jak='text' podle čísla, jak='jmeno' podle jména a příjmení, jak='jmeno_rok' / 'jmeno_vice' když stejné
 jméno má víc předků a rok u jména rozhodl / nerozhodl, jak='side' zmínka bočního příbuzného z SIDE → jeho předek)
 jsou vodítko, ne jistota; jisté je jen jak='citace'/'stitek'. Jména se hledají ve všech pádech (Pešek/Peška, Karel/Karla).
 """
-import json, os, re, runpy, sqlite3, sys, unicodedata
+import hashlib, json, os, re, runpy, sqlite3, sys, unicodedata
+from pathlib import Path
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
@@ -58,7 +63,7 @@ RE_STITEK = re.compile(r"<!--\s*((?:osoby|rod|téma|tema|roky|místa):.*?)-->")
 
 def zdroje():
     out = [os.path.join(DATA, f) for f in ("osoby.py", "zaznamy.json", "prepisy.json", "svazky.json",
-                                           "mista.json", "dokumenty.json", "research_log.md", *zdroje_md())]
+                                           "mista.json", "dokumenty.json", "denik.jsonl", "research_log.md", *zdroje_md())]
     for d, _, fs in kontext_walk():
         out += [os.path.join(d, f) for f in fs if f.endswith((".md", ".txt"))]
     out.append(os.path.abspath(__file__))  # změna nástroje = nové schéma rejstříku
@@ -196,7 +201,74 @@ def oddily(text, druh):
     return out
 
 
-def postav():
+def denik_jsonl(c, cesta, platna, klic_osoby, fts):
+    """Deník forku (data/denik.jsonl, tools/denik.py): řádek = objekt JSON. Osoby u řádku = jistá vazba (jak='osoby');
+    u takového řádku se osoby z textu neodhadují. Řádek nahrazený opravou („opravuje“) nese značku [nahrazeno ř. N]."""
+    radky = []
+    with open(cesta, encoding="utf-8") as f:
+        for line in f:
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(r, dict) and r.get("id") is not None:
+                radky.append(r)
+    nahrazeno = {r["opravuje"]: r["id"] for r in radky if r.get("opravuje") is not None}
+
+    def text(x):   # zdroj je objekt {"typ", "text", …}, ostatní pole text; nic nesmí spadnout na neznámém tvaru
+        if isinstance(x, dict):
+            return str(x.get("text") or json.dumps(x, ensure_ascii=False))
+        if isinstance(x, list):
+            return "; ".join(text(y) for y in x)
+        return "" if x is None else str(x)
+
+    def snimky(sn):   # [{"svazek", "od", "do"}] → „0a1b2c3d 38–45“
+        out = []
+        for s in sn if isinstance(sn, list) else []:
+            if isinstance(s, dict):
+                rozsah_ = f"{s.get('od')}–{s.get('do')}" if s.get("do") not in (None, s.get("od")) else f"{s.get('od')}"
+                out.append(f"{s.get('svazek', '')} {rozsah_}".strip())
+        return "; ".join(out)
+
+    for r in radky:
+        n = r["id"]
+        vys = " – ".join(x for x in (text(r.get("vysledek")), text(r.get("nalez"))) if x)
+        if n in nahrazeno:
+            vys = f"[nahrazeno ř. {nahrazeno[n]}] {vys}"
+        sn = snimky(r.get("snimky"))
+        rozsah = " ".join(x for x in (text(r.get("rozsah")), f"(snímky {sn})" if sn else "") if x)
+        cit = " ".join(x for x in (text(r.get("citace")), text(r.get("poznamka"))) if x)
+        c.execute("INSERT OR REPLACE INTO denik VALUES(?,?,?,?,?,?,?)",
+                  (n, text(r.get("datum")), text(r.get("zdroj")), rozsah, text(r.get("hledano")), vys, cit))
+        jiste = bool(r.get("osoby"))
+        fts("denik", n, f"ř. {n} {text(r.get('datum'))} – {text(r.get('hledano'))[:120]}",
+            " | ".join((text(r.get("zdroj")), rozsah, text(r.get("hledano")), vys, cit)), not jiste)
+        for k in {int(x) for x in r.get("osoby") or [] if str(x).isdigit() and int(x) in platna}:
+            c.execute("INSERT INTO zminky VALUES('denik',?,?,'osoby')", (str(n), k))
+        for klic in re.findall(r"[a-z0-9_]{12,}", cit + " " + vys):
+            for cislo in klic_osoby.get(klic, ()):
+                c.execute("INSERT INTO zminky VALUES('denik',?,?,'citace')", (str(n), cislo))
+
+
+def otisk():
+    """Otisk obsahu všech zdrojů: rejstřík platí jen pro přesně tenhle obsah (čas souboru na OneDrivu nestačí)."""
+    h = hashlib.sha1()
+    for p in sorted(zdroje()):
+        h.update(os.path.relpath(p, ROOT).encode("utf-8"))
+        with open(p, "rb") as f:
+            h.update(f.read())
+    return h.hexdigest()
+
+
+def jen_cist():
+    """Spojení s rejstříkem jen pro čtení (dotaz sql nic nezmění ani v odvozené databázi)."""
+    c = sqlite3.connect(Path(DB).as_uri() + "?mode=ro", uri=True)
+    c.execute("PRAGMA query_only=ON")
+    return c
+
+
+def postav(otisk_=None):
+    otisk_ = otisk_ or otisk()
     os.makedirs(os.path.dirname(DB), exist_ok=True)
     tmp = DB + ".tmp"
     if os.path.exists(tmp):
@@ -219,6 +291,7 @@ def postav():
     CREATE TABLE zminky(druh, ref, cislo INTEGER, jak);   -- ref = klíč zápisu / řádek deníku / id textu
     CREATE TABLE zminky_mist(druh, ref, misto);
     CREATE TABLE stitky(druh, ref, klic, hodnota);       -- štítky <!-- osoby: … · rod: … · téma: … -->
+    CREATE TABLE meta(klic PRIMARY KEY, hodnota);        -- otisk obsahu zdrojů (fork)
     CREATE VIRTUAL TABLE fts USING fts5(druh UNINDEXED, ref UNINDEXED, nadpis, text,
                                         tokenize='unicode61 remove_diacritics 2');
     """)
@@ -306,6 +379,13 @@ def postav():
                   (z["klic"], z.get("svazek"), z.get("snimek"), z.get("druh"), z.get("datum"),
                    int(rok[-1]) if rok else None, z.get("nazev"), z.get("shrnuti"), z.get("odkaz")))
         fts("zaznam", z["klic"], z.get("nazev"), (z.get("shrnuti") or "") + " " + (z.get("datum") or ""), False)
+        # fork (E4): účastníci zápisu jsou jistá vazba zápis ↔ osoba stejně jako seznam r u osoby
+        uz = {r for (r,) in c.execute("SELECT cislo FROM osoba_zaznam WHERE klic=? AND side_id IS NULL", (z["klic"],))}
+        for u in z.get("ucastnici") or []:
+            o = str(u.get("osoba", "")) if isinstance(u, dict) else ""
+            if o.isdigit() and int(o) in platna and int(o) not in uz:
+                c.execute("INSERT INTO osoba_zaznam VALUES(?,?,NULL)", (int(o), z["klic"]))
+                uz.add(int(o))
     for k, v in jload("prepisy.json").items():
         c.execute("INSERT INTO prepisy VALUES(?,?,?)", (k, v.get("orig"), v.get("cs")))
         fts("prepis", k, k, (v.get("orig") or "") + "\n" + (v.get("cs") or ""), False)
@@ -324,9 +404,14 @@ def postav():
     for cislo, klic in c.execute("SELECT cislo, klic FROM osoba_zaznam WHERE side_id IS NULL").fetchall():
         klic_osoby.setdefault(klic, set()).add(cislo)
 
-    # deník: tabulka | # | datum | zdroj | rozsah | hledáno | výsledek | citace |
+    # deník ve forku: data/denik.jsonl (ADR 0002) – osoby u řádku jsou jistá vazba, odhad podle jména se u takového řádku nedělá
+    jsonl = os.path.join(DATA, "denik.jsonl")
+    if os.path.exists(jsonl):
+        denik_jsonl(c, jsonl, platna, klic_osoby, fts)
+    # deník originálu: tabulka | # | datum | zdroj | rozsah | hledáno | výsledek | citace |
     videne = set()  # číslo řádku omylem dvakrát → druhý výskyt „12b“, ať se neztratí
-    with open(os.path.join(DATA, "research_log.md"), encoding="utf-8") as f:
+    stary = os.path.join(DATA, "research_log.md")
+    with open(stary if os.path.exists(stary) and not os.path.exists(jsonl) else os.devnull, encoding="utf-8") as f:
         for line in f:
             if not re.match(r"\|\s*\d+[a-z]?\s*\|", line):  # i dodatečně vložené řádky „53b“
                 continue
@@ -390,14 +475,23 @@ def postav():
                 tid += 1
                 c.execute("INSERT INTO texty VALUES(?,?,?,?,?)", (tid, druh, rel, nad, body))
                 fts(druh, tid, f"{rel}: {nad}", body)
+    c.execute("INSERT INTO meta VALUES('otisk', ?)", (otisk_,))
     c.commit()
     c.close()
     os.replace(tmp, DB)
 
 
 def otevri():
-    if not os.path.exists(DB) or max(os.path.getmtime(p) for p in zdroje()) > os.path.getmtime(DB):
-        postav()
+    o, stary = otisk(), None
+    if os.path.exists(DB):
+        try:
+            c = jen_cist()
+            stary = c.execute("SELECT hodnota FROM meta WHERE klic='otisk'").fetchone()
+            c.close()
+        except sqlite3.Error:
+            stary = None
+    if not stary or stary[0] != o:
+        postav(o)
     c = sqlite3.connect(DB)
     c.row_factory = sqlite3.Row
     return c
@@ -473,7 +567,8 @@ def osoba(c, q):
             print(f"Boční příbuzní (SIDE k č. {k}): " + "; ".join(r[0] for r in s))
         zm = c.execute("SELECT druh, ref, group_concat(DISTINCT jak) jak FROM zminky WHERE cislo=? "
                        "GROUP BY druh, ref ORDER BY druh, CAST(ref AS INTEGER)", (k,)).fetchall()
-        for jak, popis in (("citace", "cituje jeho zápis"), ("text", "zmíněn číslem"), ("jmeno", "jen shoda jména – ověř"),
+        for jak, popis in (("osoby", "osoba zapsaná u řádku deníku – jistá vazba"),
+                           ("citace", "cituje jeho zápis"), ("text", "zmíněn číslem"), ("jmeno", "jen shoda jména – ověř"),
                            ("jmeno_rok", "jméno má i jiný předek, rozhodl rok u jména – ověř"),
                            ("jmeno_vice", "shoda jména, které má i jiný předek – NEJEDNOZNAČNÉ"),
                            ("side", "zmínka o bočním příbuzném z SIDE – ověř")):
@@ -528,6 +623,21 @@ def zapis(c, q):
 RE_SN = re.compile(r"sn\.\s*\d+(?:\s*[–-]\s*\d+)?(?:\s*(?:,|a)\s*\d+(?:\s*[–-]\s*\d+)?)*")
 
 
+def mapa_knihy(portal, svazek_id):
+    """Fork: popsané stránky svazku z mapy knihy (tools/mapa.py, sdílená složka mimo projekt) – čte se při dotazu, neindexuje."""
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import mapa
+        m = mapa.nacti(str(portal or "").lower(), svazek_id)
+    except Exception:   # noqa: BLE001 – bez mapy knihy jen deník
+        return
+    popsane = sorted(sn for sn, d in m.items() if d.get("typ"))
+    if m:
+        print(f"Mapa knihy: {len(m)} snímků, popsáno {len(popsane)}"
+              + (": " + "; ".join(f"sn. {sn} {m[sn].get('typ', '')} {m[sn].get('od', '')}–{m[sn].get('do', '')}".rstrip("–")
+                                  for sn in popsane[:40]) if popsane else ""))
+
+
 def svazek(c, q):
     """Svazek: co z něj už máme a které snímky jsme prošli – odpověď na „nehledali jsme to už?“."""
     sv = c.execute("SELECT * FROM svazky WHERE id=?", (q,)).fetchall() or \
@@ -551,6 +661,7 @@ def svazek(c, q):
                        (r["id"],)).fetchall()
         if zz:
             print(f"Zápisy z něj ({len(zz)}): " + "; ".join(f"sn. {z['snimek']} {z['klic']}" for z in zz))
+        mapa_knihy(r["portal"], r["id"])
     rx = re.compile("|".join(vzory))
     print("Deník (rozsahy snímků hned za zmínkou svazku – ověř v řádku, co přesně se četlo):")
     nic = True
@@ -825,9 +936,14 @@ def main(a):
     elif cmd == "druhy":
         for r in c.execute("SELECT druh, count(*) FROM fts GROUP BY druh"):
             print(f"{r[0]}: {r[1]}")
-    elif cmd == "sql":
-        for r in c.execute(" ".join(rest)):
-            print(" | ".join(kratce(str(x), 200) for x in r))
+    elif cmd == "sql":   # fork: jen pro čtení
+        c.close()
+        c = jen_cist()
+        try:
+            for r in c.execute(" ".join(rest)):
+                print(" | ".join(kratce(str(x), 200) for x in r))
+        except sqlite3.Error as e:
+            sys.exit(f"sql: {e} (rejstřík je jen pro čtení; data se mění v souborech nástroji skillu)")
     else:
         print(__doc__)
 
