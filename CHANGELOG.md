@@ -32,6 +32,9 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   (poloha, dotaz) ze souboru v `pracovni/` – s důvodem a dokladem, všechno nebo nic, po změně kontrola dat (nová chyba = vrácení),
   historie oprav v `data/opravy.jsonl` (chráněná před ručním zápisem).
   Tvar vstupu vypíše `oprava.py vzor`; nápověda `--help` povolených nástrojů už není blokovaná.
+- Z originálu: lhůta pro předání svazků úmrtí do archivu je 75 let (#200), kolečko myši přibližuje vějíř kolem středu (#197), kontroly
+  rodiny čtou data jednotně přes `datumy.py` – rozsahy jako „asi 1760–64“ nebo „* asi 1620–1630“ už nedávají falešné poplachy;
+  nový `rodiny.py` pro rekonstrukci rodiny a výběr mezi kandidáty stejného jména (#201).
 - Web, stránka Co hledáme (ADR 0009): otázky pro rodinu a otevřené otázky v kontejnerech po rodech (Obecné první, jeden kontejner na
   rod v barvě rodu), prameny v archivech podle archivů s barvou rodu u každé položky, i dotazy čekající na odeslání. Vrací se sekce,
   které po převodu front na úkoly zmizely: `otazky.py z-fronty` převede veřejnou část front na nepotvrzené koncepty, `potvrd --rod`
