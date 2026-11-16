@@ -45,9 +45,8 @@ def ucastnici_smi(a):
 
 NASTROJE_ORCH = {
     "ucastnici.py": ucastnici_smi,
-    # oprava pole existujícího zápisu nebo místa (druh zápisu, obec na mapě): jen --sloucit ze souboru v pracovni/; přepis celé položky
-    # a mazání ne; přepisy čtení jdou jen přes zapis_vysledku.py
-    "zapis.py": lambda a: len(a) == 4 and a[0] in ("zaznamy", "mista") and v_pracovni(a[2]) and a[3] == "--sloucit",
+    # oprava polí existujících zápisů a míst ze souboru v pracovni/: s důvodem a dokladem, vše nebo nic, kontrola dat, historie oprav
+    "oprava.py": lambda a: (len(a) == 1 and v_pracovni(a[0])) or (len(a) == 2 and v_pracovni(a[0]) and a[1] == "--nanecisto"),
     # svazek do katalogu ze souboru v pracovni/ (portály, kam skript nesmí); bez sítě, sám kontroluje pole
     "svazky.py": lambda a: (len(a) == 2 and a[0] == "ukaz") or (a[:1] == ["pridej"] and len(a) in (2, 3) and v_pracovni(a[1])
                                                                  and (len(a) == 2 or a[2] == "--doplnit")),
@@ -147,13 +146,13 @@ ORCH_DUVOD = ("Orchestrator guard: the orchestrator may run only read-only listi
               "(`git branch --show-current`, `git status --short`, `git log --oneline -N`), "
               "`tools/vysledek.py over|souhrn|porovnej|vzor`, `tools/zadani.py novy|rozsir|ukaz`, the queue commands of `tools/fronta.py`, "
               "`tools/zapis_vysledku.py pracovni/…json`, `tools/ucastnici.py stav|navrh|zapis pracovni/…json`, "
-              "`tools/svazky.py pridej pracovni/…json [--doplnit]|ukaz`, `tools/zapis.py zaznamy|mista <key> pracovni/…json --sloucit`, "
+              "`tools/svazky.py pridej pracovni/…json [--doplnit]|ukaz`, `tools/oprava.py pracovni/…json [--nanecisto]`, "
               "`tools/denik.py pridej --opravuje N …` (a correction row only), `tools/commit.py`, `tools/stav.py`, `tools/spotreba.py`, `tools/podnet.py` "
               "(text arguments in quotes, no `$` or backticks), "
               "one command without pipes, redirects or chaining. Delegate everything else to a specialist agent.")
 SOUBOR_DUVOD = ("Orchestrator guard: you may write only working files under `pracovni/` (a decision for `tools/zapis_vysledku.py`, notes) "
                 "and measurement files under `mereni/`. Data change only through the validating tools: `tools/zapis_vysledku.py`, "
-                "`tools/fronta.py`, `tools/zadani.py`, `tools/ucastnici.py zapis`, `tools/denik.py pridej --opravuje`.")
+                "`tools/fronta.py`, `tools/zadani.py`, `tools/ucastnici.py zapis`, `tools/denik.py pridej --opravuje`, `tools/oprava.py`.")
 COMMIT_DUVOD = ("Committer guard: only `git status|diff|log`, `git branch --show-current`, `git add <exact files>` "
                 "(no -A, -u, `.`, `..`, absolute paths) and `git commit -m \"…\"` (no -a, --amend, --no-verify, --allow-empty), "
                 "one command, no chaining, pipes or redirects outside the quotes of the message, no `$` or backticks. Never push, switch branches, reset or merge.")

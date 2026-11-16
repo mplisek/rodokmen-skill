@@ -87,8 +87,7 @@ class HlidacOrchestratora(unittest.TestCase):
                   'python -I tools/commit.py --soubory mereni/v0_hodnoceni.json --zprava "Hodnocení měření v0"',
                   "python -I tools/svazky.py pridej pracovni/svazek_ebad_14312.json", "python -I tools/svazky.py pridej pracovni/s.json --doplnit",
                   "python -I tools/svazky.py ukaz ebad_14312",
-                  "python -I tools/zapis.py zaznamy libice_krest_x_1850 pracovni/oprava_druhu.json --sloucit",
-                  'python -I tools/zapis.py mista "Stružinec" pracovni/misto.json --sloucit'):
+                  "python -I tools/oprava.py pracovni/oprava_druhu.json", "python -I -X utf8 tools/oprava.py pracovni/o.json --nanecisto"):
             self.assertEqual(hook("rodokmen:badatel", p)[0], "allow", p)
         for p in ("python -I tools/ucastnici.py zapis data/zaznamy.json", "python -I tools/ucastnici.py zapis pracovni/../data/x.json",
                   "python -I tools/ucastnici.py navrh --out data/x.json", 'python -I tools/denik.py pridej --hledano "x" --vysledek nalezeno',
@@ -96,7 +95,9 @@ class HlidacOrchestratora(unittest.TestCase):
                   "python -I tools/svazky.py pridej pracovni/../x.json", "python -I tools/svazky.py smaz ebad_1",
                   "python -I tools/zapis.py zaznamy k pracovni/x.json", "python -I tools/zapis.py zaznamy k pracovni/x.json --prepsat",
                   "python -I tools/zapis.py --smazat k", "python -I tools/zapis.py prepisy k pracovni/x.json --sloucit",
-                  "python -I tools/zapis.py zaznamy k - --sloucit", "python -I tools/zapis.py zaznamy k data/x.json --sloucit"):
+                  "python -I tools/zapis.py zaznamy k - --sloucit", "python -I tools/zapis.py zaznamy k data/x.json --sloucit",
+                  "python -I tools/zapis.py zaznamy k pracovni/x.json --sloucit", "python -I tools/oprava.py data/x.json",
+                  "python -I tools/oprava.py pracovni/../x.json", "python -I tools/oprava.py pracovni/a.json pracovni/b.json"):
             self.assertEqual(hook("rodokmen:badatel", p)[0], "deny", p)
 
     def test_orchestrator_pise_soubory_jen_do_pracovni(self):

@@ -86,9 +86,10 @@ Other validated writes, each committed with `tools/commit.py --soubory … --zpr
   `tools/ucastnici.py zapis pracovni/ucastnici_navrh.json` (writes only complete entries);
 - a correction of a diary row: `tools/denik.py pridej --opravuje <row> …` (a new finding goes only through `tools/zapis_vysledku.py`);
 - measurement files (`mereni/`: evaluation of a run, the case set) with Write or Edit.
-- a field of an existing record or place (kind of record, a village on the map): write only the changed fields into `pracovni/<name>.json`,
-  then `tools/zapis.py zaznamy|mista <key> pracovni/<name>.json --sloucit` (never `--prepsat` or `--smazat`; transcriptions only through
-  `tools/zapis_vysledku.py`);
+- a wrong field of an existing record or place (kind, date, title, summary, image, volume; a village on the map): write the correction with
+  a reason and the evidence into `pracovni/oprava_<what>.json` and run `tools/oprava.py pracovni/oprava_<what>.json` (`--nanecisto` first
+  shows the change); it writes all or nothing, runs the data check, logs the old and new values in `data/opravy.jsonl` and prints the commit
+  command. New records only through `tools/zapis_vysledku.py`;
 - a third blind reading of the same reading (better crops, a stronger model) goes to `pracovni/vysledky/<task>_overeni_<reading>_<n>.json`;
   `tools/vysledek.py porovnej <task> <reading>` compares the first reading with every verification; a field counts as verified when a majority of all readings, at least two, confirms the first reading (both of two, 2 of 3; 2 : 2 is not verified).
 - a volume missing from the catalogue on a portal where scripts are banned: the browser reader copies the volume data (archive, signature,
