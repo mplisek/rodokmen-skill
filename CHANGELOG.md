@@ -18,6 +18,12 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
   ne), pravopis w = v („Čerwna“ = „Června“, „Wenceslaus“ = „Venceslaus“), měsíc i bez háčků. Kratší přepis téhož pole se dál
   za shodu nebere, ale je označený „kratší čtení“, ne „neshoda“; ověřovatel přepisuje každé pole celé.
 
+### Návody
+
+- Ověřování po malých polích (pravidlo R-CONF-004): badatel zadává čtení i slepé ověření po jednotlivých údajích
+  (`otec_jmeno`, `otec_stav`, `otec_dum` místo jednoho `otec`), audit zapsaného zápisu ověřuje jen jádro přepisu; „kratší čtení“
+  znamená další slepé čtení toho pole nebo jeho rozdělení, nikdy shodu.
+
 ## 0.10.2-fork.1 – 17. 11. 2026
 
 Fork na originálu 0.10.2 (sloučeno) a navíc:

@@ -36,7 +36,8 @@ The session can end at any moment: after every step the state is in files, and `
    archives`), and the book map `tools/mapa.py hledej <portal> <volume> --pismeno F|--rok N|--cislo N` for the image to read first. The map is a
    hint only: it never closes a search.
 3. Assignment, not a prose card: `tools/zadani.py novy <id> --otazka "…" --hleda <role> --osoba "<key>:<role>:<marks>" --svazek <volume key>
-   --snimky <from>-<to> --vratit <fields> [--strop 12,12] [--nezamenit "<key>:<marks of the namesake>"]`. The tool refuses an unknown person or
+   --snimky <from>-<to> --vratit <fields> [--strop 12,12] [--nezamenit "<key>:<marks of the namesake>"]`; small fields, one fact each
+   (`otec_jmeno,otec_stav,otec_dum`, R-CONF-004). The tool refuses an unknown person or
    volume and a volume that does not cover the searched role (a register of grooms cannot answer a question about a bride). Name the exact row
    or page when you know it (single row per crop). Send `rodokmen:researcher` (or `rodokmen:browser-reader` for portals scripts may not touch;
    agents are called by their full names) the one line the tool prints and the task id; never the transcription of the record it should find.
@@ -51,6 +52,8 @@ The session can end at any moment: after every step the state is in files, and `
      (straightened, full resolution, at most 2000 px on the longer side), the fields to read, the language and the output path
      `pracovni/vysledky/<id>_overeni_<reading>.json`; never the first reading or the name searched for. Then `tools/vysledek.py porovnej <id> <reading>`.
      A disagreement keeps both transcriptions and the claim stays `prob` at most.
+     `kratší čtení` (one reading wrote only part of a field) is not agreement: another blind reading of that field, or split the field
+     and read it again (R-CONF-004); an audit verifies the core of the transcription as small fields, never one long text.
 5. Decide (R-ID, R-CONF, R-NEG): who the person is, what is accepted, whether the done-criterion is met. Write the decision with `Write` to
    `pracovni/vysledky/<id>_rozhodnuti.json` (schema `rozhodnuti/1`, filled example `tools/vysledek.py vzor rozhodnuti`): the diary row, the new
    record with its transcription and its **participants** (`ucastnici`: every person of the tree in the record with the role, and by name those

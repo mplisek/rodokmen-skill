@@ -159,6 +159,19 @@ class DefiniceAgentu(unittest.TestCase):
         self.assertIn("Výchozí postup", o)                              # povinná pole úkolu k rozhodnutí (S-003)
         self.assertRegex(o, r"(?i)only .*decision")                     # předloží jen skutečná rozhodnutí
 
+    def test_overeni_po_malych_polich(self):
+        """Podnět z bádání 17. 11. 2026: široké pole („otec“ s celým textem) dávalo „kratší čtení“ a ověření neprošlo. Pravidlo
+        R-CONF-004 říká zadávat pole ke čtení a ověření malá a jednoznačná; badatel na něj odkazuje u zadání i u ověření."""
+        pravidla = (REPO / "skills" / "rodokmen-agents" / "rules" / "confidence.md").read_text(encoding="utf-8")
+        self.assertIn("## R-CONF-004", pravidla)
+        blok = pravidla.split("## R-CONF-004", 1)[1].split("\n## ", 1)[0]
+        for s in ("kratší čtení", "otec_jmeno", "audit"):
+            self.assertIn(s, blok, s)
+        for jmeno in ("badatel", "orchestrator"):
+            text = self.texty[jmeno]
+            self.assertGreaterEqual(text.count("R-CONF-004"), 2, jmeno)          # u --vratit i u ověření
+            self.assertIn("kratší čtení", text, jmeno)
+
     def test_orchestrator_zajistuje_commit_po_kazdem_overeni(self):
         o = self.texty["orchestrator"]
         self.assertIn("tools/commit.py", o)                             # E2: commit dělá nástroj, ne agent

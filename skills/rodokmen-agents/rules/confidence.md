@@ -20,3 +20,10 @@ when: reading German-language forms (for example Vienna) or any form where years
 do: verify years, status (single or widowed), occupation, addresses and witness names on the crop yourself before recording `doc`; leave an uncertain field out and describe the doubt in the note instead of writing a question mark
 why: these are the fields that are most often missing or confused on German forms, and a question mark in the data looks like a reading
 source: reference/matriky.md#Typické pasti (ze skutečného výzkumu)
+
+## R-CONF-004
+
+when: choosing the fields a reader returns (`zadani.py novy … --vratit`) and the fields a blind second reading verifies, an audit of a written record included
+do: ask for small, unambiguous fields, one fact each: `otec_jmeno`, `otec_stav`, `otec_dum` instead of one `otec` with the whole text; the same for the mother, the house, the date and the witnesses; for an audit verify only the core of the transcription (name, date, house, parents) as such fields, never one long text; when `vysledek.py porovnej` says `kratší čtení` (one reading wrote only part of a field), order another blind reading of that field or split the field and read it again, never accept it as agreement
+why: a wide field is written longer by one reader and shorter by another; the comparison then cannot confirm it, although both read the same record, and the verification of a correct reading fails
+source: fork
