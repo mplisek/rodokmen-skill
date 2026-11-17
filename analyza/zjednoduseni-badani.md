@@ -277,8 +277,8 @@ Zadání uživatele: při přechodu na originál zachovat **web**, **přístupy*
 některá **pravidla** (třeba „do zápisu nepatří, že pomocník zapsal“), **anonymitu repozitáře skillu** a případně **měření**.
 
 **Stav plánu (17. 11. 2026):** rozhodnuto R9–R14 (oddíl 9): možnost A, bádání jen s člověkem, spory čtení rozhoduje člověk, pevná
-pole jen jako formulář pro čtení (neukládají se), volitelné nástroje podle doporučení. Otevřené: `mapa.py` (podle změřeného
-použití) a zálohová značka. Data projektu před a po: oddíl 11. Větev `podnety-17-11b` zůstává nesloučená; audit z projektu se
+pole jen jako formulář pro čtení (neukládají se), volitelné nástroje podle doporučení. Krok 0 hotový: `mapa.py` zůstává
+(změřené použití), zálohová značka `fork-metodika-2026-11` a plán jsou na GitHubu; `nalez.py` podle PR #187 ve vlastní verzi. Data projektu před a po: oddíl 11. Větev `podnety-17-11b` zůstává nesloučená; audit z projektu se
 dokončí po přechodu.
 
 Doplněno 17. 11. 2026: z agentů zůstávají jen `metodik` a `upstream-sync` (údržba skillu, definice zkrácené); fork používá jen
@@ -350,7 +350,7 @@ přechodu se otázky zakládají přímo).
 | `smoke_test.py` | kontrola síťových nástrojů | P | Z | PR originálu #125 |
 | `mailto.py` | žádosti archivům jako odkaz do e-mailu | P | Z | PR originálu #87 |
 | `pracovni_prehled.py` | co už je stažené v `pracovni/` | P | Z | šetří archivy |
-| `mapa.py` | mapa knihy (co který snímek pokrývá) | P | V | rozhodne změřené použití (krok 0); bez něj prošlé snímky z deníku (`rejstrik.py svazek`), struktura knihy v `svazky.json` → `popis`; v tabulce nástrojů jen jeden nástroj na mapu knihy (dnes i `mapa_knihy.py`) |
+| `mapa.py` | mapa knihy (co který snímek pokrývá) | P | Z | **[měření]** 15.–16. 11. 2026: 136 volání (`hledej` 60, `zapis` 34, `stav` 28), z toho 120 pomocníci; 105 uložených map knih mimo projekt. Samostatná, zapisuje mimo `data/`; v `SKILL.md` odlišit od `mapa_knihy.py` originálu (orientace po vsích, sloupce rejstříku) |
 | `spotreba.py` | měření spotřeby sezení | – | Z | měření |
 | `podnet.py` | podnět pro správce skillu s kontrolou anonymity | M | N | R14; poznámky ručně do `poznamky_pro_skill.md` jako v originálu, anonymitu hlídá `anonymita.py` před pushem skillu |
 | `oprava.py` | změna dat jedním voláním s důvodem a historií | M | Z | R14; rodinné dokumenty, historie v `opravy.jsonl` |
@@ -363,7 +363,7 @@ přechodu se otázky zakládají přímo).
 | `zapis_vysledku.py` | zápis výsledku jedním voláním | M | N | nahradit PR originálu #187, nebo `zapis.py` |
 | `commit.py` | commit dokončené práce nástrojem | M | N | |
 
-Souhrn: **Z 30, ZZ 11, Ú 2, V 1, N 8** (52). Z vrstvy M se nepřebírá 8 nástrojů, ale také 10 z 12 agentů (zůstávají `metodik` a `upstream-sync`), hooky orchestrátoru,
+Souhrn: **Z 31, ZZ 11, Ú 2, N 8** (52). Z vrstvy M se nepřebírá 8 nástrojů, ale také 10 z 12 agentů (zůstávají `metodik` a `upstream-sync`), hooky orchestrátoru,
 32 pravidel a `reference/nocni_rezim.md`. Upravené nástroje originálu (2.4) se přenesou ve verzi forku tam, kde je potřebuje web
 (`export_web.py`, `kontrola.py`, `hlidac_site.py`, `novy_projekt.py`); jinak se vezme verze originálu.
 
@@ -403,14 +403,14 @@ a knihy po vsích (`matriky.md`), ztotožnění (`metodika.md`). Limit: `SKILL.m
 
 | Krok | Co | Hotovo, když |
 |---|---|---|
-| 0 | zbývající rozhodnutí: `mapa.py` podle změřeného použití (deník a záznamy sezení), zálohová značka dnešního forku (`fork-metodika-2026-11`) | změřeno a rozhodnuto; značka existuje |
+| 0 | zbývající rozhodnutí: `mapa.py` podle změřeného použití (deník a záznamy sezení), zálohová značka dnešního forku (`fork-metodika-2026-11`) | **hotovo 17. 11.**: `mapa.py` zůstává, značka na GitHubu |
 | 1 | větev ze `upstream/main` 0.10.2 | větev existuje, testy originálu procházejí |
 | 2 | infrastruktura repozitáře: `scripts/anonymita.py` a pre-push, CI (`testy.yml`), markdownlint, `scripts/pokryti.py`, `scripts/sync_report.py`, `CLAUDE.md`, číslování verzí `-fork.N` | anonymita a CI zelené na prázdné změně |
 | 3 | vrstva K a R: `datumy`, `chronologie`, `jmena`, `graf`, `rodiny`, `audit_dat`, `rejstrik` s testy | testy zelené |
 | 4 | deník `denik.jsonl` (`denik.py`, `zaznamy_store.py`, `hlidac_zapisu.py`); šablona `data/` bez front: `ukoly.md`, `archivni_dotazy.md`, `STAV.md` originálu s oddíly Pravidla od uživatele a Čeká na rozhodnutí | `novy_projekt.py` založí projekt podle 11.2; testy |
 | 5 | vrstva W: export a stránky, `ucastnici`, `otazky` (odpojené od front), `pohled`, `pristupy`, `pozvanky`, kontrola webu, brána | ukázkový web se sestaví, kontrola webu a brána zelené, test přístupů |
-| 6 | vrstva P: portálové nástroje, `prohlizec.py`, `svazky.py` (odpojený od `vysledek.py`), `souhlas`, `smoke_test`, `mailto`, `pracovni_prehled`, případně `mapa.py` | testy zelené; smoke test z domácí sítě |
-| 7 | `oprava.py` s `osoby_upravy.py`; pravidla: kontrola procesních údajů v `kontrola.py`, texty forku do `reference/`; `SKILL.md` podle 10.4 | testy; `SKILL.md` do 3 500 slov; žádný rozpor z 10.4 |
+| 6 | vrstva P: portálové nástroje, `prohlizec.py`, `svazky.py` (odpojený od `vysledek.py`), `mapa.py`, `souhlas`, `smoke_test`, `mailto`, `pracovni_prehled` | testy zelené; smoke test z domácí sítě |
+| 7 | `nalez.py` (zápis nálezu jedním příkazem podle PR #187, napojený na `denik.jsonl`, osoby i z RODINA, fakta přes `oprava.py`, bez `snimky.tsv`); `oprava.py` s `osoby_upravy.py`; pravidla: kontrola procesních údajů v `kontrola.py`, texty forku do `reference/`; `SKILL.md` podle 10.4 | testy; `SKILL.md` do 3 500 slov; žádný rozpor z 10.4 |
 | 8 | ověřování (3.1, 3.2): tabulka pevných polí v `reference/`, malý pomocník na porovnání dvou čtení s normalizací, dávka sporů pro uživatele; nic se neukládá navíc (11.3) | testy: shoda, neshoda → spor, neobvyklý zápis → člověk |
 | 9 | měření: `spotreba.py` a kontrola dodržování (10.7); měření `mereni-v1` na sadě `mereni-v0` (jedno sezení, bez agentů M) | čísla ceny a počet porušení vedle `mereni-v0` |
 | 10 | migrace projektu podle 11.4 na větvi z `migrace-test`: skript `scripts/migrace_a.py` (fronty → `ukoly.md`, `archivni_dotazy.md`), ruční projití úkolů s uživatelem, `STAV.md`, archivace a mazání, `novy_projekt.py`, `npm run data`, `npm run build`, brána, porovnání webu se starou verzí | web projektu se stejným obsahem, brána zelená |

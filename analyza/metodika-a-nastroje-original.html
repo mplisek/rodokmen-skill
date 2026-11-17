@@ -295,7 +295,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-si
 
 <section id="prechod">
   <h2>Co přinese fork</h2>
-  <p>Z 52 nástrojů forku se podle plánu přenese 43 (zachovat, jako závislost, po úpravě), 1 je otevřený (<code>mapa.py</code>) a 8 se nepřebírá. Z vrstvy metodiky zůstávají jen agenti pro údržbu skillu.</p>
+  <p>Z 52 nástrojů forku se podle plánu přenese 44 (zachovat, jako závislost, po úpravě) a 8 se nepřebírá. Z vrstvy metodiky zůstávají jen agenti pro údržbu skillu.</p>
   <div class="tbl"><table>
     <thead><tr><th>Oblast</th><th>Z forku</th><th>Proč</th></tr></thead>
     <tbody>
@@ -346,7 +346,7 @@ footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-si
 <section id="otevrene">
   <h2>Otevřené</h2>
   <ul class="open">
-    <li><b>Mapa knihy.</b> Originál má <code>mapa_knihy.py</code> (oddíly po vsích, sloupce rejstříku); <code>mapa.py</code> forku (co který snímek pokrývá) rozhodne změřené použití.</li>
+    <li><b>Mapa knihy.</b> <code>mapa.py</code> forku (co který snímek pokrývá) zůstává: za dva dny bádání 136 volání, 105 uložených map. V <code>SKILL.md</code> odlišit od <code>mapa_knihy.py</code> originálu (oddíly po vsích, sloupce rejstříku).</li>
     <li><b>Zápis nálezu jedním příkazem.</b> PR originálu #187 (<code>nalez.py</code>) je otevřený, s konflikty a bez revize; jeho deník je Markdown, fork drží <code>denik.jsonl</code>. Převzít jen nápad a napojit na <code>denik.py</code>, nebo zůstat u šesti kroků přes <code>zapis.py</code>.</li>
     <li><b>Kontrola dodržování.</b> Návrh výše; zatím neexistuje.</li>
     <li><b>Pevná pole a spory.</b> Tabulka polí v <code>reference/</code> a malý pomocník na porovnání (krok 8 plánu).</li>
@@ -443,6 +443,7 @@ const GROUPS = [
     ["smoke_test.py","Kontrola síťových nástrojů."],
     ["mailto.py","Žádost jako odkaz do e-mailu."],
     ["pracovni_prehled.py","Co už je stažené v pracovni/."],
+    ["mapa.py","Mapa knihy: co který snímek svazku pokrývá; odhad snímku pro písmeno, rok, číslo."],
     ["spotreba.py","Měření spotřeby sezení."]]}
 ];
 const box=document.getElementById("groups"), q=document.getElementById("q"), fork=document.getElementById("fork"),
