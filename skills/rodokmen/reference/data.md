@@ -5,7 +5,9 @@ Po změnách spusť `python3 -I tools/kontrola.py`. Ukázku vyplněných dat má
 Položky do JSON souborů přidávej a měň přes `python3 -I tools/zapis.py` (zachová formát souboru, viz SKILL.md).
 
 ## `osoby.py` – předci
+
 Kekulého čísla: 1 = výchozí osoba, otec osoby n = 2n, matka = 2n+1.
+
 | číslo | kdo |
 |---|---|
 | 1 | výchozí osoba (u ženy `sex="F"`) |
@@ -26,6 +28,7 @@ P = {
  33: dict(n="otec neuveden", st="unk", f=[], note="Nemanželský syn; otec v matrice není."),
 }
 ```
+
 - `n` jméno (ženy rodným příjmením), `y` roky pro přehledy (`"* 1895"`, `"1890–1944"`, `"asi 1720–1785"`, `"1680 – před 1740"`,
   `"† 1940"` když známe jen úmrtí; nic nevíme → `""`).
 - `f` fakta: začínají `*` (narození), `×` (sňatek), `†` (úmrtí) nebo jsou volný text (řemeslo, bydliště).
@@ -45,30 +48,37 @@ P = {
 - `SAME = {350: 140}` – předek, který je v rodokmenu dvakrát (alias → hlavní číslo; alias v `P` může mít `f=["TÁŽ OSOBA jako 140"]`).
 
 ## `zaznamy.json` – zápisy
+
 ```json
 [{"klic": "holice_krest_jan_novak_1890", "svazek": "1a0b2337", "snimek": 57, "druh": "N",
   "datum": "14. 2. 1890", "nazev": "Křest Jana Nováka",
   "shrnuti": "Jan, syn Václava Nováka, kováře v Holicích čp. 112, a Barbory roz. Malé z Ostřetína.",
   "odkaz": "https://aron.vychodoceskearchivy.cz/apu/…/dao/…/file/…"}]
 ```
+
 - `klic`: malá písmena bez diakritiky, `obec_druh_kdo_rok` (druh: krest, snatek, umrti, index, scitani…). Je to i název obrázku.
 - `druh`: N, O, Z, I (index/rejstřík), S (sčítání), J (jiný pramen).
 - `datum` jako v češtině („14. 2. 1890“, „3/1867“, „1797“) – web podle něj řadí.
 
 ## `svazky.json`
+
 `{"1a0b2337": {"archiv": "SOA Zámrsk – Sbírka matrik…", "portal": "ARON", "svazek": "N Holice 1880–1900, sign. …",
 "popis": "obce", "url": "odkaz na svazek"}}` – u ARON zapisuje `aron_img.py <apu> svazek`.
 
 ## `prepisy.json`
+
 `{"<klic>": {"orig": "[Datum] 14. února 1890\n[Dům] 112\n[Otec] …", "cs": "Český překlad celou větou…"}}`
+
 - `orig` věrný přepis po sloupcích, `[Název sloupce]` v hranatých závorkách, nejisté „(?)“, nečitelné „[…]“, zkratky ponechat.
 - `cs` srozumitelný překlad pro rodinu; vysvětli staré pojmy (domkář, podruh).
 
 ## `zvyrazneni.json`
+
 `{"<klic>": {"boxes": [[x0, y0, x1, y1]], "status": "ok", "note": ""}}` – zlomky šířky/výšky obrázku `vyrezy/<klic>.jpg`.
 Zapisuje `ramecek.py`. Rámeček má obepnout celý čtený zápis (ne jen jméno).
 
 ## `mista.json`
+
 `{"Holice": {"re": "Holic", "dotaz": "Holice, Česko", "lat": 50.066, "lon": 15.986}}` – `re` je regulární výraz hledaný
 ve faktech osob (kmen slova, aby sedělo skloňování: „Holic“ najde Holice i v Holicích). Spravuje `mista.py`.
 Pozor na kolize (Hradec Králové × Nový Hradec Králové – použij `(?<!Nový )Hradec`; krátká jména jako `\bBuku?\b`).
@@ -82,14 +92,17 @@ předků bez obce vypíše v hranatých závorkách slova z faktů, která vypad
 jen ji výraz `re` nechytí ve skloňovaném tvaru („v Přesece“ × `Přesek`) – uprav výraz (`Přese?[kc]`).
 
 ## `dokumenty.json` – rodinné fotky a dokumenty na webu
+
 `[{"img": "foto_svatba_1919", "popis": "Svatba Jana a Josefy, Holice 1919.", "osoby": [8, 9]}]` – `popis` je na webu
 vidět jako popisek, vyplň ho (stejně jako `t` u bočních příbuzných).
 Obrázek ulož přes `vyrez.py dokumenty/<sken>.jpg foto_svatba_1919` (vznikne `vyrezy/` i `zdroje/`).
 
 ## `web.json` – nastavení webu
+
 Viz `web.md`.
 
 ## Markdown poznámky
+
 - `research_log.md` – tabulka `| # | datum | zdroj | rozsah | hledáno | výsledek | citace |`, nové řádky na konec, i negativní.
   Web ji zobrazuje jako „Výzkumný deník“.
 - `zajimavosti.md` – `## Nadpis` + text, odkazy `[Jméno](/osoba/<slug>/)`.
@@ -99,10 +112,12 @@ Viz `web.md`.
 - `archivni_dotazy.md`, `udaje_od_rodiny.md` – volný text.
 
 ## Odkazy na osoby (slug)
+
 Slug = jméno bez diakritiky + rok, např. `jan-novak-1890`; při kolizi přidá číslo osoby. Přesné slugy po `npm run data`
 v `web/src/data/site.json` (`people`). Při přejmenování osoby se slug změní – oprav odkazy v textech.
 
 ## Import rodinného stromu (Fáze 1)
+
 - **GEDCOM** (`.ged`, export z MyHeritage/Geni/FamilySearch): `python3 -I tools/ged_import.py dokumenty/strom.ged "Jméno Příjmení"`
   vypíše předky s čísly, všechny události a poznámky a **frontu zápisů** (nejmladší známá událost u každého předka,
   a jestli už je v archivu). `--osoby` dá kostru pro `osoby.py`. Poznámky ve stromu bývají plné rodinných historek –

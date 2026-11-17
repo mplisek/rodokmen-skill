@@ -42,11 +42,13 @@ po verzích v [CHANGELOG.md](CHANGELOG.md).
 (víc v části [Zpětná vazba](#zpětná-vazba-a-vaše-zkušenosti)).
 
 ## Jak vypadá web
+
 Ukázkový web s vymyšlenou rodinou Novákových (260 předků v 11 generacích) má na úvodní stránce příběh rodu, zajímavosti,
 mapu, kde předci žili, osm rodů a vějíř předků. Další stránky: rodokmen po rodinách, karty osob, výřezy zápisů
 s přepisem a překladem, „Co hledáme“ a deník hledání. **[Podívejte se na celou úvodní stránku ukázky →](docs/ukazka-web.png)**
 
 ## Co budete potřebovat
+
 - **Claude Code** (aplikace pro Mac/Windows nebo příkazová řádka) a placené předplatné Claude. Rodokmen je
   dlouhá práce – počítejte s několika večery a s tím, že spotřebuje dost kreditů. Nejlevnější tarif **Pro bude
   nejspíš málo** (stačí na vyzkoušení), na celý rodokmen počítejte aspoň s nejnižším tarifem **Max**.
@@ -63,6 +65,7 @@ s přepisem a překladem, „Co hledáme“ a deník hledání. **[Podívejte se
 - Volitelně účet na [Cloudflare](https://www.cloudflare.com) (zdarma, založíte ho při zveřejnění), pokud chcete web zveřejnit pro rodinu.
 
 ## S jakými modely to vzniklo
+
 AI se vyvíjí rychle a za pár měsíců může skill dávat lepší, nebo jen jiné výsledky. Proto je tu uvedeno, s čím byl
 vyzkoušený.
 
@@ -76,26 +79,33 @@ S jiným nebo slabším modelem počítejte s víc chybami ve čtení starého p
 ## Instalace
 
 ### Varianta A – jako plugin (doporučeno)
+
 V Claude Code napište:
-```
+
+```text
 /plugin marketplace add sarsonj/rodokmen-skill
 /plugin install rodokmen@rodokmen-skill
 ```
+
 Pak Claude Code restartujte (do běžící relace se nový plugin nenačte).
 **Aktualizace.** Claude Code u pluginů od jiných autorů než Anthropic nové verze sám nehlídá. Máte dvě možnosti:
+
 - **Automaticky (doporučuji):** jednou v `/plugin` na kartě **Marketplaces** vyberte `rodokmen-skill` a zapněte
   automatické aktualizace (Enable auto-update). Nová verze se pak stáhne při spuštění Claude Code.
 - **Ručně:** v terminálu (nebo v Claude Code s `!` na začátku)
-  ```
+
+  ```text
   claude plugin marketplace update rodokmen-skill
   claude plugin update rodokmen@rodokmen-skill
   ```
+
   O nových verzích se dozvíte přes **Watch → Custom → Releases** na GitHubu.
 
 Po aktualizaci Claude Code restartujte. Rozpracovaný projekt pak Claude při další práci sám nabídne aktualizovat
 na novou verzi (vaše data i vlastní úpravy webu a nástrojů zůstanou, změny šablony se do nich sloučí).
 
 ### Varianta B – ručně
+
 Stáhněte repozitář (zelené tlačítko **Code → Download ZIP** na GitHubu, nebo `git clone`) a zkopírujte složku
 `skills/rodokmen` do `~/.claude/skills/` (na Windows `C:\Users\<jméno>\.claude\skills\`). Výsledek:
 `~/.claude/skills/rodokmen/SKILL.md`.
@@ -103,6 +113,7 @@ Stáhněte repozitář (zelené tlačítko **Code → Download ZIP** na GitHubu,
 Pak Claude Code restartujte.
 
 ## První spuštění
+
 1. Spusťte Claude Code (klidně v domovské složce) a napište třeba:
    > Chci udělat rodokmen své rodiny.
 
@@ -117,6 +128,7 @@ Chcete nejdřív vidět, jak web vypadá? Řekněte: *„Ukaž mi ukázkový web
 s vymyšlenou rodinou a spustí náhled.
 
 ## Jak to probíhá
+
 | Fáze | Co děláte vy | Co dělá Claude |
 |---|---|---|
 | 0. Příprava | potvrdíte instalaci programů | založí projekt |
@@ -130,7 +142,8 @@ Matriky jsou online jen do určitého data: narození starší než 100 let, sň
 O mladší údaje se žádá na matričním úřadě. Claude vám řekne, kdy to je potřeba.
 
 ## Co je v repozitáři
-```
+
+```text
 skills/rodokmen/
   SKILL.md           průvodce pro Clauda (fáze, pravidla)
   reference/         podrobné návody: příprava počítače, čtení matrik, portály archivů, metodika
@@ -141,6 +154,7 @@ skills/rodokmen/
 ```
 
 ## Co umí a co ne
+
 - **Hotové nástroje** (bez prohlížeče) mají: východní Čechy (SOA Zámrsk, ARON), západní Čechy (SOA Plzeň,
   Porta fontium) a Prahu (AHMP a policejní přihlášky 1850–1914). Pro severní Čechy (SOA Litoměřice) stahuje
   snímky nástrojem, knihu ale najde přes prohlížeč. Pro Rakousko je postup přes Matriculu.
@@ -158,6 +172,7 @@ skills/rodokmen/
 - Placené služby (MyHeritage, Ancestry) Claude hromadně neprochází – vede to k zablokování účtu.
 
 ## Soukromí
+
 Projekt obsahuje osobní údaje vaší rodiny. Zůstává na vašem počítači. Web je chráněný rodinnou otázkou
 a není indexovaný vyhledávači; bez nastavené otázky ho nástroj nenasadí. Je to lehká ochrana proti náhodným
 návštěvníkům, ne trezor: kdo zná odpověď, vidí všechno, co na web dáte. Claude má pokyn psát o žijících lidech
@@ -166,6 +181,7 @@ rozhodnutí je na vás.
 Pokud projekt chcete zálohovat na GitHub, použijte **soukromý** repozitář.
 
 ## Zpětná vazba a vaše zkušenosti
+
 Děkuji všem, kdo mi poslali připomínky – jen verze 0.5.0 zapracovala přes čtyřicet podnětů od šesti lidí (podpora
 Windows a staršího ImageMagicku, postupy pro MZA Brno a ZA Opava, bezpečná úprava dat a další). Každou připomínku čtu
 a průběžně zapracovávám – ne každou hned a ne každou doslova, aby skill zůstal jednoduchý pro všechny.
@@ -175,7 +191,7 @@ prosím [založte jako issue na GitHubu](https://github.com/sarsonj/rodokmen-ski
 Popište, co se stalo, a pokud jde o čtení zápisu, přidejte odkaz na snímek v archivu. Issues jsou veřejné, proto
 do nich nepište údaje o žijících lidech.
 
-Budu rád i za další zkušenosti. Napište mi na **sarsonj@gmail.com**, co fungovalo, co ne, jaký archiv jste použili, co vám na webu chybělo.
+Budu rád i za další zkušenosti. Napište mi na **<sarsonj@gmail.com>**, co fungovalo, co ne, jaký archiv jste použili, co vám na webu chybělo.
 Užitečné změny rád zapracuji do skillu, aby je měli k dispozici i ostatní. Další verze tak bude lepší pro každého,
 kdo hledá své předky.
 
@@ -184,8 +200,10 @@ chyby, nové archivy, postupy a nápady, bez údajů o vaší rodině. Občas v�
 když budete chtít, zkopírujte je do e-mailu.
 
 ## Bezpečnost
+
 Skill je obyčejný text (návod pro Clauda) a pár skriptů v Pythonu. Všechno si můžete před instalací prohlédnout
 tady v repozitáři.
+
 - **Žádný automaticky spouštěný kód.** Plugin nemá hooky ani MCP servery. Skripty spouští jen Claude, když je
   při práci potřebuje, a Claude Code se vás na ně zeptá.
   Jediná výjimka je volitelný **hlídač sítě**. Claude se na něj zeptá při zakládání projektu a bez vašeho souhlasu
@@ -209,4 +227,5 @@ tady v repozitáři.
   jeho návodem řídí.
 
 ## Licence
+
 Skill je pod licencí [MIT](LICENSE): smíte ho volně používat, upravovat a šířit dál, jen zachovejte uvedení autora (Jindřich Šaršon).

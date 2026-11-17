@@ -6,12 +6,13 @@ mapa (OpenStreetMap), vějíř přes celou obrazovku s hledáním, seznam předk
 a překladem), stránka osoby, rodiny, „Co hledáme“, výzkumný deník, hledání.
 
 ## Příkazy (ve složce `web/`)
+
 | příkaz | co dělá |
 |---|---|
 | `npm install` | jednou na začátku (stáhne knihovny, ~1 minuta) |
 | `npm run data` | převede data do webu (vždy po změně dat; `scripts/data.mjs` si sám najde funkční Python 3) |
 | `npm run build` | sestaví web do `dist/` |
-| `npm run nahled` | data + build + náhled na http://localhost:4321 (Ctrl+C ukončí) |
+| `npm run nahled` | data + build + náhled na <http://localhost:4321> (Ctrl+C ukončí) |
 | `npm run dev` | vývojový režim při úpravách vzhledu |
 | `npm run nasadit-cloudflare` | data + build + nahrání na Cloudflare (výchozí) + kontrola |
 | `npm run nasadit` | data + build + nahrání na Netlify + kontrola |
@@ -20,6 +21,7 @@ a překladem), stránka osoby, rodiny, „Co hledáme“, výzkumný deník, hle
 Náhled spouštěj na pozadí a uživateli pošli odkaz. Vzhled si ověř sám (snímek obrazovky přes prohlížeč, je-li k dispozici).
 
 ## `data/web.json`
+
 ```json
 {
  "nazev": "Rodokmen Novákových",
@@ -32,6 +34,7 @@ Náhled spouštěj na pozadí a uživateli pošli odkaz. Vzhled si ověř sám (
  "zajimavosti_na_uvodu": [{"nadpis": "Nejstarší předek", "text": "Kovář Jan, asi 1825."}]
 }
 ```
+
 - `kontakt.jmeno` je ve 3. pádě („Napište Petrovi na …“).
 - **Přihlášení:** otázka, na kterou zná odpověď jen rodina (ne snadno dohledatelná na sociálních sítích).
   Odpověď se porovnává bez diakritiky a velkých písmen a musí obsahovat písmena nebo číslice z latinky (azbuka
@@ -48,8 +51,10 @@ Náhled spouštěj na pozadí a uživateli pošli odkaz. Vzhled si ověř sám (
   `kontrola.py` je pak nehlásí jako `CITLIVÉ`. Úryvek musí obsahovat hlášené slovo; když se text změní, hlásí se znovu.
 
 ## Zveřejnění na Cloudflare (výchozí, zdarma)
+
 Nasazování i přenos jsou zdarma bez limitu; brána běží před každým souborem a to se počítá do 100 000 požadavků denně
 (stránka webu je asi 20–40 požadavků → tisíce zobrazení denně; po vyčerpání vrací web do půlnoci UTC chybu 429).
+
 1. **Účet:** nemá-li uživatel účet Cloudflare, ať si ho **nejdřív** založí na dash.cloudflare.com (zdarma, stačí e-mail)
    a potvrdí e-mail z pošty – registrace se do dvou minut přihlášení nevejde. Až je v dashboardu přihlášený, pokračuj.
 2. **Přihlášení:** spusť sám na pozadí `cd web && npx -y wrangler@4 login` – otevře prohlížeč. Řekni uživateli:
@@ -83,6 +88,7 @@ Nasazování i přenos jsou zdarma bez limitu; brána běží před každým sou
 Další aktualizace = jen `npm run nasadit-cloudflare`.
 
 **Pasti:**
+
 - „You need to verify your email address to use Workers“ (403) u nového účtu: Cloudflare chce ověřený e-mail – ověření
   v dashboardu (pruh nahoře / My Profile), potvrdit odkaz v poště, nasadit znovu (subdoména už zůstane založená).
 - Safari s blokátorem obsahu ukáže místo ověřovací stránky Cloudflare prázdnou stránku 403 – zkus jiný prohlížeč
@@ -92,7 +98,9 @@ Další aktualizace = jen `npm run nasadit-cloudflare`.
 - V cloudovém prostředí (claude.ai), kde se přihlášení přes prohlížeč nevrátí do terminálu, použij Netlify (`login --request`).
 
 ## Zveřejnění na Netlify (druhá možnost)
+
 Pro uživatele, kteří už web na Netlify mají. Bezplatný účet vystačí jen na asi 20 nasazení měsíčně (viz kredity níže).
+
 1. Uživatel si založí účet na netlify.com (stačí přihlášení přes Google/GitHub) – udělá sám.
 2. Přihlášení CLI (otevře prohlížeč) – dej uživateli: `! cd web && npx -y netlify-cli@latest login`.
    Když `!` nejde (cloudové prostředí): `npx -y netlify-cli@latest login --request "Rodokmen"` vypíše odkaz a číslo
@@ -123,20 +131,24 @@ náhled. Řekni to uživateli hned při prvním zveřejnění.
 **Pozor:** „Netlify Drop“ (přetažení složky v prohlížeči) neumí Edge Functions → web by byl bez přihlášení. Nepoužívat.
 
 ## Náhled v Claude desktop
+
 Projekt má `.claude/launch.json` – náhled webu v Claude desktop spustí `npm --prefix web run dev` (port 4321). Data se
 předtím musí vyexportovat (`cd web && npm run data`). Když náhled nenaběhne (třeba na Windows, kde je `npm` jako `npm.cmd`),
 zkus v `launch.json` `"runtimeExecutable": "node"` a `"runtimeArgs": ["web/node_modules/astro/bin/astro.mjs", "dev", "--root", "web"]`
 (Astro 7 má spouštěč `astro.mjs`, ne `astro.js`). Server běží jen na tomto počítači – nepřidávej `--host`.
 
 ## Vlastní server (pokročilé)
+
 - Docker: `web/Dockerfile` (build Astro → nginx s `nginx.conf` z `nginx.sablona.conf`). Před buildem image vždy `npm run data`.
   Bez Node.js na počítači: `python3 -I tools/export_web.py --nasazeni`, pak `docker build` ve `web/` (Astro se sestaví v image).
 - Přestavba nechává na disku starý image bez tagu (stovky MB). Po `docker build` smaž jen starý image tohoto webu:
-  ```
+
+  ```text
   OLD=$(docker images -q rodokmen-web:latest); docker build -t rodokmen-web .
   docker rm -f rodokmen-web; docker run -d --name rodokmen-web --restart unless-stopped -p 8080:80 rodokmen-web
   [ -n "$OLD" ] && [ "$OLD" != "$(docker images -q rodokmen-web:latest)" ] && docker image rm "$OLD"
   ```
+
   `docker system/image/builder prune` nepoužívej – platí pro celý server a smaže i věci jiných projektů.
 - Web počítá s během v kořeni domény (odkazy, cookie přihlášení i hledání od `/`) – za reverse proxy mu dej
   subdoménu (`rodokmen.server.cz`), ne podadresář (`server.cz/rodokmen/`).
@@ -145,17 +157,21 @@ zkus v `launch.json` `"runtimeExecutable": "node"` a `"runtimeArgs": ["web/node_
 - CapRover: `npm run deploy-caprover` (vyžaduje nainstalovaný a přihlášený `caprover` CLI).
 
 ## Úpravy vzhledu
+
 Styly `web/src/styles/global.css` (barvy v `:root`), rozložení `web/src/layouts/Base.astro`, stránky `web/src/pages/`.
 Barvy rodů jsou v `tools/export_web.py` (`LINE_COLORS`) a `tools/fan_chart.py` (`BASE`). Upravuj jen na přání uživatele
 a po úpravě zkontroluj web na mobilu i počítači.
 
 ## Vějíř jako plakát
+
 `python3 -I tools/fan_chart.py vystupy/` → SVG a HTML (a PNG, je-li nainstalovaný Google Chrome, na Windows i Microsoft Edge) k tisku.
 
 ## Aktualizace staršího projektu
+
 Znovu spusť `python3 -I SKILL_DIR/tools/novy_projekt.py <složka projektu>`. Data (`data/`, výřezy) zůstanou. Projekt má
 v `.skill_sablona/` kopii šablony `web/` a `tools/`, ze které vznikl (commitovat s projektem), a skript podle ní rozhodne
 o každém souboru a vypíše seznam:
+
 - **Přepsáno**: soubor projekt neupravoval, nahradila ho nová verze.
 - **Ponecháno**: vlastní úprava, šablona se nezměnila.
 - **Sloučeno**: změnila se úprava i šablona, každá jinde; `git merge-file` je spojil. Ověř, že soubor dává smysl.
@@ -179,6 +195,7 @@ nebo složku na místě zálohy skript odmítne s hláškou POZOR a soubory za n
 `web/package-lock.json` (mění ho `npm install`) se neslučuje: změnila-li ho šablona, vezme se nový a starý jde do zálohy.
 
 **Po aktualizaci projdi výpis s uživatelem** (skript řeší jen mechanické případy):
+
 1. **Ke kontrole:** porovnej, co změnila šablona (`.skill_sablona/<soubor>` proti `nova_sablona/<soubor>` v záloze)
    a co projekt (`.skill_sablona/<soubor>` proti souboru v projektu). Uživateli řekni jednou dvěma větami, co je nového
    a co je jeho úprava, navrhni sloučení a po souhlasu ho udělej a spusť `--vyreseno`.

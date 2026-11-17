@@ -1,6 +1,7 @@
 # Jak číst matriky – praktický návod
 
 ## Druhy knih
+
 | Zkratka | Kniha | Co v ní je | Proč je cenná |
 |---|---|---|---|
 | **N** | narození (křty), *Liber natorum / baptisatorum*, *Geburtsbuch* | datum narození a křtu, dům (čp.), dítě, rodiče (od ~1784 i jejich rodiče a bydliště), kmotři, porodní bába | pohlaví, legitimita, rodiče matky → další generace |
@@ -14,6 +15,7 @@ berní rula 1654 (jen hospodáři), gruntovní/pozemkové knihy (kdo vlastnil kt
 vojenské záznamy, domovské listy, parte. Viz `portaly.md` a `metodika.md` (prameny mimo ČR).
 
 ## Lhůty (zákon 301/2000 Sb.)
+
 Do archivu (a tedy online) jde svazek, až od jeho **posledního** zápisu uplyne: narození **100 let**, sňatky **75**, úmrtí **30**.
 Mladší knihy jsou na matričním úřadě obce s rozšířenou působností / pověřeném úřadě. **Matriční úřad ale počítá lhůtu
 u každého zápisu zvlášť** (§ 25b zákona 301/2000 Sb.): zápis starší 100 / 75 / 30 let (narození / sňatek / úmrtí) vydá
@@ -29,6 +31,7 @@ snímky; svazek rovnou zapiš do `archivni_dotazy.md` i s místem uložení (tam
 zhruba po roce 1910 často online nebudou (kniha pokračuje za rok 1926, lhůta běží od posledního zápisu).
 
 ## Jak vypadá hledání v praxi
+
 1. **Obec → farnost.** Malé vesnice patřily k faře v sousední obci; popis svazku vyjmenovává všechny obce farnosti.
    Hledej obec v popisu svazku (`aron_search.py "Obec"`), ne jen v názvu – a hledej i podle obce, ne jen podle fary
    z pozdějšího zápisu: obec mohla mít vlastní matriku (filiální kostel, lokálie), i když list vydala mateřská fara.
@@ -65,10 +68,12 @@ zhruba po roce 1910 často online nebudou (kniha pokračuje za rok 1926, lhůta 
    nejdřív v katolické matrice, syna v evangelické.
 
 ## Knihy řazené po vsích (časté 1784–1900, všechny archivy)
+
 Venkovské fary vedly knihu často **po vsích**: každá ves má vlastní oddíl s vlastním stránkováním (foliací) a roky běží
 jen uvnitř oddílu. Oddíly nejdou podle let, pokračují vzadu („ad pag. 70“, „vide reliquos pag.“) a oddíl jedné vsi bývá
 až na konci knihy. Odhad snímku podle roku pak selže a „zápis tam není“ bývá omyl (skutečné chyby: prošel se jen oddíl
 vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–405).
+
 1. **Popis knihy první:** eBadatelna „Obecný popis“ (rozvržení stran po vsích), MZA „Části matriky“, ARON „územní
    rozsah“, Porta fontium `info`. Přechody vsí mezi farami mívají mezery – zápis z mezery hledej v obou farách.
    Popis bývá **neúplný**: eBadatelna rozvržení ořízne asi na 250 znaků (konec chybí i na webu archivu), u jiných knih
@@ -97,6 +102,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
    pokrývá** (skutečná chyba: sňatek „nenalezen“ ve dvou farách, přitom byl ve vesnické knize správné fary).
 
 ## Čtení písma
+
 - **Rejstřík čti po sloupcích, ne celou dvoustranu naráz.** Při rychlém čtení sloupce příjmení se jméno snadno přehlédne
   (skutečná chyba: „v rejstříku oddaných 1686–1739 není“, a bylo tam třikrát – rod se pak dohledal o tři generace dál).
   Snímek v plném rozlišení rozřež na svislé pruhy a každý přečti zvlášť, řádek po řádku:
@@ -129,6 +135,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
   daný rok (Velikonoce se mění).
 
 ### Slovníček (lat. / něm. → česky)
+
 | výraz | význam |
 |---|---|
 | *natus / geboren*, *baptisatus / getauft* | narozen, pokřtěn |
@@ -193,6 +200,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 | *mendicus*, *testamentum*, *mane / vespere* | žebrák, závěť, ráno / večer |
 
 ## Odhad roků
+
 - Věk při úmrtí/sňatku je často zaokrouhlený o ±2–5 let. Uváděj „asi 1756“ a hledej křest v širším okně.
   I přesné datum narození v oddacím zápisu mívá špatný měsíc: když křest v něm není, projdi celý rok ±1 a farnost
   matky (dítě se často narodilo u jejích rodičů).
@@ -200,6 +208,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 - „Vdovec“ u ženicha = hledej první manželství a děti z něj.
 
 ## Stavy údajů v datech
+
 | stav | kdy |
 |---|---|
 | `doc` | přečteno přímo na snímku zápisu, který osobu jednoznačně identifikuje |
@@ -209,6 +218,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 | `unk` | známe jen místo v rodokmenu |
 
 ## Typické pasti (ze skutečného výzkumu)
+
 - Písař spletl jméno dědečka (Josef místo Václava) – rozhodne více zápisů téže rodiny.
 - Dítě zapsané pod jiným křestním jménem, než jakým ho volala rodina (Františka → v rodině Anna).
 - Předek v dospělosti „Jan“ byl pokřtěn jako Václav: starší Václav zemřel a mladší dítě dostalo jeho jméno, v dospělosti
@@ -223,6 +233,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 - Čtení pomocníků (subagentů) i jiných nástrojů na čtení písma vždy ověř sám na snímku (princip čtyř očí, SKILL.md → Pomocníci).
 
 ## Technické pasti (macOS, zsh) – napiš je i pomocníkům do zadání
+
 - Shell je zsh: `for a in "x y z"; do set -- $a` slova nerozdělí (v zsh `${=a}`); `ls F*` bez shody = chyba
   „no matches found“; `echo ====` je chyba (`=` na začátku slova). Složitější smyčky pouštěj přes `bash -c '…'`.
 - ImageMagick: seznam souborů předávej jako jednotlivé argumenty, ne jednou proměnnou s mezerami.
@@ -234,7 +245,9 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
   na webu by byl nečitelně malý. Celá stránka je v `zdroje/` a na portálu přes odkaz.
 
 ## Technické pasti (Windows) – napiš je i pomocníkům do zadání
+
 (Nahrazují první dva body macOS sekce; body o `overit.py` a výřezu platí i tady.)
+
 - Python: `python -I -X utf8 tools/<nástroj>.py` (ne `python3` – bývá to nefunkční alias z Microsoft Store). Bez `-X utf8`
   je výstup do roury v cp1250: čeština se rozbije a skripty spadnou na „≈“ a „→“ (nástroje skillu si výstup přepnou
   do UTF-8 samy, vlastní jednorázové skripty ne – `-X utf8` proto používej vždy). Totéž platí při
@@ -249,4 +262,3 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 - Windows nerozlišuje velikost písmen v názvech (`o_29.jpg` = `O_29.jpg`) – náhled a plné rozlišení odliš předponou
   (`nahled_`, `plne_`), jinak se přepíšou.
 - Datové soubory zapisuj v UTF-8 **bez BOM** (Windows PowerShell 5.1 s `-Encoding UTF8` přidá BOM a `osoby.py` pak nejde načíst).
-
