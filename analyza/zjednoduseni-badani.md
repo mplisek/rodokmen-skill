@@ -258,6 +258,9 @@ V obou případech nejdřív **3.1 a 3.2**, protože řeší dnešní problém o
 
 ## 9. Rozhodnutí pro uživatele
 
+Rozhodnuto 17. 11. 2026: R9 ano, R10 ano (pokud nebude bobtnat, 11.3), R11 větev ponechat celou nesloučenou, R12 jen s člověkem,
+R13 možnost A, R14 podle doporučení (`audit_dat` a `oprava` ano, `podnet` ne, `mapa` podle změřeného použití).
+
 | Č. | Otázka | Doporučení |
 |---|---|---|
 | R9 | Spory čtení v poli jádra rozhoduje člověk nad výřezem místo dalších slepých čtení? | ano |
@@ -391,3 +394,103 @@ originál, ne zkopírovat.
 - **Rozjetá data projektu**: fronty a předání je třeba převést dřív, než se stará metodika odstraní (10.3).
 - **Export webu**: největší kus a největší riziko regresí; před migrací porovnat sestavený web projektu starou a novou verzí
   (počet stránek, vztahy z obou stran, přístupy).
+
+## 11. Data projektu před a po přechodu (možnost A)
+
+Rozhodnutí uživatele 17. 11. 2026 (oddíl 9): R12 jen s člověkem (bez nočního režimu), R13 možnost A, R9 ano, R10 ano s podmínkou,
+že pevná pole nebudou bobtnat, R14 podle doporučení, větev `podnety-17-11b` ponechat (nesloučit), audit z projektu dokončit až po
+přechodu.
+
+**[kód]** Soupis složky `data/` projektu 17. 11. 2026 (jen názvy, velikosti a počty položek; obsah se nečetl).
+
+### 11.1 Fronty úkolů: co s nimi
+
+Dnes 6 front, 187 otevřených úkolů a historie 122 událostí:
+
+| Fronta | Úkolů | Druhy | Po přechodu |
+|---|---|---|---|
+| `ukoly_na_noc.md` | 133 | křty 56, sňatky 33, úmrtí 18, bádání 23, jiné 3 | `ukoly.md` (plán bádání) |
+| `ukoly_k_badani.md` | 46 (3 čekají) | křty 23, sňatky 17, bádání 6 | `ukoly.md` |
+| `ukoly_vstup.md` | 1 | jiné | `ukoly.md` |
+| `ukoly_dotazy_na_archivy.md` | 5 | různé | `archivni_dotazy.md` (soubor originálu) |
+| `ukoly_na_rodinu.md` | 2 | dotaz, bádání | otázka pro rodinu → `verejne_otazky.json` (stránka Co hledáme), bádání → `ukoly.md` |
+| `ukoly_k_rozhodnuti.md` | 0 | – | `STAV.md` → „Čeká na rozhodnutí“ (sem i spory čtení, R9) |
+| `ukoly_historie.jsonl` | 122 událostí | – | archiv (zůstává v historii gitu projektu), z `data/` pryč |
+
+Rozdělení na noční a denní frontu bez nočního režimu ztrácí smysl. Ceny S–XL, priority, okna, `pokusu`, `kdy` a stav `čeká` s datem
+patřily rozvrhu bez člověka; v novém plánu zůstává jen to, co potřebuje člověk s badatelem u jednoho stolu.
+
+**Nový `data/ukoly.md`** – jeden prostý seznam, žádný nástroj ho nečte ani nehlídá:
+
+```markdown
+# Plán bádání
+
+Co hledat dál. Hotové se maže (výsledek je v deníku). Rozpracované a předání jsou v STAV.md.
+
+## Křty
+- 88 – křest, Lhota 1810–1814 (svazek 0a1b2c3d); vodítko: otec chalupník čp. 5
+## Sňatky
+- 44 × 45 – sňatek asi 1835, farnost nevěsty
+## Úmrtí
+## Jiné
+```
+
+Řádek = osoba (číslo z P nebo zkratka z RODINA), co hledat, kde, případně vodítko. Převod je jednorázový skript: z každého úkolu
+vezme osoby, druh a první řádek textu a definici hotového zahodí. **[hypotéza]** Část úkolů jsou duplicity otevřených otázek
+v `ISSUES` a jiné jsou už vyřešené; převod je vypíše k ručnímu projití s uživatelem, nemaže je sám.
+
+### 11.2 Mapování souborů
+
+Značky: **=** beze změny, **~** zůstává se změnou, **+** nový soubor, **→** převod do jiného souboru, **A** archiv (z `data/`
+pryč, zůstává v historii gitu projektu), **×** smazat (generovaný nebo dočasný).
+
+| Soubor dnes | Velikost | Po přechodu | Formát po přechodu | Proč |
+|---|---|---|---|---|
+| `osoby.py` | 200 kB | = | P, LINES, SIDE, ISSUES, HYPOTEZY, SAME, RODINA | RODINA potřebuje web |
+| `zaznamy.json` | 160 kB | ~ | jako dnes; `ucastnici` a `overeno` zůstávají, `overeno` může mít hodnotu `"uzivatel"` (spor rozhodl člověk) | účastníci jsou pro web; R9 |
+| `prepisy.json` | 156 kB | ~ | k zápisu volitelně `jadro` – pevná pole podle druhu (3.1); `orig` a `cs` beze změny | R10; jen u ověřených zápisů, ne zpětně všude |
+| `denik.jsonl` | 620 kB | = | záznam na řádek přes `denik.py` | web generuje stránku Deník |
+| `research_log.md` | 240 kB | A | – | starý deník před převodem do `denik.jsonl`; před archivací **ověřit**, že se převedl celý |
+| `STAV.md` | 24 kB | ~ | šablona originálu: Pro koho, Kde co je, Pravidla (s pododdílem Pravidla od uživatele), Rozpracováno, Čeká na rozhodnutí; vede se ručně | originál; bez front a kopií plánů |
+| `ukoly_na_noc.md`, `ukoly_k_badani.md`, `ukoly_vstup.md` | 72 + 24 + 4 kB | → `ukoly.md` | prostý seznam (11.1) | bez nočního režimu |
+| `ukoly_dotazy_na_archivy.md` | 8 kB | → `archivni_dotazy.md` | soubor originálu (nadpis a odrážky) | originál |
+| `ukoly_na_rodinu.md` | 8 kB | → `verejne_otazky.json`, `ukoly.md` | – | Co hledáme na webu |
+| `ukoly_k_rozhodnuti.md` | 4 kB | → `STAV.md` | oddíl Čeká na rozhodnutí | |
+| `ukoly_historie.jsonl` | 36 kB | A | – | rozvrh a ceny úkolů |
+| `opravy.jsonl` | 108 kB | = | historie změn přes `oprava.py` | R14: `oprava.py` zůstává |
+| `rezim.json` | 4 kB | × | – | noční režim, rozpočet, podpis commitu |
+| `.rozpocet.json` | 1 kB | × | – | rozpočet nočního režimu |
+| `verejne_otazky.json` | 1 kB | = | přes `otazky.py` (odpojený od front) | stránka Co hledáme |
+| `web.json` | 12 kB | = | nastavení webu a přístupy | |
+| `pozvanky.json` | 1 kB | = | osobní odkazy | přístupy |
+| `dokumenty.json` | 20 kB | = | rodinné dokumenty | |
+| `mista.json` | 12 kB | = | místa na mapě | |
+| `svazky.json` | 52 kB | = | katalog svazků; struktura knihy jako poznámka v `popis` (náhrada mapy knihy) | |
+| `zvyrazneni.json` | 36 kB | = | rámečky ve výřezech | |
+| `stavby.py` | 12 kB | = | dějiny staveb | stránka Domy |
+| `domy/` (`adresy.json`, `domy.geojson`, `chybi.txt`) | 24 kB | = | výstup skillu stare-adresy; `chybi.txt` generuje export | stránka Domy |
+| `udaje_od_rodiny.md`, `zajimavosti.md`, `pribeh.md`, `pribehy/` | 48 kB | = | texty | |
+| `zadosti.md` | 4 kB | = | žádosti archivům a úřadům | `mailto.py` |
+| `poznamky_pro_skill.md` | 4 kB | = | zapisuje se ručně (bez `podnet.py`) | R14 |
+| – | – | + `ukoly.md` | prostý seznam (11.1) | náhrada front |
+| – | – | + `archivni_dotazy.md` | soubor originálu | náhrada fronty dotazů |
+| `__pycache__/` | – | × | – | generované Pythonem (patří do `.gitignore`) |
+
+Mimo `data/`: `pracovni/zadani/`, `pracovni/vysledky/` (kontrakty) a `pracovni/brana.json` git neukládá; zadání a nálezy po
+přechodu nevznikají, `brana.json` zůstává (brána). `mereni/` projektu zůstává kvůli měření `mereni-v1`.
+
+### 11.3 Kontrola bobtnání (podmínka k R10)
+
+- Pevná pole jádra jen pro tři druhy (křest, sňatek, úmrtí) a jen pole z tabulky 3.1; nový druh nebo pole jen rozhodnutím uživatele.
+- `jadro` se plní jen u zápisů, které se ověřují; zpětné doplňování všech zápisů se nedělá.
+- Žádné další soubory v `data/` kvůli ověřování: spory jsou v `STAV.md`, rozhodnutí v `zaznamy.json` (`overeno`).
+- Měřítko: `SKILL.md` po přechodu nejvýš o desetinu delší než originál (krok 7 v 10.4); kontrola v `scripts/pokryti.py`.
+
+### 11.4 Převod (krok 10 plánu)
+
+1. Na větvi projektu: jednorázový skript skillu (`scripts/migrace_a.py`, po migraci se z repozitáře odstraní) převede fronty podle
+   11.1 a vypíše úkoly k ručnímu projití (duplicity s `ISSUES`, zjevně hotové).
+2. Ruční projití s uživatelem: smazat hotové a duplicitní, zkrátit řádky.
+3. `STAV.md` přepsat do šablony originálu (Rozpracováno, Čeká na rozhodnutí, Pravidla od uživatele).
+4. Archivovat `research_log.md` (po kontrole úplnosti převodu), `ukoly_historie.jsonl`; smazat `rezim.json`, `.rozpocet.json`.
+5. `novy_projekt.py` nové verze, `npm run data`, `npm run build`, brána; porovnat web se starou verzí (počet stránek, vztahy, přístupy).
