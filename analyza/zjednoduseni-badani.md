@@ -23,9 +23,99 @@ Je to **jen návrh**, nic z něj není implementované. Zdroje zjištění: **[k
 - **[kód]** Příčina: ověření porovnává **volně pojmenovaná a volně ohraničená textová pole doslova**. Spor, který člověk nad výřezem
   rozhodne za vteřinu, řeší třetí a čtvrté slepé čtení, a nové čtení spor často rozšíří.
 
-## 2. Co fork přidává nad originál
+## 2. Rozdílová analýza: fork proti originálu
 
-**[kód]** 302 commitů nad `upstream/main`, 52 nástrojů navíc, 11 stránek webu navíc. Rozděleno podle původu:
+Srovnání `main` forku (0.10.2-fork.1) s `upstream/main` (0.10.2), **[kód]** `git diff upstream/main main`, 302 commitů forku navíc.
+
+### 2.1 Přehled podle oblastí
+
+| Oblast | Nové soubory | Změněné soubory originálu | Řádky + / − | Poznámka |
+|---|---|---|---|---|
+| `skills/rodokmen/tools/` | 53 | 21 | 15 450 / 341 | 52 nových nástrojů a k nim moduly; změny originálu hlavně v `export_web.py`, `kontrola.py`, `vyrez.py` |
+| `skills/rodokmen/reference/` | 4 | 8 | 1 607 / 77 | nové `nocni_rezim.md`, `zapisy.md`, `zadosti.md`, `stavby.md` |
+| `skills/rodokmen/template/web/` | 29 | 32 | 4 092 / 320 | 11 nových stránek, přístupy, komponenty |
+| `skills/rodokmen/template/data/` | 13 | 3 | 221 / 21 | jiné formáty dat projektu (2.2); 2 soubory originálu smazané |
+| `skills/rodokmen/SKILL.md` | – | 1 | 209 řádků změn | 4 700 slov proti 3 200 (2.3) |
+| `skills/rodokmen/tests/` | 81 | – | 10 745 / 0 | testy nástrojů forku (unittest), originál je nemá |
+| `tests/` | 20 | 11 | 2 828 / 19 | skriptové testy originálu a jejich rozšíření |
+| `agents/`, `hooks/`, `skills/rodokmen-agents/` | 25 | – | 1 324 / 0 | 12 agentů, 3 hooky, 32 pravidel; originál nemá nic z toho |
+| `scripts/`, `docs/adr/`, `GLOSSARY.md`, CI, `.githooks/` | 18 | – | asi 1 000 | údržba repozitáře: pokrytí, pravidla, anonymita, synchronizace s originálem, ADR |
+| `analyza/` | 17 | – | 3 303 / 0 | analýzy a návrhy metodiky (pracovní dokumenty) |
+
+Ve forku je tedy asi 40 tisíc řádků navíc, z toho asi 13,5 tisíce řádků testů a 3,3 tisíce řádků pracovních analýz.
+
+### 2.2 Data projektu
+
+Tady je rozdíl, který rozhoduje o migraci (možnost A, oddíl 4.2).
+
+| Soubor v `data/` | Originál | Fork |
+|---|---|---|
+| deník | `research_log.md` (Markdown tabulka, ručně) | `denik.jsonl` (záznam na řádek, jen přes `denik.py`, opravy novým řádkem, osoby klíčem, snímky); `research_log.md` ze šablony zmizel |
+| dotazy archivům | `archivni_dotazy.md` | fronta `ukoly_dotazy_na_archivy.md`; `archivni_dotazy.md` ze šablony zmizel |
+| úkoly | odrážky v `STAV.md` → Rozpracováno | 6 front `ukoly_*.md` (vstup, noc, bádání, rozhodnutí, rodina, archivy) a historie `ukoly_historie.jsonl` |
+| stav a předání | `STAV.md`, ručně | `STAV.md` vede `stav.py` (předání, pravidla od uživatele), ručně se nepíše |
+| zápisy | `zaznamy.json` | navíc pole `ucastnici` (osoba a role), `overeno`, `audit`, `odkaz` |
+| tvrzení, opravy | – | `tvrzeni.jsonl`, `opravy.jsonl` |
+| veřejné otázky | součást `STAV.md` a front | `verejne_otazky.json` (stránka Co hledáme, ADR 0003, 0009) |
+| nastavení | `web.json` | navíc `rezim.json` (noční režim, rozpočet, podpis commitu) |
+| stavby, žádosti, příběhy | – | `stavby.py`, `zadosti.md`, `pribehy/*.md` |
+| osoby | `osoby.py` (P, LINES, SIDE, ISSUES, HYPOTEZY, SAME) | totéž a navíc `RODINA` (příbuzní mimo přímou linii s vlastní stránkou) |
+| pracovní soubory | `pracovni/` volně | navíc kontrakty `pracovni/zadani/`, `pracovni/vysledky/` (zadání, nález, ověření, rozhodnutí), `brana.json` |
+
+Společné beze změny tvaru: `osoby.py` (P, LINES, SIDE…), `zaznamy.json` (základní pole), `prepisy.json`, `svazky.json`, `mista.json`,
+`dokumenty.json`, `zvyrazneni.json`, `udaje_od_rodiny.md`, `zajimavosti.md`, `pribeh.md`.
+
+### 2.3 Postup bádání (`SKILL.md` a role)
+
+| Krok | Originál | Fork |
+|---|---|---|
+| začátek sezení | přečíst `STAV.md` a konec deníku | `stav.py` (fronty, rozpracované úkoly, předání, pravidla od uživatele, oprávnění) |
+| kdo bádá | hlavní sezení, pomocníci podle potřeby | agent `badatel` jako hlavní vlákno, čtenáři `researcher`/`browser-reader`, ověřovatel `verifier`; hlídač omezuje příkazy |
+| výběr práce | Rozpracováno v `STAV.md`, rozhodnutí sezení | fronty, `fronta.py frontier` nebo `dalsi`, priorita a cena úkolu, noční okno |
+| zadání pomocníkovi | text v zadání | kontrakt `zadani.py novy` (osoba, role, svazek, rozsah snímků, pole, strop) |
+| čtení | hlavní sezení čte snímek, čtení pomocníka ověří samo | čtenář vrací nález `nalez/1`, ověřovatel naslepo `overeni/1`, `vysledek.py porovnej` po polích, většina čtení |
+| zápis | ruční úprava `osoby.py`, `zaznamy.json`, přepis, deník (`zapis.py`) | rozhodnutí `rozhodnuti/1` a `zapis_vysledku.py` (všechno, nebo nic), opravy `oprava.py`, commit `commit.py` |
+| záporný výsledek | pravidlo v `SKILL.md` (0.10.2: doklad) | navíc vynucený kontraktem (`prohledano[].doklad`) |
+| kontrola dat | `kontrola.py` | navíc `audit_dat.py`, `graf.py`, `rodiny.py`, `chronologie.py`, `rejstrik.py` |
+| konec sezení | aktualizovat `STAV.md` | `stav.py predani`, commit nástrojem |
+| bez člověka | ne | noční a víkendový režim (`reference/nocni_rezim.md`) |
+
+Oddíly `SKILL.md`, které fork přidal: Hledání v datech (rejstřík), Noční a víkendový režim a fronty úkolů, Žádosti archivům;
+„Příběh hlavního rodu“ se rozšířil na „příběhy rodů“.
+
+### 2.4 Nástroje originálu, které fork změnil
+
+21 nástrojů originálu je ve forku upravených **[kód]**. Největší:
+
+| Nástroj | Řádků změn | Co fork mění |
+|---|---|---|
+| `export_web.py` | 1 566 | nové stránky, přístupy, soukromí, účastníci zápisů, RODINA, Co hledáme |
+| `kontrola.py` | 362 | kontroly forku (chronologie, účastníci, procesní údaje na webu, žijící) |
+| `vyrez.py` | 165 | výřez pro čtení do 2 000 px, díly řádku, začernění rodných čísel v dokumentech |
+| `hlidac_site.py` | 119 | úzký hlídač místo plošného zákazu curl, hlídání brány před nasazením |
+| `aron_img.py` | 114 | výchozí plné rozlišení (PR #120), sdílená mezipaměť |
+| `zapis.py`, `ramecek.py`, `novy_projekt.py`, `overit.py` | 80–100 každý | sloučení zápisů, rámečky pro výřez, aktualizace projektu s bránou a hlídači |
+
+Každá taková změna je při slučování originálu místem možného konfliktu (0.10.2: 5 konfliktů v 8 souborech).
+
+### 2.5 Web
+
+Stránky navíc: Dokumenty, Domy, Jména, místa (`misto/[slug]`), Časová osa, Osobnosti, Poznámky, příběhy rodů (`pribehy/[slug]`),
+Statistiky, Strom, vějíř od libovolné osoby (`vejir/[slug]`). Dále přístupy pro větve rodiny (samostatná verze webu pro každý
+přístup), vynucené soukromí žijících, barva rodu na celém webu, brána s kontrolou vztahů z obou stran. Web je na metodice bádání
+nezávislý: čte jen data (2.2).
+
+### 2.6 Co z rozdílu plyne
+
+- **Vrstvy W, P, K, R (2.7) se dají přenést samostatně**: nástroje a stránky čtou data, bádání neřídí. Jejich jediná vazba na
+  metodiku je přes formáty dat (`denik.jsonl`, `ucastnici`, `RODINA`, `verejne_otazky.json`).
+- **Vrstva M je provázaná s daty**: fronty, `denik.jsonl`, kontrakty v `pracovni/`, `tvrzeni.jsonl`, `opravy.jsonl`, `rezim.json`.
+  Odebrat ji znamená převést nebo archivovat tato data.
+- **Konflikty s originálem** vznikají hlavně v `SKILL.md`, šabloně dat a ve 21 upravených nástrojích originálu; ne v nových nástrojích.
+
+### 2.7 Vrstvy podle původu
+
+52 nástrojů navíc a 11 stránek webu navíc rozdělených podle původu:
 
 | Vrstva | Co to je | Příklady | Původ |
 |---|---|---|---|
