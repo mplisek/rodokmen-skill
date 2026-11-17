@@ -265,3 +265,129 @@ V obou případech nejdřív **3.1 a 3.2**, protože řeší dnešní problém o
 | R11 | Větev `podnety-17-11b`: sloučit jen úpravu hlídače pro sestavení webu a bránu, `jadro` a spol. ponechat ve větvi? | ano |
 | R12 | Je potřeba bádání bez člověka (noční a víkendový režim)? | rozhodne mezi A a B (oddíl 7) |
 | R13 | A, nebo B? | podle R12: bez nočního režimu A, s ním B |
+| R14 | Při A: verdikty V v 10.2 (`audit_dat`, `mapa`, `podnet`, `oprava` s `osoby_upravy`) | `audit_dat` a `oprava` ano, `mapa` a `podnet` ne |
+
+## 10. Plán přechodu na originál (možnost A)
+
+Zadání uživatele: při přechodu na originál zachovat **web**, **přístupy**, **nástroj pro bádání v prohlížeči** (Playwright),
+některá **pravidla** (třeba „do zápisu nepatří, že pomocník zapsal“), **anonymitu repozitáře skillu** a případně **měření**.
+
+### 10.1 Co zachovat a na čem to stojí
+
+| Zachovat | Soubory | Závisí na (nutno přenést také) |
+|---|---|---|
+| Web | `template/web/` forku, `export_web.py` forku, `statistiky.py`, `stavby.py`, `domy_export.py`, `osobnosti.py`, `soubory.py`, `obraz.py` | **[kód]** `export_web.py` importuje `denik`, `otazky`, `ucastnici`, `chronologie`, `pohled`: tedy deník `denik.jsonl` (`denik.py`, `zaznamy_store.py`), veřejné otázky `verejne_otazky.json` (`otazky.py`), účastníky zápisů (`ucastnici.py`), `chronologie.py` s `datumy.py`; `RODINA` v `osoby.py` |
+| Kontrola a brána webu | `kontrola_webu.py`, `znackuj_rody.py`, `rody_html.py`, `brana.py`, `hlidac_site.py` forku | `kontrola.py` forku (importuje `chronologie`, `graf`, `pohled`, `ucastnici`, `export_web`) |
+| Přístupy | `pohled.py`, `pristupy.py`, `pozvanky.py`, šablony přihlášení a brány (`netlify/`, `cloudflare/`, `nginx`) | export webu (výše) |
+| Bádání v prohlížeči | `prohlizec.py` (vlastní Edge přes Playwright, pauzy a stopky brzdy), agent `browser-reader` nebo jen pokyn v `SKILL.md`, `reference/portaly.md` forku | `slusne.py` (ZAKAZ, brzda) z originálu; `svazky.py` (svazek z prohlížeče do katalogu) jen po odpojení od `vysledek.py` |
+| Pravidla | kontrola procesních údajů v `kontrola.py` (vzor „pomocník“, „agent“, „ověřeno na snímku“…), totéž v `kontrola_webu.py`; text `reference/zapisy.md` → „Co nepatří do dat ani na web“; doplňky forku v `reference/matriky.md` a `metodika.md` (pasti, ztotožnění, knihy po vsích) | nic; jde o text a regulární výrazy |
+| Anonymita repozitáře | `scripts/anonymita.py`, `.githooks/pre-push`, `.anonymita-seznam.priklad`, kontrola v CI | nic |
+| Měření | `spotreba.py` (spotřeba sezení podle rolí ze záznamů Claude Code) | nic; role se po přechodu čtou podle typu pomocníka |
+
+**Důsledek:** web nejde přenést bez deníku `denik.jsonl`, veřejných otázek a účastníků zápisů. Ty se stávají součástí „webové“
+vrstvy, ne metodiky. `otazky.py` je třeba **odpojit od `fronta.py`** (dnes převádí veřejnou část front příkazem `z-fronty`; po
+přechodu se otázky zakládají přímo).
+
+### 10.2 Soupis nástrojů navíc a co s nimi
+
+52 nástrojů, které originál nemá **[kód]**. Verdikt: **Z** zachovat, **ZZ** zachovat jako závislost, **Ú** zachovat po úpravě,
+**V** volitelně (rozhodne uživatel), **N** nepřebírat (zůstane v archivní větvi).
+
+| Nástroj | K čemu | Vrstva | Verdikt | Poznámka |
+|---|---|---|---|---|
+| `pohled.py` | přístupy a pohled od jiné osoby | W | Z | přístupy |
+| `pristupy.py` | přehled, kdo co vidí | W | Z | přístupy |
+| `pozvanky.py` | osobní odkazy na web | W | Z | přístupy |
+| `statistiky.py` | stránka Statistiky | W | Z | |
+| `stavby.py` | dějiny staveb, stránka Domy | W | Z | |
+| `domy_export.py` | domy předků pro web | W | Z | |
+| `osobnosti.py` | stránka Osobnosti | W | Z | |
+| `kontrola_webu.py` | kontrola sestaveného webu z obou stran, procesní text | W | Z | pravidlo „pomocník“ na webu |
+| `znackuj_rody.py` | jednotná značka rodu | W | Z | |
+| `brana.py` | brána před nasazením | W | Z | |
+| `hlidac_zapisu.py` | hlídač ručních zápisů do chráněných souborů | W | Z | chrání `denik.jsonl`, `verejne_otazky.json`, generované soubory webu |
+| `rody_html.py` | pomůcky pro text stránek | W | ZZ | pro `kontrola_webu`, `znackuj_rody` |
+| `soubory.py` | bezpečný zápis souborů | W | ZZ | |
+| `obraz.py` | hledání ImageMagicku | W | ZZ | |
+| `denik.py` | deník jako `denik.jsonl` | W/M | ZZ | web z něj generuje stránku Deník |
+| `zaznamy_store.py` | úložiště JSONL pod zámkem | W/M | ZZ | pro `denik.py`, `otazky.py` |
+| `ucastnici.py` | účastníci zápisů (zápis na stránce každého účastníka) | W | ZZ | export i kontrola webu |
+| `otazky.py` | veřejné otázky (stránka Co hledáme) | W | Ú | odpojit od `fronta.py` |
+| `chronologie.py` | časová návaznost, časová osa | K | ZZ | export i kontrola |
+| `datumy.py` | data a roky na jednom místě | K | ZZ | pro `chronologie`, `graf`, `rodiny` |
+| `jmena.py` | volné porovnání jmen | K | ZZ | pro `graf`, `rodiny` |
+| `graf.py` | kontrola rodiny jako grafu | K | Z | PR originálu #135 |
+| `rodiny.py` | rekonstrukce rodiny, kandidáti | K | Z | PR originálu #126 |
+| `audit_dat.py` | rozpory v datech bez čtení snímků | K | V | čte jen data; užitečné po migraci |
+| `rejstrik.py` | rejstřík dat v SQLite | R | Z | PR originálu #203, verze forku čte `denik.jsonl` |
+| `prohlizec.py` | vlastní prohlížeč pro portály bez skriptů | P | Z | bádání v prohlížeči |
+| `svazky.py` | svazek z prohlížeče do katalogu | P | Ú | odpojit od `vysledek.py` |
+| `litomerice.py` | matriky SOA Litoměřice | P | Z | |
+| `mza.py` | hledání matrik MZA | P | Z | |
+| `matricula.py` | Matricula Online | P | Z | |
+| `vademecum.py` | VadeMeCum, židovské matriky | P | Z | |
+| `vezni.py` | databáze Památníku Terezín | P | Z | |
+| `arolsen.py` | Arolsen Archives | P | Z | PR originálu #124 |
+| `obeti.py` | oběti holocaust.cz | P | Z | PR originálu #123 |
+| `mauthausen.py` | zemřelí v Mauthausenu | P | Z | PR originálu #122 |
+| `brno_encyklopedie.py` | Encyklopedie dějin Brna | P | Z | PR originálu #121 |
+| `souhlas.py` | souhlas s podmínkami portálu | P | ZZ | pro `arolsen`, `obeti` |
+| `smoke_test.py` | kontrola síťových nástrojů | P | Z | PR originálu #125 |
+| `mailto.py` | žádosti archivům jako odkaz do e-mailu | P | Z | PR originálu #87 |
+| `pracovni_prehled.py` | co už je stažené v `pracovni/` | P | Z | šetří archivy |
+| `mapa.py` | mapa knihy (co který snímek pokrývá) | P | V | dnes ho plní `zapis_vysledku.py`; ručně jde `mapa.py zapis` |
+| `spotreba.py` | měření spotřeby sezení | – | Z | měření |
+| `podnet.py` | podnět pro správce skillu s kontrolou anonymity | M | V | malý; originál má `poznamky_pro_skill.md` ručně |
+| `oprava.py` | změna dat jedním voláním s důvodem a historií | M | V | pohodlné u rodinných dokumentů; originál edituje data přímo |
+| `osoby_upravy.py` | úprava jedné položky `osoby.py` | M | V | jen s `oprava.py` |
+| `fronta.py` | fronty úkolů, noční režim | M | N | |
+| `stav.py` | stav a předání ze souborů | M | N | originál: `STAV.md` ručně |
+| `kontext.py` | kontextový balíček pro agenta | M | N | |
+| `zadani.py` | kontrakt zadání | M | N | |
+| `vysledek.py` | kontrakt nálezu, ověření, porovnání | M | N | z něj jen tabulka jádra a porovnání pro 3.1 a 3.2 (malý modul) |
+| `zapis_vysledku.py` | zápis výsledku jedním voláním | M | N | nahradit PR originálu #187, nebo `zapis.py` |
+| `commit.py` | commit dokončené práce nástrojem | M | N | |
+
+Souhrn: **Z 28, ZZ 10, Ú 2, V 5, N 7** (52). Z vrstvy M se nepřebírá 7 nástrojů, ale také 12 agentů, hooky orchestrátoru,
+32 pravidel a `reference/nocni_rezim.md`. Upravené nástroje originálu (2.4) se přenesou ve verzi forku tam, kde je potřebuje web
+(`export_web.py`, `kontrola.py`, `hlidac_site.py`, `novy_projekt.py`); jinak se vezme verze originálu.
+
+### 10.3 Co se z dat projektu ponechá a co archivuje
+
+| Data | Po přechodu |
+|---|---|
+| `denik.jsonl`, `verejne_otazky.json`, `ucastnici` u zápisů, `RODINA`, `stavby.py`, `pribehy/`, `zadosti.md` | ponechat (web) |
+| `osoby.py`, `zaznamy.json`, `prepisy.json`, `svazky.json`, `mista.json`, `dokumenty.json`, `zvyrazneni.json` | beze změny |
+| `ukoly_*.md`, `ukoly_historie.jsonl` | otevřené úkoly převést do `STAV.md` (Rozpracováno, odrážky), soubory archivovat ve větvi projektu |
+| `tvrzeni.jsonl`, `opravy.jsonl`, `rezim.json` | archivovat (web je nepotřebuje) |
+| `pracovni/zadani/`, `pracovni/vysledky/` | `pracovni/` git neukládá; nic nepřevádět |
+
+### 10.4 Kroky
+
+| Krok | Co | Hotovo, když |
+|---|---|---|
+| 0 | rozhodnutí: verdikty V v 10.2 a R9–R14; zálohová značka dnešního forku (`fork-metodika-2026-11`) | uživatel potvrdil seznam |
+| 1 | větev ze `upstream/main` 0.10.2 | větev existuje, testy originálu procházejí |
+| 2 | infrastruktura repozitáře: `scripts/anonymita.py` a pre-push, CI (`testy.yml`), markdownlint, `scripts/pokryti.py`, `scripts/sync_report.py`, `CLAUDE.md`, číslování verzí | anonymita a CI zelené na prázdné změně |
+| 3 | vrstva K a R: `datumy`, `chronologie`, `jmena`, `graf`, `rodiny`, `rejstrik` s testy | testy zelené |
+| 4 | deník `denik.jsonl` (`denik.py`, `zaznamy_store.py`, `hlidac_zapisu.py`), šablona `data/` bez front | `novy_projekt.py` založí projekt s deníkem; testy |
+| 5 | vrstva W: export a stránky, `ucastnici`, `otazky` (odpojené od front), `pohled`, `pristupy`, `pozvanky`, kontrola webu, brána | ukázkový web se sestaví, kontrola webu a brána zelené, test přístupů |
+| 6 | vrstva P: portálové nástroje, `prohlizec.py`, `svazky.py` (odpojený), `souhlas`, `smoke_test`, `mailto`, `pracovni_prehled` | testy zelené; smoke test z domácí sítě |
+| 7 | pravidla: kontrola procesních údajů v `kontrola.py`, texty `reference/zapisy.md`, `matriky.md`, `metodika.md` forku do `reference/`; `SKILL.md` originálu doplnit jen o odkazy (deník přes `denik.py`, prohlížeč, rejstřík, pevná pole a spory k člověku) | `SKILL.md` delší nejvýš o desetinu proti originálu |
+| 8 | pevná pole jádra a spory k člověku (3.1, 3.2) jako malý modul | testy: shoda, neshoda → spor, neobvyklý zápis |
+| 9 | měření: `spotreba.py`, měření `mereni-v1` na sadě `mereni-v0` (bez agentů M, jedno sezení) | čísla vedle `mereni-v0` |
+| 10 | migrace projektu (10.3) na jeho vlastní větvi, `novy_projekt.py`, `npm run data`, `npm run build`, brána | web projektu se sestaví se stejným obsahem, brána zelená |
+| 11 | vydání (CHANGELOG, verze); stará metodika zůstává ve větvi a značce | vydáno |
+
+Odhad práce **[hypotéza]**: kroky 1–7 jsou hlavně přenos hotového kódu s testy (několik sezení metodika), krok 10 jedno sezení
+s kontrolou webu. Nejvíc práce je v kroku 5: `export_web.py` forku se od originálu liší o 1 566 řádků a je třeba ho postavit na
+originál, ne zkopírovat.
+
+### 10.5 Rizika
+
+- **Ztráta strojových záruk vrstvy M** (zápis jen přes validující nástroje, rozlišené stavy rozpočtu a nedostupnosti, dvojí čtení
+  vynucené kódem). Zmírnění: pevná pole se spory k člověku (3.2), kontrola dat, brána.
+- **Noční a víkendový režim skončí**; bádání jen interaktivně.
+- **Rozjetá data projektu**: fronty a předání je třeba převést dřív, než se stará metodika odstraní (10.3).
+- **Export webu**: největší kus a největší riziko regresí; před migrací porovnat sestavený web projektu starou a novou verzí
+  (počet stránek, vztahy z obou stran, přístupy).
