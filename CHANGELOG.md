@@ -10,6 +10,14 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
+## Nepublikováno (fork)
+
+### Opravy
+
+- Porovnání čtení (`vysledek.py porovnej`, ověření naslepo): věk s jednotkou let = bez jednotky („80 let“ = „80“, jiná jednotka
+  ne), pravopis w = v („Čerwna“ = „Června“, „Wenceslaus“ = „Venceslaus“), měsíc i bez háčků. Kratší přepis téhož pole se dál
+  za shodu nebere, ale je označený „kratší čtení“, ne „neshoda“; ověřovatel přepisuje každé pole celé.
+
 ## 0.10.2-fork.1 – 17. 11. 2026
 
 Fork na originálu 0.10.2 (sloučeno) a navíc:

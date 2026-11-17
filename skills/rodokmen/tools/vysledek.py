@@ -21,6 +21,7 @@ import json
 import os
 import re
 import sys
+import unicodedata
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 for _s in (sys.stdout, sys.stderr):
@@ -487,7 +488,12 @@ def tisk_souhrnu(s, path):
 
 
 def norm(t):
-    return re.sub(r"[\s.,;:]+", " ", str(t)).strip().casefold()
+    """Mezery a interpunkce pryč, malá písmena, w = v (starý pravopis: „Čerwna“, „Wenceslaus“)."""
+    return re.sub(r"[\s.,;:]+", " ", str(t)).strip().casefold().replace("w", "v")
+
+
+def bez_diakritiky(t):
+    return "".join(c for c in unicodedata.normalize("NFD", t) if not unicodedata.combining(c))
 
 
 # Měsíc v datu se porovnává jako měsíc, ne jako text: „Februar“ = „Febrr.“ = „Februarii“, „9ber“ = „Novembris“, „července“ = 7.
@@ -501,16 +507,21 @@ MESICE = ((r"(7|sept?)b(e)?r", 9), (r"(8|oct|okt)b(e)?r", 10), (r"9b(e)?r", 11),
 def _mesic(slovo):
     if not re.fullmatch(r"[^\W\d_]{3,}|(7|8|9|10|x)b(e)?r\w*", slovo):
         return slovo
+    holy = bez_diakritiky(slovo)   # starý pravopis bez háčků: „Cerwna“ = „června“
     for vzor, cislo in MESICE:
-        if re.match(vzor, slovo):
+        if re.match(vzor, slovo) or re.match(bez_diakritiky(vzor), holy):
             return str(cislo)
     return slovo
 
 
-def norm_pole(pole, t):
+def norm_pole(pole, t, jednotky=True):
     """Normalizace pro porovnání čtení: číslo domu „č.“ = „čp.“ = „č. p.“; u data (pole s „datum“ nebo hodnota s rokem 1500–1999)
-    navíc měsíc na číslo. Kratší čtení se za shodu nebere (podmnožina textu neříká totéž)."""
+    navíc měsíc na číslo (i ve starém pravopisu); věk s jednotkou let = bez jednotky; w = v. Kratší čtení se za shodu nebere
+    (podmnožina textu neříká totéž), porovnej ho ale označí „kratší čtení“, ne „neshoda“."""
     n = re.sub(r"(?<!\w)(?:čp|č p|č|cp|c p)(?=\s+\d)", "č", norm(t))
+    if jednotky:   # věk: „80 let“ = „80 roků“ = „80 r.“ = „annorum 80“ = „80“ (jiná jednotka, třeba měsíce, zůstává)
+        n = re.sub(r"(?<!\w)(\d+) (?:let|léta|roků|roku|rok|r|jahre?|jahr|ann(?:orum|os|i)?)(?!\w)", r"\1", n)
+        n = re.sub(r"(?<!\w)(?:annorum|annos|anni|ann|aetatis) (\d+)(?!\w)", r"\1", n)
     datum = "datum" in str(pole).casefold() or re.search(r"(?<!\d)1[5-9]\d\d(?!\d)", n)
     return " ".join(_mesic(s) for s in n.split()) if datum else n
 
@@ -556,7 +567,9 @@ def porovnej(prvni, druhe):
         elif pole not in a:
             vysl = "jen druhé čtení"
         else:
-            vysl = "shoda" if norm_pole(pole, a[pole]) == norm_pole(pole, b[pole]) else "neshoda"
+            na, nb = norm_pole(pole, a[pole]), norm_pole(pole, b[pole])
+            sa, sb = set(norm_pole(pole, a[pole], False).split()), set(norm_pole(pole, b[pole], False).split())
+            vysl = "shoda" if na == nb else "kratší čtení" if sa and sb and (sa < sb or sb < sa) else "neshoda"
         out.append({"pole": pole, "vysledek": vysl, "prvni": a.get(pole), "druhe": b.get(pole)})
     return out
 

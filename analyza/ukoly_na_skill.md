@@ -53,6 +53,11 @@ Edit, nástroj chyběl, zápis do `udaje_od_rodiny.md` se odkládal), hlídač z
 - migraci STAV.md projektu dělá bádání (`stav.py kontrola`, úkoly do front, `vyrad`, `predani`), pak smazat poznámku v projektu;
 - zrušení nebo změna pravidla od uživatele zatím nemá příkaz (jen nové pravidlo, které starší nahrazuje).
 
+## Porovnání čtení (podnět 17. 11. 2026, větev `porovnani-normalizace`)
+
+Příčina potvrzená kódem: `norm_pole` sjednocoval jen mezery, „č.“ a měsíce v současném pravopisu. Hotovo: jednotka věku, w = v, měsíc
+bez háčků, výsledek „kratší čtení“ (dál neověřuje – rozhodnutí z E1). Zbývá zkopírovat `vysledek.py` do projektu.
+
 ## Podněty z bádání 17. 11. 2026 (větev `podnety-17-11`)
 
 Hotovo: osoby ze skupiny RODINA v `kontext.py` a `rejstrik.py` (dřív jen P a SIDE; text faktů k nahrazení byl vidět až v

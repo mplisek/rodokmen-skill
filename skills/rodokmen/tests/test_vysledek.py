@@ -249,6 +249,26 @@ class OvereniAPorovnani(Zaklad):
         r = vysledek.porovnej({"doslova": {"otec": "Febr"}}, {"doslova": {"otec": "Februar"}})   # mimo data se měsíce nenormalizují
         self.assertEqual(r[0]["vysledek"], "neshoda")
 
+    def test_jednotka_veku_pravopis_w_v_a_stary_zapis_mesice_jsou_shoda(self):
+        """Podnět z bádání 17. 11. 2026: „80 let“ × „80“, „Čerwna“ × „Června“ vycházely jako neshoda a audit se shodným obsahem
+        nešel zapsat jako ověřený."""
+        for pole, prvni, druhe, vysl in (("vek", "80 let", "80", "shoda"), ("vek", "80 roků", "80 r.", "shoda"),
+                                         ("vek", "annorum 80", "80", "shoda"),
+                                         ("vek", "80 let", "80 měsíců", "neshoda"),                  # jiná jednotka není totéž
+                                         ("vek", "8 let", "80", "neshoda"),
+                                         ("datum", "9. Čerwna 1906", "9. června 1906", "shoda"),
+                                         ("datum", "9. Čerwence 1906", "9. června 1906", "neshoda"),  # červenec ≠ červen
+                                         ("otec", "Wenceslaus Vzorny", "Venceslaus Vzorny", "shoda"),  # w = v (starý pravopis)
+                                         ("otec", "Josef Vzorný", "Josef Vzorek", "neshoda"),
+                                         ("dum", "Křemenice č. 2", "2", "kratší čtení"),             # podmnožina dál není shoda
+                                         ("otec", "Josef Vzorný rolník z Lhoty", "Josef Vzorný", "kratší čtení")):
+            r = vysledek.porovnej({"doslova": {pole: prvni}}, {"doslova": {pole: druhe}})
+            self.assertEqual(r[0]["vysledek"], vysl, (pole, prvni, druhe))
+        v = vysledek.vetsina({"doslova": {"otec": "Josef Vzorný rolník"}}, [{"doslova": {"otec": "Josef Vzorný"}}])
+        self.assertFalse(v["otec"]["overeno"])                                                     # kratší čtení neověřuje
+        v = vysledek.vetsina({"doslova": {"vek": "80 let"}}, [{"doslova": {"vek": "80"}}])
+        self.assertTrue(v["vek"]["overeno"])
+
     def test_dve_overeni_proti_prvnimu_cteni_neovereno(self):
         self.priprav(datum="17. Maii 1812")
         druhe = dict(self.overeni, vyrezy=["pracovni/vysledky/U-0101_vyrezy/c1_b.jpg"])

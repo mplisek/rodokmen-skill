@@ -23,7 +23,8 @@ Write one file, the path the card gives (`pracovni/vysledky/<id>_overeni_<readin
  "doslova": {"datum": "17. Martii 1812", "otec": "Joannes Wzorny"}, "nejistota": {"otec": "end of the word in the gutter"}, "necitelne": []}
 ```
 
-`doslova` holds each asked field exactly as written (for German forms mind years, marital status, occupation, addresses and witnesses);
+`doslova` holds each asked field exactly as written and whole – everything the record says for that field (name with occupation,
+house and village when they stand there); a shorter transcription does not count as a verification (for German forms mind years, marital status, occupation, addresses and witnesses);
 `nejistota` says why a field is unsure; `necitelne` lists the fields you cannot read. Nothing else: no "agreement", no person, no verdict.
 The comparison with the first reading is done by a tool afterwards.
 
