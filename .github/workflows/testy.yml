@@ -40,10 +40,17 @@ jobs:
         if: runner.os == 'Linux'
         run: npx -y markdownlint-cli2@0.18.1 "**/*.md" "!**/node_modules/**"
 
+      - name: Testy nástrojů forku (unittest)
+        run: python -X utf8 -m unittest discover -s skills/rodokmen/tests -v
+
       - name: Skriptové testy nástrojů
         shell: bash
         run: |
           T=skills/rodokmen/tools
+          python -X utf8 tests/chronologie/test_chronologie.py
+          python -X utf8 -I tests/datumy/test_datumy.py
+          python -X utf8 -I tests/rodiny/test_rodiny.py $T/rodiny.py
+          python -X utf8 -I tests/rejstrik/test_rejstrik.py
           python -X utf8 -I tests/kontrola/test_cisla.py $T/kontrola.py
           python -X utf8 -I tests/mista/test_mista.py $T
           python -X utf8 -I $T/slusne.py tests/brzda/test_brzda.py $T/slusne.py
