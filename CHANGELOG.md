@@ -10,10 +10,15 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
-## Nepublikováno (fork)
+## 0.10.2-fork.1 – 17. 11. 2026
+
+Fork na originálu 0.10.2 (sloučeno) a navíc:
 
 ### Nové
 
+- Záporný výsledek čtenáře jen s dokladem (z originálu 0.10.2, pravidlo R-HELP-006): nález „nenalezeno“ musí mít u každého
+  snímku prošlého úseku první a poslední jméno a rozsah dat (`prohledano[].doklad`), jinak ho `vysledek.py over` odmítne. Čtení
+  knihy bez rejstříku jde silnějšímu modelu (R-HELP-005).
 - Osoby ze skupiny RODINA jsou vidět v nástrojích: `kontext.py --osoba <zkratka>` a `rejstrik.py osoba <zkratka nebo jméno>` ukážou
   fakta, poznámku, rodiče, zápisy a otevřené otázky; `rejstrik.py hledej` najde i jejich fakta. Starší rejstřík se sám přestaví.
 - `commit.py --soubory` commitne i snímky rodinného dokumentu (`zdroje/<img>.jpg`, `vyrezy/<img>.jpg`), je-li dokument
@@ -91,10 +96,6 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 - `vyrez.py --out SLOŽKA`: výřez jen do zadané složky (agent nezapisuje do veřejných `zdroje/` a `vyrezy/`).
 - Agenti `researcher` a `orchestrator`: skripty k archivu přes `slusne.py`, výřezy do `pracovni/vysledky/`, jeden řádek na výřez a řádek jmenovaný v kartě.
 
-## Nevydáno
-
-### Nové
-
 - **Brána po aktualizaci verze a kontrola pokrytí (Fáze D).** `tools/brana.py` v projektu spustí bez sítě kontroly dat, front, deníku,
   veřejných otázek a `kontrola_webu.py` nad každou sestavenou verzí webu a vyhlásí zelená / červená / nepokryto (výsledek v
   `pracovni/brana.json`). `novy_projekt.py` při změně verze starý výsledek smaže a `hlidac_site.py` nepustí nasazení (ani testovací),
@@ -163,6 +164,28 @@ Fork na originálu 0.10.1 (sloučeno) a navíc:
   stejných jmen v obci, místo původu („ex <obec>“), pasti kurentu a čtení podivných příjmení, gruntovní knihy a kroniky,
   evangelíci na Moravě, průměrná délka generace 30–35 let; portály: ARON MZA (pozemkové knihy zdarma), globální hledání
   a rejstříky SOA Třeboň, Geneteka, FamilySearch pro Slovensko (filiální obce, „Image Restricted“), matriky.online.
+
+## 0.10.2 – 16. 11. 2026
+
+Opravná verze: bezpečnější založení a aktualizace projektu, správný požadavek na Node a pravidla, aby chybné „není
+tam“ od pomocníka neschovalo předka.
+
+**Opravy**
+
+- Založení a aktualizace projektu už nemůžou zapsat mimo projekt, když je `.claude/` nebo `.skill_verze` symbolický
+  odkaz jinam (#193). Komentář v hlídači sítě, který skener Hermes Agent mylně bral jako nebezpečný kód, je
+  přeformulovaný.
+- Web potřebuje Node 22.12 nebo novější (Astro 7) – návod chtěl jen Node 20 a s ním web nešel sestavit. `npm run data`
+  teď starší Node hned srozumitelně ohlásí.
+- `kontrola.py` upozorní na hypotézu (`HYPOTEZY`) zapsanou jinak než `dict(…)` – export webu na ní padal.
+- Brzda už nezastaví celý Kramerius na hodiny kvůli HTTP 403 u neveřejného díla (OCR, stránky, obrázky) – to není
+  blokace, dílo jen není volně dostupné.
+
+**Návody**
+
+- Záporný výsledek pomocníka („prošel jsem snímky 20–60, není tam“) Claude přijme jen s dokladem – první a poslední
+  jméno a data z každého snímku, čtené ve zvětšení – a v deníku rozliší úsek prošlý s dokladem a jen orientačně.
+  Chybné „není“ dřív mohlo předka schovat natrvalo.
 
 ## 0.10.1 – 13. 11. 2026
 

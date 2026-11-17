@@ -1474,8 +1474,10 @@ def main():
                  generations=max(p["gen"] for p in people.values()) + 1,
                  updated=(lambda d: f"{d.day}. {d.month}. {d.year} {d.hour}:{d.minute:02d}")(datetime.datetime.now()))
     hypotheses = [dict(line=h.get("rod"), title=h.get("nadpis", "Hypotéza"), text=h.get("text", ""),
-                       items=[dict(name=a, text=b) for a, b in h.get("polozky", [])],
-                       records=[r for r in h.get("zaznamy", []) if r in recs]) for h in ns["HYPOTEZY"]]
+                       items=[dict(name=x[0], text=x[1]) for x in h.get("polozky", [])
+                              if isinstance(x, (tuple, list)) and len(x) == 2],
+                       records=[r for r in h.get("zaznamy", []) if r in recs])
+                  for h in ns["HYPOTEZY"] if isinstance(h, dict)]   # jiný zápis hlásí kontrola.py
 
     story_dir = os.path.join(DATA, "pribehy")
     story_files = sorted(

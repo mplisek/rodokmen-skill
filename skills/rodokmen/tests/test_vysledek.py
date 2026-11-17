@@ -109,14 +109,34 @@ class SpatneIdentifikatory(Zaklad):
 class NegativniVysledek(Zaklad):
     """Scénáře 5 a 6."""
 
+    @staticmethod
+    def doklad(od, do, vynech=()):
+        return [{"snimek": s, "prvni": f"Joannes Prvni {s}", "posledni": f"Maria Posledni {s}", "data": "3. 1. – 28. 2. 1812"}
+                for s in range(od, do + 1) if s not in vynech]
+
     def negativni(self, **kw):
         self.nalez.update(stav="nenalezeno", stav_behu="dočteno", cteni=[], kandidati=[], navrh_dalsiho_kroku=None,
-                          prohledano=[{"svazek": "0a1b2c3d", "snimky": [40, 52], "uplne": True}])
+                          prohledano=[{"svazek": "0a1b2c3d", "snimky": [40, 52], "uplne": True, "doklad": self.doklad(40, 52)}])
         self.nalez.update(kw)
         return "\n".join(vysledek.over_nalez(self.nalez, self.zadani))
 
     def test_poctivy_negativni_vysledek_projde(self):
         self.assertEqual(self.negativni(), "")
+
+    def test_nenalezeno_bez_dokladu_ke_kazdemu_snimku_se_odmitne(self):
+        """Originál 0.10.2: záporný výsledek pomocníka jen s dokladem – u každého snímku první a poslední jméno a rozsah dat;
+        chybné „není tam“ jinak schová předka natrvalo."""
+        bez = self.negativni(prohledano=[{"svazek": "0a1b2c3d", "snimky": [40, 52], "uplne": True}])
+        self.assertIn("doklad", bez)
+        chybi = self.negativni(prohledano=[{"svazek": "0a1b2c3d", "snimky": [40, 52], "uplne": True,
+                                            "doklad": self.doklad(40, 52, vynech=(47,))}])
+        self.assertIn("47", chybi)
+        prazdne = self.doklad(40, 52)
+        prazdne[0]["posledni"] = ""
+        self.assertIn("posledni", self.negativni(prohledano=[{"svazek": "0a1b2c3d", "snimky": [40, 52], "uplne": True, "doklad": prazdne}]))
+        # částečný výsledek doklad nepotřebuje: úkol zůstává otevřený, nic se nezapisuje jako prošlé
+        self.assertEqual(self.negativni(stav="rozpočet", stav_behu="strop",
+                                        prohledano=[{"svazek": "0a1b2c3d", "snimky": [40, 45], "uplne": False}]), "")
 
     def test_nenalezeno_po_dosazenem_stropu_se_odmitne(self):
         self.assertIn("rozpočet", self.negativni(stav_behu="strop"))

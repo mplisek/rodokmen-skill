@@ -31,6 +31,13 @@ source: SKILL.md#Pomocníci (subagenti) – šetrně
 ## R-HELP-005
 
 when: planning a big round of helpers
-do: tell the user what you plan and why and get approval first; run the helpers on the cheaper model for search and first reading, and keep the verification on the image and the writing for yourself
+do: tell the user what you plan and why and get approval first; run the helpers on the cheaper model for search and first reading of a book with an index, give the reading of a book without an index (searching blind) to a stronger model, and keep the verification on the image and the writing for yourself
 why: a round costs many credits and the user should know why
+source: SKILL.md#Pomocníci (subagenti) – šetrně
+
+## R-HELP-006
+
+when: a helper reports that a searched range does not contain the record ("images 20–60 read, not there")
+do: accept it only with evidence: for every image the first and the last name and the range of dates, read zoomed in (a whole page scaled to the screen is not enough), with consecutive sections overlapping by one image; write the structure of the source into the brief (what is in which column, whether an index covers only the dead or everyone); in the diary separate a range read with evidence from one read only orientationally, and only the first counts as searched
+why: a wrong "not there" from a helper hid an ancestor for good, because nobody searched the range again
 source: SKILL.md#Pomocníci (subagenti) – šetrně

@@ -53,7 +53,7 @@ d = tempfile.mkdtemp(prefix="mapa_kontrola_")
 try:
     os.makedirs(os.path.join(d, "data"))
     os.makedirs(os.path.join(d, "tools"))
-    for n in ("kontrola.py", "export_web.py", "chronologie.py", "obraz.py", "pohled.py"):   # fork: export_web.py je na nich závislý
+    for n in ("kontrola.py", "export_web.py", "chronologie.py", "datumy.py", "obraz.py", "pohled.py", "ucastnici.py"):   # fork: export_web.py je na nich závislý
         shutil.copy(os.path.join(TOOLS, n), os.path.join(d, "tools"))
     P = {1: dict(n="Petr Novák", st="doc", f=["* 1990 Střelná"])}
     P.update({k: dict(n=f"Jan Novák {k}", st="doc", f=[f"* 18{k:02d} (fara Prčice)"]) for k in (2, 4, 8, 16)})

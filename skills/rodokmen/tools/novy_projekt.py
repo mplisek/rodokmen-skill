@@ -345,8 +345,11 @@ def nastaveni(dst, hlidac):
     projekt nebo projekt se starým plošným zákazem curl/wget dostane hook sám (zákaz se odstraní, ochrana neklesne);
     vypnutý hook (--bez-hlidace) zůstane vypnutý."""
     path = os.path.join(dst, ".claude", "settings.json")
+    if mimo(dst, path) or kolize(dst, path):   # .claude jako odkaz mimo projekt – nic nezapisovat
+        print("POZOR: .claude/settings.json nejde bezpečně zapsat – nastavení brzdy jsem nedoplnil.")
+        return
     data = {}
-    if os.path.exists(path):
+    if os.path.exists(path) and not os.path.islink(path):   # odkaz na cizí soubor nečíst, zapis() ho nahradí
         try:
             data = json.load(open(path, encoding="utf-8-sig"))
         except ValueError:
@@ -380,10 +383,8 @@ def nastaveni(dst, hlidac):
         del data["hooks"]["PreToolUse"]
     if not data["hooks"]:
         del data["hooks"]
-    if json.dumps(data, sort_keys=True) != puvodni:
-        with open(path, "w", encoding="utf-8", newline="\n") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-            f.write("\n")
+    if json.dumps(data, sort_keys=True) != puvodni or os.path.islink(path):
+        zapis(path, (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))   # odkaz nahradí, nepíše přes něj
     zapnuty = any("hlidac_site.py" in json.dumps(h) for h in data.get("hooks", {}).get("PreToolUse", []))
     print("Hlídač sítě:", "zapnutý (jen weby archivů mimo brzdu; localhost a vlastní nasazení neblokuje)" if zapnuty
           else "vypnutý (zapnout: --hlidac)")
@@ -470,7 +471,7 @@ def main():
     for name in ("CLAUDE.md", ".gitignore", ".gitattributes", os.path.join("data", "poznamky_pro_skill.md"),   # i u ukázky
                  os.path.join(".claude", "launch.json")):
         out = os.path.join(dst, name)
-        if not os.path.lexists(out):
+        if not os.path.lexists(out) and not mimo(dst, out) and not kolize(dst, out):   # ne přes odkaz mimo projekt
             copy(os.path.join(SKILL, "template", name), out)
     nastaveni(dst, True if "--hlidac" in sys.argv else False if "--bez-hlidace" in sys.argv else None)
     nova_v = open(os.path.join(SKILL, "VERZE"), encoding="utf-8").read()
@@ -482,8 +483,8 @@ def main():
     zneplatnit = stara_v is not None and stara_v.strip() != nova_v.strip() and os.path.isfile(znacka)
     if zneplatnit:   # starý výsledek brány platil pro starou verzi: nasazení se odemkne až novým během brány
         os.remove(znacka)
-    with open(os.path.join(dst, ".skill_verze"), "w", encoding="utf-8") as f:   # SKILL.md podle něj nabídne aktualizaci
-        f.write(nova_v)
+    if not kolize(dst, os.path.join(dst, ".skill_verze")):   # SKILL.md podle něj nabídne aktualizaci; odkaz nahradí
+        zapis(os.path.join(dst, ".skill_verze"), cti(os.path.join(SKILL, "VERZE")))
     if stara_v is not None and stara_v.strip() != nova_v.strip():
         print(f"Verze skillu v projektu se změnila ({stara_v.strip()} → {nova_v.strip()}): před nasazením spusť bránu "
               "(po sestavení webu: python3 -I tools/brana.py).")

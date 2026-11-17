@@ -118,7 +118,7 @@ Základní smyčka pro každou osobu:
    Při převzetí staršího výzkumu bez původních snímků nevytvářej náhradní výřezy ani rámečky; zachovej informaci, že podklad
    chybí (`kontrola.py` ji dál hlásí).
 6. **Zapiš hledání do deníku** příkazem `python3 -I tools/denik.py pridej …` (`data/denik.jsonl`, `reference/zapisy.md`) – i neúspěšné,
-   s rozsahem (které roky / snímky jsi prošel).
+   s rozsahem (které roky / snímky jsi prošel) a u neúspěšného, jestli s dokladem, nebo jen orientačně (Pomocníci níže).
    **Zjevně související výskyt** po cestě (vzácné příjmení rodu, stejný dům, jméno z rodinného vyprávění) zapiš do
    výsledku se snímkem – je to stopa, ne doklad. Když se hledání zasekne, projdi deník právě kvůli takovým stopám.
 7. Spusť `python3 -I tools/kontrola.py` a oprav chyby.
@@ -160,9 +160,11 @@ Pravidla, která chrání kvalitu:
   Odpovědi pak zapracuj do dat a zapiš do deníku.
 
 ### Hledání v datech – rejstřík `tools/rejstrik.py`
+
 Deník, zápisy, přepisy a poznámky mají za pár týdnů přes megabajt. Nečti je celé ani je negrepuj naslepo – zeptej
 se rejstříku (SQLite s fulltextem bez diakritiky; sestaví se sám z textových souborů v `data/` a `kontext/` do
 `pracovni/rejstrik.sqlite`, zdrojem pravdy zůstávají textové soubory). Odpovídá krátce, stovky tokenů místo desítek tisíc:
+
 - **Na začátku konverzace** místo konce deníku stačí `rejstrik.py denik --posledni 3` (řádky deníku bývají dlouhé).
 - **Než začneš větev nebo osobu:** `rejstrik.py osoba 84` (fakta, zápisy, řádky deníku rozdělené podle jistoty,
   otázky, zmínky). **Než otevřeš svazek:** `rejstrik.py svazek <id|"N Holice 05">` – které snímky už jsme prošli
@@ -218,6 +220,12 @@ tolik neubývají.
   související výskyty. Rejstřík ať čte po sloupcích (`mapa_knihy.py … --sloupce`, `reference/matriky.md` → Čtení
   písma) – jeho „v rejstříku není“ bez toho neber jako výsledek.
 - Pomocník píše jen do `pracovni/pom_<větev>/`, **do `data/` nikdy**. Zapisuješ ty; výstupy nemaž, dokud nejsou vytěžené.
+- **Záporný výsledek pomocníka („prošel jsem snímky 20–60, není tam“) není hotový výsledek** – chybné „není“ schová
+  předka natrvalo. Přijmi ho jen s dokladem: u každého snímku první a poslední jméno a rozsah dat, čtené ve zvětšení
+  (celá strana zmenšená na obrazovku nestačí); navazující úseky ať se o snímek překrývají. Do zadání mu napiš strukturu
+  pramene (co je v kterém sloupci, jestli je rejstřík jen zemřelých, nebo společný). V deníku rozliš úsek prošlý
+  **s dokladem** a jen **orientačně** – „už prošlé, znovu nehledat“ platí jen pro první. Čtení knihy bez rejstříku
+  (hledání naslepo) dej silnějšímu modelu, ne levnějšímu.
 - **Jejich čtení vždy ověř sám na snímku** (`python3 -I tools/overit.py <snímek> x0,y0,x1,y1 pracovni/over`, zlomky
   0–1, rozdělí zápis na dvě čitelné poloviny), než ho zapíšeš jako `doc`. Uživateli to vysvětli správně: je to stejný
   model, jde o princip čtyř očí – pomocník nemá kontext (dvě rodiny stejného jména ve vsi). Po větším kole si před

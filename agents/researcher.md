@@ -40,6 +40,9 @@ One file `pracovni/vysledky/<id>.json`, schema `nalez/1` (the only place you wri
   `doslova` (field → text exactly as written), `normalizace` (field → modern form), `nejistota` (field → why), `chybi` (fields you could not read).
 - `kandidati[]`: `osoba` = person **key** from the assignment (never a name), `cteni`, `pro`, `proti`. Reasons, not a verdict.
 - `prohledano[]`: {svazek, snimky [from, to], uplne} for everything you really read, also when nothing was found (R-NEG-001, R-NEG-002).
+  For `nenalezeno` every complete section carries `doklad`: one {snimek, prvni, posledni, data} per image – the first and the last
+  name and the range of dates on that image, read zoomed in – so the negative result can be checked (R-HELP-006); `vysledek.py over`
+  rejects a negative result without it.
 - `stranky[]`: {portal, svazek, snimek, typ `titul|rejstřík|zápisy|prázdná|jiné`, od, do, kvalita `dobrá|slabá|nečitelná`} for every page you looked at.
 - `navrh_dalsiho_kroku`: {typ, duvod, …} when the record continues on the next page, another volume is needed, or a follow-up question appeared.
 - `cerpani`: {kroku, snimku}.

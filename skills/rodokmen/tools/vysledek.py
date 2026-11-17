@@ -336,6 +336,7 @@ def over_nalez(d, zadani=None):
             ch.append("stav nenalezeno jen po dočtení celého rozsahu; při dosaženém stropu je stav „rozpočet“, při překážce „nedostupné“ nebo „nečitelné“")
         if any(isinstance(p, dict) and p.get("uplne") is False for p in proh if isinstance(proh, list)):
             ch.append("stav nenalezeno: prohledano má uplne: false – rozsah není přečten celý, výsledek je „částečně“ nebo „rozpočet“")
+        ch += doklad_negativu(proh)
         if zadani:
             p = pokryti(svazek_zadani, zadani.get("hleda_roli"), sv)
             if p:
@@ -512,6 +513,35 @@ def norm_pole(pole, t):
     n = re.sub(r"(?<!\w)(?:čp|č p|č|cp|c p)(?=\s+\d)", "č", norm(t))
     datum = "datum" in str(pole).casefold() or re.search(r"(?<!\d)1[5-9]\d\d(?!\d)", n)
     return " ".join(_mesic(s) for s in n.split()) if datum else n
+
+
+def doklad_negativu(proh):
+    """Záporný výsledek jen s dokladem (originál 0.10.2, R-HELP-006): u každého snímku úplně přečteného úseku první a poslední jméno
+    a rozsah dat, čtené ve zvětšení. Bez dokladu je úsek jen orientační a „znovu nehledat“ pro něj neplatí."""
+    ch = []
+    for i, p in enumerate(proh if isinstance(proh, list) else []):
+        if not (isinstance(p, dict) and p.get("uplne") is True and isinstance(p.get("snimky"), list) and len(p["snimky"]) == 2
+                and all(isinstance(x, int) for x in p["snimky"])):
+            continue
+        dok = p.get("doklad")
+        if not isinstance(dok, list) or not dok:
+            ch.append(f"prohledano[{i}].doklad: u záporného výsledku ke každému snímku {{snimek, prvni, posledni, data}} "
+                      "(první a poslední jméno a rozsah dat, čtené ve zvětšení); bez dokladu je úsek jen orientační")
+            continue
+        mam = set()
+        for j, x in enumerate(dok):
+            if not isinstance(x, dict) or not isinstance(x.get("snimek"), int):
+                ch.append(f"prohledano[{i}].doklad[{j}]: {{snimek, prvni, posledni, data}}")
+                continue
+            for k in ("prvni", "posledni", "data"):
+                if not isinstance(x.get(k), str) or not x[k].strip():
+                    ch.append(f"prohledano[{i}].doklad[{j}].{k}: chybí (snímek {x['snimek']})")
+            mam.add(x["snimek"])
+        od, do = p["snimky"]
+        chybi = [s for s in range(od, do + 1) if s not in mam]
+        if chybi:
+            ch.append(f"prohledano[{i}].doklad: chybí snímky {', '.join(map(str, chybi[:20]))}" + (" …" if len(chybi) > 20 else ""))
+    return ch
 
 
 def porovnej(prvni, druhe):

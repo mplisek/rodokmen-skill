@@ -219,7 +219,6 @@ Navržené úspory v původních poznámkách (hygiena sezení, skripty místo a
 
 Následující zjištění vycházejí z dřívějšího prostudování souborů a cílených kontrol z 15. 11. 2026. V aktuálně dostupných souborech již mohou být vyřešena. Při této úpravě zadání nebyl projekt znovu testován. Návrhy oprav v této příloze jsou původní dílčí návrhy, nikoli omezení systémového zadání v části 1; musí se přehodnotit v cílové metodice.
 
-
 Jde o cílený předaudit architektury instrukcí, předávání výsledků a kontrol, nikoli úplný audit všech nástrojů. Zdrojem byly tehdy dostupné soubory projektu. Projekt nebyl upraven. Nebyl proveden plný build webu, celá testovací sada, živé bádání ani skutečné nasazení.
 
 Prošly `scripts/pokryti.py --json` a tři sady v `skills/rodokmen/tests/`: `test_agenti_definice.py` (18), `test_hlidac_orchestratora.py` (14), `test_kontext.py` (9). Celkem 41 testů. Zelený výsledek není důkazem správnosti celého workflow.
@@ -239,4 +238,3 @@ Priority níže jsou návrh: P1 = zásadní rozpor nebo mezera v kontrole, P2 = 
 | A9 | P2, podnět k měření | `tools/kontext.py` má limit znaků, ne tokenů; orchestrátor předává i malé změny mezi specialisty a požaduje samostatné technické uložení změn po každém dokončeném ověření. Samotná angličtina ani menší balíček nezaručují nižší celkové náklady. | Porovnat skutečné celkové náklady úkolu včetně předávání, opakování a oprav. Zavést jednoduchou cestu pro nízkorizikové změny a plnou cestu pro nejistotu/identitu/soukromí. Bez měření neslibovat procentní úsporu. |
 
 Další drobná zjištění k prověření: dokumentace používá zkrácené `tests/e2e/...`, skutečný registr je v `skills/rodokmen/tests/e2e/`; hlídač odmítá `fronta.py cekajici` a `fronta.py plan noc`, přesto je orchestrátor zmiňuje. U těchto příkazů určit vykonavatele a prověřit, zda má být čtení či mutace. Pravidla a procedury nerozmnožovat opravami na několika místech.
-
