@@ -148,7 +148,8 @@ První čtení i kontrolní čtení vyplňují **tatáž malá pole daná druhem
 
 **Z přepisu se nic neztrácí.** Úplný přepis a překlad zůstávají v `prepisy.json`, včetně všeho, co se do jádra nevejde (hodina,
 okrajové poznámky, delší věty o příčině, kdo pohřbil, opravy písaře). Do jádra jde jen to, co se zapisuje do dat jako fakt, a jen to
-se porovnává pole po poli. Neobvyklý zápis (dvojčata, dodatečná legitimace, přeškrtnutý údaj) čtenář označí `neobvykle: <důvod>`
+se porovnává pole po poli. Pole jádra se **neukládají**: slouží jen jako formulář obou čtení při porovnání; do dat jde
+výsledek (fakta a `overeno` u zápisu). Neobvyklý zápis (dvojčata, dodatečná legitimace, přeškrtnutý údaj) čtenář označí `neobvykle: <důvod>`
 a jde k člověku. Druh mimo tabulku (pozemková kniha, rodinný doklad) ověřuje člověk.
 
 ### 3.2 Sporná místa rozhodne člověk nad výřezem
@@ -448,7 +449,7 @@ pryč, zůstává v historii gitu projektu), **×** smazat (generovaný nebo do�
 |---|---|---|---|---|
 | `osoby.py` | 200 kB | = | P, LINES, SIDE, ISSUES, HYPOTEZY, SAME, RODINA | RODINA potřebuje web |
 | `zaznamy.json` | 160 kB | ~ | jako dnes; `ucastnici` a `overeno` zůstávají, `overeno` může mít hodnotu `"uzivatel"` (spor rozhodl člověk) | účastníci jsou pro web; R9 |
-| `prepisy.json` | 156 kB | ~ | k zápisu volitelně `jadro` – pevná pole podle druhu (3.1); `orig` a `cs` beze změny | R10; jen u ověřených zápisů, ne zpětně všude |
+| `prepisy.json` | 156 kB | = | `orig` a `cs` beze změny | pevná pole se neukládají (11.3) |
 | `denik.jsonl` | 620 kB | = | záznam na řádek přes `denik.py` | web generuje stránku Deník |
 | `research_log.md` | 240 kB | A | – | starý deník před převodem do `denik.jsonl`; před archivací **ověřit**, že se převedl celý |
 | `STAV.md` | 24 kB | ~ | šablona originálu: Pro koho, Kde co je, Pravidla (s pododdílem Pravidla od uživatele), Rozpracováno, Čeká na rozhodnutí; vede se ručně | originál; bez front a kopií plánů |
@@ -481,8 +482,10 @@ přechodu nevznikají, `brana.json` zůstává (brána). `mereni/` projektu zůs
 
 ### 11.3 Kontrola bobtnání (podmínka k R10)
 
-- Pevná pole jádra jen pro tři druhy (křest, sňatek, úmrtí) a jen pole z tabulky 3.1; nový druh nebo pole jen rozhodnutím uživatele.
-- `jadro` se plní jen u zápisů, které se ověřují; zpětné doplňování všech zápisů se nedělá.
+- Pevná pole jsou **formulář pro čtení, ne data**: obě čtení (první a kontrolní) je vyplní v `pracovni/`, porovnají se a spor jde
+  k člověku; uloží se jen výsledek – fakta jako dosud a `overeno` u zápisu. Uložené jádro by nikdo nečetl (web, kontroly i rejstřík
+  berou fakta z `osoby.py`, `zaznamy.json` a přepisu), byla by to jen duplicita.
+- Tabulka polí (3.1) je pokyn v `reference/` pro tři druhy (křest, sňatek, úmrtí); nový druh nebo pole jen rozhodnutím uživatele.
 - Žádné další soubory v `data/` kvůli ověřování: spory jsou v `STAV.md`, rozhodnutí v `zaznamy.json` (`overeno`).
 - Měřítko: `SKILL.md` po přechodu nejvýš o desetinu delší než originál (krok 7 v 10.4); kontrola v `scripts/pokryti.py`.
 
