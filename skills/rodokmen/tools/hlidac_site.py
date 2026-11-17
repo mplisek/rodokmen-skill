@@ -30,8 +30,12 @@ HEREDOC = re.compile(r"<<-?\s*['\"]?\w+|@['\"]\s*\n")   # bash <<EOF, PowerShell
 PS = re.compile(r"\b(Invoke-WebRequest|Invoke-RestMethod|iwr|irm|curl\.exe|wget|Start-BitsTransfer|Net\.WebClient|"
                 r"HttpClient|DownloadString|DownloadFile)\b", re.I)
 URL = re.compile(r"https?://([^/\s\"'`:;)]+)", re.I)
-VOLNE = ("localhost", "127.0.0.1", "0.0.0.0", "netlify.app", "netlify.com", "workers.dev", "cloudflare.com", "github.com", "githubusercontent.com",
-         "npmjs.org", "pypi.org", "pythonhosted.org")
+# Vlastní web a jeho nasazení (Netlify, Cloudflare Workers a Pages), localhost a běžné zdroje balíčků se nehlídají: testovat vlastní
+# práci a nasazený web hlídač nikdy nebrání. Vlastní domény (jiné než *.netlify.app, *.workers.dev, *.pages.dev) uvádí projekt
+# v data/web.json v poli "domeny" (seznam jmen serverů).
+VOLNE = ("localhost", "127.0.0.1", "0.0.0.0", "netlify.app", "netlify.com", "workers.dev", "pages.dev", "cloudflare.com",
+         "github.com", "githubusercontent.com", "npmjs.org", "pypi.org", "pythonhosted.org")
+DOMENY = []   # vlastní domény projektu z data/web.json (naplní main())
 RADA = ("Síť na weby archivů jen přes brzdu proti zablokování (tools/slusne.py), i u pomocníků:\n"
         "  python3 -I tools/slusne.py curl …            místo curl/wget\n"
         "  python3 -I tools/slusne.py pracovni/x.py …   místo python3 pracovni/x.py (skript se síťí)\n"
@@ -39,9 +43,25 @@ RADA = ("Síť na weby archivů jen přes brzdu proti zablokování (tools/slusn
         "Nástroje v tools/ brzdu mají samy, spouštěj je normálně. Brzdu neobcházej (jiný příkaz, prohlížeč).")
 
 
+def vlastni_domeny(*slozky):
+    """Jména serverů z pole "domeny" v data/web.json projektu (hledá v cwd a v CLAUDE_PROJECT_DIR). Bez souboru nebo při
+    chybě vrátí prázdný seznam – domény se nikdy nepřidávají obecně, jen podle toho, co si projekt sám uvede."""
+    out = []
+    for slozka in slozky:
+        try:
+            with open(os.path.join(slozka, "data", "web.json"), encoding="utf-8-sig") as f:
+                for d in json.load(f).get("domeny") or []:
+                    d = re.sub(r"^https?://", "", str(d).strip().lower()).split("/")[0].rstrip(".")
+                    if re.fullmatch(r"[a-z0-9.-]+\.[a-z]{2,}", d):
+                        out.append(d)
+        except (OSError, ValueError, AttributeError):
+            continue
+    return out
+
+
 def volny(host):
     host = host.lower().rstrip(".")
-    return any(host == v or host.endswith("." + v) for v in VOLNE)
+    return any(host == v or host.endswith("." + v) for v in VOLNE + tuple(DOMENY))
 
 
 def jen_volne(text):
@@ -81,10 +101,34 @@ def python_kod(cmd, od):
     return ([m.group(2).strip("\"'")] if m else []), [t for _, t in HEREDOC_TELO.findall(cmd)]
 
 
+try:   # portály, kam skript nesmí (ZAKAZ v slusne.py): tam jen vlastní prohlížeč přes tools/prohlizec.py
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import slusne as _slusne
+    ZAKAZ_HOSTY = tuple(_slusne.ZAKAZ)
+except Exception:
+    ZAKAZ_HOSTY = ("mza.cz", "actapublica.eu", "digi.ceskearchivy.cz", "soapraha.cz", "archives.cz")
+PROHLIZEC = re.compile(r"(?:\b(?:msedge|chrome|chromium|firefox|brave)(?:\.exe)?\b|\bstart-process\b|\bxdg-open\b|\bopen\s+https?://)", re.I)
+DEBUG_PORT = re.compile(r"--remote-debugging-port", re.I)
+
+
+def prohlizec_duvod(cmd):
+    """Prohlížeč spuštěný mimo tools/prohlizec.py: s ladicím portem, nebo s adresou portálu ze ZAKAZ. Jinak None."""
+    if "prohlizec.py" in cmd or not PROHLIZEC.search(cmd):
+        return None
+    if DEBUG_PORT.search(cmd):
+        return "prohlížeč s ladicím portem jen přes tools/prohlizec.py (vlastní instance, pauzy, stop při 403/429)"
+    for h in URL.findall(cmd):
+        if any(h.lower() == z or h.lower().endswith("." + z) for z in ZAKAZ_HOSTY):
+            return f"portál {h} nepovoluje skripty – prohlížeč na něj jen přes tools/prohlizec.py (vlastní instance, pauzy, stop při 403/429)"
+    return None
+
+
 def posoudit(tool, cmd, cwd):
     """Vrátí důvod zamítnutí, nebo None (pustit)."""
     if tool == "Monitor":   # spouští příkaz v bashi stejně jako Bash
         tool = "Bash"
+    if tool in ("Bash", "PowerShell") and (d := prohlizec_duvod(cmd)):
+        return d
     if tool == "PowerShell":
         if PS.search(cmd) and "slusne.py" not in cmd and not jen_volne(cmd):
             return "PowerShell stahuje z webu mimo brzdu"
@@ -122,6 +166,67 @@ def posoudit(tool, cmd, cwd):
     return None
 
 
+NASAZENI = re.compile(
+    r"(?:\bnetlify(?:-cli)?(?:@[\w.]+)?\s+deploy\b|\bwrangler(?:@[\w.]+)?\s+(?:pages\s+)?(?:deploy|versions\s+upload)\b"
+    r"|\bnpm\s+run\s+(?:nasadit(?:-cloudflare)?|deploy-caprover)\b|\bnasadit(?:_cloudflare)?\.mjs\b|\bcaprover\s+deploy\b)", re.I)
+
+
+def koren_projektu(cwd):
+    """Nejbližší složka nad cwd s data/ a tools/ (kořen projektu), nebo None."""
+    d = os.path.abspath(cwd)
+    while True:
+        if os.path.isdir(os.path.join(d, "data")) and os.path.isdir(os.path.join(d, "tools")):
+            return d
+        nad = os.path.dirname(d)
+        if nad == d:
+            return None
+        d = nad
+
+
+def zmeny_od_brany(kor, znacka):
+    """Co se od zelené brány změnilo (data, zdroje webu, sestavený web); prázdný seznam = nic. Otisky počítá tools/brana.py projektu."""
+    import importlib.util
+    try:
+        spec = importlib.util.spec_from_file_location("_brana_projektu", os.path.join(kor, "tools", "brana.py"))
+        brana = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(brana)
+        brana.ROOT = kor
+        ted = brana.otisky()
+    except Exception:   # noqa: BLE001 – bez nástroje nejde čerstvost ověřit: raději bránu pustit znovu
+        return ["nástroj brány (tools/brana.py nejde načíst)"]
+    nazvy = {"otisk_dat": "data", "otisk_webu": "šablony a zdroje webu (web/src)", "otisk_dist": "sestavený web (web/dist)"}
+    return [n for k, n in nazvy.items() if znacka.get(k) != ted.get(k)]
+
+
+def brana_duvod(tool, cmd, cwd):
+    """Důvod zamítnutí nasazení (testovacího i ostrého), dokud pracovni/brana.json není zelený pro verzi projektu; jinak None.
+    Projekt bez .skill_verze a příkazy mimo projekt se nehlídají."""
+    if tool not in ("Bash", "PowerShell", "Monitor") or not NASAZENI.search(bez_textu(cmd)):
+        return None
+    kor = koren_projektu(cwd)
+    if not kor:
+        return None
+    try:
+        with open(os.path.join(kor, ".skill_verze"), encoding="utf-8") as f:
+            verze = f.read().strip()
+    except OSError:
+        return None
+    try:
+        with open(os.path.join(kor, "pracovni", "brana.json"), encoding="utf-8-sig") as f:
+            znacka = json.load(f)
+        if znacka.get("vysledek") == "zelena" and znacka.get("verze") == verze:
+            zmeny = zmeny_od_brany(kor, znacka)
+            if not zmeny:
+                return None
+            stav = "od zelené brány se změnilo: " + ", ".join(zmeny) + " (web by neodpovídal tomu, co brána zkontrolovala)"
+        else:
+            stav = f"výsledek brány je „{znacka.get('vysledek')}“ pro verzi {znacka.get('verze')}, projekt je ve verzi {verze}"
+    except (OSError, ValueError, AttributeError):
+        stav = "brána ještě neběžela (chybí nebo je poškozený pracovni/brana.json)"
+    return (f"Hlídač nasazení: {stav}. Před nasazením (i testovacím) musí být brána zelená pro aktuální verzi:\n"
+            "  python3 -I tools/brana.py        (po sestavení webu: cd web && npm run build)")
+
+
 def main():
     try:
         if hasattr(sys.stdin, "reconfigure"):   # Claude Code posílá UTF-8; na Windows by se četl v cp1250
@@ -129,13 +234,19 @@ def main():
         vstup = json.load(sys.stdin)
         tool = vstup.get("tool_name", "")
         cmd = (vstup.get("tool_input") or {}).get("command", "") or ""
-        duvod = posoudit(tool, cmd, vstup.get("cwd") or os.getcwd())
+        cwd = vstup.get("cwd") or os.getcwd()
+        DOMENY[:] = vlastni_domeny(cwd, os.environ.get("CLAUDE_PROJECT_DIR") or cwd)
+        duvod = posoudit(tool, cmd, cwd)
+        brana = None if duvod else brana_duvod(tool, cmd, cwd)
     except Exception:          # rozbitý hlídač příkaz pustí
         return 0
     if duvod:
         print(json.dumps({"hookSpecificOutput": {
             "hookEventName": "PreToolUse", "permissionDecision": "deny",
             "permissionDecisionReason": f"Hlídač sítě: {duvod}.\n{RADA}"}}))   # \uXXXX: čeština projde i v cp1250
+    elif brana:
+        print(json.dumps({"hookSpecificOutput": {
+            "hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": brana}}))
     return 0
 
 

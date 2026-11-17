@@ -11,8 +11,9 @@ Použití: python3 <skill>/tools/novy_projekt.py <cílová složka> [--ukazka] [
 
 Vytvoří: data/ (prázdné kostry nebo ukázka), web/ (Astro web), tools/ (kopie nástrojů),
 vyrezy/, zdroje/, dokumenty/, pracovni/, CLAUDE.md, .gitignore, .gitattributes (konce řádků LF i na Windows)
-a .claude/launch.json (náhled v Claude desktop). Do .claude/settings.json doplní zákaz přímého curl/wget
-(stahování z archivů jde přes brzdu tools/slusne.py); ostatní nastavení v souboru nechá beze změny.
+a .claude/launch.json (náhled v Claude desktop). Do .claude/settings.json zapíše hlídač sítě (úzký hook: jen příkazy na weby
+archivů mimo brzdu tools/slusne.py; localhost a vlastní nasazení neblokuje); ostatní nastavení v souboru nechá beze změny.
+Starší plošný zákaz curl/wget (permissions.deny) při aktualizaci odstraní a nahradí ho hlídačem, ochrana archivů tak neklesne.
 Existující data nepřepisuje.
 Do .skill_sablona/ uloží kopii šablony web/ a tools/, ze které projekt vznikl (patří do gitu s projektem).
 Aktualizace staršího projektu (znovu spustit na stejnou složku) rozhodne o každém souboru web/ a tools/ podle
@@ -311,7 +312,7 @@ def vyresit(dst, cesta):
     return True
 
 
-SIT_ZAKAZ = ["Bash(curl:*)", "Bash(wget:*)"]   # stahování z archivů jen přes tools/slusne.py (curl přes něj jde)
+STARY_ZAKAZ = ["Bash(curl:*)", "Bash(wget:*)"]   # do 0.10.1 plošný zákaz; blokoval i localhost a vlastní nasazení, nahradil ho hlídač
 # Hlídač spustit, jen když soubor existuje: chybějící skript by Python ukončil kódem 2 a ten by zablokoval každý příkaz.
 # mimo Windows ne cestu s číslem verze (po aktualizaci Pythonu by zmizela); na Windows lomítka (projdou Git Bash i cmd)
 KOD = ("import os,runpy;p=os.path.join(os.environ.get('CLAUDE_PROJECT_DIR','.'),'tools','hlidac_site.py');"
@@ -319,6 +320,8 @@ KOD = ("import os,runpy;p=os.path.join(os.environ.get('CLAUDE_PROJECT_DIR','.'),
 PY = sys.executable.replace("\\", "/") if os.name == "nt" else "python3"
 HLIDAC = f'"{PY}" -I -c "{KOD}"'   # tvar se shellem (macOS, Linux)
 MATCHER = "Bash|PowerShell|Monitor"   # Monitor spouští příkaz v bashi stejně jako Bash
+MATCHER_ZAPISU = "Edit|Write|MultiEdit|NotebookEdit|Bash|PowerShell|Monitor"   # hlidac_zapisu.py hlídá i úpravy souborů
+HOOKY = (("hlidac_site.py", MATCHER), ("hlidac_zapisu.py", MATCHER_ZAPISU))
 
 
 def _python_windows():
@@ -328,16 +331,19 @@ def _python_windows():
     return sys.executable
 
 
-def hook_hlidace():
+def hook_hlidace(skript="hlidac_site.py"):
     """Hook hlídače. Na Windows bez shellu (command + args): hooky tam běží v Git Bashi, nebo v PowerShellu, když
     Git Bash chybí – a tam by příkaz s uvozovkami byl chyba syntaxe a Claude Code by pak zamítal každý příkaz."""
+    kod = KOD.replace("hlidac_site.py", skript)
     if os.name == "nt":
-        return {"type": "command", "command": _python_windows(), "args": ["-I", "-X", "utf8", "-c", KOD], "timeout": 10}
-    return {"type": "command", "command": HLIDAC, "timeout": 10}
+        return {"type": "command", "command": _python_windows(), "args": ["-I", "-X", "utf8", "-c", kod], "timeout": 10}
+    return {"type": "command", "command": f'"{PY}" -I -c "{kod}"', "timeout": 10}
 
 
 def nastaveni(dst, hlidac):
-    """Doplní do .claude/settings.json zákaz curl/wget; hlidac=True/False zapne/vypne hook, None nechá, jak je."""
+    """Zapíše hlídač sítě do .claude/settings.json: hlidac=True/False zapne/vypne hook, None nechá, jak je. Výjimka: nový
+    projekt nebo projekt se starým plošným zákazem curl/wget dostane hook sám (zákaz se odstraní, ochrana neklesne);
+    vypnutý hook (--bez-hlidace) zůstane vypnutý."""
     path = os.path.join(dst, ".claude", "settings.json")
     if mimo(dst, path) or kolize(dst, path):   # .claude jako odkaz mimo projekt – nic nezapisovat
         print("POZOR: .claude/settings.json nejde bezpečně zapsat – nastavení brzdy jsem nedoplnil.")
@@ -350,17 +356,29 @@ def nastaveni(dst, hlidac):
             print(f"POZOR: {path} není platný JSON – nastavení brzdy jsem nedoplnil. Oprav ho a spusť znovu.")
             return
     puvodni = json.dumps(data, sort_keys=True)
-    deny = data.setdefault("permissions", {}).setdefault("deny", [])
-    deny += [r for r in SIT_ZAKAZ if r not in deny]
+    nove = not os.path.exists(path)
+    deny = (data.get("permissions") or {}).get("deny") or []
+    mel_zakaz = any(r in deny for r in STARY_ZAKAZ)
+    if mel_zakaz:   # plošný zákaz pryč; vlastní pravidla uživatele zůstanou
+        deny[:] = [r for r in deny if r not in STARY_ZAKAZ]
+        if not deny:
+            data["permissions"].pop("deny", None)
+        if not data["permissions"]:
+            del data["permissions"]
     pre = data.setdefault("hooks", {}).setdefault("PreToolUse", [])
-    nase = [h for h in pre if "hlidac_site.py" in json.dumps(h)]
-    for h in nase:   # aktualizace projektu: hook obnovit (cesta k Pythonu i tvar se mohly změnit)
-        h["matcher"] = MATCHER
-        h["hooks"] = [hook_hlidace()]
-    if hlidac is True and not nase:
-        pre.append({"matcher": MATCHER, "hooks": [hook_hlidace()]})
-    elif hlidac is False:
-        pre[:] = [h for h in pre if h not in nase]
+    nase = {skript: [h for h in pre if skript in json.dumps(h)] for skript, _ in HOOKY}
+    if hlidac is None and not nase["hlidac_site.py"] and (nove or mel_zakaz):
+        hlidac = True   # ochrana archivů se nezmenšuje: místo plošného zákazu úzký hook
+    if hlidac is None and nase["hlidac_site.py"] and not nase["hlidac_zapisu.py"]:
+        hlidac = True   # projekt s hlídačem sítě dostane i hlídač zápisů (Q2); vypnutý zůstane vypnutý
+    for skript, matcher in HOOKY:
+        for h in nase[skript]:   # aktualizace projektu: hook obnovit (cesta k Pythonu i tvar se mohly změnit)
+            h["matcher"] = matcher
+            h["hooks"] = [hook_hlidace(skript)]
+        if hlidac is True and not nase[skript]:
+            pre.append({"matcher": matcher, "hooks": [hook_hlidace(skript)]})
+        elif hlidac is False:
+            pre[:] = [h for h in pre if h not in nase[skript]]
     if not pre:
         del data["hooks"]["PreToolUse"]
     if not data["hooks"]:
@@ -368,12 +386,15 @@ def nastaveni(dst, hlidac):
     if json.dumps(data, sort_keys=True) != puvodni or os.path.islink(path):
         zapis(path, (json.dumps(data, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))   # odkaz nahradí, nepíše přes něj
     zapnuty = any("hlidac_site.py" in json.dumps(h) for h in data.get("hooks", {}).get("PreToolUse", []))
-    print("Hlídač sítě:", "zapnutý" if zapnuty else "vypnutý (zapnout: --hlidac)")
+    print("Hlídač sítě:", "zapnutý (jen weby archivů mimo brzdu; localhost a vlastní nasazení neblokuje)" if zapnuty
+          else "vypnutý (zapnout: --hlidac)")
+    print("Hlídač zápisů:", "zapnutý (ručně se nepřepisuje denik.jsonl, verejne_otazky.json a generované soubory webu)"
+          if any("hlidac_zapisu.py" in json.dumps(h) for h in data.get("hooks", {}).get("PreToolUse", [])) else "vypnutý")
 
 
 def _verze(text):
-    m = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)", (text or "").strip())
-    return tuple(int(x) for x in m.groups()) if m else None
+    m = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)(?:-fork\.(\d+))?", (text or "").strip())   # fork: 0.9.2-fork.1 = (0, 9, 2, 1)
+    return tuple(int(x or 0) for x in m.groups()) if m else None
 
 
 def zkontroluj_verzi(dst):
@@ -403,7 +424,25 @@ def main():
     zkontroluj_verzi(dst)
     demo = "--ukazka" in sys.argv
     os.makedirs(dst, exist_ok=True)
-    copy_tree(os.path.join(SKILL, "template", "ukazka" if demo else "data"), os.path.join(dst, "data"))
+    # poznámky pro správce skillu jsou od 0.8.2-fork.2 v data/ (dřív v kořeni projektu): starý soubor přesunout
+    stare, nove = os.path.join(dst, "poznamky_pro_skill.md"), os.path.join(dst, "data", "poznamky_pro_skill.md")
+    if os.path.isfile(stare) and not os.path.islink(stare):
+        if os.path.lexists(nove):
+            print("POZOR: poznamky_pro_skill.md je v kořeni projektu i v data/ – sluč je do data/poznamky_pro_skill.md a ten v kořeni smaž.")
+        else:
+            os.makedirs(os.path.dirname(nove), exist_ok=True)
+            os.replace(stare, nove)
+            print("Přesunuto: poznamky_pro_skill.md → data/poznamky_pro_skill.md")
+    datovy = os.path.join(dst, "data")
+    denik_byl = os.path.exists(os.path.join(datovy, "denik.jsonl"))
+    copy_tree(os.path.join(SKILL, "template", "ukazka" if demo else "data"), datovy)
+    # starý deník (research_log.md) bez denik.jsonl: prázdná šablona by ho zastínila a deník by z webu zmizel;
+    # převede ho až denik.py migruj (s protokolem k ruční kontrole)
+    if not denik_byl and os.path.exists(os.path.join(datovy, "research_log.md")) and os.path.exists(os.path.join(datovy, "denik.jsonl")):
+        if os.path.getsize(os.path.join(datovy, "denik.jsonl")) == 0:
+            os.remove(os.path.join(datovy, "denik.jsonl"))
+        print("POZOR: deník je ve starém tvaru data/research_log.md; převeď ho: python3 -I tools/denik.py migruj "
+              "a pak denik.py overit-migraci")
     if demo:
         for sub in ("vyrezy", "zdroje"):
             src = os.path.join(SKILL, "template", "ukazka_" + sub)
@@ -418,7 +457,7 @@ def main():
     tools = os.path.join(dst, "tools")
     os.makedirs(tools, exist_ok=True)
     nastroje = sorted(f for f in os.listdir(os.path.join(SKILL, "tools"))
-                      if f.endswith((".py", ".sh")) and f != "novy_projekt.py")
+                      if f.endswith((".py", ".sh", ".js")) and f != "novy_projekt.py")
     aktualizuj(os.path.join(SKILL, "tools"), dst, "tools", nastroje, zaloha, vysl, stary, cek)
     uloz_cekajici(dst, cek)
     for f in nastroje:   # i ponechaný vlastní .sh s CRLF: Git Bash by skript nespustil
@@ -430,13 +469,26 @@ def main():
     for d in ("vyrezy", "zdroje", "dokumenty", "pracovni"):
         os.makedirs(os.path.join(dst, d), exist_ok=True)
     os.makedirs(os.path.join(dst, ".claude"), exist_ok=True)
-    for name in ("CLAUDE.md", ".gitignore", ".gitattributes", "poznamky_pro_skill.md", os.path.join(".claude", "launch.json")):
+    for name in ("CLAUDE.md", ".gitignore", ".gitattributes", os.path.join("data", "poznamky_pro_skill.md"),   # i u ukázky
+                 os.path.join(".claude", "launch.json")):
         out = os.path.join(dst, name)
         if not os.path.lexists(out) and not mimo(dst, out) and not kolize(dst, out):   # ne přes odkaz mimo projekt
             copy(os.path.join(SKILL, "template", name), out)
     nastaveni(dst, True if "--hlidac" in sys.argv else False if "--bez-hlidace" in sys.argv else None)
+    nova_v = open(os.path.join(SKILL, "VERZE"), encoding="utf-8").read()
+    try:
+        stara_v = open(os.path.join(dst, ".skill_verze"), encoding="utf-8").read()
+    except OSError:
+        stara_v = None
+    znacka = os.path.join(dst, "pracovni", "brana.json")
+    zneplatnit = stara_v is not None and stara_v.strip() != nova_v.strip() and os.path.isfile(znacka)
+    if zneplatnit:   # starý výsledek brány platil pro starou verzi: nasazení se odemkne až novým během brány
+        os.remove(znacka)
     if not kolize(dst, os.path.join(dst, ".skill_verze")):   # SKILL.md podle něj nabídne aktualizaci; odkaz nahradí
         zapis(os.path.join(dst, ".skill_verze"), cti(os.path.join(SKILL, "VERZE")))
+    if stara_v is not None and stara_v.strip() != nova_v.strip():
+        print(f"Verze skillu v projektu se změnila ({stara_v.strip()} → {nova_v.strip()}): před nasazením spusť bránu "
+              "(po sestavení webu: python3 -I tools/brana.py).")
     print("Projekt připraven:", dst)
     for k, popis in (("prepsano", "Přepsáno novou verzí (bez vlastních úprav)"),
                      ("zalohovano", "Přepsáno, původní verze je v " + os.path.join(zaloha, "puvodni")
@@ -456,7 +508,7 @@ def main():
         print("Hlásí se při každé aktualizaci, dokud je nevyřešíte. Po ručním převzetí změn spusťte:\n"
               f"  python3 -I {os.path.abspath(__file__)} {dst} --vyreseno <soubor> [--vyreseno <soubor> …]")
     if any(f.startswith("web/") for k in ("prepsano", "zalohovano", "slouceno") for f in vysl[k]):
-        print("Ve web/ pak `npm install` a `npm run data`.")
+        print("Ve web/ pak `npm ci`, `npm run data` a `npm run build` (s Node.js >=22.19.0).")
 
 
 if __name__ == "__main__":
