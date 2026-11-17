@@ -281,6 +281,12 @@ pole jen jako formulář pro čtení (neukládají se), volitelné nástroje pod
 použití) a zálohová značka. Data projektu před a po: oddíl 11. Větev `podnety-17-11b` zůstává nesloučená; audit z projektu se
 dokončí po přechodu.
 
+Doplněno 17. 11. 2026: z agentů zůstávají jen `metodik` a `upstream-sync` (údržba skillu, definice zkrácené); fork používá jen
+uživatel, převod front je jednorázový; v projektu se slučuje do větve `migrace-test` (data v `.jsonl`, `main` projektu má starší
+`.md`); bádání se během přechodu zastaví. Agenti a hlídač orchestrátoru vznikli proto, aby se metodika neobcházela; po přechodu
+to místo prevence hlídá **kontrola dodržování** ze záznamů sezení (10.7). Popis originálu a toho, co se přenese:
+`analyza/metodika-a-nastroje-original.html`.
+
 ### 10.1 Co zachovat a na čem to stojí
 
 | Zachovat | Soubory | Závisí na (nutno přenést také) |
@@ -357,7 +363,7 @@ přechodu se otázky zakládají přímo).
 | `zapis_vysledku.py` | zápis výsledku jedním voláním | M | N | nahradit PR originálu #187, nebo `zapis.py` |
 | `commit.py` | commit dokončené práce nástrojem | M | N | |
 
-Souhrn: **Z 30, ZZ 11, Ú 2, V 1, N 8** (52). Z vrstvy M se nepřebírá 8 nástrojů, ale také 12 agentů, hooky orchestrátoru,
+Souhrn: **Z 30, ZZ 11, Ú 2, V 1, N 8** (52). Z vrstvy M se nepřebírá 8 nástrojů, ale také 10 z 12 agentů (zůstávají `metodik` a `upstream-sync`), hooky orchestrátoru,
 32 pravidel a `reference/nocni_rezim.md`. Upravené nástroje originálu (2.4) se přenesou ve verzi forku tam, kde je potřebuje web
 (`export_web.py`, `kontrola.py`, `hlidac_site.py`, `novy_projekt.py`); jinak se vezme verze originálu.
 
@@ -406,8 +412,8 @@ a knihy po vsích (`matriky.md`), ztotožnění (`metodika.md`). Limit: `SKILL.m
 | 6 | vrstva P: portálové nástroje, `prohlizec.py`, `svazky.py` (odpojený od `vysledek.py`), `souhlas`, `smoke_test`, `mailto`, `pracovni_prehled`, případně `mapa.py` | testy zelené; smoke test z domácí sítě |
 | 7 | `oprava.py` s `osoby_upravy.py`; pravidla: kontrola procesních údajů v `kontrola.py`, texty forku do `reference/`; `SKILL.md` podle 10.4 | testy; `SKILL.md` do 3 500 slov; žádný rozpor z 10.4 |
 | 8 | ověřování (3.1, 3.2): tabulka pevných polí v `reference/`, malý pomocník na porovnání dvou čtení s normalizací, dávka sporů pro uživatele; nic se neukládá navíc (11.3) | testy: shoda, neshoda → spor, neobvyklý zápis → člověk |
-| 9 | měření: `spotreba.py`, měření `mereni-v1` na sadě `mereni-v0` (jedno sezení, bez agentů M) | čísla vedle `mereni-v0` |
-| 10 | migrace projektu podle 11.4: skript `scripts/migrace_a.py` (fronty → `ukoly.md`, `archivni_dotazy.md`), ruční projití úkolů s uživatelem, `STAV.md`, archivace a mazání, `novy_projekt.py`, `npm run data`, `npm run build`, brána, porovnání webu se starou verzí | web projektu se stejným obsahem, brána zelená |
+| 9 | měření: `spotreba.py` a kontrola dodržování (10.7); měření `mereni-v1` na sadě `mereni-v0` (jedno sezení, bez agentů M) | čísla ceny a počet porušení vedle `mereni-v0` |
+| 10 | migrace projektu podle 11.4 na větvi z `migrace-test`: skript `scripts/migrace_a.py` (fronty → `ukoly.md`, `archivni_dotazy.md`), ruční projití úkolů s uživatelem, `STAV.md`, archivace a mazání, `novy_projekt.py`, `npm run data`, `npm run build`, brána, porovnání webu se starou verzí | web projektu se stejným obsahem, brána zelená |
 | 11 | dokončit rozpracované z projektu: audit ze 17. 11. podle nového ověřování, poznámky pro skill | audit zapsaný nebo spor u uživatele |
 | 12 | vydání (CHANGELOG, verze); stará metodika zůstává ve větvi a značce; větev `podnety-17-11b` uzavřít | vydáno |
 
@@ -423,6 +429,27 @@ originál, ne zkopírovat.
 - **Rozjetá data projektu**: fronty a předání je třeba převést dřív, než se stará metodika odstraní (oddíl 11).
 - **Export webu**: největší kus a největší riziko regresí; před migrací porovnat sestavený web projektu starou a novou verzí
   (počet stránek, vztahy z obou stran, přístupy).
+
+### 10.7 Kontrola dodržování metodiky
+
+Ve forku obcházení bránili agenti a hlídač orchestrátoru (badatel směl jen vyjmenované nástroje). Po přechodu se prevence nahradí
+**kontrolou po sezení** ze stejných záznamů Claude Code, ze kterých počítá cenu `spotreba.py`, a z gitu projektu. Kontrola nic
+neblokuje; vypíše porušení s odkazem na místo v záznamu, podle nich se upraví text nebo nástroj.
+
+| Co hlídat | Jak se pozná |
+|---|---|
+| zápis do dat nástrojem | Edit nebo Write přímo na `data/*.json`, `denik.jsonl`, `osoby.py` mimo `zapis.py` a `oprava.py`; `sed -i`, skript přepisující soubor |
+| síť jen přes brzdu | `curl`, `wget`, `requests` na weby archivů bez `slusne.py`; prohlížeč rychleji než 5 s mezi stránkami |
+| každé hledání v deníku | stažené snímky bez řádku deníku se stejným svazkem a rozsahem |
+| `doc` s ověřením | nový fakt `doc` nebo `overeno` bez druhého čtení pevných polí nebo bez rozhodnutí uživatele ve sporu |
+| záporný výsledek s dokladem | „nenalezeno“ bez rozsahu nebo s výsledkem pomocníka bez dokladu po snímcích |
+| plné rozlišení | čtení ze zmenšeného snímku před zápisem |
+| pomocníci podle pravidel | pomocník zapisující do `data/`, dva na jednom archivu, velké kolo bez schválení |
+| nic ven bez souhlasu | nasazení, e-mail, issue bez souhlasu v rozhovoru; nasazení s červenou bránou |
+
+Preventivní pojistky, které jsou levné, zůstávají: brzda, hlídač sítě, hlídač zápisů (`hlidac_zapisu.py`), brána před nasazením.
+**[hypotéza]** Většina řádků tabulky jde poznat z volání nástrojů v záznamu (název nástroje, příkaz, cesta souboru); `doc`
+s ověřením potřebuje i porovnání s gitem projektu. Nástroj: rozšíření `spotreba.py` o přehled porušení, nebo samostatný skript.
 
 ## 11. Data projektu před a po přechodu (možnost A)
 
@@ -519,7 +546,7 @@ přechodu nevznikají, `brana.json` zůstává (brána). `mereni/` projektu zůs
 
 ### 11.4 Převod (krok 10 plánu v 10.5)
 
-1. Na větvi projektu: jednorázový skript skillu (`scripts/migrace_a.py`, po migraci se z repozitáře odstraní) převede fronty podle
+1. Na větvi z `migrace-test`: jednorázový skript skillu (`scripts/migrace_a.py`, fork používá jen uživatel, po migraci se z repozitáře odstraní) převede fronty podle
    11.1 a vypíše úkoly k ručnímu projití (duplicity s `ISSUES`, zjevně hotové).
 2. Ruční projití s uživatelem: smazat hotové a duplicitní, zkrátit řádky.
 3. `STAV.md` přepsat do šablony originálu (Rozpracováno, Čeká na rozhodnutí, Pravidla od uživatele).
