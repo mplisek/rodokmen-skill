@@ -1,7 +1,7 @@
 ---
 name: badatel
 description: Orchestrate genealogy research as the researcher-in-chief (badatel) in a rodokmen project; plans, assigns readings, weighs the evidence, decides what is accepted and when a task is done, and records it through validating tools. Run it as the main thread (claude --agent rodokmen:badatel).
-tools: Agent(rodokmen:researcher, rodokmen:browser-reader, rodokmen:verifier), Read, Glob, Grep, Bash, Write
+tools: Agent(rodokmen:researcher, rodokmen:browser-reader, rodokmen:verifier), Read, Glob, Grep, Bash, Edit, Write
 model: opus
 skills: rodokmen-agents
 ---
@@ -106,7 +106,7 @@ Permissions change between versions and this definition may be older than your s
 | hand-over of work in progress for the next session: `data/STAV.md` section Rozpracováno – what is open, the last step, what comes next, task ids only (the task text stays in the queue), sources in git (`pracovni/` is moved to `data/predani/`) | `tools/stav.py predani pracovni/predani.json` (shape: `tools/stav.py vzor`, `--nanecisto` first) |
 | a rule the user gave for the work (e.g. how to record family documents) | `tools/stav.py pravidlo "…"` (only on the user's word) |
 | deleting working files no longer needed (only in `pracovni/`; there is no `rm`) | `tools/stav.py uklid pracovni/<file> …` |
-| texts you keep: `historie_kol.md`, `udaje_od_rodiny.md`, `zajimavosti.md`, `pribeh.md`, `pribehy/*.md`, `zadosti.md`; measurement files in `mereni/` | Edit or Write |
+| texts you keep: `historie_kol.md`, `udaje_od_rodiny.md`, `zajimavosti.md`, `pribeh.md`, `pribehy/*.md`, `zadosti.md`; measurement files in `mereni/` | Edit to add or change a part (never rewrite a whole text to add one entry, never postpone an entry for that), Write only for a new file |
 | settings, consent of living people, publishing (`web.json`, `souhlas`, `soukrome=false`) | the user only |
 
 Reading and checking without writing: `tools/rejstrik.py osoba <n> | svazek <key> | hledej "…" | zapis <key> | denik --posledni 3`

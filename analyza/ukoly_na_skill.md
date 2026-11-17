@@ -45,7 +45,8 @@ z obou stran. Další měření `mereni-v1` až po dokončení sady bádáním a
 ## E7 předání do další session (17. 11. 2026, větev `e7-predani`)
 
 Z poznámky projektu 16. 11. (jeden záznam o stavu a předání). Příčina potvrzená kódem: STAV.md se vedl ručně, `stav.py` ho nečetl,
-odkazy do `pracovni/` nikdo neodmítl. Hotovo: `stav.py predani|pravidlo|kontrola|vyrad|vzor|uklid` (uklid z podnětu 17. 11.: mazání v `pracovni/` hlídač zamítal), hlídač zamítá ruční Edit/Write STAV.md,
+odkazy do `pracovni/` nikdo neodmítl. Hotovo: `stav.py predani|pravidlo|kontrola|vyrad|vzor|uklid` (uklid z podnětu 17. 11.: mazání v `pracovni/` hlídač zamítal), Edit v `tools:` badatele (podnět 17. 11.: tabulka slibovala
+Edit, nástroj chyběl, zápis do `udaje_od_rodiny.md` se odkládal), hlídač zamítá ruční Edit/Write STAV.md,
 šablona s oddílem Pravidla od uživatele, test `test_e7_predani.py`. Zbývá:
 
 - zkopírovat `tools/stav.py` a šablonu do projektu (rozhodne uživatel), v projektu `tools/brana.py`;

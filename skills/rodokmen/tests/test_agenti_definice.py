@@ -69,7 +69,8 @@ class DefiniceAgentu(unittest.TestCase):
     def test_orchestrator_nezapisuje_a_nema_web(self):
         fm = frontmatter(self.texty["orchestrator"])
         nastroje = {n.strip() for n in re.split(r"\s*,\s*", re.sub(r"\([^)]*\)", "", fm["tools"]))}
-        self.assertFalse(nastroje & {"Edit", "WebFetch", "WebSearch", "PowerShell"}, nastroje)   # Write jen do pracovni/ (hlídá hook, E2)
+        # Edit a Write jen do pracovni/, mereni/ a textů, které badatel vede sám (hlídá hooks/hlidac_orchestratora.py, E2, E7)
+        self.assertFalse(nastroje & {"WebFetch", "WebSearch", "PowerShell"}, nastroje)
         self.assertIn("Agent", nastroje)
         self.assertIn("Bash", nastroje)               # úzce hlídá hooks/hlidac_orchestratora.py
         povoleni = set(re.findall(r"Agent\(([^)]*)\)", fm["tools"]))
@@ -79,6 +80,17 @@ class DefiniceAgentu(unittest.TestCase):
             self.assertTrue(p.strip().startswith("rodokmen:"), p)
             self.assertIn(p.strip().split(":", 1)[1], POCATECNI - {"orchestrator"})
         self.assertIn("rodokmen:researcher", self.texty["orchestrator"].split("---", 2)[2])   # i v postupu volá agenty plným jménem
+
+    def test_badatel_ma_nastroje_ktere_jeho_tabulka_slibuje(self):
+        """Podnět z bádání 17. 11. 2026: tabulka slibovala „Edit or Write“ pro udaje_od_rodiny.md, v tools: byl jen Write, takže dlouhý
+        text šel jen celý přepsat a badatel zápis odložil. Co tabulka zápisu jmenuje jako nástroj Claude Code, musí být v tools:."""
+        for jmeno in ("badatel", "orchestrator"):
+            text = self.texty[jmeno]
+            nastroje = {n.strip() for n in re.split(r"\s*,\s*", re.sub(r"\([^)]*\)", "", frontmatter(text)["tools"]))}
+            slibene = {n for radek in text.splitlines() if radek.startswith("|")
+                       for n in re.findall(r"\b(Edit|Write|Read|Grep|Glob)\b", radek.rsplit("|", 2)[-2])}
+            self.assertIn("Edit", slibene, jmeno)
+            self.assertLessEqual(slibene, nastroje, jmeno)
 
     def test_cteci_agenti_nemaji_zapis(self):
         for jmeno in ("failure-analyst", "test-runner"):
