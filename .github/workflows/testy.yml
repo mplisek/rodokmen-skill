@@ -1,0 +1,78 @@
+# Testy skillu při každém pushi a pull requestu: markdown, skriptové testy nástrojů (bez sítě), kontrola anonymity
+# a ukázkový web (novy_projekt.py --ukazka → kontrola → data → build). Linux i Windows.
+# Přechod na originál (analyza/zjednoduseni-badani.md, oddíl 10): kroky přenosu sem přidávají své testy.
+name: Testy
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testy:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: ImageMagick (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
+
+      - name: Kontrola markdownu (markdownlint, .markdownlint.yaml)
+        if: runner.os == 'Linux'
+        run: npx -y markdownlint-cli2@0.18.1 "**/*.md" "!**/node_modules/**"
+
+      - name: Skriptové testy nástrojů
+        shell: bash
+        run: |
+          T=skills/rodokmen/tools
+          python -X utf8 -I tests/kontrola/test_cisla.py $T/kontrola.py
+          python -X utf8 -I tests/mista/test_mista.py $T
+          python -X utf8 -I $T/slusne.py tests/brzda/test_brzda.py $T/slusne.py
+          python -X utf8 -I $T/slusne.py tests/brzda/test_mezipamet.py $T
+          python -X utf8 -I $T/slusne.py tests/brzda/test_hlidac.py skills/rodokmen
+          python -X utf8 -I tests/brzda/test_hook_windows.py skills/rodokmen
+          python -X utf8 -I tests/brzda/test_prohlizec.py $T
+          python -X utf8 -I tests/aktualizace/test_aktualizace.py skills/rodokmen
+          python -X utf8 -I tests/anno/test_ztraty.py $T
+          python -X utf8 -I tests/portafontium/test_obec.py $T
+          python -X utf8 -I tests/mapa/test_sloupce.py $T
+          python -X utf8 -I tests/verze/test_verze.py skills/rodokmen
+          python -X utf8 -I tests/web/test_overit.py skills/rodokmen
+          python -X utf8 -I tests/web/test_cloudflare.py skills/rodokmen
+          python -X utf8 -I tests/web/test_nginx.py skills/rodokmen
+          if [ "$RUNNER_OS" = Linux ]; then python -X utf8 -I tests/brzda/test_curl.py $T/slusne.py; fi   # na Windows 2 případy selhávají i u originálu
+          if [ "$RUNNER_OS" = Linux ]; then python -X utf8 -I tests/vyrez/test_kontrast.py $T; fi   # ImageMagick jen na Linuxu
+
+      - name: Ukázkový web – založení a kontrola dat
+        shell: bash
+        run: |
+          python -X utf8 skills/rodokmen/tools/novy_projekt.py "$RUNNER_TEMP/ukazka" --ukazka
+          cd "$RUNNER_TEMP/ukazka"
+          python -X utf8 tools/kontrola.py
+
+      - name: Ukázkový web – data a build
+        shell: bash
+        working-directory: ${{ runner.temp }}/ukazka/web
+        run: |
+          npm ci --no-audit --no-fund
+          npm run data
+          npm run build

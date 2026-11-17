@@ -1,0 +1,468 @@
+<title>Metodika originálu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Stejný vzhled jako metodika-a-nastroje.html: jeden čtecí sloupec, levý obsah, teplé papírové pozadí, hliněný akcent. */
+:root{
+  --bg:#F5F4EE; --surface:#FBFAF6; --sunk:#EDEBE3; --line:#DEDAD0;
+  --fg:#2B2A27; --muted:#6B675E; --accent:#C2603E; --accent-soft:#F3E3DA;
+  --ok:#4D7A4A; --warn:#A8761C; --bad:#A8432F;
+  --serif:"Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --sans:Inter, "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#262624; --surface:#2E2D2A; --sunk:#1F1E1C; --line:#3E3C37;
+  --fg:#E8E6DE; --muted:#A39F94; --accent:#E08A69; --accent-soft:#3D2D25;
+  --ok:#8DBB86; --warn:#D9AE5E; --bad:#E48D78; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#262624; --surface:#2E2D2A; --sunk:#1F1E1C; --line:#3E3C37;
+  --fg:#E8E6DE; --muted:#A39F94; --accent:#E08A69; --accent-soft:#3D2D25;
+  --ok:#8DBB86; --warn:#D9AE5E; --bad:#E48D78; color-scheme:dark}
+
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--sans);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:56px}
+@media (max-width:900px){.wrap{grid-template-columns:minmax(0,1fr);gap:0}nav.toc{display:none}}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;padding-top:56px;font-size:13.5px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+nav.toc a{color:var(--muted);text-decoration:none}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent)}
+main{min-width:0;max-width:820px}
+
+header{padding-block:56px 32px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font:500 12px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font:500 clamp(34px,5vw,48px)/1.1 var(--serif);margin:14px 0 16px;text-wrap:balance;letter-spacing:-.01em}
+.lead{font:400 19px/1.55 var(--serif);color:var(--muted);max-width:62ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:22px;font-size:13px;color:var(--muted)}
+.meta b{color:var(--fg);font-weight:500}
+
+section{padding-top:48px}
+h2{font:500 28px/1.2 var(--serif);margin:0 0 12px;text-wrap:balance}
+h3{font:600 15px/1.3 var(--sans);margin:28px 0 8px}
+p{margin:0 0 14px;max-width:68ch}
+.muted{color:var(--muted)}
+code,.mono{font-family:var(--mono);font-size:.86em}
+code{background:var(--sunk);padding:1px 5px;border-radius:4px}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.tbl{overflow-x:auto;margin:14px 0 6px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+th{font:600 12px/1.3 var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--sunk)}
+td:first-child{white-space:nowrap;font-weight:500}
+.k{font-family:var(--mono);font-size:13px;color:var(--accent)}
+
+.roles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+@media (max-width:640px){.roles{grid-template-columns:minmax(0,1fr)}}
+.role{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px;min-width:0}
+.role.main{border-color:var(--accent)}
+.role .tag{font:500 11px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.role.main .tag{color:var(--accent)}
+.role h4{font:500 21px/1.2 var(--serif);margin:8px 0 6px}
+.role p{font-size:14px;margin:0 0 6px}
+.role ul{margin:6px 0 0;padding-left:18px;font-size:14px;color:var(--muted)}
+
+.flow{list-style:none;margin:18px 0 0;padding:0;counter-reset:s;position:relative}
+.flow li{counter-increment:s;display:grid;grid-template-columns:40px minmax(0,1fr);gap:14px;padding-bottom:18px;position:relative}
+.flow li::before{content:counter(s);width:28px;height:28px;border-radius:50%;display:grid;place-items:center;
+  font:600 13px/1 var(--sans);background:var(--accent-soft);color:var(--accent);margin-top:2px}
+.flow li:not(:last-child)::after{content:"";position:absolute;left:13.5px;top:34px;bottom:2px;width:1px;background:var(--line)}
+.flow .who{font:500 12px/1 var(--sans);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.flow .what{font-weight:500;margin:4px 0 2px}
+.flow .det{font-size:14px;color:var(--muted)}
+.chip{display:inline-block;font:500 12.5px/1 var(--mono);padding:4px 7px;border-radius:5px;background:var(--sunk);color:var(--fg);
+  border:1px solid var(--line);margin:4px 4px 0 0;white-space:nowrap}
+
+.st{display:inline-block;font:500 12.5px/1 var(--mono);padding:4px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.st.ok{color:var(--ok)} .st.mid{color:var(--warn)} .st.bad{color:var(--bad)}
+
+.callout{background:var(--accent-soft);border-radius:10px;padding:14px 18px;margin:18px 0;font-size:14.5px}
+.callout b{color:var(--accent)}
+
+.figs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}
+@media (max-width:640px){.figs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fig{border-top:2px solid var(--line);padding-top:10px}
+.fig .n{font:500 28px/1.1 var(--serif);font-variant-numeric:tabular-nums}
+.fig .l{font-size:13px;color:var(--muted)}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0 4px}
+.toolbar input{font:15px var(--sans);padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);flex:1 1 240px;min-width:0}
+.toolbar label{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.toolbar .count{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.group{margin-top:26px}
+.group h3{margin:0 0 4px;display:flex;align-items:baseline;gap:10px}
+.group h3 small{font:400 13px var(--sans);color:var(--muted)}
+.group > p{font-size:14px;color:var(--muted);margin-bottom:6px}
+.tools{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.tools li{display:grid;grid-template-columns:minmax(150px,200px) minmax(0,1fr);gap:16px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+@media (max-width:560px){.tools li{grid-template-columns:minmax(0,1fr);gap:2px}}
+.tools .tn{font:500 13.5px/1.5 var(--mono);color:var(--fg)}
+.tools .new{font:600 10.5px/1 var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-left:6px;vertical-align:1px}
+.tools .note{color:var(--warn);font-size:12.5px;display:block}
+
+.steps{margin:10px 0 0;padding-left:22px;font-size:15px}
+.steps li{margin-bottom:6px;max-width:66ch}
+.open li{margin-bottom:8px;max-width:68ch;font-size:15px}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<nav class="toc" aria-label="Obsah">
+  <ol>
+    <li><a href="#princip">Princip</a></li>
+    <li><a href="#kvalita">Podmínky kvality</a></li>
+    <li><a href="#role">Role</a></li>
+    <li><a href="#tok">Průchod úkolu</a></li>
+    <li><a href="#pravidla">Pravidla bádání</a></li>
+    <li><a href="#archivy">Archivy a pomocníci</a></li>
+    <li><a href="#data">Data projektu</a></li>
+    <li><a href="#web">Web</a></li>
+    <li><a href="#prechod">Co přinese fork</a></li>
+    <li><a href="#dodrzovani">Dodržování metodiky</a></li>
+    <li><a href="#nastroje">Nástroje</a></li>
+    <li><a href="#otevrene">Otevřené</a></li>
+  </ol>
+</nav>
+
+<main>
+<header>
+  <div class="eyebrow">rodokmen-skill · originál 0.10.2</div>
+  <h1>Jak bádá originál</h1>
+  <p class="lead">Metodika a nástroje originálu sarsonj/rodokmen-skill, na kterém stojí přechod (možnost A): jedno sezení s člověkem, pomocníci podle potřeby, pravidla v textu místo kontraktů. K tomu, co se z forku přenese a jak se dá hlídat, že se metodika neobchází.</p>
+  <div class="meta">
+    <span>Stav <b>17. 11. 2026</b></span>
+    <span>Verze <b class="mono">0.10.2</b> (upstream/main)</span>
+    <span>Nástroje <b>28 + 3 skripty .sh</b></span>
+    <span>Plán <b class="mono">analyza/zjednoduseni-badani.md</b></span>
+  </div>
+</header>
+
+<section id="princip">
+  <h2>Princip</h2>
+  <p>Originál vede člověka bez zkušeností s genealogií od rodinných vzpomínek přes matriky k rodinnému webu. <b>Technickou práci dělá Claude</b> (stahování snímků, čtení, zápis dat, web), <b>uživatel dodává znalost rodiny, rozhoduje sporná místa a schvaluje, co jde ven</b>. Všechno řídí jedno sezení; pomocníci (subagenti) jsou výpomoc na velká kola, ne stálé role.</p>
+  <p>Metodika je v textu: <code>SKILL.md</code> (asi 3 200 slov) a podrobné návody v <code>reference/</code>. Nástroje jsou jednoúčelové skripty bez kontraktů mezi sebou; kvalitu hlídá <code>kontrola.py</code>, brzda <code>slusne.py</code> a volitelný hlídač sítě.</p>
+  <div class="figs">
+    <div class="fig"><div class="n">1</div><div class="l">hlavní sezení, žádní stálí agenti</div></div>
+    <div class="fig"><div class="n">5</div><div class="l">fází: příprava, rodina, matriky, příběhy, web</div></div>
+    <div class="fig"><div class="n">31</div><div class="l">nástrojů (28 Python, 3 shell)</div></div>
+    <div class="fig"><div class="n">8</div><div class="l">návodů v <code>reference/</code></div></div>
+  </div>
+</section>
+
+<section id="kvalita">
+  <h2>Podmínky kvality</h2>
+  <p>Stejných osm podmínek jako ve forku, ale v originálu se většina drží pravidlem v textu, ne kódem. Sloupec „po přechodu“ ukazuje, co doplní fork (plán, oddíl 10).</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Č.</th><th>Podmínka</th><th>Originál</th><th>Po přechodu</th></tr></thead>
+    <tbody>
+      <tr><td class="k">K1</td><td>Tvrzení <code>doc</code> má dohledatelný důkaz (svazek, snímek, výřez, přepis).</td><td><span class="st mid">pravidlo + kontrola</span> šest kroků zápisu, <code>kontrola.py</code> hlásí chybějící výřez</td><td>beze změny</td></tr>
+      <tr><td class="k">K2</td><td>Čtení, které se stane <code>doc</code>, je nezávisle ověřené.</td><td><span class="st mid">pravidlo</span> čtení pomocníka ověří hlavní sezení na snímku (<code>overit.py</code>)</td><td>pevná pole pro obě čtení, neshoda = spor pro člověka</td></tr>
+      <tr><td class="k">K3</td><td>Tvrzení patří osobám přes ID.</td><td><span class="st mid">pravidlo</span> čísla v <code>osoby.py</code>, deník je volný text</td><td>deník <code>denik.jsonl</code> s osobami klíčem</td></tr>
+      <tr><td class="k">K4</td><td>Negativní výsledek nese rozsah a doklad.</td><td><span class="st mid">pravidlo</span> 0.10.2: doklad u každého snímku, „s dokladem“ × „orientačně“</td><td>beze změny</td></tr>
+      <tr><td class="k">K5</td><td>Rozpočet, nedostupnost a nečitelnost nejsou „nenalezeno“.</td><td><span class="st mid">pravidlo</span> brzda hlásí „zastavený“, „neodpovídá“</td><td>beze změny (bez nočního režimu stačí)</td></tr>
+      <tr><td class="k">K6</td><td>Vztah je vidět z obou stran.</td><td><span class="st mid">export</span> odvozuje stránky z dat, kontrola webu chybí</td><td><code>kontrola_webu.py</code> z obou stran</td></tr>
+      <tr><td class="k">K7</td><td>Na web jen to, co odpovídá datům.</td><td><span class="st bad">nic</span> nasazení na pokyn uživatele</td><td><code>brana.py</code> s otiskem, hlídač nasazení</td></tr>
+      <tr><td class="k">K8</td><td>Soukromí má přednost.</td><td><span class="st ok">export</span> žijící jen jménem a rokem, hlášky <code>CITLIVÉ</code></td><td>navíc přístupy pro větve rodiny</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="role">
+  <h2>Role</h2>
+  <div class="roles">
+    <div class="role main">
+      <div class="tag">Hlavní sezení</div>
+      <h4>Claude</h4>
+      <p>Plánuje, hledá svazky, stahuje a <b>sám čte</b> snímky, zapisuje data, staví web. Pomocníky pouští jen na velké kolo a po schválení.</p>
+      <ul><li>Zápis do <code>data/</code> dělá jen hlavní sezení.</li><li>Stav drží <code>STAV.md</code> a konec deníku.</li></ul>
+    </div>
+    <div class="role main">
+      <div class="tag">Člověk</div>
+      <h4>uživatel</h4>
+      <p>Zná rodinu, rozhoduje sporná čtení a kandidáty, schvaluje velká kola, zveřejnění a citlivé údaje.</p>
+      <ul><li>Spory dostává v dávce se stránkou odpovědí.</li><li>Nic se neposílá ani nezveřejňuje bez něj.</li></ul>
+    </div>
+    <div class="role">
+      <div class="tag">Výpomoc</div>
+      <h4>pomocník (subagent)</h4>
+      <p>Na velké kolo 2–4 pomocníci paralelně, na levnějším modelu: hledání a první čtení. Píše jen do <code>pracovni/pom_&lt;větev&gt;/</code>.</p>
+      <ul><li>Do <code>data/</code> nikdy, čísla osob neurčuje (<code>nova1</code>…).</li><li>Záporný výsledek jen s dokladem.</li></ul>
+    </div>
+    <div class="role">
+      <div class="tag">Údržba skillu (po přechodu)</div>
+      <h4>metodik, upstream-sync</h4>
+      <p>Z forku zůstávají jen agenti pro údržbu repozitáře: metodik mění skill, upstream-sync připravuje sloučení originálu.</p>
+      <ul><li>Nebádají a nečtou rodinná data.</li></ul>
+    </div>
+  </div>
+</section>
+
+<section id="tok">
+  <h2>Průchod jednoho úkolu</h2>
+  <p>Základní smyčka Fáze 2 pro jednu osobu, jak ji popisuje <code>SKILL.md</code> originálu. Čipy jsou nástroje originálu; kroky označené „po přechodu“ doplní fork.</p>
+  <ol class="flow">
+    <li><div><div class="who">hlavní sezení</div><div class="what">Vybere cíl a začne od nejmladšího zápisu</div>
+      <div class="det">Nejmladší předek bez dokladu, jeho nejmladší událost: úmrtí, pak sňatek, teprve křest. Nikdy křest naslepo po stovkách snímků.</div>
+      <span class="chip">STAV.md</span><span class="chip">research_log.md</span></div></li>
+    <li><div><div class="who">hlavní sezení</div><div class="what">Ověří přístupnost a najde svazek</div>
+      <div class="det">Lhůty (narození 100 let, sňatky a úmrtí 75), obec → farnost → archiv; sňatek nejdřív ve farnosti nevěsty, rejstřík napřed. Co je jen na úřadě, jde do archivních dotazů.</div>
+      <span class="chip">aron_search.py</span><span class="chip">portafontium.py</span><span class="chip">ahmp_search.sh</span><span class="chip">archivni_dotazy.md</span></div></li>
+    <li><div><div class="who">hlavní sezení</div><div class="what">Stáhne snímek v plném rozlišení a sám ho přečte</div>
+      <div class="det">Přes brzdu a sdílenou mezipaměť; zmenšené snímky jen na hledání stránky. Nečitelné místo výřezem z plného rozlišení.</div>
+      <span class="chip">aron_img.py</span><span class="chip">cache.py</span><span class="chip">slusne.py</span><span class="chip">mapa_knihy.py</span></div></li>
+    <li><div><div class="who">hlavní sezení</div><div class="what">Zapíše nález v šesti krocích</div>
+      <div class="det">Svazek, zápis, výřez, rámeček (prohlédnout), přepis s překladem, osoby s fakty a odkazem na zápis. Nová obec na mapu, nový rod do LINES.</div>
+      <span class="chip">zapis.py</span><span class="chip">vyrez.py</span><span class="chip">ramecek.py</span><span class="chip">mista.py</span></div></li>
+    <li><div><div class="who">hlavní sezení</div><div class="what">Zapíše hledání do deníku, i neúspěšné</div>
+      <div class="det">S rozsahem a u neúspěšného, jestli s dokladem, nebo orientačně. Zjevně související výskyt po cestě jako stopu. Po přechodu přes <code>denik.py</code>.</div>
+      <span class="chip">research_log.md</span></div></li>
+    <li><div><div class="who">hlavní sezení · uživatel</div><div class="what">Sporné čtení nebo kandidáta rozhodne uživatel</div>
+      <div class="det">Do té doby <code>prob</code>. Po velkém kole dávka v <code>pracovni/sporna_cteni.json</code> a jedna stránka s odpověďmi. Po přechodu i neshoda dvou čtení v pevném poli.</div>
+      <span class="chip">overit.py</span></div></li>
+    <li><div><div class="who">nástroj</div><div class="what">Kontrola dat</div>
+      <div class="det">Chyby oprav hned; hlásí i citlivé údaje na webu a kdy psát příběh.</div>
+      <span class="chip">kontrola.py</span></div></li>
+    <li><div><div class="who">nástroj · uživatel</div><div class="what">Web: data, sestavení, náhled, nasazení na pokyn</div>
+      <div class="det">Po změně dat <code>npm run data &amp;&amp; npm run build</code>; nasazení jen se souhlasem a ne po každém kole. Po přechodu brána před nasazením.</div>
+      <span class="chip">export_web.py</span><span class="chip">fan_chart.py</span></div></li>
+  </ol>
+  <div class="callout"><b>Proti forku chybí:</b> zadání a nálezy jako soubory, slepé druhé čtení agentem, stavy nálezu, fronty a rozpočet, zápis „všechno, nebo nic“, commit nástrojem. Originál spoléhá na to, že hlavní sezení čte samo a sporné věci ukáže člověku.</div>
+</section>
+
+<section id="pravidla">
+  <h2>Pravidla bádání</h2>
+  <p>„Pravidla, která chrání kvalitu“ ze <code>SKILL.md</code> originálu. Po přechodu zůstávají; přibudou texty forku v <code>reference/</code>.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Pravidlo</th><th>Obsah</th></tr></thead>
+    <tbody>
+      <tr><td>Nic neobjevuj dvakrát</td><td>Než ohlásíš nové, prohledej <code>osoby.py</code>, <code>zaznamy.json</code> a deník (jméno, místo, rok).</td></tr>
+      <tr><td>Zápis nástrojem</td><td><code>zapis.py</code> změní jen jednu položku a zachová formát; nikdy <code>sed -i</code> ani přepis celého souboru.</td></tr>
+      <tr><td><code>doc</code> jen ze snímku</td><td>Shoda jména a doby bez přímého dokladu je <code>prob</code> s poznámkou proč.</td></tr>
+      <tr><td>Nic nedomýšlej</td><td>Nejisté „(?)“, rozpory do <code>ISSUES</code>; písaři se pletli.</td></tr>
+      <tr><td>Celý zápis i okraje</td><td>Pozdější poznámky o úmrtí, sňatku, legitimaci bývají nejcennější.</td></tr>
+      <tr><td>Rodina přes domy</td><td>Stejné číslo popisné a řemeslo přes generace je silná stopa; sčítání lidu po domácnostech.</td></tr>
+      <tr><td>Příčina úmrtí</td><td>Původní výraz, překlad a jistota; nečitelné × prázdné × bez rubriky; nevymýšlet diagnózu.</td></tr>
+      <tr><td>Místa podle panství</td><td>„Langenau bey Hohenelbe“ rozhodne mezi stejnojmennými obcemi.</td></tr>
+      <tr><td>Spornou věc rozhodne uživatel</td><td>S výřezem, do té doby <code>prob</code>; desítky sporů v dávce se stránkou odpovědí.</td></tr>
+      <tr><td class="k">po přechodu</td><td>Do dat ani na web nepatří údaje o procesu („pomocník zapsal“, „ověřeno na snímku“, jména agentů) – hlídá <code>kontrola.py</code> a <code>kontrola_webu.py</code>; pasti čtení, knihy po vsích a ztotožnění z <code>reference/</code> forku.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="archivy">
+  <h2>Archivy a pomocníci</h2>
+  <h3>Brzda <code>slusne.py</code></h3>
+  <p>Archivy blokují IP adresu po sérii rychlých dotazů. Síť jen přes brzdu (i vlastní skripty a curl), při hlášce „zastavený“ přestat a říct to uživateli, v prohlížeči tempo člověka (5 s, při listování 10 s), na jeden archiv nejvýš jeden pomocník a jeden prohlížeč. Mezipaměť obrázků je společná pro všechny projekty.</p>
+  <h3>Pomocníci</h3>
+  <p>Velké kolo jen po schválení, levnější model na hledání a první čtení, čtení knihy bez rejstříku silnějšímu. Přesné zadání (svazek, snímky, koho, formát výsledku, pasti, brzda), u každého snímku co skutečně přečetl, rejstřík po sloupcích. Jejich čtení vždy ověř sám na snímku.</p>
+  <h3>Prohlížeč</h3>
+  <p>Portály, kam skript nesmí (SOA Praha, MZA, SOA Třeboň, ZA Opava), jen v prohlížeči. Originál počítá s Claude in Chrome nebo Playwrightem; <b>po přechodu</b> se čte přes <code>prohlizec.py</code> forku (vlastní Edge, pauzy a stopky brzdy zabudované v nástroji).</p>
+</section>
+
+<section id="data">
+  <h2>Data projektu</h2>
+  <p>Šablona originálu má 13 souborů v <code>data/</code>. Přechod podle plánu (oddíl 11) ponechá jejich tvar a přidá jen to, co potřebuje web forku.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Soubor</th><th>Originál</th><th>Po přechodu</th></tr></thead>
+    <tbody>
+      <tr><td class="k">STAV.md</td><td>vstupní bod: Pro koho, Kde co je, Pravidla, Rozpracováno; ručně</td><td>navíc Pravidla od uživatele a Čeká na rozhodnutí; ručně</td></tr>
+      <tr><td class="k">osoby.py</td><td>P, LINES, SIDE, ISSUES, HYPOTEZY, SAME</td><td>navíc RODINA</td></tr>
+      <tr><td class="k">research_log.md</td><td>deník, tabulka v Markdownu</td><td><code>denik.jsonl</code> přes <code>denik.py</code></td></tr>
+      <tr><td class="k">archivni_dotazy.md</td><td>co jde jen v badatelně nebo na úřadě</td><td>beze změny (místo fronty dotazů)</td></tr>
+      <tr><td class="k">zaznamy.json</td><td>použité zápisy</td><td>navíc <code>ucastnici</code>, <code>overeno</code> (i „uzivatel“)</td></tr>
+      <tr><td class="k">prepisy.json, svazky.json, zvyrazneni.json, mista.json, dokumenty.json</td><td>přepisy, svazky, rámečky, místa, dokumenty</td><td>beze změny</td></tr>
+      <tr><td class="k">udaje_od_rodiny.md, zajimavosti.md, pribeh.md, web.json</td><td>texty a nastavení webu</td><td>navíc <code>pribehy/</code>, přístupy ve <code>web.json</code></td></tr>
+      <tr><td class="k">–</td><td>–</td><td><code>ukoly.md</code> (plán bádání), <code>verejne_otazky.json</code>, <code>opravy.jsonl</code>, <code>stavby.py</code>, <code>zadosti.md</code>, <code>pozvanky.json</code></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="web">
+  <h2>Web</h2>
+  <p>Astro web ze šablony, data z <code>npm run data</code> (<code>export_web.py</code>). Přihlašovací otázka pro rodinu, žijící jen jménem a rokem, hlášky <code>CITLIVÉ</code> schvaluje uživatel. Nasazení Cloudflare nebo Netlify jen se souhlasem.</p>
+  <h3>Stránky originálu (15)</h3>
+  <p><span class="chip">úvod</span><span class="chip">předci</span><span class="chip">rody</span><span class="chip">rod</span><span class="chip">rodina</span><span class="chip">osoba</span><span class="chip">vějíř</span><span class="chip">mapa</span><span class="chip">zápisy</span><span class="chip">zdroj</span><span class="chip">deník</span><span class="chip">zajímavosti</span><span class="chip">příběhy</span><span class="chip">hledáme</span><span class="chip">hledat</span></p>
+  <h3>Po přechodu navíc (z forku)</h3>
+  <p><span class="chip">dokumenty</span><span class="chip">domy</span><span class="chip">jména</span><span class="chip">místa</span><span class="chip">časová osa</span><span class="chip">osobnosti</span><span class="chip">poznámky</span><span class="chip">příběhy rodů</span><span class="chip">statistiky</span><span class="chip">strom</span><span class="chip">vějíř od osoby</span></p>
+  <p class="muted">A přístupy pro větve rodiny (samostatná verze webu pro každý přístup), barva rodu, kontrola vztahů z obou stran a brána před nasazením.</p>
+</section>
+
+<section id="prechod">
+  <h2>Co přinese fork</h2>
+  <p>Z 52 nástrojů forku se podle plánu přenese 44 (zachovat, jako závislost, po úpravě) a 8 se nepřebírá. Z vrstvy metodiky zůstávají jen agenti pro údržbu skillu.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Oblast</th><th>Z forku</th><th>Proč</th></tr></thead>
+    <tbody>
+      <tr><td>Web a přístupy</td><td>export a stránky forku, <code>pohled</code>, <code>pristupy</code>, <code>pozvanky</code>, <code>statistiky</code>, <code>stavby</code>, <code>osobnosti</code>, <code>kontrola_webu</code>, <code>brana</code></td><td>rozhodnutí uživatele</td></tr>
+      <tr><td>Data pro web</td><td><code>denik</code> (<code>denik.jsonl</code>), <code>otazky</code> (bez front), <code>ucastnici</code>, <code>chronologie</code>, <code>datumy</code>, <code>hlidac_zapisu</code></td><td>export webu je importuje</td></tr>
+      <tr><td>Prohlížeč</td><td><code>prohlizec.py</code>, <code>svazky.py</code> (bez kontraktu)</td><td>bádání na portálech bez skriptů</td></tr>
+      <tr><td>Prameny</td><td><code>litomerice</code>, <code>mza</code>, <code>matricula</code>, <code>vademecum</code>, <code>vezni</code>, <code>arolsen</code>, <code>obeti</code>, <code>mauthausen</code>, <code>brno_encyklopedie</code>, <code>smoke_test</code>, <code>mailto</code>, <code>pracovni_prehled</code></td><td>samostatné, bádání nekomplikují</td></tr>
+      <tr><td>Kontroly a data</td><td><code>graf</code>, <code>rodiny</code>, <code>jmena</code>, <code>audit_dat</code>, <code>rejstrik</code>, <code>oprava</code></td><td>čtou data, šetří kontext</td></tr>
+      <tr><td>Repozitář</td><td><code>anonymita.py</code> a pre-push, CI, pokrytí, <code>sync_report.py</code>, agenti <code>metodik</code> a <code>upstream-sync</code></td><td>veřejný repozitář bez rodinných údajů</td></tr>
+      <tr><td>Měření</td><td><code>spotreba.py</code> a kontrola dodržování (níže)</td><td>cena a poctivost postupu</td></tr>
+      <tr><td class="k">nepřebírá se</td><td><code>fronta</code>, <code>stav</code>, <code>kontext</code>, <code>zadani</code>, <code>vysledek</code>, <code>zapis_vysledku</code>, <code>commit</code>, <code>podnet</code>; agenti bádání, hooky orchestrátoru, 32 pravidel, noční režim</td><td>bádání jen s člověkem</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="dodrzovani">
+  <h2>Dodržování metodiky</h2>
+  <p>Ve forku hlídali obcházení agenti a hlídač: badatel směl jen vyjmenované nástroje. Originál nic takového nemá; postup je v textu a model se ho drží, nebo ne. Po přechodu se <b>prevence nahradí kontrolou po sezení</b>: stejné záznamy sezení, ze kterých počítá cenu <code>spotreba.py</code>, ukážou i to, co se dělo.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Co hlídat</th><th>Jak se pozná ze záznamu sezení a dat</th></tr></thead>
+    <tbody>
+      <tr><td>Zápis do dat nástrojem</td><td>Edit nebo Write přímo na <code>data/*.json</code>, <code>denik.jsonl</code>, <code>osoby.py</code> mimo <code>zapis.py</code> a <code>oprava.py</code>; <code>sed -i</code> nebo skript přepisující soubor.</td></tr>
+      <tr><td>Síť jen přes brzdu</td><td>Bash s <code>curl</code>, <code>wget</code>, <code>requests</code> na weby archivů bez <code>slusne.py</code>; prohlížeč rychleji než 5 s mezi stránkami.</td></tr>
+      <tr><td>Každé hledání v deníku</td><td>Stažené snímky (volání <code>aron_img.py</code> aj.) bez řádku deníku se stejným svazkem a rozsahem.</td></tr>
+      <tr><td><code>doc</code> s ověřením</td><td>Nový fakt <code>doc</code> nebo zápis s <code>overeno</code> bez druhého čtení pevných polí nebo bez rozhodnutí uživatele ve sporu.</td></tr>
+      <tr><td>Záporný výsledek s dokladem</td><td>Řádek deníku „nenalezeno“ bez rozsahu nebo s výsledkem pomocníka bez dokladu po snímcích.</td></tr>
+      <tr><td>Plné rozlišení</td><td>Čtení ze zmenšeného snímku (úroveň 1–2, náhled) před zápisem.</td></tr>
+      <tr><td>Pomocníci podle pravidel</td><td>Pomocník zapisující do <code>data/</code>; dva pomocníci nebo prohlížeče na jednom archivu současně; velké kolo bez schválení.</td></tr>
+      <tr><td>Nic ven bez souhlasu</td><td>Nasazení, e-mail nebo issue bez předchozího souhlasu v rozhovoru; nasazení s červenou bránou.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="muted">Návrh: rozšířit měření o přehled porušení na sezení (počet a odkaz na místo v záznamu) vedle ceny. Levné preventivní pojistky zůstávají: brzda, hlídač sítě, hlídač zápisů do <code>denik.jsonl</code> a generovaných souborů, brána před nasazením. Kontrola nic neblokuje, jen ukáže, kde se postup obešel, a podle toho se upraví text nebo nástroj.</p>
+</section>
+
+<section id="nastroje">
+  <h2>Nástroje</h2>
+  <p>Nástroje originálu ve <code>skills/rodokmen/tools/</code>. Síťové brzdí <code>slusne.py</code>. Přepínač ukáže i nástroje forku, které se podle plánu přenesou.</p>
+  <div class="toolbar">
+    <label for="q">Hledat</label>
+    <input id="q" type="search" placeholder="např. snímek, deník, web" autocomplete="off">
+    <label><input id="fork" type="checkbox"> i nástroje z forku</label>
+    <span class="count" id="count"></span>
+  </div>
+  <div id="groups"></div>
+  <p id="empty" class="muted" hidden>Žádný nástroj neodpovídá hledání.</p>
+</section>
+
+<section id="otevrene">
+  <h2>Otevřené</h2>
+  <ul class="open">
+    <li><b>Mapa knihy.</b> <code>mapa.py</code> forku (co který snímek pokrývá) zůstává: za dva dny bádání 136 volání, 105 uložených map. V <code>SKILL.md</code> odlišit od <code>mapa_knihy.py</code> originálu (oddíly po vsích, sloupce rejstříku).</li>
+    <li><b>Zápis nálezu jedním příkazem.</b> PR originálu #187 (<code>nalez.py</code>) je otevřený, s konflikty a bez revize; jeho deník je Markdown, fork drží <code>denik.jsonl</code>. Převzít jen nápad a napojit na <code>denik.py</code>, nebo zůstat u šesti kroků přes <code>zapis.py</code>.</li>
+    <li><b>Kontrola dodržování.</b> Návrh výše; zatím neexistuje.</li>
+    <li><b>Pevná pole a spory.</b> Tabulka polí v <code>reference/</code> a malý pomocník na porovnání (krok 8 plánu).</li>
+  </ul>
+</section>
+
+<footer>Vychází z <span class="mono">upstream/main</span> (sarsonj/rodokmen-skill 0.10.2: <span class="mono">SKILL.md</span>, <span class="mono">reference/</span>, <span class="mono">tools/</span>) a z <span class="mono">analyza/zjednoduseni-badani.md</span>. Neobsahuje údaje z rodinného projektu.</footer>
+</main>
+</div>
+
+<script>
+const GROUPS = [
+  {name:"Matriční portály", desc:"Hledání svazků a stažení snímků. Co skript smí, určuje ZAKAZ v slusne.py.", tools:[
+    ["aron_search.py","Hledání svazků na portálu ARON (SOA Zámrsk)."],
+    ["aron_img.py","Snímek z ARONu (úroveň 0 = plné rozlišení), trvalý odkaz, zápis svazku."],
+    ["portafontium.py","Matriky SOA Plzeň na Porta fontium bez prohlížeče."],
+    ["soal_zoomify.py","Snímek SOA Litoměřice v plném rozlišení (Zoomify).","ZA Opava jen v prohlížeči."],
+    ["ahmp_search.sh","Matriky AHMP (Praha): svazky ze starého katalogu."],
+    ["ahmp_parse.py","Pomocník pro ahmp_search.sh: svazky z HTML výsledků."],
+    ["ahmp_scan.py","Snímek AHMP slepením dlaždic."],
+    ["matricula_dl.sh","Obrázek z Matriculy podle odkazu z prohlížeče."],
+    ["matricula_batch.sh","Dávka obrázků z Matriculy."],
+    ["ebadatelna.py","SOA Praha: odkaz, náhled a výřez ze snímku uloženého z prohlížeče.","Stahovat skriptem nesmí."],
+    ["mapa_knihy.py","Mapa knihy po vsích a montáž sloupce jmen bez stahování celých snímků."]]},
+  {name:"Další prameny", desc:"Noviny a policejní přihlášky.", tools:[
+    ["kramerius.py","Fulltext v Krameriu (české noviny, jen veřejná díla)."],
+    ["anno.py","ANNO: rakouské noviny 1700–1950, seznamy ztrát."],
+    ["anno_snap.py","Stránka nebo výřez kolem nálezu z ANNO."],
+    ["policie_prihlasky.py","Pražské policejní přihlášky 1850–1914."]]},
+  {name:"Snímky a čtení", desc:"Práce se staženými obrazy.", tools:[
+    ["vyrez.py","Výřez zápisu do zdroje/ a vyrezy/; --kontrast pro vybledlé písmo."],
+    ["ramecek.py","Rámeček místa, které se ve výřezu čte (zvyrazneni.json)."],
+    ["overit.py","Ověření čtení: výřez rozdělený na dvě čitelné poloviny."],
+    ["cache.py","Sdílená mezipaměť: každý obrázek se z archivu stáhne jen jednou."]]},
+  {name:"Data", desc:"Zápis do data/ beze změny formátu.", tools:[
+    ["zapis.py","Přidá nebo nahradí jednu položku v data/*.json a odkaz r v osoby.py."],
+    ["mista.py","Místa předků pro mapu (OpenStreetMap)."],
+    ["napady.py","Náměty na zajímavosti z dat osob."]]},
+  {name:"Kontroly, brzda a hlídač", desc:"Kvalita dat a ochrana archivů.", tools:[
+    ["kontrola.py","Konzistence dat; citlivé údaje na webu; kdy psát příběh."],
+    ["slusne.py","Brzda: společný limit dotazů pro všechny procesy, zákazy, stopky."],
+    ["hlidac_site.py","Volitelný hook: přímé curl/wget na weby archivů zastaví."],
+    ["verze.py","Verze skillu × projekt × nejnovější vydání."]]},
+  {name:"Rodinný web", desc:"Export dat a vějíř.", tools:[
+    ["export_web.py","Data → web (volá ho npm run data)."],
+    ["fan_chart.py","Vějíř předků jako SVG nebo plakát."]]},
+  {name:"Založení a import", desc:"Začátek projektu a převzetí stromu.", tools:[
+    ["novy_projekt.py","Nový projekt ze šablony; i aktualizace na novou verzi."],
+    ["ged_import.py","Import GEDCOM (MyHeritage, Geni, FamilySearch)."],
+    ["ftb_export.py","Záloha Family Tree Builder → GEDCOM."]]},
+  {name:"Z forku: web a přístupy", fork:true, desc:"Přenese se podle plánu (oddíl 10.2).", tools:[
+    ["pohled.py","Přístupy a pohled od jiné výchozí osoby."],
+    ["pristupy.py","Přehled, kdo co vidí."],
+    ["pozvanky.py","Osobní odkazy na web."],
+    ["statistiky.py","Stránka Statistiky."],
+    ["stavby.py","Dějiny staveb, stránka Domy."],
+    ["domy_export.py","Domy předků pro web."],
+    ["osobnosti.py","Stránka Osobnosti."],
+    ["kontrola_webu.py","Sestavený web: vztahy z obou stran, procesní text."],
+    ["znackuj_rody.py","Jednotná značka rodu."],
+    ["brana.py","Brána před nasazením s otiskem."],
+    ["hlidac_zapisu.py","Hlídač ručních zápisů do deníku a generovaných souborů."],
+    ["rody_html.py","Pomůcky pro text stránek (závislost)."],
+    ["soubory.py","Bezpečný zápis souborů (závislost)."],
+    ["obraz.py","Hledání ImageMagicku (závislost)."]]},
+  {name:"Z forku: data pro web", fork:true, desc:"Export webu je importuje.", tools:[
+    ["denik.py","Deník jako denik.jsonl."],
+    ["zaznamy_store.py","Úložiště JSONL pod zámkem (závislost)."],
+    ["ucastnici.py","Účastníci zápisů."],
+    ["otazky.py","Veřejné otázky (Co hledáme).","Po úpravě: odpojit od front."],
+    ["chronologie.py","Časová návaznost, časová osa."],
+    ["datumy.py","Data a roky na jednom místě (závislost)."]]},
+  {name:"Z forku: kontroly a data", fork:true, desc:"Čtou data, šetří kontext.", tools:[
+    ["graf.py","Rodina jako graf."],
+    ["rodiny.py","Rekonstrukce rodiny, kandidáti."],
+    ["jmena.py","Volné porovnání jmen (závislost)."],
+    ["audit_dat.py","Rozpory v datech bez čtení snímků."],
+    ["rejstrik.py","Rejstřík dat v SQLite."],
+    ["oprava.py","Změna dat jedním voláním s důvodem a historií."],
+    ["osoby_upravy.py","Úprava jedné položky osoby.py (závislost)."]]},
+  {name:"Z forku: prameny a prohlížeč", fork:true, desc:"Samostatné nástroje k archivům.", tools:[
+    ["prohlizec.py","Vlastní Edge přes Playwright pro portály bez skriptů."],
+    ["svazky.py","Svazek z prohlížeče do katalogu.","Po úpravě: bez kontraktu vysledek.py."],
+    ["litomerice.py","Matriky SOA Litoměřice."],
+    ["mza.py","Hledání matrik MZA."],
+    ["matricula.py","Matricula Online."],
+    ["vademecum.py","VadeMeCum, židovské matriky."],
+    ["vezni.py","Databáze Památníku Terezín."],
+    ["arolsen.py","Arolsen Archives."],
+    ["obeti.py","Oběti holocaust.cz."],
+    ["mauthausen.py","Zemřelí v Mauthausenu."],
+    ["brno_encyklopedie.py","Encyklopedie dějin Brna."],
+    ["souhlas.py","Souhlas s podmínkami portálu (závislost)."],
+    ["smoke_test.py","Kontrola síťových nástrojů."],
+    ["mailto.py","Žádost jako odkaz do e-mailu."],
+    ["pracovni_prehled.py","Co už je stažené v pracovni/."],
+    ["mapa.py","Mapa knihy: co který snímek svazku pokrývá; odhad snímku pro písmeno, rok, číslo."],
+    ["spotreba.py","Měření spotřeby sezení."]]}
+];
+const box=document.getElementById("groups"), q=document.getElementById("q"), fork=document.getElementById("fork"),
+      count=document.getElementById("count"), empty=document.getElementById("empty");
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function render(){
+  const t=q.value.trim().toLowerCase(); let shown=0, total=0, html="";
+  for(const g of GROUPS){
+    if(g.fork && !fork.checked) continue;
+    total+=g.tools.length;
+    const items=g.tools.filter(([n,d,x])=>!t||(n+" "+d+" "+(x||"")+" "+g.name).toLowerCase().includes(t));
+    if(!items.length) continue; shown+=items.length;
+    html+=`<div class="group"><h3>${esc(g.name)} <small>${items.length}</small></h3><p>${esc(g.desc)}</p><ul class="tools">`+
+      items.map(([n,d,x])=>`<li><span class="tn">${esc(n)}${g.fork?'<span class="new">fork</span>':''}</span><span>${esc(d)}${x?`<span class="note">${esc(x)}</span>`:''}</span></li>`).join("")+
+      `</ul></div>`;
+  }
+  box.innerHTML=html; empty.hidden=shown>0;
+  count.textContent=t?`${shown} z ${total}`:`${total} nástrojů`;
+}
+q.addEventListener("input",render); fork.addEventListener("change",render);
+render();
+</script>

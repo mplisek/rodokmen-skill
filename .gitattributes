@@ -9,3 +9,5 @@
 *.jpg  binary
 *.png  binary
 *.pdf  binary
+
+.githooks/* text eol=lf

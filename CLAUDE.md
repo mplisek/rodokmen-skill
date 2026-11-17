@@ -1,10 +1,32 @@
 # Správa repozitáře rodokmen-skill
 
+Fork originálu `sarsonj/rodokmen-skill` (remote `upstream`). Od 0.10.2-fork.2 stojí na metodice originálu (bádání jedno sezení
+s člověkem) a přidává web, přístupy, prameny, kontroly a rejstřík; dřívější metodika s agenty a frontami je ve značce
+`fork-metodika-2026-11`. Plán přechodu: `analyza/zjednoduseni-badani.md`.
+
+Číslo verze forku = verze originálu, na které stojí, plus `-fork.N` (např. `0.10.2-fork.2`; po sloučení originálu 0.11.0 znovu
+`0.11.0-fork.1`) – nikdy se nepotká s číslem originálu. Novou verzi originálu slučuj `git merge upstream/main` (historie se
+nepřepisuje); co se v originále změnilo a kde hrozí konflikt, ukáže předem `python -X utf8 scripts/sync_report.py` (po
+`git fetch upstream`). PR originálu `git merge --no-ff -m "Merge sarsonj/rodokmen-skill#N: <název>" refs/upstream-pr/N`.
+Pravidla archivů z originálu (co skriptem nesmí, `tools/slusne.py` ZAKAZ) platí i pro úpravy forku.
+
 Vydání nové verze: zvedni číslo ve třech místech najednou – `.claude-plugin/plugin.json` (`version`),
-`skills/rodokmen/VERZE` (podle něj Claude u uživatele pozná, že má aktualizovat projekt) a README na dvou místech – nahoře „Aktuální verze: X.Y.Z (vydána D. M. RRRR)“ a v požadavcích
-„Stav k D. M. RRRR (verze X.Y.Z)“, vždy s číslem verze i datem vydání.
+`skills/rodokmen/VERZE` (podle něj Claude u uživatele pozná, že má aktualizovat projekt) a README na dvou místech – nahoře
+„Aktuální verze: X.Y.Z (vydána D. M. RRRR)“ a v požadavcích „Stav k D. M. RRRR (verze X.Y.Z)“, vždy s číslem verze i datem vydání.
 Do `CHANGELOG.md` přidej nahoru sekci `## X.Y.Z – D. M. RRRR` (Nové / Opravy / Návody, krátké odrážky pro uživatele,
-čísla issues jako `#11`). Po commitu a pushi vytvoř tag a vydání na GitHubu s textem té sekce:
-`awk '/^## X.Y.Z /{f=1;next} /^## /{f=0} f' CHANGELOG.md > /tmp/notes.md && gh release create vX.Y.Z --target main --title "X.Y.Z" --notes-file /tmp/notes.md`.
+čísla issues jako `#11`). Po commitu a pushi vytvoř tag a vydání na GitHubu s textem té sekce (`gh` bez `-R` míří na originál):
+`awk '/^## X.Y.Z /{f=1;next} /^## /{f=0} f' CHANGELOG.md > /tmp/notes.md && gh release create vX.Y.Z -R mplisek/rodokmen-skill --target main --title "X.Y.Z" --notes-file /tmp/notes.md`.
 Mění-li se formát mezi `tools/` a `template/web/`, otestuj i aktualizaci projektu založeného předchozí verzí
 (`novy_projekt.py` na stejnou složku, `npm install`, `npm run data`, `npm run build`).
+
+Testy: skriptové testy v `tests/<oblast>/` (bez sítě); GitHub Actions je pouští při každém pushi na Linuxu i Windows spolu
+s buildem ukázkového webu (`.github/workflows/testy.yml` – seznam příkazů). Nový nebo převzatý nástroj = test v `tests/` a řádek
+v CI. Před vydáním navíc `python -X utf8 skills/rodokmen/tools/smoke_test.py` proti živým portálům – z domácí sítě, ne z firemní
+(blokace, certifikáty).
+
+Veřejný repozitář nesmí obsahovat údaje z projektu (jména, čísla osob a úkolů – ani v příkladech, testech a zprávách commitů):
+před pushem `python -X utf8 scripts/anonymita.py pred-pushem` (lokální seznam `.anonymita-seznam`, vzor `.anonymita-seznam.priklad`;
+hook `pre-push` zapíná uživatel příkazem `anonymita.py nainstaluj`). V CI kontrola neběží, seznam je jen lokálně.
+
+Markdown: `.markdownlint.yaml` a `.editorconfig` v kořeni; kontrola `npx -y markdownlint-cli2@0.18.1 "**/*.md" "!**/node_modules/**"`
+(v CI i před commitem, `--fix` jen s kontrolou `git diff`). MD037 je vypnuté kvůli „* 1890“ (narozen).
