@@ -745,3 +745,102 @@ Co nebylo ověřeno:
 
 Další krok po schválení: **E7 baseline** a **E0**, obojí jde hned a jedno druhé neblokuje. Vykonavatel: metodik (sezení nad skillem),
 sadu případů připraví badatel v projektu na pokyn uživatele.
+
+## 11. Zjednodušení bádání (návrh 17. 11. 2026)
+
+Podnět uživatele: metodika bádání je překombinovaná. Tento oddíl je zase **jen návrh**; nic z něj není implementované.
+
+### 11.1 Proč
+
+- **[kód]** Fork má 80 nástrojů (21 tisíc řádků), originál 28. Badatel má definici o 2 300 slovech, 19 nástrojů a tabulku 16 cest
+  k zápisu. Jeden výsledek čtení prochází čtyřmi soubory (zadání, nález o 80 řádcích vzoru, ověření, rozhodnutí o 79 řádcích vzoru)
+  a asi deseti kroky.
+- **[měření]** `mereni-v0`: 7 837 tis. ekvivalentních tokenů na 11 případů (`analyza/mereni-v0-2026-11-16.md`).
+- **[běh]** Audit jednoho zápisu úmrtí (17. 11. 2026), který všechna čtení čtou obsahově stejně, potřeboval čtyři kola oprav metodiky
+  a pořád není ověřený. Každé kolo přidalo výjimku: normalizace textu, „kratší čtení“, nespárovaná pole, `vysledek.py jadro`,
+  `z_cteni`, `audit.pole`, `porovnej --pole`, započtení ověření rodičovského čtení.
+- **[kód]** Příčina je v návrhu ověření: porovnávají se **volně pojmenovaná a volně ohraničená textová pole doslova**. Každý čtenář pole
+  pojmenuje a ohraničí po svém (jméno se stavem a domem, datum s hodinou), takže shodu zachraňují další a další mosty. Spor, který by
+  člověk nad výřezem rozhodl za vteřinu, se řeší třetím a čtvrtým slepým čtením, a nové čtení (silnější, nebo slabší) spor často
+  ještě rozšíří.
+
+### 11.2 Pevná pole podle druhu zápisu: o co přijdeme
+
+Návrh: první čtení i slepé ověření vyplňují **tatáž malá pole daná druhem zápisu**, ne pole, která si čtenář vymyslí.
+
+| Druh | Ověřovaná pole (jádro) |
+|---|---|
+| křest | datum narození, datum křtu, jméno dítěte, otec (jméno, stav, dům, obec), matka (jméno, rodné příjmení, otec matky), kmotři (jména) |
+| sňatek | datum, ženich (jméno, věk, stav, dům, obec, rodiče), nevěsta (totéž), svědci (jména) |
+| úmrtí | datum úmrtí, datum pohřbu, jméno, stav nebo povolání, dům, obec, věk, příčina (jedno slovo nebo krátké označení) |
+
+**Nic se neztrácí z přepisu.** Úplný přepis originálu a překlad zůstávají v `prepisy.json` jako dosud, včetně všeho, co se do jádra
+nevejde: hodina, okrajové poznámky, delší věty o příčině, kdo pohřbil, prohlížitel, opravy písaře, poznámky o legitimaci, dvojčata.
+Do jádra jde jen to, co se **zapisuje do dat jako fakt** (datum, jméno, vztah, dům). Jen jádro se ověřuje strojově pole po poli.
+
+Co skutečně odpadne:
+
+- strojové ověřování vyprávěcích polí (věta o příčině, poznámky) – zůstávají v přepisu jako `doslova`, `doc` z nich nevzniká,
+- volnost čtenáře v názvech polí – tu dnes nikdo nepotřebuje, jen způsobuje nespárovaná pole.
+
+Riziko a jak ho krýt:
+
+- **Neobvyklý zápis** (dvojčata v jednom řádku, nemanželské dítě s dodatečnou legitimací, přeškrtnutý a opravený údaj, údaj jen na
+  okraji): čtenář vyplní jádro, co jde, a označí zápis `neobvykle: <důvod>`. Takový zápis jde rovnou k člověku (11.3), ne do dalších
+  slepých čtení.
+- **Druh mimo tabulku** (výpis z pozemkové knihy, list oddací v rodinných dokumentech): jádro se nedefinuje, zápis ověřuje člověk.
+
+### 11.3 Sporná místa rozhodne člověk nad výřezem
+
+Ano, je to lepší než další kola strojového čtení. Návrh:
+
+1. První čtení a **jedno** slepé ověření (stejná pole jádra). Shoda pole po normalizaci = ověřeno (podmínka K2 splněna).
+2. **Neshoda v poli jádra = spor pro člověka**, ne třetí čtení. Nástroj sestaví jednu položku: výřez (plné rozlišení, s rámečkem
+   na místě pole), název pole a obě čtení vedle sebe; nic dalšího.
+3. Spory se sbírají do jedné dávky (`ukoly_k_rozhodnuti.md`, typ `spor čtení`), aby člověk rozhodl desítky polí najednou, ne po
+   jednom během bádání. Odpověď je krátká: „A“, „B“, vlastní čtení, nebo „nečitelné“.
+4. Rozhodnutí člověka se zapíše k poli (`rozhodl: uzivatel`, datum) a pole je `doc`: lidské čtení nad výřezem je to nejsilnější
+   ověření, jaké máme. Ani `fam`, ani `prob` – je to čtení originálu.
+5. Badatel spor **nerozhoduje** sám a nezadává kvůli němu další čtení; jen připraví položku. Výjimka: výřez je špatný (useknutý,
+   rozmazaný) – pak nový výřez, ne nové čtení.
+
+Co tím odpadne: většina 2 ze 3 a třetí a další ověření, `jadro`, `z_cteni`, `audit.pole`, `porovnej --pole`, „kratší čtení“ jako
+samostatný stav, nespárovaná pole, většina normalizací. Audit zapsaného zápisu je pak jen „jedno slepé čtení jádra a spory
+k člověku“.
+
+Cena pro člověka **[hypotéza]**: v auditu ze 17. 11. vyšly spory hlavně v jménu (rozsah pole) a datu (pravopis, hodina), tedy
+v tom, co pevná pole a normalizace odstraní; skutečný spor zbyl jeden (číslo domu). Odhad: jedno až dvě pole na deset zápisů, dávka
+na pár minut týdně. Nezměřeno – ověřit na sadě případů (11.6).
+
+### 11.4 Další zjednodušení
+
+| Č. | Návrh | Co odpadne | Přínos |
+|---|---|---|---|
+| Z1 | Pevná pole jádra podle druhu (11.2) a spory k člověku (11.3) | `jadro`, většina, výjimky porovnání | dnešní audit a podobné případy bez dalších kol |
+| Z2 | Rozhodnutí krátkým příkazem nad nálezem („přijmi čtení c1 jako zápis, osoby 88 a 89, uzavři“) místo ručně skládaného JSON o 79 řádcích; zbytek nástroj odvodí z nálezu a zadání | ruční rozhodnutí, polovina chyb zápisu | méně tokenů badatele, méně odmítnutí |
+| Z3 | Prořezat nástroje a fronty podle skutečného použití (deník, `ukoly_historie.jsonl`, `spotreba.py` za poslední týdny); nepoužité sloučit nebo zrušit, kandidáti: část ze 6 front, router a rozpočet nočního režimu, překrývající se výpisy | desítky nástrojů a voleb | menší definice badatele, méně odkazů |
+| Z4 | Definice badatele na jednu obrazovku (postup), podrobnosti jen v `--help` nástrojů | 2 300 slov | levnější start sezení, méně zastaralých pokynů |
+
+### 11.5 Co zůstává beze změny
+
+Podmínky K1–K8 (1.2). Slepé druhé čtení bez znalosti prvního (K2). Negativní výsledek s rozsahem a dokladem (K4, R-HELP-006).
+Rozlišení rozpočtu, nedostupnosti a nečitelnosti (K5). Zápis jen validujícími nástroji, commit nástrojem, brána před nasazením.
+
+### 11.6 Postup a měření
+
+1. Rozhodnutí uživatele (11.7).
+2. Z1 na větvi ze `main`: tabulka jádra v `vysledek.py`, zadání bere pole z druhu zápisu, porovnání bez většiny, položka sporu
+   s výřezem, zápis rozhodnutí člověka. Testy napřed (scénáře: shoda, neshoda → spor, neobvyklý zápis → člověk, audit).
+3. Měření `mereni-v1` na téže sadě jako `mereni-v0`: počet kroků na úkol, tokeny na případ, počet sporů pro člověka, přesnost
+   proti potvrzeným odpovědím. Cíl: přesnost aspoň stejná, tokeny a kroky výrazně méně, spory do dvou polí na deset zápisů.
+4. Teprve podle měření Z2, pak Z3 a Z4.
+5. Dočasná řešení z 17. 11. (`vysledek.py jadro`, `audit.pole`, započtení ověření rodiče) po zavedení Z1 odstranit.
+
+### 11.7 Rozhodnutí pro uživatele
+
+| Č. | Otázka | Doporučení |
+|---|---|---|
+| R9 | Spory čtení v poli jádra rozhoduje člověk nad výřezem místo třetího a dalších slepých čtení? | ano |
+| R10 | Pevná pole jádra podle druhu zápisu; zbytek jen v přepisu, strojově neověřený? | ano |
+| R11 | Větev `podnety-17-11b` (hlídač pro build a bránu, `jadro`, `audit.pole`): sloučit jako dočasné řešení, nebo ponechat a rovnou Z1? | hlídač pro build a bránu sloučit (nezávisí na Z1); `jadro` a spol. nechat ve větvi a audit vyřešit přes Z1 |
+| R12 | Rozsah etapy: jen Z1 a Z2, nebo i Z3 a Z4? | Z1 hned, Z2 po měření, Z3 a Z4 jako další etapa |
