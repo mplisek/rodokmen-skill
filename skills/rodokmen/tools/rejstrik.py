@@ -11,7 +11,8 @@ Použití (z kořene projektu; na Windows `python -I -X utf8 tools/rejstrik.py �
         --zdroj denik,zajimavost      omezit na druhy zdrojů (seznam: rejstrik.py druhy)
         -n 30                         počet výsledků (výchozí 20); neověřené výstupy pomocníků jsou až na konci
   rejstrik.py osoba 8                 vše o osobě: fakta, zápisy, deník, otázky, zajímavosti, dotazy…
-  rejstrik.py osoba "Dvořák"          totéž podle části jména (přímí předci i SIDE)
+  rejstrik.py osoba "Dvořák"          totéž podle části jména (přímí předci, SIDE i RODINA)
+  rejstrik.py osoba marie-novakova    osoba ze skupiny RODINA podle zkratky (fork)
   rejstrik.py zapis <klíč|část>       zápis: datum, svazek a snímek, přepis s překladem, osoby, řádky deníku
   rejstrik.py svazek <id|"Název 05">  svazek: které snímky jsme už prošli (z deníku, s výsledkem) a zápisy z něj
   rejstrik.py denik 443-445           vypíše řádky deníku (zkráceně; --cele celé); denik --posledni 3 = konec deníku
@@ -250,9 +251,12 @@ def denik_jsonl(c, cesta, platna, klic_osoby, fts):
                 c.execute("INSERT INTO zminky VALUES('denik',?,?,'citace')", (str(n), cislo))
 
 
+SCHEMA = "fork-2"   # fork-2: osoby ze skupiny RODINA (tabulky rodina, rodina_fakta, rodina_zaznam)
+
+
 def otisk():
     """Otisk obsahu všech zdrojů: rejstřík platí jen pro přesně tenhle obsah (čas souboru na OneDrivu nestačí)."""
-    h = hashlib.sha1()
+    h = hashlib.sha1(SCHEMA.encode("utf-8"))   # jiné schéma databáze = jiný otisk, starší rejstřík se přestaví
     for p in sorted(zdroje()):
         h.update(os.path.relpath(p, ROOT).encode("utf-8"))
         with open(p, "rb") as f:
@@ -277,6 +281,9 @@ def postav(otisk_=None):
     c.executescript("""
     CREATE TABLE osoby(cislo INTEGER PRIMARY KEY, jmeno, roky, st, rod INTEGER, generace INTEGER, note, druh);
     CREATE TABLE side(id INTEGER PRIMARY KEY, k INTEGER, jmeno, text);
+    CREATE TABLE rodina(klic PRIMARY KEY, jmeno, roky, st, otec, matka, note);   -- RODINA: příbuzní mimo přímou linii (fork)
+    CREATE TABLE rodina_fakta(klic, fakt);
+    CREATE TABLE rodina_zaznam(osoba, klic);
     CREATE TABLE fakta(cislo INTEGER, fakt);
     CREATE TABLE osoba_zaznam(cislo INTEGER, klic, side_id INTEGER);
     CREATE TABLE hypoteza_zaznam(hypoteza INTEGER, klic);
@@ -358,6 +365,13 @@ def postav(otisk_=None):
         c.executemany("INSERT INTO fakta VALUES(?,?)", [(k, x) for x in f])
         c.executemany("INSERT INTO osoba_zaznam VALUES(?,?,NULL)", [(k, r) for r in p.get("r", [])])
         fts("osoba", k, f"č. {k} {p.get('n')} ({p.get('y', '')})", "\n".join(f) + "\n" + p.get("note", ""), False)
+    for k, p in (d.get("RODINA") or {}).items():
+        f = [x for x in p.get("f", []) if isinstance(x, str)]
+        c.execute("INSERT INTO rodina VALUES(?,?,?,?,?,?,?)", (str(k), p.get("n"), p.get("y"), p.get("st"), str(p.get("otec") or ""),
+                                                             str(p.get("matka") or ""), p.get("note", "")))
+        c.executemany("INSERT INTO rodina_fakta VALUES(?,?)", [(str(k), x) for x in f])
+        c.executemany("INSERT INTO rodina_zaznam VALUES(?,?)", [(str(k), r) for r in p.get("r", [])])
+        fts("rodina", k, f"{k} {p.get('n')} ({p.get('y', '')})", "\n".join(f) + "\n" + p.get("note", ""), False)
     for i, s in enumerate(SIDE):
         c.execute("INSERT INTO side VALUES(?,?,?,?)", (i, s.get("k"), s.get("n"), s.get("t", "")))
         c.executemany("INSERT INTO osoba_zaznam VALUES(?,?,?)", [(s.get("k"), r, i) for r in s.get("r", [])])
@@ -512,6 +526,8 @@ def popis_ref(c, druh, ref):
         return f"deník ř. {ref}"
     if druh in ("osoba",):
         return f"osoba č. {ref}"
+    if druh == "rodina":
+        return f"RODINA {ref}"
     if druh in ("zaznam", "prepis", "svazek", "dokument"):
         return f"{druh} {ref}"
     r = c.execute("SELECT soubor, nadpis FROM texty WHERE id=?", (ref,)).fetchone()
@@ -584,7 +600,25 @@ def osoba(c, q):
     for i in sides:
         s = c.execute("SELECT * FROM side WHERE id=?", (i,)).fetchone()
         print(f"## SIDE {s['jmeno']} – k č. {s['k']}\n  {kratce(s['text'], 600)}\n")
-    if not cisla_ and not sides:
+    rodina = [r[0] for r in c.execute("SELECT klic FROM rodina WHERE klic=? OR jmeno LIKE ? ORDER BY klic", (q, f"%{q}%"))]
+    for k in rodina:
+        o = c.execute("SELECT * FROM rodina WHERE klic=?", (k,)).fetchone()
+        print(f"## RODINA {k} {jr(o['jmeno'], o['roky'])} – stav {o['st']}")
+        rodice = [x for x in (o["otec"], o["matka"]) if x]
+        if rodice:
+            print("Rodiče: " + "; ".join(f"č. {x}" if x.isdigit() else x for x in rodice))
+        for (f,) in c.execute("SELECT fakt FROM rodina_fakta WHERE klic=?", (k,)):
+            print(f"  · {f}")
+        if o["note"]:
+            print(f"Poznámka: {kratce(o['note'], 600)}")
+        zap = c.execute("SELECT z.klic, z.datum, z.nazev FROM rodina_zaznam rz JOIN zaznamy z ON z.klic=rz.klic WHERE rz.osoba=?",
+                        (k,)).fetchall()
+        if zap:
+            print("Zápisy:")
+            for z in zap:
+                print(f"  - {z['klic']} ({z['datum']}): {z['nazev']}")
+        print()
+    if not cisla_ and not sides and not rodina:
         print("Nenalezeno.")
 
 

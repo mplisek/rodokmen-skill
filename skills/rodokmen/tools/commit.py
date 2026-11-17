@@ -7,6 +7,7 @@ Použití (z kořene projektu):
         soubory a zprávu vezme z historie úkolu (události „zapsano“ od tools/zapis_vysledku.py, které ještě nejsou v commitu)
   python3 -I tools/commit.py --soubory data/ukoly_na_noc.md,data/ukoly_historie.jsonl --zprava "Fronty: směrování nových úkolů"
         změny front bez výsledku čtení, role účastníků, opravný řádek deníku, hodnocení měření; jen soubory v data/ a mereni/
+        a snímky rodinných dokumentů z data/dokumenty.json (zdroje/<img>.jpg, vyrezy/<img>.jpg, jak je uloží vyrez.py)
 
 Pravidla: zpráva říká, co bylo zjištěno a kde, bez čísel úkolů a jmen agentů; --vetev (je-li zadána) se musí shodovat s aktivní větví,
 jinak se necommituje; soubor beze změny se přeskočí; nic ke commitu = kód 1. Podpis (řádek Co-Authored-By) jednotně z data/rezim.json
@@ -50,6 +51,17 @@ def z_historie(ukol):
     return sorted({s for e in ud for s in e.get("soubory") or []}), (ud[-1].get("zprava") if ud else None)
 
 
+def snimky_dokumentu():
+    """zdroje/<img>.jpg a vyrezy/<img>.jpg dokumentů z data/dokumenty.json (vyrez.py je uloží tam, mimo data/)."""
+    try:
+        with open(os.path.join(ROOT, "data", "dokumenty.json"), encoding="utf-8") as f:
+            d = json.load(f)
+    except (OSError, ValueError):
+        return set()
+    imgs = {x.get("img") for x in d if isinstance(x, dict)} if isinstance(d, list) else set()
+    return {f"{s}/{i}.jpg" for i in imgs if isinstance(i, str) and re.fullmatch(r"[\w.-]+", i) for s in ("zdroje", "vyrezy")}
+
+
 def podpis():
     try:
         with open(os.path.join(ROOT, "data", "rezim.json"), encoding="utf-8") as f:
@@ -79,8 +91,10 @@ def main(argv=None):
     else:
         soubory = [x.strip().replace("\\", "/") for x in (a.soubory or "").split(",") if x.strip()]
         zprava = a.zprava
-        if not soubory or any(not s.startswith(("data/", "mereni/")) for s in soubory):
-            sys.exit("bez úkolu: --soubory jen z data/ nebo mereni/ (oddělené čárkou) a --zprava")
+        snimky = snimky_dokumentu()
+        if not soubory or any(not (s.startswith(("data/", "mereni/")) or s in snimky) for s in soubory):
+            sys.exit("bez úkolu: --soubory jen z data/ nebo mereni/, nebo snímek rodinného dokumentu z data/dokumenty.json "
+                     "(zdroje/<img>.jpg, vyrezy/<img>.jpg); oddělené čárkou, s --zprava")
     if not zprava or not zprava.strip():
         sys.exit("chybí --zprava (co bylo zjištěno a kde)")
     if UKOL.search(zprava) or PROCES.search(zprava):

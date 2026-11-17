@@ -53,6 +53,13 @@ Edit, nástroj chyběl, zápis do `udaje_od_rodiny.md` se odkládal), hlídač z
 - migraci STAV.md projektu dělá bádání (`stav.py kontrola`, úkoly do front, `vyrad`, `predani`), pak smazat poznámku v projektu;
 - zrušení nebo změna pravidla od uživatele zatím nemá příkaz (jen nové pravidlo, které starší nahrazuje).
 
+## Podněty z bádání 17. 11. 2026 (větev `podnety-17-11`)
+
+Hotovo: osoby ze skupiny RODINA v `kontext.py` a `rejstrik.py` (dřív jen P a SIDE; text faktů k nahrazení byl vidět až v
+`oprava.py --nanecisto`), `commit.py --soubory` bere snímky dokumentů z `data/dokumenty.json` (dřív jen `data/` a `mereni/`, snímky
+zůstávaly necommitnuté). Test `test_rodina_a_snimky_dokumentu.py`. Zbývá zkopírovat `kontext.py`, `rejstrik.py` a `commit.py`
+do projektu a poznámku v projektu smazat.
+
 ## Otevřené po E0–E6
 
 - Pokus na platformě: jde v pomocníkovi pluginu pokračovat zprávou se zachovaným kontextem (nástroj `SendMessage`), když je řídicí agent

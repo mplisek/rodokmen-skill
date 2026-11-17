@@ -14,6 +14,10 @@ odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
 ### Nové
 
+- Osoby ze skupiny RODINA jsou vidět v nástrojích: `kontext.py --osoba <zkratka>` a `rejstrik.py osoba <zkratka nebo jméno>` ukážou
+  fakta, poznámku, rodiče, zápisy a otevřené otázky; `rejstrik.py hledej` najde i jejich fakta. Starší rejstřík se sám přestaví.
+- `commit.py --soubory` commitne i snímky rodinného dokumentu (`zdroje/<img>.jpg`, `vyrezy/<img>.jpg`), je-li dokument
+  v `data/dokumenty.json`; jiné obrázky dál odmítne.
 - Předání do další session (E7): `data/STAV.md` je předání rozpracované práce, úkoly zůstávají ve frontách. Oddíl Rozpracováno
   zapisuje `tools/stav.py predani pracovni/predani.json` celý, nebo vůbec (úkoly jen odkazem a jen otevřené, podklady z `pracovni/`
   přesune do `data/predani/`, pak commit); pravidla od uživatele mají vlastní oddíl (`stav.py pravidlo "…"`). `stav.py` obojí vypíše

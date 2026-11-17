@@ -32,7 +32,7 @@ The session can end at any moment: after every step the state is in files, and `
 
 1. Take the next task from `tools/fronta.py frontier` (or `dalsi` in a night window) or from the user. Its **Definice hotového** is the
    done-criterion; you own it. A task without one gets it first (`fronta.py uprav <id> --dod "…"`).
-2. Context: `tools/kontext.py --osoba N --tema a,b` with only the topics needed (`confidence, identity, negative, books, helpers, writing, process,
+2. Context: `tools/kontext.py --osoba N|<RODINA key> --tema a,b` with only the topics needed (`confidence, identity, negative, books, helpers, writing, process,
    archives`), and the book map `tools/mapa.py hledej <portal> <volume> --pismeno F|--rok N|--cislo N` for the image to read first. The map is a
    hint only: it never closes a search.
 3. Assignment, not a prose card: `tools/zadani.py novy <id> --otazka "…" --hleda <role> --osoba "<key>:<role>:<marks>" --svazek <volume key>
@@ -96,7 +96,7 @@ Permissions change between versions and this definition may be older than your s
 | finding from a register (diary row, new record, transcription, claims, book map, follow-ups) | `tools/zapis_vysledku.py pracovni/…_rozhodnuti.json`; an audit of an existing record: `"audit": {"zaznam": "<key>", "vysledek": "potvrzeno"\|"rozpor"}`, no new record |
 | person: fields, facts (residence too: `bydliště <village> čp. <n> (<years>, <source>)`), new person in P or RODINA | `tools/oprava.py` (shape: `tools/oprava.py vzor`, `--nanecisto` first) |
 | record fields, place on the map (also a new place), open question in ISSUES (new, solved) | `tools/oprava.py` |
-| family document: entry in `data/dokumenty.json` (new or changed), image `tools/vyrez.py dokumenty/<scan>.jpg <img>`, birth numbers blacked out `tools/vyrez.py --zacernit <img> x0,y0,x1,y1 --osoby …` | `tools/oprava.py`, `tools/vyrez.py` |
+| family document: entry in `data/dokumenty.json` (new or changed), image `tools/vyrez.py dokumenty/<scan>.jpg <img>`, birth numbers blacked out `tools/vyrez.py --zacernit <img> x0,y0,x1,y1 --osoby …` | `tools/oprava.py`, `tools/vyrez.py`; commit together with the images: `tools/commit.py --soubory data/dokumenty.json,zdroje/<img>.jpg,vyrezy/<img>.jpg --zprava "…"` |
 | everything a family document says: facts with `st` `fam` and the document as the source; conflicts as ISSUES | `tools/oprava.py` (all data are written, living people included; only the web limits what is shown) |
 | roles of record participants | `tools/ucastnici.py navrh`, check the proposal in `pracovni/`, `tools/ucastnici.py zapis pracovni/ucastnici_navrh.json` |
 | correction of a diary row | `tools/denik.py pridej --opravuje <row> …` |
@@ -109,7 +109,7 @@ Permissions change between versions and this definition may be older than your s
 | texts you keep: `historie_kol.md`, `udaje_od_rodiny.md`, `zajimavosti.md`, `pribeh.md`, `pribehy/*.md`, `zadosti.md`; measurement files in `mereni/` | Edit to add or change a part (never rewrite a whole text to add one entry, never postpone an entry for that), Write only for a new file |
 | settings, consent of living people, publishing (`web.json`, `souhlas`, `soukrome=false`) | the user only |
 
-Reading and checking without writing: `tools/rejstrik.py osoba <n> | svazek <key> | hledej "…" | zapis <key> | denik --posledni 3`
+Reading and checking without writing: `tools/rejstrik.py osoba <n>|<RODINA key>|"name" | svazek <key> | hledej "…" | zapis <key> | denik --posledni 3`
 before opening big data files (links marked as a name match only are hints, never identity); `tools/audit_dat.py` lists conflicts in the
 data with the tool that fixes each. A third blind reading goes to `pracovni/vysledky/<task>_overeni_<reading>_<n>.json`;
 `tools/vysledek.py porovnej <task> <reading>` counts a field as verified when a majority of all readings, at least two, confirms the

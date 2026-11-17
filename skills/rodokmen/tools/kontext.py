@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Kontextový balíček pro agenta (Fáze C, Q-C3): nejmenší sada údajů, se kterou agent dokončí úkol o jedné osobě. Jen čte.
 
-Použití: python3 -I tools/kontext.py --osoba N --tema identity,books [--limit 6000] [--rules SLOŽKA] [--data SLOŽKA]
+Použití: python3 -I tools/kontext.py --osoba N|zkratka --tema identity,books [--limit 6000] [--rules SLOŽKA] [--data SLOŽKA]
+
+--osoba je číslo předka z P, nebo zkratka osoby ze skupiny RODINA ("marie-novakova").
 
 Výstup (Markdown, stdout): záznam osoby z data/osoby.py, navázané zápisy (pole `r`), otevřené otázky osoby (ISSUES) a pravidla z vybraných
 témat. Témata jsou názvy souborů ve složce pravidel (`skills/rodokmen-agents/rules/`). Stejný vstup dává stejný výstup (řazení podle
@@ -88,7 +90,8 @@ def nacti_zaznamy(data):
 
 
 def osoba_text(n, o):
-    r = [f"## Person {n}: {o.get('n', '?')}", f"- years: {o.get('y', '')}", f"- confidence: {o.get('st', '')}"]
+    skupina = "" if isinstance(n, int) else " (RODINA)"
+    r = [f"## Person {n}{skupina}: {o.get('n', '?')}", f"- years: {o.get('y', '')}", f"- confidence: {o.get('st', '')}"]
     for pole in ("sex", "otec", "matka", "partner"):
         if o.get(pole) not in (None, "", []):
             r.append(f"- {pole}: {o[pole]}")
@@ -117,7 +120,7 @@ def zapisy_text(o, zaznamy):
 
 def otazky_text(n, issues):
     r = ["## Open questions of the person"]
-    mine = [i for i in issues if i.get("k") == n and str(i.get("stav", "")).lower().startswith(("otev", "hypot"))]
+    mine = [i for i in issues if str(i.get("k")) == str(n) and str(i.get("stav", "")).lower().startswith(("otev", "hypot"))]
     if not mine:
         r.append("(none)")
     for i in mine:
@@ -127,9 +130,13 @@ def otazky_text(n, issues):
 
 def sestav(osoba, tema, rules, data):
     ns = nacti_osoby(data)
-    P = ns.get("P", {})
+    if str(osoba).isdigit():
+        osoba = int(osoba)
+        P = ns.get("P", {})
+    else:
+        P = ns.get("RODINA", {})
     if osoba not in P:
-        konec(f"osoba {osoba} není v data/osoby.py")
+        konec(f"osoba {osoba} není v data/osoby.py (číslo z P, nebo zkratka z RODINA)")
     platna = temata(rules)
     vybrana = sorted(set(t.strip() for t in tema.split(",") if t.strip()))
     if not vybrana:
@@ -150,7 +157,7 @@ def sestav(osoba, tema, rules, data):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--osoba", type=int, required=True)
+    ap.add_argument("--osoba", required=True)
     ap.add_argument("--tema", default="")
     ap.add_argument("--limit", type=int, default=12000)
     ap.add_argument("--rules")
