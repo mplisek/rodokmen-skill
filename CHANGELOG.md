@@ -1,10 +1,203 @@
 # Co je nového
 
 Změny ve skillu rodokmen, nejnovější verze nahoře. Každá verze má na GitHubu i
-[vydání (Releases)](https://github.com/sarsonj/rodokmen-skill/releases) – kdo chce dostávat upozornění,
+[vydání (Releases)](https://github.com/mplisek/rodokmen-skill/releases) – kdo chce dostávat upozornění,
 dá v repozitáři **Watch → Custom → Releases**.
 
 Projekt založený starší verzí Claude sám nabídne aktualizovat (pozná to podle souboru `VERZE`).
+
+Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skill)). Verze `X.Y.Z-fork.N` stojí
+na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
+odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
+
+## 0.10.2-fork.2 – 18. 11. 2026
+
+Fork znovu postavený na originálu 0.10.2: **bádání vede jedno sezení s uživatelem** jako v originále. Dřívější metodika
+s agenty, frontami úkolů a kontrakty mezi agenty skončila (je ve značce `fork-metodika-2026-11`). Web, přístupy, archivy,
+kontroly a rejstřík z forku zůstávají. Projekt založený dřívější verzí převede jednorázový skript (postup níže).
+
+### Nové
+
+- **Zápis nálezu jedním příkazem** `tools/nalez.py nahled|zapis` (podle návrhu z originálu, PR #187): snímek v plném
+  rozlišení, výřez, rámeček, zápis s účastníky (i osoby z RODINA), přepis, odkazy u osob a řádek deníku – všechno, nebo nic.
+- **Kontrolní čtení po pevných polích** `tools/cteni.py`: první i kontrolní čtení vyplní tatáž pole podle druhu zápisu
+  (křest, sňatek, úmrtí); shoda = ověřeno, neshoda = spor pro uživatele v `pracovni/sporna_cteni.json`. Žádné třetí čtení.
+- **Kontrola dodržování postupu** `tools/dodrzovani.py` ze záznamů sezení: zápis do dat mimo nástroje, síť na archiv mimo
+  brzdu, pomocník zapisující do dat, nasazení bez brány.
+- Plán bádání `data/ukoly.md` (prostý seznam) a `data/archivni_dotazy.md` místo šesti front; `STAV.md` s oddíly Pravidla od
+  uživatele, Rozpracováno a Čeká na rozhodnutí, vede se ručně.
+- `otazky.py ze-souboru`: otázky pro Co hledáme z `otazky_pro_rodinu.md` a `archivni_dotazy.md`.
+- Agenti jen pro údržbu skillu: `metodik` a `upstream-sync`.
+
+### Opravy
+
+- `SKILL.md` z originálu bez rozporů forku (dva deníky, postup, který hlídač zakazoval); mapa knihy (`mapa.py`) a náhled knihy
+  (`mapa_knihy.py`) rozlišené; nejvýš o desetinu delší než originál.
+- Založení projektu nezastíní starý deník `research_log.md` prázdným `denik.jsonl` (poradí `denik.py migruj`).
+- Test brzdy pro ZA Opava odpovídá zákazu skriptů od 0.10.1.
+
+### Přechod projektu z 0.10.2-fork.1
+
+1. Aktualizujte skill a v projektu spusťte `novy_projekt.py`; nástroje zrušené vrstvy ohlásí jako „šablona už nemá“ – smažte
+   je a potvrďte `--vyreseno`.
+2. Fronty převede `scripts/migrace_a.py <projekt>` z repozitáře skillu (nanečisto přehled k projití, pak `--zapsat`).
+3. `STAV.md` do nové šablony, archivace front, `rezim.json` a starého deníku (`denik.py overit-migraci` nejdřív).
+4. `npm ci`, `npm run data`, `npm run build`, `tools/brana.py`.
+
+## 0.10.2-fork.1 – 17. 11. 2026
+
+Fork na originálu 0.10.2 (sloučeno) a navíc:
+
+### Nové
+
+- Záporný výsledek čtenáře jen s dokladem (z originálu 0.10.2, pravidlo R-HELP-006): nález „nenalezeno“ musí mít u každého
+  snímku prošlého úseku první a poslední jméno a rozsah dat (`prohledano[].doklad`), jinak ho `vysledek.py over` odmítne. Čtení
+  knihy bez rejstříku jde silnějšímu modelu (R-HELP-005).
+- Osoby ze skupiny RODINA jsou vidět v nástrojích: `kontext.py --osoba <zkratka>` a `rejstrik.py osoba <zkratka nebo jméno>` ukážou
+  fakta, poznámku, rodiče, zápisy a otevřené otázky; `rejstrik.py hledej` najde i jejich fakta. Starší rejstřík se sám přestaví.
+- `commit.py --soubory` commitne i snímky rodinného dokumentu (`zdroje/<img>.jpg`, `vyrezy/<img>.jpg`), je-li dokument
+  v `data/dokumenty.json`; jiné obrázky dál odmítne.
+- Předání do další session (E7): `data/STAV.md` je předání rozpracované práce, úkoly zůstávají ve frontách. Oddíl Rozpracováno
+  zapisuje `tools/stav.py predani pracovni/predani.json` celý, nebo vůbec (úkoly jen odkazem a jen otevřené, podklady z `pracovni/`
+  přesune do `data/predani/`, pak commit); pravidla od uživatele mají vlastní oddíl (`stav.py pravidlo "…"`). `stav.py` obojí vypíše
+  na začátku sezení; `stav.py kontrola` a `vyrad` převedou starší STAV.md. Badatel už STAV.md ručně neupravuje (hlídač).
+  Pracovní soubory, které už nejsou potřeba, smaže badatel `stav.py uklid pracovni/<soubor>` (dřív mazání hlídač zamítl a `rm` nemá);
+  zadání a výsledky úkolů, které jsou ještě ve frontě, ani přerušené zápisy nesmaže.
+- Badatel má nástroj Edit: texty, které vede sám (`udaje_od_rodiny.md`, příběhy, zajímavosti, žádosti), doplní po částech; dřív je
+  uměl jen celé přepsat a zápis z rodinných dokumentů odkládal. Hlídač dál pouští úpravy jen u těchto textů, v `pracovni/` a `mereni/`.
+- Dva hlavní agenti (E6): `badatel` řídí bádání v projektu (dřívější `orchestrator`, jméno zůstává jednu verzi), `metodik` mění pravidla, kontrakty, nástroje a testy v repozitáři skillu z technických podnětů a rodinná data nečte. Pomocníci jsou rozděleni: badatel má čtenáře a ověřovatele, metodik testy, opravy a slučování z originálu.
+- Web a brána (E5): `tools/kontrola_webu.py` ověří na sestaveném webu, že každý vztah (rodič a dítě, partneři) a každá účast v zápisu je vidět z obou stran; očekávání bere z dat projektu, ne z exportu (`--data`, `--bez-vazeb`). Brána (`tools/brana.py`) ukládá otisk dat, šablon a sestaveného webu a hlídač nasazení ho před nasazením přepočítá: změna po zelené bráně znamená bránu pustit znovu.
+- Účastníci zápisu a tvrzení (E4): pole `ucastnici` u zápisu v `zaznamy.json` (osoba a role, nebo jméno a role) se píše jednou a zápis se z něj ukáže na stránce každého účastníka s jeho rolí; stránka zápisu ukáže i účastníky mimo rodokmen. `tools/ucastnici.py` (`stav`, `navrh`, `zapis`) doplní účastníky starším zápisům z dnešních seznamů `r`, nejisté role nechá k ruční kontrole. Nový zápis přes `zapis_vysledku.py` účastníky vyžaduje; přijatá tvrzení se ukládají do `data/tvrzeni.jsonl` (jen přibývá, oprava přes `nahrazuje`), kontrola hlídá osoby a odkazy.
+- Pokračování a výřezy (E3): `tools/vysledek.py pripoj` připojí další část nálezu k témuž úkolu (první část zůstává, čerpání se sčítá), `zadani.py rozsir` vypíše zprávu pro pokračujícího čtenáře; `vyrez.py --out` odmítne výřez delší než 2000 px a `--dily` rozdělí široký řádek na díly s překryvem.
+- Zápis bez pomocných agentů (E2): `tools/zapis_vysledku.py` zapíše přijatý výsledek jedním voláním (deník, zápis a přepis, mapa knihy, uzavření úkolu, navazující úkoly; vše, nebo nic; opakování nic nezdvojí), `tools/commit.py` commitne přesně soubory toho zápisu na aktivní větvi, `tools/stav.py` vypíše stav bádání bez historie rozhovoru, `tools/podnet.py` zapíše technický podnět pro skill (bez jmen z rodokmenu). Orchestrátor tyto nástroje a `fronta.py` spouští sám, soubory smí psát jen do `pracovni/`; agenti `fixer` a `committer` se v bádání nepoužívají.
+  `stav.py` výsledek ve starém tvaru (z doby před kontraktem) neukazuje jako nález, ale radí ho přečíst, nebo zadat čtení znovu.
+  Badatel smí zapsat role účastníků (`ucastnici.py zapis pracovni/…`), opravný řádek deníku (`denik.py pridej --opravuje`) a soubory
+  měření v `mereni/`; `commit.py --soubory` bere i `mereni/`.
+- Nový nástroj `tools/svazky.py`: svazek do katalogu `data/svazky.json` ze souboru v `pracovni/`, bez sítě – pro portály, kam skript nesmí
+  (eBadatelna, SOA Třeboň, MZA). Údaje o svazku opíše čtenář v prohlížeči, zapíše badatel; kontroluje povinná pole, adresu a role v `pokryva`.
+- `vysledek.py porovnej` porovná první čtení se všemi ověřeními naslepo téhož čtení (i třetí čtení `_overeni_c1_v2.json`); ověřené je jen
+  pole je ověřené, když hodnotu prvního čtení potvrdí většina všech čtení, aspoň dvě (2 ze 3; při 2 : 2 ne); `zapis_vysledku.py` hlídá totéž.
+- `commit.py` soubor ignorovaný gitem odmítne nahlas (dřív ho tiše vynechal).
+- Web: u rodu na stránkách Jména, Domy a Mapa jeden barevný kruh místo dvou (`znackuj_rody.py` nepřidá kruh, když ho šablona už dala).
+- Nový nástroj `tools/oprava.py`: badatel sám opraví chybná pole existujících zápisů (druh, datum, název, shrnutí, snímek, svazek) a míst
+  (poloha, dotaz) ze souboru v `pracovni/` – s důvodem a dokladem, všechno nebo nic, po změně kontrola dat (nová chyba = vrácení),
+  historie oprav v `data/opravy.jsonl` (chráněná před ručním zápisem).
+  Tvar vstupu vypíše `oprava.py vzor`; nápověda `--help` povolených nástrojů už není blokovaná.
+- Badatel má cestu ke všem datům, která bádání mění (dřív narážel na jednu chybějící cestu za druhou): `tools/oprava.py` umí
+  i osoby (pole, fakta včetně bydliště, nová osoba v P i RODINA), rodinné dokumenty, nová místa a otevřené otázky – vždy s důvodem
+  a dokladem, vše nebo nic, s kontrolou dat a historií; u `osoby.py` mění jen text dotčené položky (`tools/osoby_upravy.py`).
+  Texty, které vede sám (`STAV.md`, historie, údaje od rodiny, zajímavosti, příběhy, žádosti), smí upravovat přímo; snímky rodinných
+  dokumentů ukládá a začerňuje `vyrez.py`. `stav.py` vypíše, co badatel smí zapisovat podle platného hooku (dlouhé sezení má definici
+  agenta z doby startu).
+- Nový `tools/audit_dat.py`: kontrola historických dat bez čtení snímků (druh zápisu, svazek v katalogu, rok zápisu proti faktu osoby,
+  osoby u řádku deníku proti účastníkům zápisu, doc bez zápisu, negativ bez rozsahu) s návrhem opravy; jen čte.
+- `zapis_vysledku.py`: nanečisto kontroluje i řádek deníku (délka polí); audit už zapsaného zápisu (`"audit": {"zaznam", "vysledek"}`)
+  potvrdí nebo zpochybní přepis bez nového zápisu. Porovnání čtení bere měsíc jako měsíc u každé hodnoty s rokem a „č.“ = „čp.“.
+- Z originálu (#203) s úpravami pro fork: `tools/rejstrik.py` – rejstřík dat jen pro čtení (osoba, svazek, hledání, zápis, deník,
+  podklady) za stovky tokenů místo čtení celých souborů. Deník čte z `denik.jsonl`, osoby u řádku deníku a účastníci zápisu jsou
+  jisté vazby (odhad podle jména jen tam, kde vazba chybí), platí jen pro přesný obsah dat, `sql` jen čte, u svazku ukáže i mapu
+  knihy. Zdrojem pravdy zůstávají soubory v gitu; badatel smí jen čtecí příkazy.
+- Z originálu: lhůta pro předání svazků úmrtí do archivu je 75 let (#200), kolečko myši přibližuje vějíř kolem středu (#197), kontroly
+  rodiny čtou data jednotně přes `datumy.py` – rozsahy jako „asi 1760–64“ nebo „* asi 1620–1630“ už nedávají falešné poplachy;
+  nový `rodiny.py` pro rekonstrukci rodiny a výběr mezi kandidáty stejného jména (#201).
+- Web, stránka Co hledáme (ADR 0009): otázky pro rodinu a otevřené otázky v kontejnerech po rodech (Obecné první, jeden kontejner na
+  rod v barvě rodu), prameny v archivech podle archivů s barvou rodu u každé položky, i dotazy čekající na odeslání. Vrací se sekce,
+  které po převodu front na úkoly zmizely: `otazky.py z-fronty` převede veřejnou část front na nepotvrzené koncepty, `potvrd --rod`
+  je potvrdí po rodech; rod jde zadat i názvem.
+- Web: kontejner vázaný na rod má barvu rodu na celém webu (komponenta `RodBox`, zajímavosti v kontejneru svého rodu); kontrola webu
+  hlásí kontejner bez barvy rodu, obecný s barvou, víc kontejnerů téhož rodu na stránce Co hledáme a nepotvrzenou otázku na webu.
+- Porovnání čtení: kopie téhož ověření pod jiným názvem se nepočítá jako další čtení (upozorní na ni); u polí s datem se měsíc
+  porovnává jako měsíc (`Februar` = `Febrr.`, `9ber` = `Novembris`), ne jako text.
+- Kontrakt čtení (E1, `analyza/navrh-optimalizace.md`): `tools/vysledek.py` (kontrola zadání, nálezu a ověření; souhrn nálezu; porovnání dvou čtení po polích) a `tools/zadani.py` (zadání pro čtenáře jako soubor, rozšíření rozsahu jako pokračování téhož úkolu). Odmítne osobu jménem, signaturu místo klíče svazku, čtení mimo rozsah, hledání v prameni, který roli nevede (`svazky.json → pokryva`), a „nenalezeno“ bez dočtení; dosažený strop, nedostupný portál a nečitelný snímek jsou vlastní stavy. Ověřovatel vrací jen vlastní přepis. `mapa.py zapis` zapíše buď všechny stránky, nebo žádnou, a signaturu převede na klíč svazku. `fronta.py rozdel` s vlastními osobami, typem a cenou části, `uprav --dod`.
+- Zmírnění škod z prvního běhu orchestrátoru (E0, `analyza/navrh-optimalizace.md`): úkoly se slučují jen ve stejné frontě a jen při shodném cíli nebo stejném typu a stejných osobách (ne při pouhém překryvu osob), `--nove` sloučení zakáže; `denik.py pridej` odmítne osobu, která není v `data/osoby.py` (jméno místo klíče); `aron_img.py` bez zadaného výstupu ukládá do `pracovni/snimky/`, ne do aktuální složky; `data/.rozpocet.json` je v `.gitignore`; hook pluginu volá nejdřív `python`; `browser-reader` má výčet nástrojů; orchestrátor smí číst `fronta.py cekajici | plan | historie | kalibrace` a drží jeden model po celé sezení.
+- `tools/spotreba.py`: skutečná spotřeba sezení podle rolí a úkolů ze záznamů Claude Code (jen čte); výchozí měření v `analyza/baseline-2026-11-15.md`.
+- `tools/pracovni_prehled.py`: soupis stažených svazků ARONu a ostatních snímků v `pracovni/` s vazbou na deník; `--hledej` před stažením, `--json`. Jen čte, bez sítě.
+- Deník: zakázaný vzor „mnou“ (první osoba); nahrazený záznam (`--opravuje`) se na zakázané vzory nekontroluje a oprava projde i při starším záznamu, který nový vzor porušuje.
+- Hook `committer`a: `<`, `>`, `;`, `&`, `|` a víc řádků jsou povolené uvnitř uvozovek zprávy (řádek `Co-Authored-By: Jméno <e-mail>`); mimo uvozovky a `$` či zpětné apostrofy dál ne.
+- Fronta úkolů: přehled čekajících (`fronta.py cekajici`, `seznam` je jen počítá), `fronta.py odeslano --uzivatel` pro dotazy archivu a otázky pro rodinu (odesílá vždy člověk, výchozí lhůta odpovědi 30 dnů v `rezim.json → odpoved_dnu`), typy `skill`, `test` a `údržba` se ve frontách nevedou (poznámky pro skill, `analyza/ukoly_na_skill.md`).
+- Mapa knihy `tools/mapa.py` (S-011, S-007): `hledej` odhadne snímek pro písmeno, rok nebo číslo z už popsaných stránek (jen rada, hledání neuzavře), `zapis` přidá údaje o stránkách z výsledku čtenáře, identita snímků z `aron_img.py`, `pracovni/aron` a mezipaměti eBadatelny; mapa je v `rodokmen_mapy/` vedle mezipaměti (mimo úklid). `cache.py stav` ukáže stažené snímky na nalezený záznam. Před každým čtením se orchestrátor i čtenáři ptají mapy, mezipaměti a historie.
+- `tools/prohlizec.py`: vlastní Edge pro agenta `browser-reader` na portály, kam skript nesmí (start/stop/stav, otevri, klik, pis, text, snimek); pauza 5 s (10 s při listování), strop 120 otevření za hodinu, jeden archiv na relaci, stop při 403/429/CAPTCHA se zapisuje do brzdy; hook zamítá ruční spuštění prohlížeče s adresou takového portálu nebo s ladicím portem. Uživatel prohlížeč nespouští ani nenastavuje.
+- Rozpočet na noc: pásma ceny S až XL, řazení priorita a cena, práh XL (jen po schválení člověkem), rozpočet okna v `rezim.json`, `fronta.py plan` a `kalibrace`; `dalsi` přidělený úkol označí `probíhá`; číslo úkolu se po smazání znovu nepřidělí.
+- Historie úkolů `data/ukoly_historie.jsonl` (`fronta.py historie`, `hotovo --denik --soubory --spotreba`), metadata čtení v deníku (`--ukol`, `--nastroj`, `--model`, `--snimky`; na web nejdou) a `fronta.py znovu --starsi-nez <verze> --zaloz` pro opakované čtení jen těch neúspěšných čtení, která dělal starší nástroj.
+- Router úkolů: vstupní fronta `ukoly_vstup.md` (v šabloně), `fronta.py smeruj | rozdel | zaparkuj` s povinnou definicí hotového, ceny S až XL, stav `čeká` s datem; `fronta.py selhani` a `rezim.json → opakovani` (po přechodné chybě portálu nejdřív za dvě noci, pak víkend, pak pracovní doba, pak jedno rozhodnutí za portál; po zákazu rovnou). Starší projekty bez `ukoly_vstup.md` fungují jako dřív.
+- Fronta úkolů k rozhodnutí: rozhodovací postup směrování v `reference/nocni_rezim.md`; `fronta.py pridej rozhodnuti` vyžaduje otázku, možnosti a výchozí postup, `fronta.py kontrola` varuje u úkolů bez nich i u úkolů, které vypadají jako práce; orchestrátor frontu rozhodnutí auditoval a zakládá jen skutečná rozhodnutí.
+- Návody (`reference/matriky.md`, `portaly.md`): křest hledat v celém roce, názvy obcí z hlavičky archivu bez domýšlení diakritiky, rejstřík sňatků v AHMP jen u některých farností.
+- Noční fronta jen pro úkoly bez člověka (`reference/nocni_rezim.md`, orchestrátor, researcher): úkoly na prohlížeč, archiv, rodinu nebo lhůtu rovnou do své fronty s důvodem.
+- Agenti: výřez pro `verifier` je narovnaný, v plném rozlišení a nejvýš 2000 px na delší straně; `verifier` při zmenšeném snímku hlásí „crop too large“ místo hádání.
+- Mezipaměť snímků: výchozí limit 25 GB (dřív 5 GB); `RODOKMEN_SNIMKY_GB` ho dál přepíše.
+- Agent `committer` a krok 6 orchestrátora: commit po každém dokončeném ověření, jen vyjmenované soubory na zadané větvi (výchozí `main`, jinak větev, na které se pracuje); hook `committer`u povolí jen bezpečné git příkazy a orchestrátoru čtení větve a stavu.
+- Agenti: SessionStart hook `hooks/zapis_koren.py` zapíše cestu pluginu do `pracovni/.plugin_root`, `kontext.py` podle ní najde pravidla i v Bash nástroji (ten `CLAUDE_PLUGIN_ROOT` nemá).
+- `vyrez.py --out SLOŽKA`: výřez jen do zadané složky (agent nezapisuje do veřejných `zdroje/` a `vyrezy/`).
+- Agenti `researcher` a `orchestrator`: skripty k archivu přes `slusne.py`, výřezy do `pracovni/vysledky/`, jeden řádek na výřez a řádek jmenovaný v kartě.
+
+- **Brána po aktualizaci verze a kontrola pokrytí (Fáze D).** `tools/brana.py` v projektu spustí bez sítě kontroly dat, front, deníku,
+  veřejných otázek a `kontrola_webu.py` nad každou sestavenou verzí webu a vyhlásí zelená / červená / nepokryto (výsledek v
+  `pracovni/brana.json`). `novy_projekt.py` při změně verze starý výsledek smaže a `hlidac_site.py` nepustí nasazení (ani testovací),
+  dokud brána není zelená pro aktuální verzi projektu. `scripts/pokryti.py` hlídá, že každý nástroj a každá trasa webu má test
+  (registry `tests/e2e/stranky.json` a `vyjimky.json`), anglická vrstva je anglicky a pravidla mají platné otisky; běží i v CI.
+- **Sada agentů a jejich nástroje (Fáze C).** `agents/` v pluginu (anglicky): `orchestrator` (spouští se jako hlavní vlákno,
+  `claude --agent rodokmen:orchestrator`), `researcher`, `browser-reader`, `verifier`, `upstream-sync`, `test-runner`,
+  `failure-analyst`, `fixer`, `test-author`; každý má kritérium dokončení. `tools/kontext.py` sestaví kontextový balíček osoby
+  a pravidel vybraných podle témat (jen čtení, nikdy neořezává mlčky). `scripts/sync_report.py` ukáže, co je nového v originále
+  (commity, verze, dotčené soubory, překryv s forkem, pravidla k přezkoumání; jen lokální git). Hook pluginu
+  `hooks/hlidac_orchestratora.py` dovolí orchestrátorovi v Bashi jen výpis z `fronta.py` a `kontext.py`.
+- **Vynucovaná forma výzkumného deníku a veřejných otázek (Fáze A).** Deník je strukturovaný soubor `data/denik.jsonl` (jen
+  přidávání) a tabulku na webu z něj generuje skript: `tools/denik.py` (`pridej`, `vykresli`, `over`, `migruj`, `overit-migraci`).
+  Chybný záznam se odmítne (datum, výčet výsledku, rozsah u negativního výsledku, délky, zakázané údaje o procesu: čísla úkolů,
+  jména agentů a modelů, cesty, opravy uvnitř textu). Převod starého `research_log.md` nic neztratí: původní řádek se uchová
+  v poli `puvodni`, procesní údaje v `proces`, řádky k ruční kontrole se na web nedostanou a jsou v protokolu.
+- **Veřejné otázky odděleně od vnitřní fronty:** `tools/otazky.py` a `data/verejne_otazky.json` (otázky pro rodinu a prameny
+  mimo online matriky), na web jde jen ručně potvrzený záznam; koncept z úkolu `otazky.py z-ukolu`. Opravuje únik hlaviček
+  úkolů (`U-0013 | P2 | …`) na stránku Co hledáme.
+- **Fronty se jmenují `ukoly_*`** (`ukoly_na_rodinu.md`, `ukoly_dotazy_na_archivy.md`) a nikdy se nečtou při sestavení webu;
+  `fronta.py prejmenuj` převede staré názvy (`otazky_pro_rodinu.md`, `archivni_dotazy.md`), do přejmenování fungují oba.
+  Úkoly mají pole `zavisi` a `fronta.py frontier` vypíše ty, jejichž závislosti jsou hotové; `dalsi` blokovaný úkol nepřidělí.
+- **Jednotná značka rodu na celém webu (Fáze B):** po `astro build` (před `pagefind`) nahradí `tools/znackuj_rody.py` holý název
+  rodu v textech všech stránek značkou (barevný kruh a název s odkazem); autor textu nic neznačkuje. `tools/kontrola_webu.py`
+  hlídá holé názvy, barvu a pořadí značek a procesní text na stránkách a běží i v CI nad ukázkovým webem.
+- **Pravidla pro agenty v angličtině** (`skills/rodokmen-agents/rules/`, 30 pravidel v osmi tématech: jistota údajů, ztotožnění, „nenalezeno“,
+  knihy a stránky, pomocníci, zápis dat, procesní údaje, archivy) a tenký anglický skill `rodokmen-agents` pro agenty. Každé pravidlo
+  odkazuje na zdrojový oddíl českých návodů a `scripts/pravidla.py` hlídá otisk oddílu: změní-li se oddíl (třeba po sloučení z originálu),
+  pravidlo je zastaralé, dokud se nepřezkoumá. Návody a `SKILL.md` zůstávají česky. `scripts/jazyk.py` hlídá, že anglická vrstva je anglicky.
+- **Kontrola anonymity před pushem** (`scripts/anonymita.py`, `.githooks/pre-push`): lokální seznam zakázaných řetězců (jména, čísla osob),
+  kontrola všech commitů určených k pushi včetně zpráv, maskovaný nález, nikdy nepřepisuje historii. Instalaci hooku provádí uživatel.
+- **Hlídač zápisů** (`tools/hlidac_zapisu.py`): hook zamítne ruční úpravu `data/denik.jsonl`, `data/verejne_otazky.json` a
+  generovaných souborů webu a napíše, kterým skriptem se to dělá; čtení, kopie z nich, zápis skriptem, git ani build neblokuje.
+  Zapisuje ho `novy_projekt.py` vedle hlídače sítě a vypíná se stejně (`--bez-hlidace`).
+- Export webu čte deník a veřejné otázky z nového úložiště, dokud je prázdné, platí dosavadní soubory; chyba formy v novém
+  úložišti sestavení zastaví (`CHYBA`). Glosář `GLOSSARY.md` a záznamy rozhodnutí `docs/adr/`.
+
+### Opravy
+
+- **Hlídač sítě neblokuje testování vlastní práce.** `novy_projekt.py` už nezapisuje plošný zákaz `curl`/`wget`
+  (`permissions.deny`), který blokoval i `curl` na localhost a na vlastní nasazený web; místo něj je zapnutý úzký hlídač
+  (jen weby archivů mimo brzdu). Při aktualizaci se starý zákaz odstraní a hlídač se zapne, takže ochrana archivů neklesne;
+  `--bez-hlidace` zůstane vypnutý. Volné jsou localhost, `*.netlify.app`, `*.workers.dev`, nově `*.pages.dev` a vlastní
+  domény z `data/web.json` (`domeny`). Test `test_hlidac_rozsah.py`.
+
+## 0.10.1-fork.1 – 13. 11. 2026
+
+Fork na originálu 0.10.1 (sloučeno) a navíc:
+
+### Nové
+
+- **Noční a víkendový režim, fronty úkolů:** `tools/fronta.py` (úkoly na noc, k rozhodnutí, k bádání; slučování duplicit,
+  třídění podle priority, mazání hotových, zámek „bádání × úprava skillu“), konfigurace `data/rezim.json` (pracovní doba,
+  svátky, počet pomocníků), pravidla v `reference/nocni_rezim.md` a šablony zápisů v `reference/zapisy.md`.
+  `kontrola.py` hlásí údaje o procesu (pomocník, „ověřeno na snímku“…) v textech pro web.
+- **markdownlint:** `.markdownlint.yaml`, `.editorconfig` a kontrola `.md` v CI.
+
+### Opravy
+
+- `npm run nahled -- --port <číslo>` pustí druhý náhled na jiném portu (`--ignore-lock` přidal i originál, #186).
+- Test `test_soal_zoomify.py` hlídá, že 403 zastaví web v brzdě a 404 skončí srozumitelnou hláškou bez opakování.
+
+### Návody
+
+- Metodika z hlášení uživatelů (originál #167, #174, #177, #181, #188): přečíslování domů, smíšené knihy po vsích, dva páry
+  stejných jmen v obci, místo původu („ex <obec>“), pasti kurentu a čtení podivných příjmení, gruntovní knihy a kroniky,
+  evangelíci na Moravě, průměrná délka generace 30–35 let; portály: ARON MZA (pozemkové knihy zdarma), globální hledání
+  a rejstříky SOA Třeboň, Geneteka, FamilySearch pro Slovensko (filiální obce, „Image Restricted“), matriky.online.
 
 ## 0.10.2 – 16. 11. 2026
 
@@ -63,6 +256,127 @@ podle toho upravil. U Opavy je nově doporučený prohlížeč Playwright, proto
 - ZA Opava: denní limit asi 50 snímků (po prvním odmítnutí ten den skončit), „Server Exception“ hned po CAPTCHA
   limit není, žádné `fetch` na stránce. Matriky ZA Opava a pozemkové knihy Opavy a Olomouce jsou i na FamilySearch
   v plném rozlišení – jak svazky spárovat a proč nikdy nepočítat s odhadnutým posunem snímků.
+
+## 0.10.0-fork.2 – 12. 11. 2026
+
+Fork na originálu 0.10.0 a navíc:
+
+### Nové
+
+- **Dokumenty rodiny mimo přímé předky (např. manželky) jsou na stránce Dokumenty v oddílu svého rodu** (podle rodokmenu správce),
+  ne v „Obecné“.
+- **Rody začínají dědečkem po mužské linii:** děd (osoba 4, 6) patří do rodu svého otce a je výchozí osobou rodu, u babiček (5, 7)
+  rod začíná až u jejich rodičů. Stránka rodu to vysvětluje (u dědečkova rodu uvede, z jakých rodů pochází jeho manželka).
+- **Statistiky – ověřené matrikou, věk při sňatku, barvy rodů:** u každé generace je vidět, kolik předků známe a kolik z nich
+  je doloženo matrikou; u svateb nejmladší/nejstarší nevěsta i ženich a dva sloupcové grafy „V kolika letech se vdávaly
+  ženy“ a „…ženili muži“ (pásma po dvou letech, seznam všech sňatků zrušen); u rodičů nejstarší a nejmladší otec;
+  graf „Jak dlouho žili“ má sloupce v barvě rodu. Opraveny chybějící mezery za větami a středník v textu o dožití.
+  Svatby jsou ve čtyřech kartách 2×2 (věk a měsíc nahoře, grafy ženy/muži dole); řádky „Nejmladší/Nejstarší …“ mají u svateb
+  i u rodičů stejný tvar, ženy první a mladší dřív.
+- **Úvodní texty se řídí šířkou stránky:** `.lead`, `.prose`, `.next-step` a grafy ve statistikách už nemají pevnou šířku 46 rem,
+  takže na širší stránce text nezalamuje v polovině.
+- **Přístupy pro větve rodiny – fáze 3, rody a texty:** zajímavosti, karty na úvodu, příběhy, otázky pro rodinu
+  a prameny se k rodu vážou zakladatelem (číslo osoby z rodokmenu správce); větev je vidí, jen když má zakladatele
+  v přímé linii, a ukáže je pod svým názvem rodu. Zajímavost bez rodu vidí všichni, kartu na úvodu bez rodu jen přístup s právem texty. Úvod = společný + vlastní text
+  přístupu. Odkaz v textu na osobu jiné větve zastaví sestavení přístupu (CHYBA), chybějící názvy rodů přístupu hlásí
+  POZOR. Jednotný znak rodu (barevný kruh + název) na Zajímavostech, Co hledáme, Příbězích, Dokumentech (nově po
+  rodech) a na úvodu; přepínač vějíře u přístupu s víc výchozími osobami.
+- **Přístupy pro větve rodiny – fáze 2, soukromí osob:** žijící se zapsaným souhlasem (`souhlas={"kdo", "datum",
+  "rozsah"}` u osoby) vidí s plnými údaji správce a přístupy s právem `soukrome`, které je mají ve vlastní větvi;
+  ostatní dál jen jméno a rok narození. Ručně: `soukrome=True` u osoby (i zemřelé) a údaj `"(soukromé) …"` – jen pro
+  toho, kdo smí soukromé údaje dané osoby. U skryté osoby zmizí i její zápisy z matrik, sňatek na stránce rodiny,
+  boční příbuzní a doklady; doklad s žijícím bez souhlasu (`rozsah` s `doklady`) se neukáže. `kontrola.py` hlídá
+  tvar souhlasu a značky, `pristupy.py` ukáže, koho přístup vidí s plnými údaji a kdo je ručně soukromý.
+  Správce (přístup `vse` ve webu s přístupy) vidí vše i bez souhlasu; export upozorní na osobní odkazy vedoucí na `vse`.
+
+- **Přístupy pro větve rodiny – fáze 4, dokumenty:** doklad s rodným číslem (`rc`) jde na web až po úmrtním listu
+  (`"druh": "umrtni_list"`) nebo začernění (`vyrez.py --zacernit <img> oblasti --osoby …` zapíše `zacerneno`) – pro
+  všechny, i správce. Ve verzi přístupu jen doklady, jejichž osoby přístup vidí celé, nebo ručně přidělené
+  (`pristupy`); `soukrome: true` jen tomu, kdo smí. `kontrola.py` hlídá `rc` u dokladů, osoby a přístupy.
+
+- **Přístupy pro větve rodiny – fáze 5, poznámky:** přístup s právem `poznamky` vidí i poznámky jiných větví ke
+  stránkám, které sám má (společní předci), a píše jen ke svým stránkám (`npm run build` zapíše seznam stránek každé
+  verze). Sdílí se jen nové poznámky; autor může zaškrtnout „Jen pro naši větev“, správce označit dodatečně (`npm run poznamky -- --soukrome <id>`). Poznámky správce ostatním větvím ne.
+- **Předci a stránka rodu:** sloupec „Život“ s přepínačem „jen roky / celá data“ (volba se pamatuje v prohlížeči) a pevné šířky
+  sloupců, aby při posouvání mezi generacemi neskákaly; na stránce rodu přibylo číslo předka (PR #183). Celá data se u žijících
+  nikdy nezobrazí (skrytá osoba má `dates` prázdné, jen jméno a rok).
+- **Stránka Jména** (`/jmena/`, PR #182): jak často se která křestní jména v rodokmenu opakují, zvlášť mužská a ženská, s počty
+  po rodech a rozkliknutím na konkrétní lidi. U přístupů se počítají jen osoby, které přístup vidí; v menu je jen
+  tam, kde je co ukázat.
+- Návody: sčítání lidu jako zdroj domácností a sourozenců, ověření člověka (ALTCHA) v SOA Třeboň a adresa snímku rovnou
+  ve 100 %, krajské Krameriusy s OCR a pravidla pro pomocníky (prohlížeč, čtení ve 100 %, dočasné odkazy na nové osoby,
+  přehled výřezů před zápisem) (PR #189).
+
+### Opravy
+
+- Obrázek, který už na web nepatří (doklad s rodným číslem, skrytá osoba), export smaže z `public/` i na webu
+  bez přístupů.
+- Adresa stránky stejnojmenné osoby (`vaclav-culek-144`) je stejná ve všech verzích webu – dřív ji verze přístupu
+  počítala z jiného číslování a odkazy z textů nefungovaly.
+- Domy (`stavby.py`) u přístupu s jiným kořenem: osoby se párovaly podle čísel z jiného číslování; teď se převedou
+  a osoby mimo přístup se vynechají.
+- Časová osa u žijících neprozradí přesné datum narození (dosud bylo dopočitatelné z čísla pro graf).
+- Sňatek žijícího se už neukáže na stránce rodiny z údajů manžela či manželky; žijící boční příbuzní (`SIDE`)
+  jen jménem.
+- Příkaz `svazek` u `aron_img.py`, `portafontium.py` a `ebadatelna.py` zapíše jen svou položku přes `zapis.py`; dřív přepsal
+  celý `data/svazky.json` (jiné odsazení a pořadí, v gitu změněný celý soubor) a přeformátoval ručně psané položky.
+  `portafontium.py svazek <kniha> vypis` položku jen vypíše (PR #189).
+- Brzda: krajské Krameriusy (JVK České Budějovice, SVK Plzeň) nejvýš 1 dotaz za 10 s (PR #189).
+- `anno_snap.py` nespadne na odpovědi bez `snippetPages` (PR #189).
+
+## 0.10.0-fork.1 – 10. 11. 2026
+
+Fork na originálu 0.10.0 (přepracované návody, brzda a hlídač, Cloudflare s vlastním názvem webu, opravy exportu a importu – viz níže; předchozí verze originálu 0.9.x je zahrnutá) a navíc:
+
+### Nové
+
+- **Výzkumný deník** na webu má fulltextové hledání (bez diakritiky, více slov = všechna) a přepínač řazení; výchozí je
+  nejnovější nahoře a volba se pamatuje v prohlížeči (PR #176, #175).
+- **Přístupy pro větve rodiny – fáze 1:** u přístupu objekt `prava` (`soukrome`, `texty`, `poznamky`; nevyplněné = false) a osobní odkazy přímo ve `web.json` (`pristupy[].odkazy`, převod `pozvanky.py prevest`); přístup může mít jen odkazy bez odpovědi. Ve verzi webu přístupu je jeho **přímá linie** (Statistiky, Rody, Mapa, Časová osa, Strom, Předci) a **rozšířená linie** (sourozenci výchozích osob i předků s větvemi, partneři a nově i rodiče partnerů); u osob příznak linie a vlastní větve. Menu ukazuje jen stránky s daty. Nový přehled `tools/pristupy.py` – kdo co vidí.
+- **Strom ukazuje jen přímou linii** (předky), i na webu bez přístupů; sourozenci a jejich rodiny jsou dál na stránkách osob.
+- **Kontrola rodiny jako grafu** (`tools/graf.py`, PR #135): `graf.py strom strom.ged ["Jméno"]` před importem cizího
+  stromu najde dvojníky (Jan = Johann), dítě ve dvou rodinách, cykly a nemožné věky a navrhne `SAME` pro předka na víc
+  číslech. `kontrola.py` z něj přebírá jen hlášení o stejné osobě na dvou číslech; věk rodičů a úmrtí rodiče před
+  narozením dál hlídá časová kontrola (jde u ní potlačit polem `overeno`).
+- Kontrola nové verze skillu (`verze.py`, z originálu 0.9.1) se ptá GitHubu forku a rozumí verzím `X.Y.Z-fork.N`
+  (`0.9.2-fork.1` je až za `0.9.2` originálu); stejně pojistka proti aktualizaci projektu starším skillem.
+- Zveřejnění na Cloudflare (originál 0.9.0) je ve forku zatím jen pro jednoduchý web s jednou rodinnou otázkou.
+  S přístupy nebo osobními odkazy se brána pro Cloudflare nevyrobí a `npm run nasadit-cloudflare` řekne proč (jinak
+  by pustila jen jednu odpověď, u webu jen s odkazy dokonce všechny). Přístupy, odkazy a poznámky jsou jen na Netlify.
+- Stránka **Zápisy z matrik** je rozdělená podle události: křest / narození, sňatek, úmrtí (a biřmování, soupisy obyvatel, jiné prameny, jsou-li). Rejstřík už není samostatný druh: položka rejstříku je u své události se štítkem „rejstřík“ (`"rejstrik": true`, `druh` = událost); starší `"druh": "I"` web převede sám a `kontrola.py` ho připomene.
+- Stránka **Co hledáme** má tři části: **Otázky pro rodinu** (`data/otazky_pro_rodinu.md`, nově i na webu) a **Otevřené otázky** (`ISSUES`) seřazené podle rodů, **Prameny mimo online matriky** (`archivni_dotazy.md`) podle archivů. `ISSUES` má nový tvar `dict(k=…, otazka=…, stav=…, text=…)` – otázka se zařadí k rodu a odkáže na osobu, stav je štítek (dřív se ukazoval kus textu do první dvojtečky); starší dvojice dál fungují.
+- `kontrola.py` hlídá „Co hledáme“: otázky ve starém tvaru, oddíly, které nejsou rod nebo archiv, data zápisu („zapsáno …“), zodpovězené položky a citlivé údaje i v otázkách pro rodinu a v pramenech.
+- Obrázky pro web se při exportu zmenší a překódují: na stránce nejvýš 1400 px (je-li k zápisu plné rozlišení),
+  progresivní JPEG bez metadat, plné rozlišení v kvalitě 82. Na skutečném projektu asi o polovinu méně dat u obrázků
+  na stránkách a o čtvrtinu u plného rozlišení – méně přenesených dat a kreditů na Netlify. Upravené verze jsou
+  v `pracovni/.web_obrazky/`, další export je bere odtud. Bez ImageMagicku se jen kopíruje jako dřív.
+
+- Poznámky z náhledu (`test--<web>.netlify.app`, nasazení bez `--prod`) jdou do vlastního úložiště `poznamky-test`,
+  na ostrém webu se neukážou; `npm run poznamky -- --test` je stáhne zvlášť.
+
+- Poznámky pro správce skillu jsou v `data/poznamky_pro_skill.md` (dřív v kořeni projektu); aktualizace projektu
+  starý soubor přesune sama, a když jsou oba, jen upozorní.
+
+### Návody
+
+- `SKILL.md` je zeštíhlený podle originálu (z 44 na 29 KB): postup u žádostí, import stromu a instalace jsou v `reference/`.
+- Kredity na Netlify: ostré nasazení 15 kreditů, náhled (bez `--prod`, `--alias test`) zdarma – na zkoušení.
+
+### Opravy
+
+- `kramerius.py` hledá jen veřejná díla (`dostupnost:public`). Text neveřejných stran server nevydá (HTTP 403) a brzda
+  to bere jako blokaci, takže zastavila celý Kramerius až na 8 hodin. `--vse` ukáže i neveřejná díla jen jako seznam
+  (PR #168).
+- Roky: „1889 – před 1936“ se ukáže celé (dřív „1889–?“), nejisté úmrtí „1901 (?)“ jako „1901?“ (PR #140).
+- `kontrola.py` hlídá citlivé údaje i v hypotézách a v deníku (u deníku podle okolí nálezu, ne celého řádku;
+  sloupec s datem hledání se nepočítá jako rok události) (PR #140).
+- Mapa: osoba se nezařadí k obci její matky („roz. Nováková z Bašnic“, „a Rosiny, dcery sedláka … z Hovězí“),
+  u muže k obci nevěsty ve sňatku ani k obci fary, okresu a přívlastku („Chlum u Hořic“). `kontrola.py` používá
+  stejná pravidla a vypíše všechny předky bez vlastní obce, ne jen tři (PR #139).
+- Příběh rodu ukazuje jen rodinné dokumenty osob z toho rodu (dřív všechny, např. vysvědčení jiného rodu).
+- Mapa: jedna tečka za místo, s víc rody rozdělená jejich barvami (dřív samostatné tečky posunuté o ~700 m, při
+  přiblížení vypadaly jako další místa v polích). Osoba se k obci přiřadí jen podle skutečného údaje – ne podle
+  poznámky v závorce („kniha narozených Libice…“), okresu („okr. Havlíčkův Brod“) ani původu partnera u sňatku.
 
 ## 0.10.0 – 10. 11. 2026
 
@@ -167,6 +481,41 @@ takže web jde aktualizovat kdykoli (bezplatný Netlify vystačí jen na zhruba 
 
 Děkuji všem, kdo poslali poznámky a opravy – hlavně za zkušenosti s Cloudflare a Dockerem.
 
+## 0.8.2-fork.1 – 6. 11. 2026
+
+Fork na originálu 0.8.2 (Porta fontium podle far a 10 s mezi dotazy, FamilySearch do mezipaměti, `--kontrast`,
+`anno.py --ztraty`, kontrola po nasazení na Netlify, brzda při visícím archivu – viz níže) a navíc:
+
+### Nové
+
+- **Osobní odkazy na web** (PR #94): každý příbuzný může dostat vlastní odkaz `https://<web>/?k=<klíč>`
+  (`tools/pozvanky.py pridej "Teta Jana"`), který jde jednomu člověku zrušit nebo vyměnit; rodinná otázka platí dál.
+  Ve forku navíc **i s přístupy**: `pozvanky.py pridej "Teta Jana" --pristup <id>` – teta pak vidí jen verzi webu
+  pro ten přístup; změna `pozvanky.py pristup p1 <id>`. Poznámky ke stránkám fungují i pro příchozí přes odkaz.
+  Jen na Netlify (nginx/Docker odkazy neumí).
+- Snímky z ARONu na čtení ve výchozím plném rozlišení (PR #120).
+- Holocaust.cz (`obeti.py`) a Arolsen (`arolsen.py`) stahují až po souhlasu s podmínkami portálu, který potvrdí
+  uživatel sám v terminálu (`souhlas`, jednou za 30 dní; PR #123, #124).
+- `smoke_test.py` rozliší i ZASTAVENO (brzda web zastavila) a přeskočí nástroje čekající na souhlas (PR #125).
+- README: kapitola Nastavení – mezipaměť snímků, brzda, co jde nastavit v projektu (PR #107).
+- **Dějiny významných domů:** `data/stavby.py` (držitelé, obyvatelé, události, čísla popisná v čase, otevřené otázky)
+  a nástroj `tools/stavby.py` – `kontrola` (osoby, zápisy, stavy, soukromí), `kandidati` (náměty z `osoby.py`: řemesla
+  a domy s více lidmi), `export` (volá ho `export_web.py`). Na stránce Domy je u domu rozbalovací „Dějiny domu“.
+- Návod `reference/stavby.md`: formát, přehled pramenů podle doby (gruntovní a pozemkové knihy, sčítání lidu po domech,
+  reambulace pro datování novostaveb) a postup. Vznikl podle skillu dejiny-domu.
+
+### Opravy
+
+- Encyklopedie Brna a Mauthausen: srozumitelná hláška při výpadku portálu, spolehlivější čtení výsledků (PR #121, #122).
+- Úvodní text bez fotky vede přes celou šířku stránky (dřív jen do tří pětin).
+- Kontrola po nasazení (`npm run overit`) běží i po nasazení z čisté složky (`nasadit.mjs`) a pozná přihlašovací
+  stránku i bez otázky (jen osobní odkazy).
+- `npm run nasadit` z čisté složky (projekt za odkazem) nasadí i funkci poznámek – zkopíruje `src/lib/poznamky.mjs` a doinstaluje `@netlify/blobs`; nasazuje s `--no-build` (web je sestavený předem).
+
+### Návody
+
+- Vybledlé písmo: nejdřív `--kontrast` (originál), u nejhorších snímků `--vylepsit` (navíc doostření).
+
 ## 0.8.2 – 5. 11. 2026
 
 **Opravy**
@@ -211,6 +560,46 @@ V dnešním vydání jsem se zaměřil na nejčastěji hlášené problémy a vy
 
 Děkuji všem, kdo poslali zkušenosti e-mailem.
 
+## 0.8.0-fork.1 – 4. 11. 2026
+
+Fork na originálu 0.8.0 (bezpečná aktualizace projektu, ARON celým skenem, nové kontroly – viz níže) a navíc:
+
+### Opravy
+
+- `mista.py` dává přednost bodu vsi či města před hranicí obce (bod uprostřed katastru padal u obce s více částmi
+  do jiné části nebo do pole).
+- `kontrola.py` už nepadá (`UnboundLocalError`) u projektu s `PARTNERI` a bez `RODINA`; neexistující zápis hlídá
+  u každé osoby z `RODINA`, ne jen u poslední.
+- `npm run nasadit` funguje i u projektu za odkazem (junction/symlink): Netlify CLI tam končilo chybou „build.base …
+  must be inside the repository root“, nově se nasazuje z čisté složky `~/.rodokmen-netlify/<projekt>`
+  (`web/scripts/nasadit.mjs`).
+
+### Nové
+
+- Web má jen dvě šířky stránek: úzkou pro textové stránky (osoba, zajímavosti, příběhy…) a širokou přes celé okno
+  (úvod, mapa, místo, časová osa, deník, poznámky, domy, zdroj); na široké stránce se text nezalamuje v polovině.
+- Žádosti archivům a úřadům: `mailto.py` udělá z konceptu odkaz do e-mailu (i Gmail, Outlook, Seznam), přehled
+  `data/zadosti.md` a vzory v `reference/zadosti.md` (PR #87).
+- Příčina úmrtí u zápisů (`pricina_umrti`: původní znění, překlad, jistota čtení) na stránce osoby i zápisu (PR #92).
+- Opravy z issues (PR #89): `zapis.py --smazat`, `overit.py`/`vyrez.py --vylepsit` pro vybledlé snímky,
+  `ramecek.py --stranka`, kontrola polí v přepisech, doklady bez online odkazu; odkaz ARON hledá snímek ve všech
+  digitálních objektech.
+- Stránka předka ukazuje v kartě Děti i **Další děti** zapsané jen v `SIDE` (bratr/sestra dítěte v linii, syn/dcera
+  předka) s odkazem na poznámku; děti z `RODINA` tam byly už dřív (obdoba #69 z PR #89 pro data forku).
+- `aron_img.py odkazy --opravit` najde správný snímek i v jiném digitálním objektu svazku (nahradí celou adresu),
+  nespadne na jednom nedostupném svazku a jde spustit i jako `opravit-odkazy [--zapsat]` jako v originálu.
+- Stránka osoby mimo přímou linii (z `RODINA`) má i kapitolu **Předci** (tři generace přes otce a matku, od přímého
+  předka dál po číslech) a řádek **Místa** s odkazy na obce z jejích údajů.
+- `kontrola.py` hlídá Kekulého čísla: upozorní, když poznámka „otec Václava (72)“ nebo „syn Josefa (40)“
+  neodpovídá číslu osoby (rodiče osoby k jsou 2k a 2k+1).
+
+### Návody
+
+- Stránka Domy: odkaz na skill stare-adresy, jak ho nainstalovat a že bez `domy.geojson` se stránka neukáže.
+- Rejstřík celé fary (eBadatelna, klíč písmen ke vsím) jako rychlá cesta k zápisu mimo knihu vsi ženicha.
+- Poznámky pro správce skillu jdou do issues forku (<https://github.com/mplisek/rodokmen-skill/issues>).
+- `smoke_test.py` už nezkouší Třeboň ani eBadatelnu (skriptem zakázané); testy originálu běží i v CI forku.
+
 ## 0.8.0 – 4. 11. 2026
 
 Bezpečná aktualizace projektu (vlastní úpravy zůstanou), rychlé stahování z ARONu a přesnější kontrola dat.
@@ -243,6 +632,52 @@ Bezpečná aktualizace projektu (vlastní úpravy zůstanou), rychlé stahován�
 
 Aktualizaci projektu napsal pavelzbornik (PR #88), stejně jako opravu `mista.py` (PR #85) a nové kontroly
 (PR #86). Děkuji i všem, kdo poslali zkušenosti e-mailem.
+
+## 0.7.0-fork.1 – 4. 11. 2026
+
+První verze forku postavená přímo na originálu 0.7.0 (historie odpovídá originálu, otevřené pull requesty jsou
+sloučené jako merge commity) a pravidla archivů z originálu platí i pro všechno, co fork přidává.
+
+**Nové**
+
+- Web: stránky **Statistiky** a **Domy**, volitelné původní tvary jmen (PR #19), **Osobnosti** (PR #23),
+  **stromový graf** celé rodiny s rozbalováním větví a sourozenci (PR #13), **víc příběhů rodu** (PR #49),
+  **Časová osa** s pruhy životů předků a seznamem „Co časově nesedí“ (PR #77), **stránka každého místa** s časovou
+  osou lidí a událostí, odkaz z mapy (PR #73), vějíř s plynulým posunem a přibližováním (PR #55).
+- Web podle projektu: příbuzní z `RODINA` mají vlastní stránky (děti, sourozenci, manželství se počítají stejně
+  u všech), volitelné `PARTNERI`, vějíř předků pro libovolnou osobu (`/vejir/<osoba>/`), stránka `/dokumenty/`.
+- **Soukromí žijících vynucuje export webu:** žijící a narození v posledních 100 letech bez známého úmrtí jen se
+  jménem, rokem narození a vazbami – i na mapě, v Domech, Statistikách a na časové ose.
+- **Přístupy k webu:** každá větev rodiny může mít vlastní odpověď a vidí jen svou část rodokmenu (`pristupy` ve web.json).
+- **Poznámky ke stránkám:** tlačítko „Připomínka“, přehled `/poznamky/`, `npm run poznamky`.
+- `kontrola.py` hlídá **časovou návaznost** narození, sňatků a úmrtí; ověřený neobvyklý údaj se odškrtne polem
+  `overeno` (PR #76).
+- Nové nástroje (PR #29): SOA Litoměřice (`litomerice.py`, jen když portál nežádá ověření), židovské matriky
+  (`vademecum.py`), vězni a oběti 2. sv. války (`arolsen.py`, `mauthausen.py`, `obeti.py`, `vezni.py`), Matricula
+  (`matricula.py`, `matricula_snimek.js`), Encyklopedie dějin města Brna (`brno_encyklopedie.py`), `kramerius.py --server`,
+  `smoke_test.py` (kontrola síťových nástrojů na živých portálech). MZA Brno: `mza.py` jen hledá knihy, detail
+  a snímky jsou v prohlížeči (MZA stahování skriptem nepovoluje). Všechny nové síťové nástroje jdou přes brzdu `slusne.py`.
+- Bezpečný zápis datových souborů (`tools/soubory.py`): přerušení nenechá useknutý `svazky.json` ani jiný soubor.
+
+**Opravy**
+
+- ARON: odkaz na snímek otevře správný snímek, ne první; `aron_img.py odkazy` opraví staré odkazy (PR #22).
+- SOA Třeboň: správné slepení dlaždic (PR #48).
+- Přihlašovací odpověď bez znaků a-z0-9 (např. „***“, azbuka) už neskončí chybou (PR #66); nginx
+  `map_hash_bucket_size 128` proti chybě 502 v Dockeru/CapRoveru (PR #56).
+- `SKILL.md` se načte i v přísnějších parserech YAML a v GitHub Copilotu (PR #26, PR #59).
+- Windows: chybějící kořenový certifikát (Porta fontium, Kramerius, ANNO) brzda doplní přes systémový `curl.exe`
+  a spojení zopakuje – ověřování certifikátů zůstává zapnuté.
+- AHMP: dočasné dlaždice se smažou i při chybě; stránka Osobnosti ukazuje jen předky; web skripty bez varování
+  DEP0190 na Windows.
+
+**Návody**
+
+- Předávání výzkumu a práce s GEDCOM (PR #46), přesnější pokyny pro archivy a opakované pokusy eBadatelny (PR #47),
+  vylepšení z praxe – čas aktualizace webu, web ve vnitřní síti, zaniklé obce (PR #41).
+- Písemnosti vrchnosti, zemské desky a vodnimlyny.cz (PR #62); nové archivy a poválečné osídlení (PR #29).
+- Německé formuláře – co vždy ověřit na výřezu; čísla zápisů společná pro celou farnost (z PR #28).
+- Node.js 22.19 nebo novější (Astro 7.3.8).
 
 ## 0.7.0 – 3. 11. 2026
 
