@@ -141,7 +141,7 @@ def smazat(klic):
     if jinde:
         print(f"Zmiňuje ho i {', '.join('data/' + f for f in jinde)} – text nech, odkaz na web („/zdroj/{klic}/“) "
               "případně uprav (npm run data ho ohlásí jako nefunkční).")
-    print("Do deníku (research_log.md) zapiš, proč zápis nepatří k rodině – ať ho příště nikdo nenajde „znovu“.")
+    print("Do deníku (tools/denik.py) zapiš, proč zápis nepatří k rodině – ať ho příště nikdo nenajde „znovu“.")
 
 
 def bajty_pozice(src):

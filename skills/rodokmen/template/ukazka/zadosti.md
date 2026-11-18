@@ -10,7 +10,7 @@ Stav: koncept → odesláno → odpověď s dalším krokem (čeká na úhradu, 
 - Koncept je v `pracovni/zadosti/`, odkaz k odeslání z něj udělá `python3 -I tools/mailto.py <koncept.md>`.
 - Odesláno: datum, kdy uživatel žádost poslal. Bez odpovědi déle než 30 dní → připomenout.
 - Odpověď, po které je ještě co udělat, zůstává v Otevřených a do Stavu přijde další krok. Vyřízeno, zamítnuto
-  nebo opuštěno: výsledek do dat a do `research_log.md`, řádek přesunout do Uzavřených.
+  nebo opuštěno: výsledek do dat a do deníku (`tools/denik.py`), řádek přesunout do Uzavřených.
 - Na jeden archiv nanejvýš jedna otevřená žádost.
 - Vaše adresa, telefon a e-mail sem nepatří, jen do konceptů v `pracovni/` (nejdou do gitu ani na web).
 

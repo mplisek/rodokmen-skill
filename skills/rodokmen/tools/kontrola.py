@@ -128,7 +128,7 @@ def co_hledame(ns, P, LINES):
             text = ""
         if len(text) > 400:
             warn.append(f"ISSUES {n}: text má {len(text)} znaků – na webu ho čte rodina, zkrať na pár vět "
-                        "(signatury a snímky patří do research_log.md)")
+                        "(signatury a snímky patří do deníku)")
     jmena = {k: v[0] for k, v in LINES.items()}
     kmen = lambda t: re.sub(r"[^a-z]", "", unicodedata.normalize("NFKD", t).encode("ascii", "ignore").decode().lower())[:5]
     for name, druh in (("otazky_pro_rodinu.md", "rod"), ("archivni_dotazy.md", "archiv")):
@@ -140,7 +140,7 @@ def co_hledame(ns, P, LINES):
                         "pořadí určuje rod nebo archiv, ne datum")
         if re.search(r"(?mi)^\s*(?:[-*]|\d+\.).*\b(ODPOVĚZENO|zodpovězeno|vyřešeno)\b", md):
             warn.append(f"{name}: obsahuje zodpovězenou položku – smaž ji, odpověď patří do udaje_od_rodiny.md "
-                        "nebo research_log.md")
+                        "nebo do deníku")
         nadpisy = re.findall(r"(?m)^## +(.+)$", md)
         if druh == "rod":
             nezname = [h for h in nadpisy if not any(kmen(h.split()[0]) == kmen(j.split()[0]) for j in jmena.values())

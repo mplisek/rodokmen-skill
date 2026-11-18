@@ -443,6 +443,20 @@ def main():
             os.remove(os.path.join(datovy, "denik.jsonl"))
         print("POZOR: deník je ve starém tvaru data/research_log.md; převeď ho: python3 -I tools/denik.py migruj "
               "a pak denik.py overit-migraci")
+    # po přechodu na denik.jsonl: vlastní CLAUDE.md a STAV.md projektu se nepřepisují – upozornit na staré odkazy
+    if os.path.exists(os.path.join(datovy, "denik.jsonl")) and not os.path.exists(os.path.join(datovy, "research_log.md")):
+        for f in ("CLAUDE.md", os.path.join("data", "STAV.md")):
+            p = os.path.join(dst, f)
+            if os.path.exists(p):
+                radky = [i for i, r in enumerate(open(p, encoding="utf-8").read().splitlines(), 1) if "research_log" in r]
+                if radky:
+                    print(f"POZOR: {f.replace(os.sep, '/')} odkazuje na research_log.md (řádky {', '.join(map(str, radky))}); "
+                          "deník je v data/denik.jsonl – čte se přes tools/rejstrik.py denik, zapisuje přes tools/denik.py")
+    # pracovni/.plugin_root zapisoval zrušený hook agentů (kořen pluginu, ne složka skillu) – mátl hledání SKILL_DIR
+    zbytek = os.path.join(dst, "pracovni", ".plugin_root")
+    if os.path.exists(zbytek):
+        os.remove(zbytek)
+        print("Smazáno: pracovni/.plugin_root (zbytek zrušené vrstvy agentů)")
     if demo:
         for sub in ("vyrezy", "zdroje"):
             src = os.path.join(SKILL, "template", "ukazka_" + sub)
