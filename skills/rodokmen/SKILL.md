@@ -293,4 +293,4 @@ mlčel nebo radil špatně, a co uživatel chtěl, ale skill to neuměl. Piš ob
 | `pozvanky.py`, `pristupy.py` | osobní odkazy na web; přehled přístupů (kdo co vidí) |
 | `mailto.py` | koncept žádosti → odkaz na hotový e-mail (nic neodesílá) – `zadosti.md` |
 | `slusne.py`, `smoke_test.py`, `verze.py` | brzda proti zablokování archivem; kontrola síťových nástrojů; verze skillu |
-| `spotreba.py` | spotřeba sezení (měření ceny) |
+| `spotreba.py`, `dodrzovani.py` | spotřeba sezení; dodržování metodiky ze záznamů sezení |
