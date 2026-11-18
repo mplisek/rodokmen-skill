@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Vlastní prohlížeč pro čtení portálů, kam skript nesmí (SOA Třeboň, eBadatelna, ZA Opava, MZA – viz ZAKAZ v tools/slusne.py).
 
-Čtení v prohlížeči tempem člověka je u těchto portálů povolené (reference/portaly.md, R-ARCH-002). Agent `browser-reader` ho nespouští ručně
+Čtení v prohlížeči tempem člověka je u těchto portálů povolené (reference/portaly.md, SKILL.md → Šetrně k archivům). Prohlížeč se nespouští ručně
 (Start-Process, vlastní skript s Playwrightem), ale tímto nástrojem. Pravidla jsou zabudovaná v něm, ne v dobré vůli čtenáře:
 
   - Edge se spustí jako VLASTNÍ instance (vlastní --user-data-dir v pracovni/, --remote-debugging-port, bez adresy portálu), takže se

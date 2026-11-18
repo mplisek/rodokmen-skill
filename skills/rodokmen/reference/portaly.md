@@ -67,7 +67,7 @@ nespouští ani nenastavuje. Nástroj používá vlastní instanci Edge (vlastn�
 pauza aspoň 5 s (10 s při listování), nejvýš 120 otevření stránky za hodinu, jeden archiv na relaci, stop při HTTP 403/429/503 a při CAPTCHA
 (zapíše se do brzdy `slusne.py`, výstupní kód 4), výzva k přihlášení se vrací uživateli (kód 5). Hook `hlidac_site.py` ruční `Start-Process` prohlížeče
 s adresou takového portálu nebo s `--remote-debugging-port` zamítne; povolený je jen `prohlizec.py`. Čtení pořád jen tempem člověka; smyčky přes celé
-svazky jsou zakázané (R-ARCH-002).
+svazky jsou zakázané (SKILL.md → Šetrně k archivům).
 
 ## SOA Třeboň (digi.ceskearchivy.cz) – jen v prohlížeči
 

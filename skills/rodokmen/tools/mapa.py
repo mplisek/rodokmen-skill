@@ -2,7 +2,7 @@
 """Mapa knihy: co které snímky svazku pokrývají (písmena rejstříku, roky, čísla zápisů), aby se z archivu stahovalo jen to, co je potřeba.
 
 Mapa je jen RADA, kam jít (z dvou známých bodů odhadne snímek hledaného písmene nebo roku, jako při hledání ve slovníku). Nikdy
-neuzavře hledání: „není tam“ vyžaduje přečíst stránky, které cíl ohraničují (R-NEG-001); pořadí v rejstřících a číslech zápisů nemusí být přísné.
+neuzavře hledání: „není tam“ vyžaduje přečíst stránky, které cíl ohraničují (SKILL.md: záporný výsledek jen s dokladem); pořadí v rejstřících a číslech zápisů nemusí být přísné.
 Obsahuje jen navigační údaje o stránce (typ, od–do, kvalita, kdo a čím četl), žádné přepisy a jména lidí, proto je společná pro všechny projekty
 na počítači: `rodokmen_mapy/<portál>/<svazek>.jsonl` vedle mezipaměti snímků (mimo její úklid; jen přidávání, poslední čtení snímku platí).
 
@@ -191,7 +191,7 @@ def hledej(portal, svazek, pismeno=None, rok=None, cislo=None, celkem=None):
             od, do = f(d["od"]), f(d["do"])
             if od is not None and do is not None:
                 body.append((sn, min(od, do), max(od, do)))
-    nota = "rada, ne důkaz: hledání se uzavře až čtením stránek, které cíl ohraničují (R-NEG-001)"
+    nota = "rada, ne důkaz: hledání se uzavře až čtením stránek, které cíl ohraničují (SKILL.md: záporný výsledek jen s dokladem)"
     for sn, od, do in body:
         if od <= cil <= do:
             return {"stav": "zname", "snimek": sn, "poznamka": f"snímek {sn} už je popsaný a cíl pokrývá; {nota}"}

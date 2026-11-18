@@ -16,7 +16,8 @@ vojenské záznamy, domovské listy, parte. Viz `portaly.md` a `metodika.md` (pr
 
 ## Lhůty (zákon 301/2000 Sb.)
 
-Do archivu (a tedy online) jde svazek, až od jeho **posledního** zápisu uplyne: narození **100 let**, sňatky **75**, úmrtí **30**.
+Do archivu (a tedy online) jde svazek, až od jeho **posledního** zápisu uplyne: narození **100 let**, sňatky **75**, úmrtí **75**
+(§ 23; lhůta 30 let u úmrtí platí jen pro vydání jednotlivého zápisu na úřadě, viz níže).
 Mladší knihy jsou na matričním úřadě obce s rozšířenou působností / pověřeném úřadě. **Matriční úřad ale počítá lhůtu
 u každého zápisu zvlášť** (§ 25b zákona 301/2000 Sb.): zápis starší 100 / 75 / 30 let (narození / sňatek / úmrtí) vydá
 **komukoli** i ze svazku, který je ještě na úřadě, a dovolí do knihy nahlédnout. Mladší zápis dostane jen osoba, které
@@ -36,11 +37,17 @@ zhruba po roce 1910 často online nebudou (kniha pokračuje za rok 1926, lhůta 
    Hledej obec v popisu svazku (`aron_search.py "Obec"`), ne jen v názvu – a hledej i podle obce, ne jen podle fary
    z pozdějšího zápisu: obec mohla mít vlastní matriku (filiální kostel, lokálie), i když list vydala mateřská fara.
    Obec rozdělená mezi dvě fary má dvě řady knih, každou jen pro „svá“ čísla domů.
+   Pozor i na opak: **kniha (hlavně zemřelých) mateřské fary nemusí zapisovat filiální vsi**, které měly vlastní
+   hřbitov nebo vlastní knihu (příklad: fara Bělá pod Bezdězem, Z 1666–1728 – vsi jen 1666–67, dál jen město
+   a předměstí). **Než knihu zemřelých procházíš celou, ověř na 3–4 vzorcích z různých desetiletí, jestli v ní
+   hledaná ves vůbec je** – ušetří to desítky snímků. Když není, zjisti z popisu svazků, jestli má ves vlastní řadu
+   knih, a zapiš do deníku, které vsi kniha pokrývá.
 2. **Svazek podle roku a druhu.** Pozor na překryvy: jedna kniha pro více obcí, zvláštní knihy pro jednotlivé obce.
    **Druhopisy** (duplikáty pro děkanát nebo úřad, např. „T“ svazky v ZA Opava) mívají N, O a Z jednoho roku u sebe –
    hodí se, když originál chybí, je nečitelný nebo velký.
-3. **Index, pak kniha.** Index řazený po písmenech a letech dá stránku/folio; snímek odhadni (snímek ≈ folio × 1 až 2) a dolaď.
-   Starší rejstříky (18. stol.) občas ukazují o 1–4 strany vedle – když zápis na udané straně není, listuj kolem.
+3. **Index, pak kniha.** Index řazený po písmenech a letech dá stránku/folio; číslo folia nepřeváděj pevným offsetem
+   na číslo snímku. Najdi folio podle číslování přímo v knize a zkontroluj okolní strany – vložené, chybějící nebo
+   nečíslované listy mohou vztah mezi folií a snímkem změnit.
    Posun „snímek – strana“ se v knize mění (vložené listy, chybějící strany) – přečti číslo strany na náhledu a dopočítej.
    **Posun nikdy nedomýšlej:** přečti „Pag./fol.“ na 2–3 snímcích, spočítej ho a teprve pak skoč (bývá +1, +2, ale i −19).
    U knih **dodatečně přefoliovaných** odkazuje rejstřík na původní ruční číslo listu (vpravo nahoře), ne na archivní
@@ -58,14 +65,51 @@ zhruba po roce 1910 často online nebudou (kniha pokračuje za rok 1926, lhůta 
    okolní fary. (Skutečná chyba: „9?“ přečteno jako 97, prošlo se pět okolních far; sňatek byl doma o pět let dřív.)
 5. **Přečti celý zápis**, pak se podívej i na okolí (dvojčata, další děti stejných rodičů).
 6. **Sňatek se obvykle konal ve farnosti nevěsty** (v jejím bydlišti) – hledej ho nejdřív tam, pak ve faře ženicha.
+   Když oddací rejstřík pod nevěstiným příjmením nic neukáže, zkus také příjmení ženicha; rejstříky se mohou lišit
+   způsobem řazení.
    Nedaří se? Ve křtu dítěte bývá (Praha ~1880–1890) připsané datum a místo sňatku rodičů – ověř ho v oddaných.
 7. **Rodina v katolické matrice chybí? Zkus evangelickou nebo židovskou.** Po toleranci (1781) vedly vlastní matriky
    evangelické sbory (a. v. i h. v.), jeden sbor pokrýval desítky obcí; v ARONu mají signatury „R …“ a `aron_search.py`
-   je najde podle obce. Ve východních Čechách časté (Rychnovsko, Dobrušsko, Opočensko). Židovské matriky viz `portaly.md`.
+   je najde podle obce. Ve východních Čechách časté (Rychnovsko, Dobrušsko, Opočensko). Židovské matriky (Národní archiv, nástroj `vademecum.py`) viz `portaly.md`.
    Ve 20. století (1920–1945) zkus i **civilní matriky** lidí bez vyznání u okresních úřadů (vyzkoušeno v SOA Třeboň, viz `portaly.md`).
    **Smíšená manželství:** od roku 1868 šli synové po otci a dcery po matce, pokud se rodiče nedohodli jinak.
    Před rokem 1868 byly při katolickém otci katolické všechny děti. Dceru evangelíka a katoličky proto hledej
    nejdřív v katolické matrice, syna v evangelické.
+
+## Rekonstrukce rodiny a víc kandidátů stejného jména (`tools/rodiny.py`)
+
+Dvě situace, kde jeden zápis nestačí a pomůže skládat celou rodinu:
+
+- **Sourozenci předka.** Rodina měla často 8–15 dětí. Křty sourozenců doplní, co v zápisu předka chybí nebo je nečitelné:
+  rodné příjmení matky, dům, prarodiče, řemeslo. Přes děti z druhého manželství se najde i druhá žena a její rodiče.
+- **Víc kandidátů.** V 18. století bývá v jedné vsi několik párů stejných jmen (skutečně: dva páry „Václav Novák ×
+  Kateřina“ křtily děti ve stejných letech 1754–1764). Zápis „syn Václava a Kateřiny“ pak sedí na všechny. **Nevybírej toho, koho najdeš první.**
+
+Postup jako hledání do šířky (BFS). Případ je soubor `data/rodiny/<případ>.json` (stav výzkumu, patří do gitu; web ho nečte), vede ho `rodiny.py`:
+
+1. `rodiny.py novy <případ> "cíl" --osoba N`. Pak **kotvy**: zápisy, které o předkovi víme jistě (`zapis` s `"patri": "kotva"`).
+2. Každého kandidáta zapiš (`kandidat`). Kdo zjevně nesedí věkem nebo místem, hned `stav … vyloucen "důvod"`.
+3. **Vrstva 1**: vlastní zápisy kandidáta (křest, svatba, úmrtí). **Vrstva 2**: jeho děti a jejich kmotři, svědci na svatbě,
+   sourozenci, rodina nevěsty. **Vrstva 3**: rodiče, tchán, kmotři dětí jako samostatné osoby. Úkoly zapiš (`ukol`)
+   a po přečtení uzavři (`hotovo`, i „nic jsem nenašel“ s `--nic`). Vrstvu dokonči u **všech** otevřených kandidátů,
+   teprve pak jdi hlouběji. Srovnání musí být férové: u každého stejné druhy zápisů.
+4. Ke každému přečtenému zápisu vypiš **všechny osoby s rolí** (kmotři, svědci, porodní bába, sousedé). Právě kmotři
+   rozhodují: rodiny měly stálé kmotry a ti se drželi příbuzenstva a sousedů.
+5. Po každé vrstvě `prunik`: ukáže osoby a domy kandidáta, které se potkají s kotvami nebo s `osoby.py`. Shody u všech
+   kandidátů nerozlišují (vypíše je zvlášť). `rodiny` seskupí křty podle rodičů a upozorní na mezery (chybějící dítě),
+   opakované jméno (předchozí dítě zemřelo), stálé kmotry (počítá kmotry i svědky – v 18. století se titíž lidé
+   v rolích střídají) a **dva porody méně než 9 měsíců po sobě**: to jedna matka nestihne, jde o dva stejnojmenné páry,
+   nebo o špatně přečtené datum (měsíc a rok bývají v nadpisu sloupce o kus výš).
+6. Rozhoduje **doklad**, ne počet shod. Shoda kmotra nebo domu je stopa, věta „syn X“ v zápisu je důkaz. Kandidát, který
+   zemřel dřív, než se předek naposledy objevuje jako živý, odpadá. Potvrzeného (`stav … potvrzen`) zapiš do `osoby.py`
+   jako `doc` jen při přímém dokladu, jinak `prob` s poznámkou, čím se ostatní vyloučili. Do deníku zapiš i vyloučené.
+
+Pozor na závěr „ve vsi křtí jen jeden pár“ z pár let: druhý pár mohl mít zrovna přestávku. Rozhodne až souvislá řada
+let před i po narození předka a porovnání prvního dítěte se svatbami kandidátů (první dítě rok po svatbě A, ne B).
+
+Venkov se ženil v okruhu pár vsí a kmotři se drželi v rodině, proto se stopy kandidátů s kotvami obvykle potkají
+do 2.–3. vrstvy. Ve městech a v 19. století s rostoucí mobilitou to funguje hůř.
+Nástroj porovnává jména volně (latinská a německá křestní jména, -ová, -ek/-ková, w/v, cz/č) – shody jsou náměty, ne závěry.
 
 ## Knihy řazené po vsích (časté 1784–1900, všechny archivy)
 
@@ -85,7 +129,10 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
    Staré rejstříky odkazují často na **přeškrtnutá stará čísla** listů a rok s listem bývá posunutý o řádek proti jménu –
    čti i sousední položky a ověř na snímku. Na konci knih bývá i ručně psaný **rejstřík po obcích** (prohlédni poslední
    snímky). Dobrovolnické rejstříky nejsou úplné – při neúspěchu čti oddíl vsi přímo.
-   Klíč písmeno/tom → ves zjistíš ze záhlaví stránek; sestav si tabulku do deníku.
+   Klíč písmeno/tom → ves zjistíš ze záhlaví stránek; sestav si tabulku do deníku. Rejstřík **celé fary** je nejrychlejší
+   cesta i k zápisu, který není v knize vsi ženicha (nevěsta z jiné vsi): u eBadatelny v seznamu matrik obce (v prohlížeči)
+   hledej knihy s vyplněným indexem N/O/Z; klíč písmen ke vsím bývá na úvodní straně některého z rejstříků (Bykáň:
+   u rejstříku zemřelých).
 3. **Mapa knihy:** z každého 5.–30. snímku jen horní pruh (název vsi, rok) v malém rozlišení, slepit pod sebe s číslem
    snímku → stavba celé knihy na jednom obrázku: `python3 -I tools/mapa_knihy.py aron|pf|ahmp <kniha> <od> <do> [krok]`
    (u archivů jen v prohlížeči z uložených snímků obrazovky: `mapa_knihy.py soubory pracovni/x_*.png`). Pak v plném
@@ -114,11 +161,24 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
   i písmena, pod která mohl písař jméno zařadit.
 - Kurentový rejstřík: totéž, plné rozlišení a pruhy (`--sloupce`). **Dopisované řádky** se snadno přečtou špatně
   (Franziska × Heinrich, strana 131 × 151) – údaj z rejstříku vždy ověř v matrice.
+- **Kniha bez rejstříku** (hledáš rodiče podle příjmení): stáhni jen sloupec otce (nebo matky) z mnoha snímků
+  v nízkém rozlišení (`aron_img.py <apu> <n> 2 pracovni/x/o<n>.jpg x0,y0,x1,y1` – výřez nastav podle sloupce na jednom snímku, víc
+  najednou přes `xargs -P 4`) a slož je po osmi vedle sebe (`magick montage o1.jpg … o8.jpg -tile 8x1 -geometry +4+0 m.jpg`).
+  Úroveň 2 na čtení příjmení stačí, menší ne. Nalezený zápis pak stáhni celý v úrovni 1 nebo 0 (0 = plné rozlišení).
+  Nezapomeň na nemanželské děti – otec je prázdný a příjmení je ve sloupci matky.
 - **Vybledlé písmo** (mikrofilm, propiska nebo tužka 1945–1949, celé knihy hlavně v eBadatelně): je-li písmo zápisu
   světlé nebo stránka vypadá skoro prázdná, čti z výřezu s `--kontrast` (`vyrez.py … --kontrast`,
   `overit.py … --kontrast`; jinak `magick x.jpg -colorspace Gray -contrast-stretch 2%x35% x_k.jpg`). Stránku
   **neprohlašuj za prázdnou a zápis za nenalezený**, dokud ji nezkusíš s kontrastem. Do webu pak dej kontrastní výřez
   a poznamenej to v přepisu. Zelený tón snímku: `magick x.jpg -channel G -separate -normalize x_k.jpg`.
+- **Pasti kurentu** (hlášení uživatelů): velké Č vypadá jako G, W jako St, S jako B/P/D, Z jako P (kolem 1830), malé r jako w;
+  ř se píše „rz“, z jako ʒ, „au“ je dnešní „ou“. Letopočty **1829 a 1839** se snadno spletou – rok ověř podle vizitační
+  poznámky na konci roku.
+- **Podivné příjmení:** porovnej tvar písmen se **jistými slovy téže ruky** (rozhodne, které ze dvou čtení je správné), ověř, že
+  příjmení existuje (kdejsme.cz), projdi sčítání 1890–1921 v obci (latinka) a hledej jméno se stejnou kostrou bez ohledu na první
+  písmeno. Jméno z rejstříku nebo gruntovní knihy vždy ověř v matričním zápisu, jinak vznikne falešný předek; písař také
+  může převzít jméno z řádku nad zápisem.
+- **Čtvrtinové náhledy** stačí na orientaci v knize, ale jména v nich přehlédneš – čti aspoň v polovičním rozlišení.
 - Do ~1780 latina nebo čeština, pak hodně němčina (kurent), od ~1860 často čeština, ve 20. století čeština.
 - Česká jména v němčině/latině: Johann/Joannes = Jan, Wenzel/Wenceslaus = Václav, Joseph = Josef, Franz/Franciscus = František,
   Maria = Marie, Anna, Katharina = Kateřina, Barbara = Barbora, Magdalena = Majdalena/Magdaléna, Theresia = Terezie,
@@ -206,6 +266,12 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
   matky (dítě se často narodilo u jejích rodičů).
 - Nevěsta mívala 18–28, ženich 22–32; děti po 1,5–3 letech.
 - „Vdovec“ u ženicha = hledej první manželství a děti z něj.
+- Při přepisu křtu ověř měsíc podle záhlaví příslušného sloupce a nepopleť číslo domu porodní báby
+  (*obstetrix*, *Hebamme*) s rodištěm dítěte.
+- Skutečný průměr generace v rodokmenech bývá **30–35 let**, ne 20–25: u nezdokumentované generace počítej s tím
+  (a řekni to uživateli, který čeká kratší řetěz). Věk ve sňatcích kolem 1800 bývá o 3–5 let jiný než podle křtu;
+  při nesouladu rozhoduje dům a rodiče, ne věk.
+- Soupisy duší (*status animarum*) se psaly během roku, často v létě: věk „⅓ roku“ nedá spolehlivé datum narození.
 
 ## Stavy údajů v datech
 
@@ -227,10 +293,49 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
   opravit (přeškrtnuté Jan → František) a do rejstříku se opsalo to původní.
 - Sňatek pár měsíců před porodem nebo po něm – není chyba, jen „svatba na poslední chvíli“; zajímavost pro web.
 - Nemanželské dítě nese příjmení matky; otec chybí nebo je dopsán později (legitimace na okraji).
-- Stejný předek dvakrát v rodokmenu (vzdálení příbuzní se vzali) – v datech `SAME`.
+- Stejný předek dvakrát v rodokmenu (vzdálení příbuzní se vzali) – v datech `SAME`. Najde ho `tools/graf.py`
+  (ve stromu z GEDCOMu i v `osoby.py`). Ověří ho dispens pro pokrevní příbuzenství v oddacím zápisu
+  („Dispens … Blutsverwandtschaft III. Grades“, „in 3o et 4o gradu“). Stupeň podle církevního počítání je počet
+  generací od snoubence ke společnému předkovi, u nestejně vzdálených ten delší: sestřenice z 2. kolene
+  (společný pradědeček) = 3. stupeň, o generaci dál = „3. a 4. stupeň“. Do roku 1917 platila překážka do 4. stupně;
+  když spočítaný stupeň a dispens nesedí, nebo dispens chybí, prověř vazbu.
 - Index nenašel ≠ zápis neexistuje. Zapiš, co přesně jsi prošel.
 - Oddací zápis uvádí „narozen dle mat. IV f. 149“ – podle folia najdeš křest jedním stažením (folio ≈ snímek − posun knihy).
 - Čtení pomocníků (subagentů) i jiných nástrojů na čtení písma vždy ověř sám na snímku (princip čtyř očí, SKILL.md → Pomocníci).
+- Německé formuláře (např. Vídeň) se čtou hůř než české: nejčastěji chybí nebo se pletou **roky, stav (ledig × vdovec), povolání,
+  adresy a jména svědků**. Tyhle údaje vždy ověř sám na výřezu, než je zapíšeš jako `doc`; „střední“ jistota od pomocníka na to nestačí.
+  Nejisté pole nevyplňuj „?“ – vynech ho a popiš v poznámce.
+- Kniha s „chybějícími čísly“ nemusí mít chybějící strany: čísla zápisů v roce bývají společná pro celou farnost a obce mají
+  vlastní knihy (v knize jedné obce proto čísla vynechávají).
+- Křest hledej v celém roce: čísla zápisů neodpovídají pořadí dat (zápis č. 107 může být až v polovině července), takže z čísla neodvozuj
+  měsíc a nezastavuj se na stránce, kde „by měl být“.
+- Názvy obcí a farností přebírej z hlavičky nebo seznamu archivu (např. Miskovice, ne „Miškovice“); diakritiku si nedomýšlej.
+- Velké kolo s pomocníky (zkušenost s 10 souběžnými): společná pravidla dej do jednoho souboru (`pracovni/ZADANI_POMOCNIK.md`)
+  a v zadání na něj jen odkaž. Do pravidel patří: obrázek pro čtení zmenšit na max. 2000 px (jinak se nástroji
+  nezobrazí a pomocník „čte“ naslepo), **nikdy nepsat přepis zápisu, který neviděl**, ukládat výsledek průběžně po každém
+  nálezu (pomocník může skončit předčasně), u nálezu uvést soubor výřezu, ze kterého četl. Kurent 1. poloviny 19. století
+  ve středním rozlišení ARON (úroveň 1) spolehlivě nepřečte – chtěj plné rozlišení a výřez sloupce. Víc než ~5 pomocníků
+  současně na ARON ho přetíží (snímek pak trvá minuty) – rozlož je mezi archivy (ARON, Porta fontium, eBadatelna).
+- Nemanželské dítě matky se stejným jménem: rodinný strom může „dosadit“ za rodiče prarodiče (nemanželská dcera
+  svobodné matky vedená jako dcera matčina bratra). Rozhodne zápis o sňatku nebo úmrtí dítěte (uvádí matku) a to, zda je v matrice
+  jiné dítě daného jména.
+- **Přečíslování domů:** kolem let 1805–1815 a 1857–1880 hledej v zápisech poznámky „starý / nový“ (*alt / neu*) a čísla
+  porovnávej jen v rámci jednoho číslování – stejné čp. před a po přečíslování je jiný dům. Farář často píše obě čísla, od
+  konce roku jen nové.
+- **Knihy smíšené po vsích:** kniha může být do určitého roku po datech pro celou farnost a pak po oddílech (městečko, vsi),
+  oddíly se v knize střídají a kniha může být špatně svázaná. Udělej si mapu knihy podle záhlaví oddílů, ušetří čas.
+- **Dva páry stejných jmen v jedné obci** (Ján × Katarína se stejně pojmenovanými dětmi) index slévá. Rozhodne přesné datum
+  křtu dopsané k pozdějšímu sňatku nebo úmrtí. Pozor na datum narození, které farář dopsal k úmrtí o desítky let později –
+  může patřit jmenovci.
+- **Místo původu:** „ex <obec>“ u matky v křtu dítěte nebo *locus originis* u úmrtí dovede do fary, kde je její křest.
+  U zkomoleného „ex“ zkus obě čtení; sňatek bývá ve farnosti rodičů nevěsty, ne tam, kam ukazuje zkomolené místo.
+  Osvědčené pořadí u slovenských rodin: úmrtí (dopsané datum a místo původu) → sňatek (věk) → křest.
+- **Hledání sňatku:** syn se žení ve farnosti nevěsty, otec může být z jiné. Když sňatek ve farnosti bydliště chybí, projdi
+  nejdřív sousední vsi téhož panství (poddaní se ženili hlavně uvnitř panství), nejlépe přes místní rejstřík. Úmrtí
+  v nemocnici je v knize farnosti nemocnice, ne vsi.
+- **Rejstříky vynechávají zápisy dopsané dodatečně** (konec strany, mimo pořadí): tvrdí-li jiný pramen, že úmrtí ve farnosti je,
+  projdi knihu po stranách. „Strana 77“ je folio 77 *recto* i *verso* – projdi obě a sousední rok. U sloupců narozen / oddán /
+  pohřben je poslední datum pohřeb a rok bývá jen ve sloupci křtů.
 
 ## Technické pasti (macOS, zsh) – napiš je i pomocníkům do zadání
 
@@ -239,7 +344,7 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 - ImageMagick: seznam souborů předávej jako jednotlivé argumenty, ne jednou proměnnou s mezerami.
   `-annotate` potřebuje písmo: `-font /System/Library/Fonts/Supplemental/Arial.ttf` (bez něj spadne na „unable to read
   font“; totéž `montage` s popisky) – pořadí výřezů raději vypiš zvlášť.
-- Ověření čtení: `python3 -I tools/overit.py <snímek> x0,y0,x1,y1 pracovni/over [v]` (zlomky 0–1, ne pixely) – zápis rozdělený na dvě poloviny
+- Ověření čtení: `python3 -I tools/overit.py <snímek> x0,y0,x1,y1 pracovni/over [v] [--vylepsit]` (zlomky 0–1, ne pixely; `--vylepsit` = šedá, kontrast a doostření pro vybledlé snímky) – zápis rozdělený na dvě poloviny
   zmenšené na 1900 px (dvoustrana je jinak nečitelná).
 - Výřez pro web (`vyrez.py`) dělej jen na **čtený zápis** (případně s hlavičkou sloupců), ne na celou dvoustranu –
   na webu by byl nečitelně malý. Celá stránka je v `zdroje/` a na portálu přes odkaz.
@@ -248,6 +353,10 @@ vsi a sňatek byl v oddílu městyse; ves měla oddíl až na snímcích 380–4
 
 (Nahrazují první dva body macOS sekce; body o `overit.py` a výřezu platí i tady.)
 
+- `CERTIFICATE_VERIFY_FAILED` (Porta fontium, Kramerius NK, ANNO – certifikáty HARICA/GEANT): Windows doplňuje méně
+  běžné kořenové certifikáty až při otevření webu v prohlížeči, Python to sám nespustí. Nástroje (brzda `slusne.py`)
+  to zkusí samy jednou přes systémový `curl.exe`; když to nestačí, ať uživatel web jednou otevře v Edge nebo Chrome.
+  **Ověřování certifikátů nikdy nevypínej.**
 - Python: `python -I -X utf8 tools/<nástroj>.py` (ne `python3` – bývá to nefunkční alias z Microsoft Store). Bez `-X utf8`
   je výstup do roury v cp1250: čeština se rozbije a skripty spadnou na „≈“ a „→“ (nástroje skillu si výstup přepnou
   do UTF-8 samy, vlastní jednorázové skripty ne – `-X utf8` proto používej vždy). Totéž platí při
