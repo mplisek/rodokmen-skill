@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Vějíř předků (360°) z data/osoby.py jako SVG.
 Použití: fan_chart.py <out_dir>                         (plakát: SVG + HTML s nadpisem a legendou, PNG přes Chrome, je-li k dispozici)
-         fan_chart.py <out_file.svg> --web <hrefs.json>  (holé klikací SVG pro web – volá ho export_web.py)"""
+         fan_chart.py <out_file.svg> --web <hrefs.json> [--root REF]
+                                                         (holé klikací SVG pro web – volá ho export_web.py; REF = Kekulé číslo z P
+                                                          nebo klíč z RODINA = vějíř předků libovolné osoby, výchozí 1)"""
 import html, json, math, os, re, subprocess, sys
 if sys.argv[1:2] in (["-h"], ["--help"]):   # nápověda místo pádu
     sys.exit(__doc__.strip())
@@ -12,7 +14,9 @@ for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else os.path.join(ROOT, "vystupy")
 WEB = "--web" in sys.argv
-HREFS = {int(k): v for k, v in json.load(open(sys.argv[sys.argv.index("--web") + 1])).items()} if WEB else {}
+HREFS_ALL = json.load(open(sys.argv[sys.argv.index("--web") + 1])) if WEB else {}   # {"12": "/osoba/…/", "anna": "/osoba/…/"}
+ROOT_REF = sys.argv[sys.argv.index("--root") + 1] if "--root" in sys.argv else "1"
+ROOT_REF = int(ROOT_REF) if ROOT_REF.isdigit() else ROOT_REF
 CHROME = next((c for c in ("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
                            "C:/Program Files/Google/Chrome/Application/chrome.exe",
                            "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
@@ -21,8 +25,37 @@ CHROME = next((c for c in ("/Applications/Google Chrome.app/Contents/MacOS/Googl
                if os.path.exists(c) or __import__("shutil").which(c)), None)
 
 ns = {}
-exec(open(os.path.join(ROOT, "data", "osoby.py"), encoding="utf-8-sig").read(), ns)
-P, LINES = ns["P"], ns.get("LINES", {})
+# RODOKMEN_OSOBY: osoby z pohledu jednoho přístupu (export_web.py --pristup, tools/pohled.py); jinak data/osoby.py
+exec(open(os.environ.get("RODOKMEN_OSOBY") or os.path.join(ROOT, "data", "osoby.py"), encoding="utf-8-sig").read(), ns)
+P_ALL, R, LINES = ns["P"], ns.get("RODINA", {}), ns.get("LINES", {})
+
+
+def person(ref):
+    return P_ALL.get(ref) if isinstance(ref, int) else R.get(ref)
+
+
+def parent_refs(ref):
+    if isinstance(ref, int):
+        return [c if c in P_ALL else None for c in (2 * ref, 2 * ref + 1)]
+    return [R[ref].get("otec"), R[ref].get("matka")]
+
+
+# strom předků zvolené osoby přečíslovaný lokálně (1 = osoba, otec 2n, matka 2n+1)
+P, HREFS, LREF = {}, {}, {}
+
+
+def walk(ref, n):
+    p = person(ref) if ref is not None else None
+    if p is None or n.bit_length() - 1 > 10:
+        return
+    P[n], LREF[n] = p, ref
+    if str(ref) in HREFS_ALL:
+        HREFS[n] = HREFS_ALL[str(ref)]
+    for c, r in zip((2 * n, 2 * n + 1), parent_refs(ref)):
+        walk(r, c)
+
+
+walk(ROOT_REF, 1)
 WEBCFG = json.load(open(os.path.join(ROOT, "data", "web.json"), encoding="utf-8-sig")) if os.path.exists(os.path.join(ROOT, "data", "web.json")) else {}
 
 W, H = (4520, 4520) if WEB else (4600, 5650)
@@ -59,8 +92,9 @@ def years(y):
         return "* " + ys[0]
     if len(ys) == 1:
         return approx + ys[0] + ("–?" if dash else "")
-    second = "?" if "před" in tail else ("po " if re.search(r"\bpo\b", tail) else "") + \
-        ("≈" if re.search(r"(asi|≈)", tail) else "") + ys[-1]
+    # „1889 – před 1936“ → „1889–před 1936“ (ne „1889–?“, horní odhad úmrtí se neztratí), „1849 (?)“ → „1849?“
+    second = ("před " if "před" in tail else ("po " if re.search(r"\bpo\b", tail) else "") +
+              ("≈" if re.search(r"(asi|≈)", tail) else "")) + ys[-1] + ("?" if "(?)" in tail else "")
     return f"{approx}{ys[0]}–{second}"
 
 
@@ -133,7 +167,8 @@ for k in slots:
     p = P.get(k)
     if not p:
         continue
-    name, yrs, st = p["n"], years(p.get("y")), p.get("st")
+    name = " / ".join(p["zap"]) if WEBCFG.get("puvodni_jmena") and p.get("zap") else p["n"]
+    yrs, st = years(p.get("y")), p.get("st")
     if k in HREFS:
         shape = (f'<circle cx="{CX}" cy="{CY}" r="{r1}"/>' if g == 0 else f'<path d="{sector(r0, r1, a0, a1)}"/>')
         links.append(f'<a href="{HREFS[k]}"><title>{html.escape(name)} {html.escape(yrs)}</title>{shape}</a>')
@@ -147,7 +182,7 @@ for k in slots:
     if g <= 4:   # tangential text on arcs
         rm = (r0 + r1) / 2
         lines = []
-        if g == 3 and k in LINES:
+        if g == 3 and k in LINES and ROOT_REF == 1:
             lines.append((LINES[k][0].upper(), 21, 'font-weight="700" letter-spacing="4" fill="#5A4632"'))
         lines.append((name, {1: 40, 2: 34, 3: 30, 4: 27}[g], f'font-weight="600" {style}'))
         if yrs:

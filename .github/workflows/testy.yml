@@ -66,6 +66,12 @@ jobs:
           python -X utf8 -I tests/web/test_overit.py skills/rodokmen
           python -X utf8 -I tests/web/test_cloudflare.py skills/rodokmen
           python -X utf8 -I tests/web/test_nginx.py skills/rodokmen
+          python -X utf8 -I tests/graf/test_graf.py $T/graf.py
+          python -X utf8 -I tests/drobne/test_drobne.py
+          python -X utf8 -I tests/mapa/test_mapa.py
+          python -X utf8 -I tests/pozvanky/test_pozvanky.py
+          python -X utf8 -I tests/pozvanky/test_prihlaseni.py
+          node --test tests/pozvanky/brana.test.mjs tests/pozvanky/brana_pristupy.test.mjs
           if [ "$RUNNER_OS" = Linux ]; then python -X utf8 -I tests/brzda/test_curl.py $T/slusne.py; fi   # na Windows 2 případy selhávají i u originálu
           if [ "$RUNNER_OS" = Linux ]; then python -X utf8 -I tests/vyrez/test_kontrast.py $T; fi   # ImageMagick jen na Linuxu
 
@@ -76,10 +82,35 @@ jobs:
           cd "$RUNNER_TEMP/ukazka"
           python -X utf8 tools/kontrola.py
 
-      - name: Ukázkový web – data a build
+      - name: Ukázkový web – testy, data a build
         shell: bash
         working-directory: ${{ runner.temp }}/ukazka/web
         run: |
           npm ci --no-audit --no-fund
+          npm test
           npm run data
           npm run build
+          node scripts/over_css.mjs
+          python -X utf8 "$GITHUB_WORKSPACE/skills/rodokmen/tests/over_odkazy.py" dist
+          python -X utf8 ../tools/kontrola_webu.py dist --site src/data/site.json   # jednotná značka rodu, žádný procesní text
+
+      - name: Ukázkový web s více přístupy – samostatná verze pro každý přístup
+        shell: bash
+        working-directory: ${{ runner.temp }}/ukazka/web
+        run: |
+          python -X utf8 - <<'PY'
+          import json
+          p = "../data/web.json"
+          cfg = json.load(open(p, encoding="utf-8"))
+          cfg["pristupy"] = [{"nazev": "Matčina rodina", "odpoved": "eva-ci", "koren": [3]},
+                             {"nazev": "Marie", "odpoved": "marie-ci", "koren": ["marie-novakova"]}]
+          json.dump(cfg, open(p, "w", encoding="utf-8"), ensure_ascii=False)
+          PY
+          npm run build
+          test -f dist/prihlaseni.html
+          for id in vse matcina-rodina marie; do test -f "dist/_p/$id/index.html"; done
+          node scripts/over_css.mjs
+          python -X utf8 "$GITHUB_WORKSPACE/skills/rodokmen/tests/over_odkazy.py" dist
+          ! grep -rq "Václav Novák" dist/_p/matcina-rodina --include=*.html   # otcova větev ve verzi matky není
+          python -X utf8 ../tools/kontrola_webu.py dist/_p/vse --site src/data/site.json
+          for id in matcina-rodina marie; do python -X utf8 ../tools/kontrola_webu.py "dist/_p/$id" --site /nonexistent; done

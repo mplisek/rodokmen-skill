@@ -1,28 +1,52 @@
 ---
 import Base from '../../layouts/Base.astro';
-import { docs, config, lineByK, href } from '../../lib/data.js';
+import Rod from '../../components/Rod.astro';
+import { docs, config, lineByK, href, stories } from '../../lib/data.js';
 import { Content, frontmatter } from '../../generated/pribeh.md';
 const line = lineByK[config.pribeh?.rod ?? 8];
+// dokumenty jen osob z rodu příběhu (rods z export_web.py); příběh bez rodu ukáže všechny
+const rodyPribehu = (config.pribeh?.rody ?? [config.pribeh?.rod ?? 8]).map(Number).filter(Boolean);
+const docsRodu = docs.filter((d) => !rodyPribehu.length || !d.rods?.length || d.rods.some((r) => rodyPribehu.includes(r)));
+const rodyStory = (s) => (s.rody ?? (s.rod ? [s.rod] : [])).map(Number).filter(Boolean);
 ---
-<Base title={frontmatter.title}>
-  <p class="crumbs">{line && <><a href={href.line(line.slug)}>rod {line.name}</a> · </>}<a href="/zajimavosti/">další zajímavosti</a></p>
-  <h1>{frontmatter.title}</h1>
-  {frontmatter.lead && <p class="lead">{frontmatter.lead}</p>}
-  <div class="prose"><Content /></div>
-
-  <div class="next-step">
-    <p><strong>Chcete víc?</strong> Další objevy z rodokmenu najdete v zajímavostech.</p>
-    <a class="btn" href="/zajimavosti/">Zajímavosti z rodokmenu →</a>
-  </div>
-
-  {docs.length > 0 && (
+<Base title={config.maVicePribehu ? 'Rodinné příběhy' : frontmatter.title}>
+  {config.maVicePribehu ? (
     <>
-      <h2>Rodinné dokumenty a fotografie</h2>
-      <div class="docs">
-        {docs.map((d) => (
-          <figure><a href={`/img/${d.img}.jpg`} target="_blank" rel="noopener"><img src={`/img/${d.img}.jpg`} alt={d.caption} loading="lazy" /></a><figcaption>{d.caption}</figcaption></figure>
+      <p class="crumbs"><a href="/zajimavosti/">další zajímavosti</a></p>
+      <h1>Rodinné příběhy</h1>
+      <p class="lead">Vyberte si příběh z rodinné historie.</p>
+      <div class="grid2">
+        {stories.map((story) => (
+          <a class="card card-link" href={`/pribehy/${story.slug}/`}>
+            <h3>{story.title}</h3>
+            {story.lead && <p class="small muted">{story.lead}</p>}
+            {rodyStory(story).length > 0 && <p class="small">{rodyStory(story).map((k) => <Rod k={k} odkaz={false} />)}</p>}
+          </a>
         ))}
       </div>
+    </>
+  ) : (
+    <>
+      <p class="crumbs">{line && <><a href={href.line(line.slug)}>rod {line.name}</a> · </>}<a href="/zajimavosti/">další zajímavosti</a></p>
+      <h1>{frontmatter.title}</h1>
+      {frontmatter.lead && <p class="lead">{frontmatter.lead}</p>}
+      <div class="prose"><Content /></div>
+
+      <div class="next-step">
+        <p><strong>Chcete víc?</strong> Další objevy z rodokmenu najdete v zajímavostech.</p>
+        <a class="btn" href="/zajimavosti/">Zajímavosti z rodokmenu →</a>
+      </div>
+
+      {docsRodu.length > 0 && (
+        <>
+          <h2>Rodinné dokumenty a fotografie</h2>
+          <div class="docs">
+            {docsRodu.map((d) => (
+              <figure><a href={`/img/${d.img}.jpg`} target="_blank" rel="noopener"><img src={`/img/${d.img}.jpg`} alt={d.caption} loading="lazy" /></a><figcaption>{d.caption}</figcaption></figure>
+            ))}
+          </div>
+        </>
+      )}
     </>
   )}
 </Base>

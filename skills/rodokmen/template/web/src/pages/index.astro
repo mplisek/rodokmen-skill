@@ -2,12 +2,14 @@
 import Base from '../layouts/Base.astro';
 import { stats, lines, href, config, linesTitle } from '../lib/data.js';
 import fan from '../generated/fan.svg?raw';
+import Rod from '../components/Rod.astro';
 import FamilyMap from '../components/FamilyMap.astro';
 import site from '../data/site.json';
 import { frontmatter as pribeh } from '../generated/pribeh.md';
 const lineList = Object.values(lines).sort((a, b) => a.k - b.k);
 const uvod = config.uvod ?? {};
 const cards = config.zajimavosti_na_uvodu ?? [];
+const defaultStoryButton = config.maVicePribehu ? 'Prohlédnout příběhy' : 'Přečíst příběh';
 ---
 <Base title="" wide>
   <h1>{config.nazev || 'Rodokmen'}</h1>
@@ -17,7 +19,7 @@ const cards = config.zajimavosti_na_uvodu ?? [];
       <div>
         {uvod.nadpis && <h2>{uvod.nadpis}</h2>}
         {(uvod.odstavce ?? []).map((t) => <p>{t}</p>)}
-        {config.maPribeh && <a class="btn" href="/pribehy/">{config.pribeh?.tlacitko || `Přečíst: ${pribeh.title}`} →</a>}
+        {config.maPribeh && <a class="btn" href="/pribehy/">{config.pribeh?.tlacitko || (config.maVicePribehu ? defaultStoryButton : `Přečíst: ${pribeh.title}`)} →</a>}
       </div>
       {uvod.foto && (
         <a href={config.maPribeh ? '/pribehy/' : `/img/${uvod.foto}.jpg`}><img src={`/img/${uvod.foto}.jpg`} alt={uvod.foto_popis || ''} /></a>
@@ -30,7 +32,7 @@ const cards = config.zajimavosti_na_uvodu ?? [];
       <div>
         <h2>{pribeh.title}</h2>
         {pribeh.lead && <p>{pribeh.lead}</p>}
-        <a class="btn" href="/pribehy/">{config.pribeh?.tlacitko || 'Přečíst příběh'} →</a>
+        <a class="btn" href="/pribehy/">{config.pribeh?.tlacitko || defaultStoryButton} →</a>
       </div>
     </section>
   )}
@@ -41,13 +43,19 @@ const cards = config.zajimavosti_na_uvodu ?? [];
     <div><strong>{stats.generations}</strong>generací</div>
     <div><strong>{stats.records}</strong>matričních zápisů</div>
   </div>
+  {stats.updated && <p class="updated">Poslední aktualizace: {stats.updated}</p>}
 
   {cards.length > 0 && (
     <>
       <h2>Zajímavosti</h2>
       <div class="grid2">
         {cards.map((c) => (
-          <a class="card card-link" href="/zajimavosti/"><h3>{c.nadpis}</h3><p class="small muted">{c.text}</p></a>
+          c.rody?.length > 0 ? (
+            // odkaz na rod uvnitř odkazu karty by byl vnořený <a>, proto je odkazem jen nadpis
+            <div class="card"><h3><a href="/zajimavosti/">{c.nadpis}</a></h3><p class="small">{c.rody.map((s) => <Rod slug={s} />)}</p><p class="small muted">{c.text}</p></div>
+          ) : (
+            <a class="card card-link" href="/zajimavosti/"><h3>{c.nadpis}</h3><p class="small muted">{c.text}</p></a>
+          )
         ))}
       </div>
       <p><a href="/zajimavosti/">Všechny zajímavosti →</a></p>

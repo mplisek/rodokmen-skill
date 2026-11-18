@@ -1,18 +1,21 @@
 ---
 import { records, href } from '../lib/data.js';
 import PersonLink from './PersonLink.astro';
+import Cause from './Cause.astro';
 const { id, showPeople = false, exclude, open = false } = Astro.props;
 const r = records[id];
 ---
 {r && (
   <article class="rec">
     <div>
-      <div class="meta"><span class="kind">{r.kindName}</span>{r.date} · {r.archive && r.volume ? r.volume : r.vdesc} · snímek {r.scan}</div>
+      <div class="meta"><span class="kind">{r.kindName}</span>{r.index && <span class="kind kind-index" title="Jen položka rejstříku – odkaz do knihy, samotný zápis jsme nečetli">rejstřík</span>}{r.date} · {r.archive && r.volume ? r.volume : r.vdesc} · snímek {r.scan}</div>
       <div class="title"><a href={href.record(r.key)}>{r.title}</a></div>
       <div class="small">{r.summary}</div>
+      <Cause cause={r.cause} />
       {showPeople && r.people.filter((s) => s !== exclude).length > 0 && (
-        <div class="small muted">Týká se: {r.people.filter((s) => s !== exclude).map((s, i) => <>{i > 0 && ', '}<PersonLink slug={s} /></>)}</div>
+        <div class="small muted">Týká se: {r.people.filter((s) => s !== exclude).map((s, i) => <>{i > 0 && ', '}<PersonLink slug={s} />{r.roles?.[s] && <> ({r.roles[s]})</>}</>)}</div>
       )}
+      {exclude && r.roles?.[exclude] && <div class="small muted">Role v zápisu: {r.roles[exclude]}</div>}
     </div>
     {r.img && (
       <a class="scan" href={r.full ? `/zdroje/${r.key}.jpg` : `/img/${r.key}.jpg`} target="_blank" rel="noopener">

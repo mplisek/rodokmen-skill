@@ -21,6 +21,7 @@ import json, math, os, re, sys, time, urllib.parse, urllib.request
 if sys.argv[1:2] in (["-h"], ["--help"]):   # nápověda místo pádu
     sys.exit(__doc__.strip())
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
+from soubory import zapis_json   # bezpečný zápis dat celého souboru naráz (tools/soubory.py)  # noqa: E402
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")
@@ -57,8 +58,10 @@ def je_sidlo(r):
 
 
 def vyber(res):
-    """První sídlo jako (výsledek, True); bez sídla první výsledek (bar, ostrov, chráněné území…) s False."""
-    obce = [r for r in res if je_sidlo(r)]
+    """První sídlo jako (výsledek, True); bez sídla první výsledek (bar, ostrov, chráněné území…) s False.
+    Bod sídla (place=village…) má přednost před hranicí obce: ta má bod uprostřed katastru a u obce s více částmi
+    padne do jiné části nebo do pole (Plaňany → Blinka)."""
+    obce = sorted((r for r in res if je_sidlo(r)), key=lambda r: r.get("class") != "place")
     return (obce[0], True) if obce else (res[0], False) if res else None
 
 
@@ -130,7 +133,7 @@ def main():
         n = nejblizsi(name, cache)
         if n and n[0] > VZDALENE_KM:
             pozor.append(f"POZOR: {name} je {n[0]:.0f} km od nejbližšího místa ({n[1]}) – je to ono? {cache[name]['osm'][:80]}")
-    json.dump(cache, open(OUT, "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
+    zapis_json(OUT, cache)
     for n, e in cache.items():
         print(f"{n:28} {str(e.get('lat', '?')):>8} {str(e.get('lon', '?')):>8}  hledá „{e.get('re')}“  {e.get('osm', '')[:60]}")
     for p in pozor:

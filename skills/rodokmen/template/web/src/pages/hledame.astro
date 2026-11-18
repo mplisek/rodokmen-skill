@@ -1,21 +1,86 @@
 ---
+// „Co hledáme“ (rozhodnutí uživatele 16. 11. 2026): otázky pro rodinu a otevřené otázky jako kontejnery po rodech (Obecné první,
+// jeden kontejner na rod v barvě rodu), prameny v archivech podle archivů s barvou rodu u každé položky. Data připraví export
+// (site.hledame) z potvrzených veřejných otázek (tools/otazky.py) a z ISSUES; stránka jen vykresluje.
 import Base from '../layouts/Base.astro';
-import { issues, config } from '../lib/data.js';
-import { Content as Dotazy } from '../generated/dotazy.md';
+import PersonLink from '../components/PersonLink.astro';
+import RodBox from '../components/RodBox.astro';
+import { hledame, config } from '../lib/data.js';
+
+const STAV = { 'otevřené': ['Otevřené', 'st-unk'], 'hypotéza': ['Hypotéza', 'st-prob'] };
+const kontakt = config.kontakt?.email;
 ---
 <Base title="Co hledáme">
   <h1>Co ještě hledáme</h1>
-  <p class="lead">Otevřené otázky a hypotézy. Pokud o něčem z toho víte z rodinné paměti nebo dokumentů, ozvěte se{config.kontakt?.email ? <> na <a href={`mailto:${config.kontakt.email}`}>{config.kontakt.email}</a></> : ' autorovi rodokmenu'}.</p>
-  <h2>Otevřené otázky</h2>
-  <div class="grid2">
-    {issues.filter((i) => !i.text.startsWith('Vyřešeno')).map((i) => (
-      <div class="card">
-        <h3>{i.title}</h3>
-        <p class="small"><span class={`chip ${i.text.startsWith('Vyřešeno') ? 'st-doc' : i.text.startsWith('Hypotéza') ? 'st-prob' : 'st-unk'}`}>{i.text.split(':')[0]}</span> {i.text.slice(i.text.indexOf(':') + 1)}</p>
+  <p class="lead">Co o rodině zatím nevíme. Pokud o něčem z toho víte z rodinné paměti nebo máte doma dokumenty, ozvěte se{kontakt ? <> na <a href={`mailto:${kontakt}`}>{kontakt}</a></> : ' autorovi rodokmenu'}.</p>
+
+  {hledame.rodina.length > 0 && (
+    <section class="hledame-cast" data-hledame="rodina">
+      <h2>Otázky pro rodinu</h2>
+      <p class="small muted">Co z matrik nezjistíme a může vědět někdo z rodiny. Stačí odpovědět na to, co kdo ví; i „nevím“ pomůže. Nejcennější jsou fotky dokumentů.</p>
+      <div class="kontejnery">
+        {hledame.rodina.map((c) => (
+          <RodBox rod={c.rod} nadpis="Obecné">
+            {c.skupiny.map((s) => (
+              <>
+                {s.nadpis && <h3 class="podnadpis">{s.nadpis}</h3>}
+                <ul>{s.polozky.map((p) => <li set:html={p} />)}</ul>
+              </>
+            ))}
+          </RodBox>
+        ))}
       </div>
-    ))}
-  </div>
-  <h2>Prameny mimo online matriky</h2>
-  <div class="prose small"><Dotazy /></div>
+    </section>
+  )}
+
+  {hledame.prameny.length > 0 && (
+    <section class="hledame-cast" data-hledame="prameny">
+      <h2>Prameny v archivech</h2>
+      <p class="small muted">Zápisy a knihy, které nejsou online – jsou jen v archivu nebo na matričním úřadě. Barva karty je barva rodu.</p>
+      {hledame.prameny.map((a) => (
+        <>
+          <h3>{a.archiv}</h3>
+          <div class="grid2">
+            {a.polozky.map((p) => (
+              <RodBox rod={p.rod} tag="div">
+                <p class="small" set:html={p.html} />
+                {p.ceka && <p class="small muted">Žádost se připravuje.</p>}
+              </RodBox>
+            ))}
+          </div>
+        </>
+      ))}
+    </section>
+  )}
+
+  <section class="hledame-cast" data-hledame="otevrene">
+    <h2>Otevřené otázky</h2>
+    {hledame.otevrene.length ? (
+      <div class="kontejnery">
+        {hledame.otevrene.map((c) => (
+          <RodBox rod={c.rod} nadpis="Obecné">
+            {c.polozky.map((i) => (
+              <div class="otazka">
+                <h3 class="podnadpis">{i.title}</h3>
+                <p class="small"><span class={`chip ${STAV[i.stav]?.[1] ?? 'st-unk'}`}>{STAV[i.stav]?.[0] ?? i.stav}</span> {i.text}</p>
+                {i.person && <p class="small muted">Osoba: <PersonLink slug={i.person} /></p>}
+              </div>
+            ))}
+          </RodBox>
+        ))}
+      </div>
+    ) : <p class="muted">Žádné otevřené otázky.</p>}
+  </section>
+
   <p><a href="/denik/">Výzkumný deník – všechna hledání včetně neúspěšných →</a></p>
 </Base>
+
+<style>
+  .hledame-cast { margin-top: 2rem; }
+  .kontejnery { display: grid; gap: 1rem; }
+  .podnadpis { font-size: 1rem; margin: 0.8rem 0 0.3rem; }
+  .rod-box > .podnadpis:first-of-type, .otazka:first-of-type .podnadpis { margin-top: 0; }
+  .otazka + .otazka { border-top: 1px solid var(--line); margin-top: 0.8rem; padding-top: 0.6rem; }
+  .rod-box ul { margin: 0.2rem 0 0; padding-left: 1.2rem; }
+  .rod-box li { margin: 0.25rem 0; }
+</style>

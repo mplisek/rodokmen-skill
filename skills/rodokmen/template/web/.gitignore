@@ -4,12 +4,17 @@ dist
 .netlify
 # generuje tools/export_web.py (npm run data)
 src/data/site.json
+src/data/statistiky.json
+src/data/domy.json
+public/domy/
 src/generated/
 public/img/
 public/zdroje/
 public/prihlaseni.html
 nginx.conf
 netlify/edge-functions/
+netlify/functions/
+netlify/stranky/
 cloudflare/worker.js
 wrangler.jsonc
 .wrangler

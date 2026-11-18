@@ -1,4 +1,6 @@
+# Docker dostane hotový web (dist/) a nginx.conf – zdrojáky ani závislosti nepotřebuje
 node_modules
-dist
 .astro
+src
+public
 .wrangler

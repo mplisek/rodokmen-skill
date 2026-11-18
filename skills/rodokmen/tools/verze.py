@@ -26,16 +26,18 @@ for _s in (sys.stdout, sys.stderr):
         _s.reconfigure(encoding="utf-8", errors="replace")
 
 SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-URL = os.environ.get("RODOKMEN_VERZE_URL", "https://api.github.com/repos/sarsonj/rodokmen-skill/releases/latest")
+REPO = "mplisek/rodokmen-skill"   # fork; originál je sarsonj/rodokmen-skill (jeho vydání jsou jen podklad ke slučování)
+URL = os.environ.get("RODOKMEN_VERZE_URL", f"https://api.github.com/repos/{REPO}/releases/latest")
 CACHE = os.path.join(os.environ.get("RODOKMEN_CACHE") or os.environ.get("LOCALAPPDATA")
                      or os.path.join(os.path.expanduser("~"), ".cache"), "rodokmen_verze.json")
 DEN = 24 * 3600
 
 
 def cislo(v):
-    """„v0.10.0“ → (0, 10, 0); nesrozumitelná verze → None."""
-    m = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)", (v or "").strip())
-    return tuple(int(x) for x in m.groups()) if m else None
+    """„v0.10.0“ → (0, 10, 0, 0); verze forku „0.9.2-fork.1“ → (0, 9, 2, 1), tedy za stejnou verzí originálu;
+    nesrozumitelná verze → None."""
+    m = re.fullmatch(r"v?(\d+)\.(\d+)\.(\d+)(?:-fork\.(\d+))?", (v or "").strip())
+    return tuple(int(x or 0) for x in m.groups()) if m else None
 
 
 def cti(cesta):
@@ -144,7 +146,7 @@ def main():
                    "  rodokmen@rodokmen-skill`, pak restart Claude Code (natrvalo: v /plugin zapnout automatické aktualizace;\n"
                    "  když příkaz `claude` nejde spustit, stejné příkazy jdou v Claude Code přes /plugin)")
         else:                                       # nakopírovaný ručně (~/.claude/skills/rodokmen …)
-            jak = (f"ručně nakopírovaný skill ({SKILL}): stáhnout novou verzi z https://github.com/sarsonj/rodokmen-skill\n"
+            jak = (f"ručně nakopírovaný skill ({SKILL}): stáhnout novou verzi z https://github.com/{REPO}\n"
                    "  (Code → Download ZIP), složkou skills/rodokmen nahradit tu stávající a restartovat Claude")
         print(f"→ NOVA_VERZE_SKILLU: vyšla verze {gh}, nainstalovaný skill je {skill}. Řekni to uživateli jednou větou a poraď,\n"
               f"  jak skill aktualizovat – {jak}. Projekt aktualizuj až z nového skillu.")

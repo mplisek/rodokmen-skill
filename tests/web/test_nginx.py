@@ -45,6 +45,8 @@ def nginx_t(conf, image):
         open(p, "w", encoding="utf-8").write(conf)
         r = subprocess.run(["docker", "run", "--rm", "-v", f"{p}:/etc/nginx/conf.d/default.conf:ro", image, "nginx", "-t"],
                            capture_output=True, text=True)
+        if r.returncode != 0 and "nginx: " not in r.stderr:   # nginx se nespustil: nejde stáhnout image (síť, limit Docker Hubu)
+            return None, r.stderr[-400:]
         return r.returncode == 0, r.stderr[-400:]
 
 
@@ -72,6 +74,9 @@ try:
     if shutil.which("docker") and subprocess.run(["docker", "info"], capture_output=True).returncode == 0:
         for nazev, conf in (("s otázkou", s_otazkou), ("otevřený web", otevreny)):
             ok, err = nginx_t(conf, image)
+            if ok is None:   # fork: nestabilní stažení image na CI není chyba konfigurace
+                print(f"[–] nginx -t ({image}): {nazev} přeskočeno, image se nepodařilo stáhnout: {err[-160:]}")
+                continue
             check(f"nginx -t ({image}): {nazev}", ok, err)
     else:
         print("[–] Docker není k dispozici, nginx -t přeskočeno")

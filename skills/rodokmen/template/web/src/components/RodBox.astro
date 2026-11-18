@@ -1,0 +1,14 @@
+---
+// Kontejner vázaný na rod (pravidlo celého webu, docs/adr/0009-kontejner-rodu.md): karta s barvou rodu nahoře jako na /rody/,
+// v záhlaví značka rodu. Bez rodu = obecný kontejner v neutrální barvě (záhlaví = nadpis, např. „Obecné“).
+// Kontrola webu (kontrola_webu.py) hlídá, že kontejner s data-rod má barvu svého rodu a obecný žádnou.
+import Rod from './Rod.astro';
+import { lines } from '../lib/data.js';
+const { rod = null, nadpis = null, tag = 'section' } = Astro.props;
+const l = rod ? lines[rod] : null;
+const Tag = tag;
+---
+<Tag class="card rod-box" data-rod={l ? l.slug : 'obecne'} style={l ? `--c:${l.color}` : undefined}>
+  {(l || nadpis) && <div class="rod-box-hlava">{l ? <Rod slug={l.slug} /> : nadpis}</div>}
+  <slot />
+</Tag>

@@ -58,6 +58,7 @@ ok("vyber: bar přeskočí, vezme ves", mista.vyber([BAR, VES]) == (VES, True), 
 ok("vyber: boundary je obec", mista.vyber([OBEC]) == (OBEC, True))
 ok("vyber: jen bar = nalez s příznakem", mista.vyber([BAR]) == (BAR, False))
 ok("vyber: nic = None", mista.vyber([]) is None)
+ok("vyber: bod vsi před hranicí obce (střed katastru)", mista.vyber([OBEC, VES]) == (VES, True), mista.vyber([OBEC, VES]))
 
 # vzdalenost_km(): Praha – Brno vzdušnou čarou asi 185 km
 km = mista.vzdalenost_km((50.0755, 14.4378), (49.1951, 16.6068))
@@ -163,7 +164,8 @@ for fakt, cekam in (("v Horních Počernicích", "Horních Počernicích"), ("z 
 d = tempfile.mkdtemp(prefix="kontrola_")
 os.makedirs(os.path.join(d, "tools"))
 os.makedirs(os.path.join(d, "data"))
-shutil.copy(os.path.join(TOOLS, "kontrola.py"), os.path.join(d, "tools"))
+for _f in ("kontrola.py", "chronologie.py", "datumy.py", "pohled.py", "ucastnici.py"):   # kontrola.py načítá pravidla časové návaznosti a id přístupů
+    shutil.copy(os.path.join(TOOLS, _f), os.path.join(d, "tools"))
 with open(os.path.join(d, "data", "osoby.py"), "w", encoding="utf-8", newline="\n") as f:
     f.write("P = {1: {'n': 'Jan Novák', 'st': 'doc', 'r': ['k'], 'f': ['* 3. 5. 1850 Přesece čp. 4', 'sedlák v Nové Vsi u Klikova',"
             " '† 1900 z Ostrovce']},\n     2: {'n': 'Josef Novák', 'st': 'doc', 'r': ['k'], 'f': ['* 1820 Holice']}}\n")

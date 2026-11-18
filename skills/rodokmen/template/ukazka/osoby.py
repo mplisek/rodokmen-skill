@@ -276,17 +276,30 @@ LINES = {
  15: ("Vondráčkové", "Hrnčíři z Luže, dům čp. 88 pod poutním kostelem na Chlumku."),
 }
 
+# Osoby mimo přímou linii (sourozenci, jejich rodiny, předci partnerů) – stromový graf je ukáže jako rozklikávací větve.
+RODINA = {
+ "marie-novakova": dict(n="Marie Nováková", y="1892–1970", sex="F", otec=16, matka=17, st="fam", f=["* 1892 Holice", "provd. Hrubá, Ostřetín"], note="Sestra Jana, provdaná do Ostřetína."),
+ "vaclav-novak-1896": dict(n="Václav Novák", y="1896–1916", sex="M", otec=16, matka=17, st="fam", note="Bratr Jana, padl v 1. světové válce u Doberdò."),
+ "karel-hruby": dict(n="Karel Hrubý", y="1888–1950", sex="M", otec="josef-hruby", matka="anna-hruba", st="fam", f=["rolník v Ostřetíně čp. 40"], note="Manžel Marie Novákové."),
+ "josef-hruby": dict(n="Josef Hrubý", y="asi 1855 – ?", sex="M", st="fam", f=["rolník v Ostřetíně čp. 40"]),
+ "anna-hruba": dict(n="Anna (příjmení neznámé)", y="", sex="F", st="unk"),
+ "jaroslav-hruby": dict(n="Jaroslav Hrubý", y="1920–1985", sex="M", otec="karel-hruby", matka="marie-novakova", st="fam", note="Syn Marie a Karla, převzal statek v Ostřetíně."),
+}
+
 SIDE = [
- dict(k=8, n="Marie Nováková (1892–1970)", t="Sestra Jana, provdaná do Ostřetína.", r=[]),
- dict(k=8, n="Václav Novák (1896–1916)", t="Bratr Jana, padl v 1. světové válce u Doberdò.", r=[]),
- dict(k=26, n="Antonín Kučera (1869–1941)", t="Bratr Josefa, převzal mlýn v Třemošnici.", r=[]),
+ dict(k=26, n="Antonín Kučera", v="bratr", y="1869–1941", t="Bratr Josefa, převzal mlýn v Třemošnici.", r=[]),
 ]
 
 ISSUES = [
- ("Odkud přišel Jakub Novák do Ostřetína?", "Otevřené: jeho křest je starší než ostřetínské matriky (1690); zkusit soupis poddaných 1651 a berní rulu."),
- ("Kdo byl otec Rozálie Křížové (1879)?", "Otevřené: v matrice Proseče je zapsána jako nemanželská, otec neuveden ani dodatečně."),
- ("Kdy se narodil Václav Hrubý (1841)?", "Hypotéza: podle věku v zápisu úmrtí 1841; ve Vysokém Mýtě 1839–1843 zatím nenalezen."),
- ("Byl mlýn ve Slatiňanech Kučerův už před rokem 1773?", "Otevřené: gruntovní knihy panství Slatiňany (SOA Zámrsk) – do archivu."),
+ dict(k=1024, otazka="Odkud přišel Jakub Novák do Ostřetína?", stav="otevřené",
+      text="Narodil se dřív, než začínají ostřetínské matriky (1690). Pomoci může soupis poddaných 1651 a berní rula."),
+ dict(k=29, otazka="Kdo byl otec Rozálie Křížové?", stav="otevřené",
+      text="V matrice je zapsaná jako nemanželská, otec není uvedený ani dodatečně."),
+ dict(k=44, otazka="Kdy se narodil Václav Hrubý?", stav="hypotéza",
+      text="Rok 1841 je spočítaný z věku při úmrtí; ve Vysokém Mýtě 1839–1843 jsme křest zatím nenašli."),
+ dict(k=208, otazka="Patřil mlýn ve Slatiňanech Kučerům už před rokem 1773?", stav="otevřené",
+      text="Rozhodnou gruntovní knihy panství Slatiňany – jsou jen v archivu."),
+ dict(otazka="Kde se vzali rodiče Františky Kučerové?", stav="vyřešeno", text="Ve Slatiňanech 1898 (na webu se nezobrazí)."),
 ]
 
 HYPOTEZY = [

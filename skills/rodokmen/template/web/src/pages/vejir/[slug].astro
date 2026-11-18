@@ -1,0 +1,17 @@
+---
+// Vějíř předků libovolné osoby: SVG vznikají v tools/export_web.py (generated/fan_<adresa osoby>.svg) pro každou
+// osobu se známým rodičem; výchozí osoba má vějíř na /vejir/ i tady.
+import Base from '../../layouts/Base.astro';
+import FanView from '../../components/FanView.astro';
+import { people } from '../../lib/data.js';
+
+const fans = import.meta.glob('../../generated/fan_*.svg', { query: '?raw', import: 'default', eager: true });
+export function getStaticPaths() {
+  return Object.values(people).filter((p) => p.fan).map((p) => ({ params: { slug: p.slug } }));   // i výchozí osoba (stejné jako /vejir/)
+}
+const p = people[Astro.params.slug];
+const svg = fans[`../../generated/fan_${p.slug}.svg`];
+---
+<Base title={`Vějíř předků – ${p.name}`} full>
+  <FanView svg={svg} title={`Vějíř: ${p.name}`} current={p.slug} />
+</Base>

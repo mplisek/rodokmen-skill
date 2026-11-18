@@ -14,6 +14,9 @@
 #   r    klíče zápisů z data/zaznamy.json, které osobu dokládají
 #   note poznámka: proč je údaj nejistý, rozpory, odkud se vzal
 #   sex  jen u osoby 1: "M" nebo "F" (u ostatních plyne z čísla)
+#   sour stav hledání sourozenců (stromový graf): "hotovo" = všichni dohledáni, "částečně"; chybí = zatím nehledáno
+#   overeno  neobvyklý, ale ověřený údaj – varování časové návaznosti pak zmizí z kontroly i z webu:
+#        overeno={"vek-matky": "věk 51 let potvrzuje křest i úmrtí matky"} (klíč vypíše tools/kontrola.py)
 # Žijící lidé: jen jméno a rok narození (soukromí), note="Žijící – údaje jen základní."
 # Neznámý otec nemanželského dítěte: dict(n="otec neuveden", st="unk", f=[], note="…")
 
@@ -25,14 +28,36 @@ P = {
 LINES = {
 }
 
-# Příbuzní mimo přímou linii (sourozenci, strýcové…): k = číslo předka, ke kterému patří.
-# dict(k=16, n="Josef Novák (1865–1920)", t="Bratr Jana. Kovář v …", r=["klic_zapisu"])
+# Osoby mimo přímou linii: sourozenci předků, jejich partneři a děti, děti výchozí osoby, předci partnerů…
+# Každá má na webu vlastní stránku (Děti, Sourozenci, Manželství) a je ve stromovém grafu.
+# "zkratka": dict(n="Marie Nováková", y="1892–1970", sex="F", otec=16, matka=17, st="doc", f=[...], r=[...], note="…")
+#   otec, matka  číslo přímého předka (16; děti výchozí osoby otec=1) nebo zkratka jiné osoby z RODINA
+#                ("karel-hruby"); chybí = neznámý.
+#                Sourozenec předka 8 má otec=16, matka=17 – i když 16/17 ještě neznáme (poznají se jako sourozenci).
+#   partner      seznam partnerů bez společného dítěte v rodokmenu, např. partner=[44] (první manželka předka 44)
+#   sex          "M" nebo "F" (povinné); n, y, st, f, r, note jako u předků. Žijící: jen jméno a rok narození.
+#   v            (volitelné) vztah na stránce osoby, např. "manželka Václava Culka"; jinak ho web odvodí sám.
+RODINA = {
+}
+
+# Poznámky o příbuzných, které nejdou zapsat do RODINA (nejistý vztah, celá větev jednou větou): k = číslo předka.
+# dict(k=16, n="Josef Novák", v="bratr", y="1865–1920", t="Bratr Jana. Kovář v …", r=["klic_zapisu"])
+#   v  vztah k předkovi: "bratr", "sestra", "manžel", "manželka", "syn", "dcera", jinak volně ("příbuzný")
+#   y  roky jako u předků ("* 1949", "1893–1960"); obojí volitelné
 SIDE = [
 ]
 
-# Rozpory a otevřené otázky (na web do „Co hledáme“) jako dvojice (otázka, odpověď). Odpověď začněte
-# „Vyřešeno: …“ (na webu se skryje), „Hypotéza: …“ nebo „Otevřené: …“. Jde na web – nic citlivého.
-# ("Kdy se narodil Jan Novák?", "Otevřené: rodina říká 1850, v Holicích 1848–1852 nenalezen.")
+# Sňatky s podrobnostmi (rok, místo, konec) – i druhá manželství předků: a, b = číslo předka nebo zkratka z RODINA.
+# dict(a=44, b="rosalie-culkova", rok=1850, misto="Libice", konec="ovdověl 1860")   (rok, misto, konec volitelné)
+PARTNERI = [
+]
+
+# Otevřené otázky a rozpory v datech (na web do „Co hledáme“ → Otevřené otázky, seřazené podle rodů):
+# dict(k=<číslo předka nebo zkratka z RODINA>, otazka="…", stav="otevřené" | "hypotéza" | "vyřešeno", text="…")
+# Krátce a srozumitelně pro rodinu: co nevíme a co by to rozhodlo; bez signatur, čísel snímků a dat zápisu
+# (ty patří do research_log.md). Vyřešené se na webu skryjí – časem je smaž. Jde na web – nic citlivého.
+# Co může vědět rodina, patří do otazky_pro_rodinu.md, zápis, který není online, do archivni_dotazy.md.
+# dict(k=16, otazka="Kdy se narodil Jan Novák?", stav="otevřené", text="Rodina říká 1850, v Holicích 1848–1852 nenalezen.")
 ISSUES = [
 ]
 

@@ -4,21 +4,24 @@
   "type": "module",
   "version": "0.1.0",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.19.0"
   },
   "scripts": {
     "data": "node scripts/data.mjs",
     "dev": "astro dev",
-    "build": "astro build && pagefind --site dist",
+    "build": "node scripts/build.mjs",
     "preview": "astro preview",
-    "nahled": "npm run data && npm run build && astro preview --ignore-lock",
-    "nasadit": "npm run data -- --nasazeni && npm run build && npx -y netlify-cli@latest deploy --prod --dir=dist && node scripts/overit.mjs",
-    "nasadit-cloudflare": "npm run data -- --nasazeni && npm run build && node scripts/nasadit_cloudflare.mjs",
+    "test": "node --test src/lib/*.test.ts",
+    "nahled": "node scripts/build.mjs --nahled",
+    "nasadit": "npm run data -- --nasazeni && npm run build && node scripts/over_css.mjs && node scripts/nasadit.mjs && node scripts/overit.mjs",
+    "nasadit-cloudflare": "npm run data -- --nasazeni && npm run build && node scripts/over_css.mjs && node scripts/nasadit_cloudflare.mjs",
     "overit": "node scripts/overit.mjs",
-    "pack": "tar -czf ../rodokmen-web.tar.gz --exclude=node_modules --exclude=dist --exclude=.astro .",
-    "deploy-caprover": "npm run data -- --nasazeni && npm run pack && caprover deploy -t ../rodokmen-web.tar.gz"
+    "poznamky": "node scripts/poznamky.mjs",
+    "pack": "tar -czf ../rodokmen-web.tar.gz Dockerfile captain-definition nginx.conf dist",
+    "deploy-caprover": "npm run data -- --nasazeni && npm run build && node scripts/over_css.mjs && npm run pack && caprover deploy -t ../rodokmen-web.tar.gz"
   },
   "dependencies": {
+    "@netlify/blobs": "^10.7.13",
     "astro": "^7.3.8",
     "leaflet": "^1.9.4"
   },

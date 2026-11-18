@@ -73,6 +73,21 @@ if (argv.length) {
   process.exit(2);
 }
 
+// Fork: brána pro Cloudflare umí jen jednu rodinnou otázku. Přístupy a osobní odkazy zatím jen Netlify (npm run nasadit).
+function neumi() {
+  try {
+    if ((JSON.parse(readFileSync("../data/web.json", "utf8")).pristupy || []).length) return "přístupy (pristupy ve web.json)";
+  } catch {}
+  try {
+    if (JSON.parse(readFileSync("../data/pozvanky.json", "utf8")).length) return "osobní odkazy (data/pozvanky.json)";
+  } catch {}
+  return "";
+}
+if (neumi()) {
+  console.error(`CHYBA: nasazení na Cloudflare zatím neumí ${neumi()} – web by tam mohl pustit jen jednu odpověď. Nasazuj na Netlify (npm run nasadit).`);
+  process.exit(1);
+}
+
 if (!existsSync("wrangler.jsonc") || !existsSync("cloudflare/worker.js")) {
   console.error("CHYBA: chybí wrangler.jsonc nebo cloudflare/worker.js – spusť `npm run nasadit-cloudflare` (vyrobí je export).");
   process.exit(1);

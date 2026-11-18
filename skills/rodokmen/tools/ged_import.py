@@ -6,7 +6,10 @@ Použití (z kořene projektu):
   python3 -I tools/ged_import.py dokumenty/strom.ged "Jméno Příjmení" -> předci této osoby s Kekulého čísly
                                                                         (1 = ona, 2 = otec, 3 = matka…), všechny
                                                                         události, poznámky a FRONTA ZÁPISŮ k vyhledání
+  Při shodných jménech spusť výpis osob bez jména a jako kořen zadej jejich GEDCOM ID (např. @I42@).
   … "Jméno Příjmení" --osoby   -> totéž jako kostra pro data/osoby.py (stav "fam", ke kontrole a doplnění)
+
+Výpis je podklad k ručnímu převzetí, osoby do projektu nepřidává. Počet osob ve vstupním souboru proto není počet nových osob.
 
 Fronta zápisů: u každého předka nejmladší známá událost s místem (úmrtí, pak sňatek, pak narození) –
 úmrtní a oddací zápisy uvádějí datum a místo narození i rodiče, proto se hledá od nejmladšího zápisu.
@@ -15,9 +18,8 @@ Kódování: UTF-8; starší soubory s hlavičkou „1 CHAR ANSI“ (Brother's K
 („SRPEN 1945“, „PODZIM 1951“, „1926 NEBO 1927“, „11.11.1934“) se převedou na tvar „8. 1945“, „podzim 1951“…
 """
 import datetime, re, sys
-if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):   # nápověda místo pádu
+if __name__ == "__main__" and (len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help")):   # nápověda místo pádu (ne při importu z graf.py)
     sys.exit(__doc__.strip())
-from collections import defaultdict
 for _s in (sys.stdout, sys.stderr):   # UTF-8 výstup i na Windows bez -X utf8 (cp1250 neumí třeba „→“)
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8", errors="replace")

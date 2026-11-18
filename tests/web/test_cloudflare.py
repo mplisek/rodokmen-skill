@@ -126,7 +126,8 @@ try:
     # --- odpověď bez písmen a číslic z latinky (azbuka, symboly) ---
     r = export(projekt, {"otazka": "Kde?", "odpoved": "Москва"}, None, "--nasazeni")
     out = r.stdout + r.stderr
-    check("odpověď v azbuce: nasazení odmítne a vysvětlí proč (latinka)", r.returncode != 0 and "latink" in out, out[-300:])
+    # fork: azbuka a symboly projdou (záložní normalizace z PR #66 – malá písmena bez mezer, stejně jako přihlašovací stránka)
+    check("odpověď v azbuce: ve forku projde (záložní normalizace)", r.returncode == 0, out[-300:])
 
     # --- otevřený web ---
     r = export(projekt, {"otevreny": True})

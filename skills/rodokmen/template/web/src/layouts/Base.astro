@@ -1,12 +1,21 @@
 ---
 import '../styles/global.css';
-import { config } from '../lib/data.js';
+import { config, stats, docs, stranky } from '../lib/data.js';
+import domyData from '../data/domy.json';
+import Poznamky from '../components/Poznamky.astro';
 const siteName = config.nazev || 'Rodokmen';
 const { title, description = config.popis || siteName, wide = false, wider = false, full = false } = Astro.props;
 const path = Astro.url.pathname;
+const storyMenu = config.pribeh?.menu || (config.maVicePribehu ? 'Příběhy' : 'Příběh rodu');
+// položka menu jen u stránky, která má v této verzi webu data (site.stranky z export_web.py; starší data bez něj = vše)
+const ma = (k, vychozi = true) => (stranky ? !!stranky[k] : vychozi);
 const groups = [
-  [['/', 'Úvod'], ...(config.maPribeh ? [['/pribehy/', config.pribeh?.menu || 'Příběh rodu']] : []), ['/zajimavosti/', 'Zajímavosti']],
-  [['/rody/', 'Rody'], ['/mapa/', 'Mapa'], ['/vejir/', 'Vějíř'], ['/predci/', 'Předci'], ['/zapisy/', 'Zápisy'], ['/hledame/', 'Co hledáme']],
+  [['/', 'Úvod'], ...(ma('pribeh', config.maPribeh) ? [['/pribehy/', storyMenu]] : []), ...(ma('zajimavosti') ? [['/zajimavosti/', 'Zajímavosti']] : []),
+   ...(ma('statistiky') ? [['/statistiky/', 'Statistiky']] : []), ...(ma('osobnosti') ? [['/osobnosti/', 'Osobnosti']] : [])],
+  [...(ma('rody') ? [['/rody/', 'Rody']] : []), ...(ma('mapa') ? [['/mapa/', 'Mapa']] : []), ...(domyData.domy.length > 0 ? [['/domy/', 'Domy']] : []),
+   ...(ma('vejir') ? [['/vejir/', 'Vějíř']] : []), ...(ma('osa') ? [['/osa/', 'Časová osa']] : []), ...(ma('strom') ? [['/strom/', 'Strom']] : []),
+   ...(ma('predci') ? [['/predci/', 'Předci']] : []), ...(ma('jmena') ? [['/jmena/', 'Jména']] : []), ...(ma('zapisy') ? [['/zapisy/', 'Zápisy']] : []), ...(ma('dokumenty', docs.length > 0) ? [['/dokumenty/', 'Dokumenty']] : []),
+   ...(ma('hledame') ? [['/hledame/', 'Co hledáme']] : []), ...(ma('poznamky', !!config.poznamky) ? [['/poznamky/', 'Poznámky']] : [])],
   [['/hledat/', 'Hledat']],
 ];
 const current = (url) => ((url === '/' ? path === '/' : path.startsWith(url)) ? 'page' : undefined);
@@ -40,11 +49,12 @@ const current = (url) => ((url === '/' ? path === '/' : path.startsWith(url)) ? 
         btn.setAttribute('aria-expanded', String(open));
       });
     </script>
-    <main class={full ? 'full' : wider ? 'wider' : wide ? 'wide' : ''} data-pagefind-body>
+    <main class={full ? 'full' : wide || wider ? 'wide' : ''} data-pagefind-body>
       <slot />
     </main>
+    {config.poznamky && <Poznamky />}
     {!full && <footer class="site-footer">
-      {config.zapati || 'Dohledáno v digitalizovaných matrikách'} · rodinný web, neveřejný
+      {config.zapati || 'Dohledáno v digitalizovaných matrikách'} · rodinný web, neveřejný{stats?.updated && <> · aktualizováno {stats.updated}</>}
     </footer>}
   </body>
 </html>
