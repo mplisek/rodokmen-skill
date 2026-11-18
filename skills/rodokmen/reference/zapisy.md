@@ -43,7 +43,9 @@ v `pracovni/`, neukládají se; do dat jde výsledek (fakta, přepis v `prepisy.
 | sňatek (O) | datum, ženich (jméno, věk, stav, dům, obec, rodiče), nevěsta (totéž), svědci (jména) |
 | úmrtí (Z) | datum úmrtí, datum pohřbu, jméno, stav nebo povolání, dům, obec, věk, příčina (krátké označení) |
 
-- Shoda pole po běžné normalizaci (mezery, „č.“ = „čp.“, měsíc slovem = číslem, w = v, „80 let“ = „80“) = ověřeno.
+- Porovná je `python3 -I tools/cteni.py porovnej pracovni/cteni_<klíč>_1.json pracovni/cteni_<klíč>_2.json` (formulář:
+  `cteni.py vzor N|O|Z`). Shoda pole po běžné normalizaci (mezery, „č.“ = „čp.“, měsíc slovem = číslem, w = v,
+  „80 let“ = „80“) = ověřeno; spory nástroj připíše do `pracovni/sporna_cteni.json`.
 - **Neshoda = spor pro uživatele**: výřez, pole a obě čtení vedle sebe (dávka sporů, SKILL.md → Spornou věc). Žádné třetí
   ani čtvrté čtení; nový výřez jen tehdy, když je výřez špatný (useknutý, rozmazaný).
 - Rozhodnutí uživatele je čtení originálu: pole je `doc`, u zápisu `overeno: "uzivatel"`.

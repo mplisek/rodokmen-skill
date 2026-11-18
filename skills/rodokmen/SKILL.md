@@ -120,8 +120,8 @@ Pravidla, která chrání kvalitu:
   (`--sloucit` jen uvedená pole), osoby, dokumenty, místa a otázky `oprava.py` (s důvodem a dokladem, historie v `opravy.jsonl`),
   deník `denik.py`. Nikdy `sed -i` ani skript, který soubor přepíše celý. Do zápisů ani na web nepatří údaje o procesu
   („pomocník zapsal“, „ověřeno na snímku“, jména modelů) – `reference/zapisy.md`, hlídá `kontrola.py`.
-- **`doc` jen ověřené čtení.** Zápis přečtený na snímku ověří **kontrolní čtení stejných pevných polí** (podle druhu
-  zápisu, `reference/zapisy.md` → Pevná pole): shoda pole = ověřeno, **neshoda = spor pro uživatele** (níže), nikdy třetí
+- **`doc` jen ověřené čtení.** Zápis přečtený na snímku ověří **kontrolní čtení stejných pevných polí** (`reference/zapisy.md`,
+  porovná `tools/cteni.py`): shoda pole = ověřeno, **neshoda = spor pro uživatele** (níže), nikdy třetí
   a čtvrté čtení. Shoda jména a doby bez přímého dokladu = `prob` + poznámka proč.
 - **Nic nedomýšlej.** Nejisté čtení „(?)“, rozpory zapiš do `ISSUES`. Písaři se pletli (jména sourozenců, věk, Anna/Františka).
 - **Čti celý zápis včetně okrajů** – pozdější poznámky o úmrtí, sňatku, legitimaci bývají nejcennější.
@@ -280,7 +280,7 @@ mlčel nebo radil špatně, a co uživatel chtěl, ale skill to neuměl. Piš ob
 | `mapa.py` | **mapa knihy**: co který snímek svazku pokrývá (`hledej`, `zapis`, `stav`), sdílená pro všechny projekty |
 | `mapa_knihy.py` | **náhled knihy**: montáž záhlaví snímků (oddíly po vsích) a sloupců rejstříku (`--sloupce`) |
 | `cache.py`, `pracovni_prehled.py` | sdílená mezipaměť snímků; co už leží v `pracovni/` |
-| `nalez.py` | zápis nálezu jedním příkazem (snímek, výřez, rámeček, zápis s účastníky, přepis, odkazy, deník) |
+| `nalez.py`, `cteni.py` | zápis nálezu jedním příkazem; porovnání dvou čtení po pevných polích (spory k uživateli) |
 | `vyrez.py`, `ramecek.py`, `overit.py` | výřez (zlomky stránky; `--kontrast`, `--zacernit` u dokladů), rámeček (zlomky výřezu), ověření čtení na dvou polovinách |
 | `zapis.py`, `oprava.py`, `svazky.py` | zápis položky; změny osob, dokumentů a míst s historií; svazek z prohlížeče |
 | `denik.py`, `otazky.py`, `ucastnici.py` | deník (`pridej`, `over`, `migruj`); otázky pro Co hledáme (`pridej`, `potvrd`, `ze-souboru`); účastníci zápisů |
