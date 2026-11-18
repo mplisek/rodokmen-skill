@@ -4,7 +4,7 @@
 
 ## Nástroje
 
-Zkontroluj: `python3 --version` (≥ 3.9), `node --version` (≥ 22.12, kvůli Astru 7), `magick -version` (ImageMagick 7; je-li jen verze 6
+Zkontroluj: `python3 --version` (≥ 3.9), `node --version` (≥ 22.19.0 pro Astro 7 a lockfile; nižší verze nemusí stačit), `magick -version` (ImageMagick 7; je-li jen verze 6
 s příkazem `convert`, nástroje ji mimo Windows použijí samy), `git --version`.
 Co chybí, pomoz nainstalovat. Instalace systémových věcí nech uživatele potvrdit; interaktivní příkazy mu dej
 s předponou `!`, ať je spustí sám.
@@ -48,15 +48,24 @@ Litoměřice). Když předci žili tam a nemáš nástroje `mcp__…playwright�
 (`/chrome`); postupy v `portaly.md` jsou vyzkoušené hlavně s Playwrightem (snímek obrazovky do souboru).
 Bez prohlížeče ať uživatel posílá snímky obrazovky.
 
+**Prohlížeč pro portály bez skriptů** spouští a ovládá nástroj `tools/prohlizec.py` (vlastní instance Edge s vlastním profilem v `pracovni/`,
+pauzy a stop zabudované v nástroji). Uživatel nic nespouští ani nenastavuje. Při nastavení projektu a po každé aktualizaci spusť
+`python tools/prohlizec.py stav` (bez `-I`). Chybí-li Playwright, nainstaluj ho sám: `python -m pip install --user playwright` (prohlížeč se
+nestahuje, použije se Edge nebo Chrome; `pip install` jde do user-site, který `python -I` nevidí, proto se nástroj spouští bez `-I`).
+
 ## Založení projektu
 
 1. Zeptej se, kde má projekt být (navrhni `~/Rodokmen`), a založ ho: `python3 -I SKILL_DIR/tools/novy_projekt.py <složka>`.
    Chce-li uživatel nejdřív vidět, jak web vypadá, založ vedle ukázku: `… novy_projekt.py ~/Rodokmen-ukazka --ukazka`,
-   pak `cd web && npm install && npm run nahled` (na pozadí) a pošli mu odkaz <http://localhost:4321>.
+   pak `cd web && npm ci && npm run nahled` (na pozadí; Node.js ≥ 22.19.0, stejný pro build) a pošli mu odkaz <http://localhost:4321>.
 2. Zeptej se, jestli zapnout **hlídač sítě** (`… novy_projekt.py <složka> --hlidac`, vypnutí `--bez-hlidace`).
    Vysvětli jednou větou: archivy blokují IP adresu po sérii rychlých dotazů. Hlídač je malý skript v projektu
    (`tools/hlidac_site.py`), který před každým příkazem zkontroluje, že stahování jde přes brzdu, a jinak ho zamítne.
-   Sám nic nestahuje. Bez něj platí jen pravidla brzdy a zákaz přímého `curl`/`wget` v `.claude/settings.json`.
+   Sám nic nestahuje. Je úzký: hlídá jen weby archivů, **localhost a vlastní nasazení (Netlify, Cloudflare, vlastní domény
+   z `data/web.json` → `domeny`) neblokuje**, takže web jde normálně testovat. Nový projekt ho má zapnutý sám; plošný zákaz
+   `curl`/`wget` z dřívějších verzí se při aktualizaci odstraní a hlídač ho nahradí. Spolu s ním se zapíše **hlídač zápisů**
+   (`tools/hlidac_zapisu.py`): zamítne ruční úpravu `data/denik.jsonl`, `data/verejne_otazky.json` a generovaných souborů
+   `web/src/generated`, `web/src/data` a řekne, kterým skriptem se to dělá; nic jiného neblokuje. Vypíná se stejně (`--bez-hlidace`).
 3. V projektu `git init` a první uložení (git = historie změn, kdyby se něco pokazilo). Doporuč pokračovat v Claude Code
    **z této složky** (soubor `CLAUDE.md` v ní zajistí, že příště navážeš).
 4. Vyplň v `data/STAV.md` sekci „Pro koho“ a v `data/web.json` název webu („Rodokmen Novákových“), jakmile znáš

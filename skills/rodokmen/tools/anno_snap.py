@@ -19,8 +19,10 @@ if not stranky:   # dotaz v tomto čísle nemá shodu – srozumitelně místo K
              '(přesný tvar slova, OCR bývá chybné) nebo číslo novin z výsledků anno.py.')
 for sp in stranky:
     if page and str(sp['page'])!=page and sp['pageLabel']!=page: continue
+    if not sp.get('snippets'): continue
     s=sp['snippets'][0]; url=s['imageURL']
     m=re.search(r'iiif=(/[^/]+/[^/]+)/(\d+),(\d+),(\d+),(\d+)/',url)
+    if not m: continue
     base,x,y,ww,hh=m.group(1),*map(int,m.groups()[1:])
     W,H=s['imageWidth'],s['imageHeight']
     if mode=='full': reg='full'

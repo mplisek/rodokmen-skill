@@ -31,17 +31,21 @@ localhost, vlastní web (Netlify, Cloudflare), GitHub a npm se nebrzdí. V prohl
 tam aspoň 5–10 s mezi stránkami, žádné souběžné dotazy ani smyčky přes celé svazky (SKILL.md, Šetrně k archivům).
 Stav je v ~/.cache/rodokmen_slusne/ (Windows %LOCALAPPDATA%\\rodokmen_slusne), jen malé soubory JSON.
 """
-import http.client, io, json, os, re, shutil, socket, subprocess, sys, tempfile, threading, time
+import http.client, io, json, os, re, shutil, socket, ssl, subprocess, sys, tempfile, threading, time
 from urllib.parse import urlsplit
 
 DOTAZ, OBRAZEK = 2.0, 0.1            # výchozí rozestup v sekundách
 LIMITY = {                           # konec názvu webu: (dotaz, obrázek)
+    "kramerius.cbvk.cz": (10.0, 10.0),   # krajské Krameriusy (JVK, SVK Plzeň): po ~15 dotazech za 20 min 403 na hodinu (#189)
+    "kramerius.svkpk.cz": (10.0, 10.0),
     "archives.cz": (4.0, 0.3),       # ZA Opava (digi.archives.cz, images.archives.cz) – blokuje na 30 min, obrázky po ~6 snímcích 403
     "nominatim.openstreetmap.org": (1.1, 1.1),   # pravidla Nominatimu: nejvýš 1 dotaz za s
     "mza.cz": (4.0, 4.0),            # MZA Brno – skriptem jen hledání knih (ZAKAZ níže), blokuje i za rychlé dotazy na katalog
     "digi.nacr.cz": (4.0, 4.0),      # Národní archiv (policejní přihlášky) – po pár rychlých kartách přiškrcuje podle IP
     "aron.vychodoceskearchivy.cz": (2.0, 2.0),   # ARON: celý sken (2–4 MB) jedním požadavkem; dlaždice imgx.… dál 0,1 s
     "portafontium.eu": (10.0, 10.0), # SOA Plzeň – robots.txt „Crawl-delay: 10“ (snímek IIIF je jeden požadavek)
+    "kramerius.cbvk.cz": (10.0, 10.0),   # krajské Krameriusy (JVK, SVK Plzeň): po ~15 dotazech za 20 min 403 na hodinu
+    "kramerius.svkpk.cz": (10.0, 10.0),
 }
 ZAKAZ = {                            # konec názvu webu: (cesty povolené skriptům, hláška pro ostatní)
     suffix: (re.compile(r"/actapublica/matrika/hledani"),
@@ -71,7 +75,7 @@ ZAKAZ["archives.cz"] = (            # ZA Opava: robots.txt „Disallow: /“, od
     "HTTP 403/404) – soal_zoomify.py ani vlastní skripty nepoužívej. Snímek ulož z prohlížeče snímků: Playwright "
     "(dlaždice, které načte prohlížeč, složí úryvek do celého snímku), jinak snímek obrazovky přiblíženého zápisu "
     "(reference/portaly.md, ZA Opava). Neobcházej to (jiný User-Agent, nástroj, hlavičky).")
-VOLNE = ("localhost", "127.0.0.1", "::1", "0.0.0.0", "netlify.app", "netlify.com", "workers.dev", "cloudflare.com", "github.com",
+VOLNE = ("localhost", "127.0.0.1", "::1", "0.0.0.0", "netlify.app", "netlify.com", "workers.dev", "pages.dev", "cloudflare.com", "github.com",
          "githubusercontent.com", "npmjs.org", "pypi.org", "pythonhosted.org")
 UA = "Mozilla/5.0 (rodokmen)"           # jak se představuje slusne.py curl (stejně jako nástroje)
 STOPKY = (30 * 60, 2 * 3600, 8 * 3600)   # stopka po 1., 2. a 3. (i každém dalším) odmítnutí webu během OKNO
@@ -316,6 +320,54 @@ def _host(conn):
     return getattr(conn, "_tunnel_host", None) or conn.host
 
 
+# --- certifikáty na Windows -----------------------------------------------------------------------------------------
+# Windows doplňuje méně běžné kořenové certifikáty (např. HARICA TLS RSA Root CA 2021 – Porta fontium, Kramerius NK,
+# ANNO) až ve chvíli, kdy web ověřuje „windowsí“ program (prohlížeč, curl.exe se Schannel). Python ověřuje sám (OpenSSL)
+# a vidí jen kořeny, které už v úložišti jsou – na čistých Windows pak hlásí CERTIFICATE_VERIFY_FAILED, dokud web
+# nikdo neotevře v prohlížeči. Proto: po chybě ověření jednou otevřít adresu systémovým curl.exe (Windows kořen stáhne
+# běžnou cestou), znovu načíst certifikáty Windows a spojení zopakovat. Ověřování zůstává zapnuté, nic se neobchází.
+_doplneno = set()
+
+
+def _doplnit_koreny(host):
+    """True, když má smysl spojení zopakovat (Windows, u tohoto webu poprvé, curl.exe doběhl)."""
+    if os.name != "nt" or not host or host in _doplneno:
+        return False
+    _doplneno.add(host)
+    curl = os.path.join(os.environ.get("SystemRoot", "C:/Windows"), "System32", "curl.exe")
+    if not os.path.isfile(curl):
+        return False
+    pockej(f"https://{host}/", False)   # i tenhle dotaz jde přes brzdu
+    try:
+        _bez_prepisu(subprocess.run, [curl, "-s", "-I", "-o", "NUL", "-m", "20", f"https://{host}/"],
+                     capture_output=True, timeout=40)   # dotaz už prošel brzdou výše – bez dalšího přepisu na slusne.py curl
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return True
+
+
+def _https_spojeni(self):
+    """HTTPSConnection.connect s jedním opakováním po doplnění kořenových certifikátů z Windows."""
+    try:
+        return _s_connect[0](self)
+    except ssl.SSLCertVerificationError:
+        host = _host(self)
+        if not _doplnit_koreny(host):
+            if os.name == "nt":
+                print(f"slusne: certifikát webu {host} nejde ověřit. Otevři jednou https://{host}/ v prohlížeči (Edge, Chrome) "
+                      "a zkus to znovu – Windows tím doplní chybějící kořenový certifikát. Ověřování nevypínej.",
+                      file=sys.stderr)
+            raise
+        if self.sock is not None:
+            self.sock.close()
+            self.sock = None
+        self._context.load_default_certs()   # znovu načíst úložiště Windows (teď i s doplněným kořenem)
+        return _s_connect[0](self)
+
+
+_s_connect = [http.client.HTTPSConnection.connect]   # seznam: testy sem dosadí náhradu
+
+
 try:   # sdílená mezipaměť obrázků (tools/cache.py); bez ní brzda funguje dál, jen bez úspory
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import cache as _mezipamet
@@ -447,6 +499,7 @@ def _zapni():
 
     C.putrequest, C.getresponse, C.connect, C._slusne = putrequest, getresponse, connect_, True
     C.putheader, C.endheaders, C.send = putheader_, endheaders_, send_
+    http.client.HTTPSConnection.connect = _https_spojeni
 
 
 # --- brzda pro podprocesy: curl, python a bash spuštěné z Pythonu (úpravu http.client nedědí) ---------------------

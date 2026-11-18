@@ -29,7 +29,7 @@ def rozptyl(f):
 def projekt():
     tmp = tempfile.mkdtemp(prefix="vyrez_kontrast_")
     os.makedirs(os.path.join(tmp, "tools"))
-    for n in ("vyrez.py", "overit.py"):
+    for n in ("vyrez.py", "overit.py", "obraz.py"):   # obraz.py: společný hledač ImageMagicku ve forku
         shutil.copy(os.path.join(TOOLS, n), os.path.join(tmp, "tools", n))
     os.makedirs(os.path.join(tmp, "pracovni"))
     snimek = os.path.join(tmp, "pracovni", "bledy.jpg")

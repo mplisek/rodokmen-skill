@@ -3,7 +3,7 @@
 
 Použití:
   aron_img.py <apu_id> <snimek> [uroven] [vystup.jpg] [x0,y0,x1,y1]
-      uroven: 0 = plné rozlišení, 1 = polovina (výchozí), 2 = čtvrtina
+      uroven: 0 = plné rozlišení (výchozí, na čtení), 1 = polovina, 2 = čtvrtina (jen na orientaci)
       x0,y0,x1,y1: jen výřez (zlomky 0..1 celé stránky)
       Stahuje celý sken jedním požadavkem (jako tlačítko „stáhnout“ v ARONu) a výřez i zmenšení dělá z disku;
       sken se uloží do sdílené mezipaměti (tools/cache.py), další výřezy téže stránky už na archiv nejdou.
@@ -11,10 +11,13 @@ Použití:
   aron_img.py <apu_id> info          -> název svazku a počet snímků
   aron_img.py <apu_id> link <n>      -> trvalý odkaz na snímek n v prohlížeči ARON (pole "odkaz" v zaznamy.json)
   aron_img.py <apu_id> svazek        -> zapíše svazek do data/svazky.json (klíč = prvních 8 znaků apu_id)
+  aron_img.py odkazy [--opravit]     -> najde v data/ odkazy z dřívějšího `link`, které otevřou knihu na prvním
+                                        snímku (id souboru PUBLISHED); s --opravit je přepíše na správný snímek (TILE)
+                                        (totéž jako `opravit-odkazy [--zapsat]` z originálu)
 
 Popis svazků se ukládá do pracovni/.cache_aron/<apu_id>.json (ve složce projektu).
 """
-import glob, json, math, os, shutil, ssl, subprocess, sys, tempfile, time, urllib.error, urllib.request
+import glob, json, math, os, re, shutil, ssl, subprocess, sys, tempfile, time, urllib.error, urllib.request
 import concurrent.futures as cf
 import xml.etree.ElementTree as ET
 import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); import slusne  # noqa: E402 – brzda proti zablokování archivem (společný limit dotazů, tools/slusne.py)
@@ -28,14 +31,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, "pracovni", ".cache_aron")
 
 
-def magick():
-    """Cesta k ImageMagicku; když chybí, skončí hned (před stahováním) srozumitelnou hláškou."""
-    m = (shutil.which("magick") or next(iter(sorted(glob.glob(r"C:\Program Files\ImageMagick*\magick.exe"))), None)
-         or (os.name != "nt" and shutil.which("convert")))   # ImageMagick 6 bez magick; na Windows je convert.exe jiný program
-    if not m:
-        sys.exit("Chybí ImageMagick (příkaz magick). Nainstaluj ho (macOS: brew install imagemagick, "
-                 "Windows: winget install ImageMagick.ImageMagick a restart Claude Code) a spusť nástroj znovu.")
-    return m
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidává složku skriptu
+from obraz import magick   # společný hledač ImageMagicku (tools/obraz.py)
+from soubory import zapis_json   # bezpečný zápis dat celého souboru naráz (tools/soubory.py)
 
 
 def get(url, binary=False, tries=4):
@@ -161,6 +159,11 @@ def fetch_sken(url, level_offset=1, out="page.jpg", crop=None):
     return out, (W, H)
 
 
+def vychozi_vystup(apu, n):
+    """Bez zadaného výstupu jde snímek do pracovni/snimky/ projektu, nikdy do aktuální složky (kořen repozitáře, veřejné složky webu)."""
+    return os.path.join(ROOT, "pracovni", "snimky", f"{apu[:8]}_{n:04d}.jpg")
+
+
 def bez_snimku(vol, tiles, n):
     """Snímek n ve svazku není: srozumitelná hláška místo KeyError."""
     if not tiles:
@@ -182,9 +185,65 @@ def chyba_archivu(e):
     if isinstance(e, urllib.error.HTTPError):
         sys.exit(f"ARON vrátil chybu HTTP {e.code} – chyba na straně archivu, zkus to později.")
     sys.exit(f"ARON neodpovídá ({duvod}) – zkus to později.")
+ODKAZ = re.compile(r"aron\.vychodoceskearchivy\.cz/apu/([0-9a-f-]{36})/dao/([0-9a-f-]{36})/file/([0-9a-f-]{36})")
+
+
+def oprav_odkazy(opravit):
+    """Odkazy na snímek v data/*.json a data/*.md s id souboru PUBLISHED (dřívější `link`) otevřou knihu na prvním
+    snímku. Nahradí celou adresu adresou souboru TILE téhož snímku (může být i v jiném digitálním objektu svazku);
+    zbytek souborů zůstane beze změny. Popis svazku bere z mezipaměti, chybějící stáhne (jeden dotaz na svazek)."""
+    soubory = sorted(glob.glob(os.path.join(ROOT, "data", "*.json")) + glob.glob(os.path.join(ROOT, "data", "*.md")))
+    texty = {}
+    for p in soubory:
+        with open(p, encoding="utf-8", newline="") as f:   # newline="": konce řádků zůstanou, jak jsou
+            texty[p] = f.read()
+    nahrady, nezname, dobre = {}, [], 0
+    for apu, dao_id, file_id in sorted({m.groups() for t in texty.values() for m in ODKAZ.finditer(t)}):
+        stara = f"/apu/{apu}/dao/{dao_id}/file/{file_id}"
+        try:
+            vol = volume(apu)
+        except SIT + (ValueError, urllib.error.HTTPError) as e:
+            nezname.append(f"…{stara} (svazek se nepodařilo načíst: {e})")
+            continue
+        daos = vol.get("digitalObjects") or []
+        f = next((f for d in daos for f in d.get("files", []) if f["id"] == file_id), None)
+        tile = f and next(((d, t) for d in daos for t in d.get("files", [])
+                           if t["type"] == "TILE" and t["order"] == f["order"]), None)
+        if f and f["type"] == "TILE":
+            dobre += 1
+        elif tile:
+            nahrady[stara] = f"/apu/{apu}/dao/{tile[0]['id']}/file/{tile[1]['id']}"
+        else:
+            nezname.append(f"…{stara} ({'snímek nemá dlaždice' if f else 'soubor ve svazku není'})")
+    zmenene = {}
+    for p, t in texty.items():
+        nove = t
+        for stara, nova in nahrady.items():
+            nove = nove.replace(stara, nova)
+        if nove != t:
+            zmenene[p] = (nove, sum(t.count(stara) for stara in nahrady))
+    print(f"odkazy na snímky ARON: {dobre + len(nahrady) + len(nezname)} různých, správně {dobre}, "
+          f"na první snímek {len(nahrady)}" + (f", nejasné {len(nezname)}" if nezname else ""))
+    for p, (_, kolik) in zmenene.items():
+        print(f"  {os.path.relpath(p, ROOT)}: {kolik}× {'opraveno' if opravit else 'k opravě'}")
+    for o in nezname:
+        print("  nejasné:", o)
+    if opravit:
+        for p, (nove, _) in zmenene.items():
+            with open(p, "w", encoding="utf-8", newline="") as f:
+                f.write(nove)
+        if zmenene:
+            print("Hotovo. Web: cd web && npm run data && npm run build")
+    elif nahrady:
+        print("Opravíš je: python3 -I tools/aron_img.py odkazy --opravit")
+
+
 
 
 if __name__ == "__main__":
+    if sys.argv[1:2] in (["odkazy"], ["opravit-odkazy"]):   # opravit-odkazy [--zapsat] = název z originálu (#89)
+        oprav_odkazy(bool({"--opravit", "--zapsat"} & set(sys.argv[2:])))
+        sys.exit(0)
     if len(sys.argv) < 3 or sys.argv[1] in ("-h", "--help"):
         sys.exit(__doc__)
     apu = sys.argv[1]
@@ -203,28 +262,28 @@ if __name__ == "__main__":
         print("scans:", len(tiles))
         sys.exit(0)
     if sys.argv[2] == "svazek":
-        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        path = os.path.join(root, "data", "svazky.json")
-        sv = json.load(open(path, encoding="utf-8-sig")) if os.path.exists(path) else {}
+        import zapis   # jen ta jedna položka, formát souboru zůstane (tools/zapis.py)
         fond, _, rest = vol["name"].partition(": ")
-        sv[apu[:8]] = dict(archiv=fond if rest else "", portal="ARON", svazek=rest or vol["name"],
-                           popis=(vol.get("description") or "")[:300], snimku=len(tiles),
-                           url=f"https://aron.vychodoceskearchivy.cz/apu/{vol['id']}")
-        with open(path, "w", encoding="utf-8", newline="\n") as f:
-            json.dump(sv, f, ensure_ascii=False, indent=1)
-        print(apu[:8], "->", sv[apu[:8]]["svazek"])
+        polozka = dict(archiv=fond if rest else "", portal="ARON", svazek=rest or vol["name"],
+                       popis=(vol.get("description") or "")[:300], snimku=len(tiles),
+                       url=f"https://aron.vychodoceskearchivy.cz/apu/{vol['id']}")
+        zapis.zapis("svazky", apu[:8], polozka, sloucit=True)   # dopsaná pole (obce…) zůstanou
+        print(apu[:8], "->", polozka["svazek"])
         sys.exit(0)
     if sys.argv[2] == "link":
         n = int(sys.argv[3])
-        dao = (vol.get("digitalObjects") or [{}])[0]
-        pub = [f for f in dao.get("files", []) if f["type"] == "PUBLISHED" and f["order"] == n]
-        if not pub:
+        # prohlížeč ARONu najde snímek jen podle souboru typu TILE (dlaždice); s id varianty PUBLISHED
+        # otevře knihu vždy na prvním snímku (#18)
+        tile = [(dao, f) for dao in vol.get("digitalObjects") or [] for f in dao.get("files", [])
+                if f["type"] == "TILE" and f["order"] == n]
+        if not tile:
             bez_snimku(vol, tiles, n)
-        print(f"https://aron.vychodoceskearchivy.cz/apu/{apu}/dao/{dao['id']}/file/{pub[0]['id']}")
+        dao, f = tile[0]
+        print(f"https://aron.vychodoceskearchivy.cz/apu/{apu}/dao/{dao['id']}/file/{f['id']}")
         sys.exit(0)
     n = int(sys.argv[2])
-    lo = int(sys.argv[3]) if len(sys.argv) > 3 else 1
-    out = sys.argv[4] if len(sys.argv) > 4 else f"{apu[:8]}_{n:04d}.jpg"
+    lo = int(sys.argv[3]) if len(sys.argv) > 3 else 0
+    out = sys.argv[4] if len(sys.argv) > 4 else vychozi_vystup(apu, n)
     crop = tuple(float(v) for v in sys.argv[5].split(",")) if len(sys.argv) > 5 else None
     if n not in tiles:
         bez_snimku(vol, tiles, n)
@@ -242,3 +301,8 @@ if __name__ == "__main__":
     except SIT + (ET.ParseError,) as e:
         chyba_archivu(e)
     print(path, "full size", dims)
+    try:   # identita snímku do mapy knihy (tools/mapa.py): víme, že ho máme; popis obsahu doplní čtenář
+        import mapa
+        mapa.snimek_bezpecne("aron", apu[:8], n, "cache")
+    except Exception:   # noqa: BLE001 – mapa nikdy nezastaví stahování
+        pass

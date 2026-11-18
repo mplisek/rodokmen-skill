@@ -72,7 +72,7 @@ try:
     check("GitHub novější, plugin: řekne verzi a poradí claude plugin update", "0.9.0" in out and "plugin update" in out and "NOVA_VERZE_SKILLU" in out, out)
     kod, out = verze(falesny_skill("0.8.2"), projekt("0.8.2"))
     check("GitHub novější, ručně nakopírovaný skill: neradí claude plugin, ale novou složku z GitHubu",
-          "NOVA_VERZE_SKILLU" in out and "claude plugin" not in out and "github.com/sarsonj/rodokmen-skill" in out, out)
+          "NOVA_VERZE_SKILLU" in out and "claude plugin" not in out and "github.com/mplisek/rodokmen-skill" in out, out)   # fork: vydání jsou u forku
     check("GitHub novější: projekt z GitHubu neaktualizuje (žádný git clone)", "clone" not in out, out)
     check("mezipaměť zapsaná", os.path.exists(os.path.join(cache, "rodokmen_verze.json")), os.listdir(tmp))
 
@@ -180,6 +180,34 @@ try:
     check("novy_projekt: projekt novější než skill → odmítne (kód ≠ 0)", r.returncode != 0 and "99.0.0" in out, out[-400:])
     check("novy_projekt: při odmítnutí nic nezmění", open(exp).read().endswith("# vlastni uprava\n")
           and open(os.path.join(proj, ".skill_verze")).read().strip() == "99.0.0", "")
+
+    # 12) fork: verze X.Y.Z-fork.N se řadí za X.Y.Z originálu a před X.Y.(Z+1)
+    shutil.rmtree(cache, ignore_errors=True)
+    STAV["tag"] = "v0.9.2-fork.2"
+    kod, out = verze(falesny_skill("0.9.2-fork.1"), projekt("0.9.2-fork.1"))
+    check("fork: 0.9.2-fork.2 je novější než 0.9.2-fork.1", "NOVA_VERZE_SKILLU" in out and "0.9.2-fork.2" in out, out)
+    shutil.rmtree(cache, ignore_errors=True)
+    STAV["tag"] = "v0.9.2"
+    kod, out = verze(falesny_skill("0.9.2-fork.1"), projekt("0.9.2-fork.1"))
+    check("fork: originál 0.9.2 není novější než 0.9.2-fork.1", "AKTUALNI" in out and "NOVA_VERZE" not in out, out)
+    shutil.rmtree(cache, ignore_errors=True)
+    STAV["tag"] = "v0.9.3"
+    kod, out = verze(falesny_skill("0.9.2-fork.3"), projekt("0.9.2-fork.3"))
+    check("fork: originál 0.9.3 je novější než 0.9.2-fork.3", "NOVA_VERZE_SKILLU" in out, out)
+    shutil.rmtree(cache, ignore_errors=True)
+    STAV["tag"] = "v0.9.0"
+    kod, out = verze(falesny_skill("0.9.2-fork.1"), projekt("0.9.2-fork.2"))
+    check("fork: projekt z fork.2, skill fork.1 → projekt neaktualizovat", "PROJEKT_NOVEJSI" in out, out)
+    kod, out = verze(falesny_skill("0.9.2-fork.2"), projekt("0.9.2"))
+    check("fork: projekt z originálu 0.9.2, skill fork.2 → nabídne aktualizaci", "AKTUALIZUJ_PROJEKT" in out, out)
+    STAV["tag"] = "v0.9.0"
+    proj2 = os.path.join(tmp, "skutecny_fork")
+    r = subprocess.run([sys.executable, "-I", "-X", "utf8", os.path.join(SKILL, "tools", "novy_projekt.py"), proj2],
+                       capture_output=True, text=True)
+    open(os.path.join(proj2, ".skill_verze"), "w").write("99.0.0-fork.1\n")
+    r = subprocess.run([sys.executable, "-I", "-X", "utf8", os.path.join(SKILL, "tools", "novy_projekt.py"), proj2],
+                       capture_output=True, text=True)
+    check("novy_projekt: projekt z novější verze forku odmítne", r.returncode != 0 and "99.0.0-fork.1" in r.stdout + r.stderr, (r.stdout + r.stderr)[-300:])
 finally:
     srv.shutdown()
     shutil.rmtree(tmp, ignore_errors=True)
