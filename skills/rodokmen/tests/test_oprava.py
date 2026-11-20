@@ -65,6 +65,15 @@ class Oprava(unittest.TestCase):
         self.assertIn("uložit: git add", r.stdout)
         self.assertIn("data/opravy.jsonl", r.stdout)
 
+    def test_overeno_u_zapisu_po_kontrolnim_cteni(self):
+        r = self.oprav({"duvod": "kontrolní čtení po polích, shoda", "doklad": "cteni.py porovnej",
+                        "zmeny": [{"soubor": "zaznamy", "klic": "ukazka_snatek_1801", "pole": {"overeno": "kontrolni-cteni"}}]})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.zaznam("ukazka_snatek_1801")["overeno"], "kontrolni-cteni")
+        r = self.oprav({"duvod": "x", "doklad": "y",
+                        "zmeny": [{"soubor": "zaznamy", "klic": "ukazka_snatek_1801", "pole": {"overeno": True}}]})
+        self.assertNotEqual(r.returncode, 0)
+
     def test_misto_souradnice(self):
         r = self.oprav({"duvod": "obec u stejnojmenné obce jinde", "doklad": "titulní štítek knihy narozených",
                         "zmeny": [{"soubor": "mista", "klic": "Ukázkov", "pole": {"lat": 49.69, "lon": 15.81, "dotaz": "Ukázkov, okres Havlíčkův Brod"}}]})

@@ -35,7 +35,8 @@ webu se kvůli nim zastaví (`export_web.py` hlásí CHYBA).
 
 Zápis, ze kterého se stane `doc`, se čte dvakrát: první čtení (tvoje nebo pomocníka) a kontrolní čtení. Obě vyplní
 **tatáž pole podle druhu zápisu** – žádná vlastní pole, žádné celé věty v jednom poli. Pole jsou formulář pro čtení
-v `pracovni/`, neukládají se; do dat jde výsledek (fakta, přepis v `prepisy.json`, u zápisu `overeno`).
+v `pracovni/`, neukládají se; do dat jde výsledek: u zápisu `overeno: "kontrolni-cteni"` (`oprava.py`), fakta osob
+z ověřených polí jako `doc`, řádek deníku s `--overeno` (`cteni.py` po shodě vypíše přesné příkazy).
 
 | Druh | Pole |
 |---|---|

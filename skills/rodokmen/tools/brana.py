@@ -98,6 +98,23 @@ def verze_webu():
     return [dist] if os.path.isfile(os.path.join(dist, "index.html")) else []
 
 
+def neuplne_verze(weby):
+    """Neúplně sestavené nebo nahrané verze (OneDrive umí soubor zamknout uprostřed sestavení): chybí úvodní nebo přihlašovací
+    stránka, nebo má verze „vse“ (celý rodokmen) méně stránek než některý přístup."""
+    chyby, pocty = [], {}
+    for cesta in weby:
+        jmeno = os.path.relpath(cesta, ROOT).replace("\\", "/")
+        pristup = os.path.basename(os.path.dirname(cesta)) == "_p"
+        for f in ("index.html",) + (("prihlaseni.html",) if pristup else ()):
+            if not os.path.isfile(os.path.join(cesta, f)):
+                chyby.append(f"{jmeno}: chybí {f} – verze je neúplná, sestav web znovu (npm run build)")
+        pocty[os.path.basename(cesta)] = sum(1 for _, _, fs in os.walk(cesta) for x in fs if x.endswith(".html"))
+    if "vse" in pocty and len(pocty) > 1 and pocty["vse"] < max(v for k, v in pocty.items() if k != "vse"):
+        chyby.append(f"verze vse má {pocty['vse']} stránek, méně než přístup ({max(v for k, v in pocty.items() if k != 'vse')})"
+                     " – verze je neúplná, sestav web znovu (npm run build)")
+    return chyby
+
+
 def poslednich(text, n=12):
     return "\n".join(text.splitlines()[-n:])
 
@@ -121,6 +138,9 @@ def main(argv=None):
         ok, vystup = spust(["kontrola_webu.py", *arg])
         kroky.append({"krok": "web", "cil": os.path.relpath(cesta, ROOT).replace("\\", "/"), "ok": ok,
                       "vystup": "" if ok else poslednich(vystup, 25)})
+    neuplne = neuplne_verze(weby)
+    if weby:
+        kroky.append({"krok": "úplnost webu", "ok": not neuplne, "vystup": "\n".join(neuplne)})
     selhalo = [k for k in kroky if not k["ok"]]
     vysledek = "cervena" if selhalo else ("zelena" if weby else "nepokryto")
     znacka = {"vysledek": vysledek, "verze": verze_projektu(), **otisky(), "cas": time.strftime("%Y-%m-%dT%H:%M:%S")}

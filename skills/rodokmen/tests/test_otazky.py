@@ -164,6 +164,16 @@ class CoHledame(OtazkyTest):
         self.assertEqual(((self.p / "data" / "otazky_pro_rodinu.md").read_bytes(),
                           (self.p / "data" / "archivni_dotazy.md").read_bytes()), pred)   # zdrojové soubory se nemění
 
+    def test_ze_souboru_stejny_text_v_jinem_archivu_neni_duplicita(self):
+        """Poznámka z bádání 18. 11. 2026: sčítací operáty pro dvě obce ve dvou archivech mají stejné „co hledat“."""
+        (self.p / "data" / "archivni_dotazy.md").write_text(
+            "# Prameny\n\n## SOkA Chrudim\n\n- Sčítací operáty 1869–1921 – na internetu nejsou.\n\n"
+            "## SOkA Havlíčkův Brod\n\n- Sčítací operáty 1869–1921 – na internetu nejsou.\n", encoding="utf-8")
+        self.assertEqual(self.otazky("ze-souboru", "--soubor", "archivy").returncode, 0)
+        self.assertEqual(sorted(x["archiv"] for x in self.data()), ["SOkA Chrudim", "SOkA Havlíčkův Brod"])
+        self.otazky("ze-souboru", "--soubor", "archivy")
+        self.assertEqual(len(self.data()), 2)                                        # podruhé nic nového
+
     def test_potvrd_po_rodech_vse_nebo_nic(self):
         self.otazky("pridej", "--druh", "rodina", "--rod", "8", "--otazka", "A?")
         self.otazky("pridej", "--druh", "pramen", "--rod", "novakove", "--archiv", "SOA", "--co-hledat", "B")

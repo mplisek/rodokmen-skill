@@ -144,16 +144,11 @@ class KontejnerRodu(Zaklad):
                 self.assertNotEqual(r.returncode, 0, telo)
                 self.assertIn(stopa, r.stdout)
 
-    def test_hledame_jeden_kontejner_na_rod(self):
+    def test_hledame_kontejner_na_otazku(self):
+        """Uživatel 20. 11. 2026: co otázka, to kontejner – víc kontejnerů téhož rodu v kterékoli části je v pořádku."""
         dvakrat = self.box() + self.box()
-        self.stranka("hledame/index.html", f'<section data-hledame="rodina">{dvakrat}</section>'
-                                           f'<section data-hledame="prameny">{dvakrat}</section>')
-        r = self.kontrola()
-        self.assertNotEqual(r.returncode, 0)
-        self.assertIn("rodina", r.stdout)
-        self.assertNotIn("prameny", r.stdout)                                    # v pramenech je rod u každé položky
-        self.stranka("hledame/index.html", f'<section data-hledame="rodina">{self.box()}</section>'
-                                           f'<section data-hledame="otevrene">{self.box()}</section>')
+        self.stranka("hledame/index.html", "".join(f'<section data-hledame="{c}">{dvakrat}</section>'
+                                                   for c in ("rodina", "prameny", "otevrene")))
         self.assertEqual(self.kontrola().returncode, 0)
 
 

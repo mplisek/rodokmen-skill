@@ -12,7 +12,8 @@ Použití (z kořene projektu):
 Vstup: {"klic": "<klíč zápisu>", "druh": "N", "vyrez": "vyrezy/<klíč>.jpg", "pole": {"datum_krtu": "…", …}, "necitelne": ["kmotri"]}
 
 Normalizace: mezery a interpunkce, malá písmena, w = v, „č.“ = „čp.“; v datu měsíc slovem = číslem (i starý pravopis);
-věk s jednotkou let = bez jednotky. Kratší přepis téhož pole (podmnožina slov) je spor, ne shoda.
+věk s jednotkou let = bez jednotky. Pole prázdné v obou čteních = „nevede se“ (zápis údaj nemá), ne spor; liší-li se
+hodnoty jen „(?)“, je to „shoda, nejisté“ (údaj zůstane s otazníkem, prob). Kratší přepis téhož pole (podmnožina slov) je spor, ne shoda.
 """
 import json
 import os
@@ -89,6 +90,13 @@ def nacti(cesta):
     return d
 
 
+SHODA = ("shoda", "shoda, nejisté", "nevede se")
+
+
+def bez_jistoty(t):
+    return re.sub(r"\s*\(\?\)", "", str(t))
+
+
 def porovnej(a, b):
     """[(pole, vysledek, a, b)] pro pole, která má aspoň jedno čtení; vysledek „shoda“, nebo popis sporu."""
     if (a["klic"], a["druh"]) != (b["klic"], b["druh"]):
@@ -100,10 +108,17 @@ def porovnej(a, b):
         if p not in pa and p not in pb and p not in na and p not in nb:
             continue
         va, vb = pa.get(p), pb.get(p)
-        if p in na or p in nb or va is None or vb is None:
+        prazdne = lambda v: v is None or not str(v).strip() or str(v).strip() in ("-", "–", "—")
+        if p in na or p in nb:
+            vysl = "nečitelné nebo jen v jednom čtení"
+        elif prazdne(va) and prazdne(vb):
+            vysl = "nevede se"                      # zápis údaj nevede (obě čtení prázdná) – shoda, ne spor
+        elif prazdne(va) or prazdne(vb):
             vysl = "nečitelné nebo jen v jednom čtení"
         elif norm_pole(p, va) == norm_pole(p, vb):
             vysl = "shoda"
+        elif norm_pole(p, bez_jistoty(va)) == norm_pole(p, bez_jistoty(vb)):
+            vysl = "shoda, nejisté"                 # liší se jen „(?)“ – hodnota sedí, v datech zůstane s otazníkem (prob)
         else:
             vysl = "neshoda"
         out.append((p, vysl, va, vb))
@@ -119,7 +134,7 @@ def zapis_spory(a, radky):
     znam = {(s.get("klic"), s.get("pole")) for s in d}
     nove = 0
     for p, vysl, va, vb in radky:
-        if vysl != "shoda" and (a["klic"], p) not in znam:
+        if vysl not in SHODA and (a["klic"], p) not in znam:
             d.append({"klic": a["klic"], "vyrez": a.get("vyrez") or f"vyrezy/{a['klic']}.jpg", "pole": p, "spor": vysl,
                       "moznosti": [x for x in (va, vb) if x is not None], "navrh": None})
             nove += 1
@@ -147,15 +162,18 @@ def main(argv=None):
         print(f"CHYBA: {e}")
         return 2
     for p, vysl, va, vb in radky:
-        print(f"  {p}: {vysl}" + ("" if vysl == "shoda" else f" | první: {va} | kontrolní: {vb}"))
-    if all(v == "shoda" for _, v, _, _ in radky) and radky:
-        print(f"{x['klic']}: všechna pole se shodují – zápis je ověřený")
+        print(f"  {p}: {vysl}" + ("" if vysl in SHODA else f" | první: {va} | kontrolní: {vb}"))
+    if all(v in SHODA for _, v, _, _ in radky) and radky:
+        print(f"{x['klic']}: všechna pole se shodují – zápis je ověřený. Zapiš výsledek:\n"
+              f"  1. oprava.py: {{\"soubor\": \"zaznamy\", \"klic\": \"{x['klic']}\", \"pole\": {{\"overeno\": \"kontrolni-cteni\"}}}}"
+              " a fakta osob z ověřených polí jako doc (fakta_nahrad)\n"
+              "  2. denik.py pridej … --vysledek nalezeno --overeno (krátce: kontrolní čtení po polích, shoda)")
         return 0
     if not radky:
         print("CHYBA: žádné pole k porovnání")
         return 2
     nove = zapis_spory(x, radky)
-    print(f"{x['klic']}: spor v {sum(v != 'shoda' for _, v, _, _ in radky)} polích, do pracovni/sporna_cteni.json přidáno {nove} – "
+    print(f"{x['klic']}: spor v {sum(v not in SHODA for _, v, _, _ in radky)} polích, do pracovni/sporna_cteni.json přidáno {nove} – "
           "rozhodne uživatel (SKILL.md → Spornou věc), do té doby prob")
     return 1
 

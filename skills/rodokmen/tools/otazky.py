@@ -200,7 +200,9 @@ def cmd_ze_souboru(a):
         sys.exit(f"data/{SOUBORY[a.soubor]} neexistuje.")
     lines = linie()
     d = nacti()
-    zname = {(z.get("druh"), z.get("otazka") or z.get("co_hledat")) for z in d["otazky"]}
+    # totožnost: druh, text a u pramene i archiv, rod a osoba (stejné „co hledat“ ve dvou archivech nebo rodech jsou dvě položky)
+    totoznost = lambda z: (z.get("druh"), z.get("otazka") or z.get("co_hledat"), z.get("archiv"), z.get("rod"), z.get("osoba"))
+    zname = {totoznost(z) for z in d["otazky"]}
     nove, preskoceno = [], 0
     for nadpis, polozky in verejna_cast(open(path, encoding="utf-8-sig").read()):
         if a.soubor == "rodina":
@@ -230,12 +232,12 @@ def cmd_ze_souboru(a):
                 nove.append(z)
     pridano = 0
     for z in nove:
-        if (z["druh"], z.get("otazka") or z.get("co_hledat")) in zname:
+        if totoznost(z) in zname:
             preskoceno += 1
             continue
         z = {"id": dalsi_id(d), **z}
         d["otazky"].append(z)
-        zname.add((z["druh"], z.get("otazka") or z.get("co_hledat")))
+        zname.add(totoznost(z))
         pridano += 1
     if pridano:
         uloz(d)

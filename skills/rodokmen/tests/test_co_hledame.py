@@ -99,7 +99,8 @@ class Ukazka(unittest.TestCase):
                     self.assertFalse(p["html"].startswith(f"<strong>{site['lines'][p['rod']]['name']}"), p["html"])
         stranka = (self.p / "web" / "src" / "pages" / "hledame.astro").read_text(encoding="utf-8")
         self.assertNotIn("grid2", stranka)         # bloky pod sebou, ne vedle sebe
-        self.assertIn("c.polozky.map((i) => (\n          <RodBox", stranka)   # otevřené otázky: kontejner na otázku
+        self.assertEqual(stranka.count("<RodBox"), 3)                            # kontejner na otázku i pramen (20. 11. 2026)
+        self.assertNotIn("<ul>", stranka)
 
     def test_zajimavosti_v_kontejneru_rodu(self):
         spust(self.p, "export_web.py")

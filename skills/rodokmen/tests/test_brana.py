@@ -26,6 +26,8 @@ class Brana(unittest.TestCase):
         d = self.p / "web" / "dist" / ("_p/" + pristup if pristup else "")
         d.mkdir(parents=True, exist_ok=True)
         (d / "index.html").write_text(html, encoding="utf-8")
+        if pristup:
+            (d / "prihlaseni.html").write_text(CISTA, encoding="utf-8")
 
     def brana(self, *args):
         return spust(self.p, "brana.py", *args, check=False)
@@ -64,6 +66,7 @@ class Brana(unittest.TestCase):
         pristup = self.p / "web" / "dist" / "_p" / "pristup"
         for d in (vse, pristup):
             d.mkdir(parents=True, exist_ok=True)
+            (d / "prihlaseni.html").write_text(CISTA, encoding="utf-8")
         (vse / "index.html").write_text(stranka.format(z=znacka.format(b="#111111", s="rod-a", n="Rodové A")), encoding="utf-8")
         (pristup / "index.html").write_text(stranka.format(z=znacka.format(b="#222222", s="rod-b", n="Rodové B")), encoding="utf-8")
         r = self.brana()
@@ -99,13 +102,26 @@ class Brana(unittest.TestCase):
         self.web()
         d = json.loads(self.brana("--json").stdout)
         self.assertEqual(d["vysledek"], "zelena")
-        self.assertEqual({k["krok"] for k in d["kroky"]}, {"kontrola", "denik", "otazky", "web"})
+        self.assertEqual({k["krok"] for k in d["kroky"]}, {"kontrola", "denik", "otazky", "web", "úplnost webu"})
 
     def test_data_nemeni(self):
         self.web()
         pred = {str(f): f.read_bytes() for f in (self.p / "data").rglob("*") if f.is_file()}
         self.brana()
         self.assertEqual(pred, {str(f): f.read_bytes() for f in (self.p / "data").rglob("*") if f.is_file()})
+
+
+    def test_neuplna_verze_webu_je_cervena(self):
+        """Poznámka z bádání 19. 11. 2026: verze vse se v OneDrive nahrála bez úvodní stránky, brána to nepoznala."""
+        self.web(pristup="vse")
+        self.web(pristup="a")
+        for i in range(3):
+            (self.p / "web" / "dist" / "_p" / "a" / f"s{i}.html").write_text(CISTA, encoding="utf-8")
+        r = self.brana()
+        self.assertEqual(r.returncode, 1, r.stdout + r.stderr)
+        self.assertIn("verze vse má", r.stdout + r.stderr)
+        (self.p / "web" / "dist" / "_p" / "a" / "index.html").unlink()
+        self.assertIn("chybí index.html", self.brana().stdout)
 
 
 if __name__ == "__main__":

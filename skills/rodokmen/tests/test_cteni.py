@@ -44,6 +44,8 @@ class Cteni(unittest.TestCase):
                          {"datum_umrti": "31. května 1856", "vek": "80", "dum": "čp. 12", "jmeno": "Venceslaus Vzorny"})
         self.assertEqual(r.returncode, 0, r.stdout)
         self.assertIn("ověřený", r.stdout)
+        self.assertIn('"overeno": "kontrolni-cteni"', r.stdout)                         # kam zapsat výsledek (18. 11. 2026)
+        self.assertIn("--overeno", r.stdout)
         self.assertEqual(self.spory(), [])
 
     def test_neshoda_jde_do_davky_sporu_pro_uzivatele(self):
@@ -60,6 +62,17 @@ class Cteni(unittest.TestCase):
                          necitelne=("pricina",))
         self.assertEqual(r.returncode, 1)
         self.assertEqual(sorted(x["pole"] for x in self.spory()), ["jmeno", "pricina"])
+
+    def test_prazdne_v_obou_a_jen_otaznik_nejsou_spor(self):
+        """Poznámka z bádání 18. 11. 2026: údaj, který zápis nevede (obě čtení prázdná), a hodnota lišící se jen „(?)“."""
+        r = self.dvojice({"datum_pohrbu": None, "pricina": "", "dum": "12 (?)", "vek": "80"},
+                         {"datum_pohrbu": None, "pricina": "–", "dum": "12", "vek": "80"})
+        self.assertEqual(r.returncode, 0, r.stdout)
+        self.assertIn("nevede se", r.stdout)
+        self.assertIn("shoda, nejisté", r.stdout)
+        self.assertEqual(self.spory(), [])
+        r = self.dvojice({"datum_pohrbu": None}, {"datum_pohrbu": "2. 6. 1856"})            # jen v jednom čtení = spor
+        self.assertEqual(r.returncode, 1, r.stdout)
 
     def test_cizi_pole_a_jiny_zapis_se_odmitnou(self):
         self.assertEqual(self.dvojice({"krestni_jmeno": "Jan"}, {"krestni_jmeno": "Jan"}).returncode, 2)

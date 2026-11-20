@@ -76,6 +76,14 @@ if (nahled) {
     sestav(join("dist", "_p", id));
     zapisStranky(id, join("dist", "_p", id));
   }
+  // neúplná verze (OneDrive umí zamknout soubor uprostřed sestavení): chybí úvodní nebo přihlašovací stránka → stop, ne nasazení
+  const chybi = ids.flatMap((id) => ["index.html", "prihlaseni.html"]
+    .filter((f) => !existsSync(join(web, "dist", "_p", id, f))).map((f) => `dist/_p/${id}/${f}`));
+  if (chybi.length) {
+    console.error(`\nCHYBA: neúplně sestavený web, chybí ${chybi.join(", ")}. Sestav ho znovu (npm run build); opakuje-li se to,`
+      + " je nejspíš soubor zamčený synchronizací (OneDrive) – pozastav ji nebo měj projekt mimo synchronizovanou složku.");
+    process.exit(1);
+  }
   cpSync(join(web, "dist", "_p", ids[0], "prihlaseni.html"), join(web, "dist", "prihlaseni.html"));
   exportuj();   // web/src zpět na data celého rodokmenu (npm run dev, náhled)
   console.log(`\nSestaveno ${ids.length} verzí webu (dist/_p/): ${ids.join(", ")}`);

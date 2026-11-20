@@ -35,12 +35,19 @@ kontroly a rejstřík z forku zůstávají. Projekt založený dřívější ver
   (`mapa_knihy.py`) rozlišené; nejvýš o desetinu delší než originál.
 - Založení projektu nezastíní starý deník `research_log.md` prázdným `denik.jsonl` (poradí `denik.py migruj`).
 - Test brzdy pro ZA Opava odpovídá zákazu skriptů od 0.10.1.
+- Kontrolní čtení (`cteni.py`): pole, které zápis nevede (prázdné v obou čteních), a hodnota lišící se jen „(?)“ už nejsou
+  spor; po shodě nástroj vypíše, kam výsledek zapsat (`overeno: "kontrolni-cteni"` u zápisu přes `oprava.py`, deník `--overeno`).
+- Co hledáme: prameny a otevřené otázky pod sebou, každá otázka ve vlastním kontejneru; rod se v textu pramene neopakuje.
+- `otazky.py ze-souboru`: stejný text ve dvou archivech nebo rodech nejsou duplicita.
+- Brána a sestavení webu poznají neúplnou verzi (chybí úvodní nebo přihlašovací stránka, např. kvůli zámku OneDrive).
+- Aktualizace projektu upozorní na odkazy na `research_log.md` ve vlastním `CLAUDE.md` a `STAV.md`.
 
 ### Přechod projektu z 0.10.2-fork.1
 
 1. Aktualizujte skill a v projektu spusťte `novy_projekt.py`; nástroje zrušené vrstvy ohlásí jako „šablona už nemá“ – smažte
    je a potvrďte `--vyreseno`.
-2. Fronty převede `scripts/migrace_a.py <projekt>` z repozitáře skillu (nanečisto přehled k projití, pak `--zapsat`).
+2. Fronty převede `scripts/migrace_a.py <projekt>` z repozitáře skillu (nanečisto přehled k projití, pak `--zapsat`);
+   převedené dotazy na archivy přepište do tvaru pro Co hledáme (`## archiv`, `- **Rod – osoba:** co a proč`).
 3. `STAV.md` do nové šablony, archivace front, `rezim.json` a starého deníku (`denik.py overit-migraci` nejdřív).
 4. `npm ci`, `npm run data`, `npm run build`, `tools/brana.py`.
 

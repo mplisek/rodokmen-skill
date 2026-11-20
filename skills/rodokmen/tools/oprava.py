@@ -56,7 +56,8 @@ def _cislo(od, do):
 POLE = {
     "zaznamy": {"druh": lambda v: None if v in DRUHY else f"jedno z {', '.join(DRUHY)}", "datum": _text(60), "nazev": _text(300),
                 "shrnuti": _text(3000), "snimek": _snimek, "svazek": None, "odkaz": lambda v: None if isinstance(v, str) and
-                v.startswith("https://") else "adresa https://", "rejstrik": lambda v: None if isinstance(v, bool) else "true nebo false"},
+                v.startswith("https://") else "adresa https://", "rejstrik": lambda v: None if isinstance(v, bool) else "true nebo false",
+                "overeno": lambda v: None if v in ("kontrolni-cteni", "uzivatel") else "kontrolni-cteni nebo uzivatel"},
     "mista": {"re": _text(300), "dotaz": _text(300), "lat": _cislo(-90, 90), "lon": _cislo(-180, 180), "osm": _text(500)},
 }
 SOUBORY = {"zaznamy": "data/zaznamy.json", "mista": "data/mista.json", "dokumenty": "data/dokumenty.json",

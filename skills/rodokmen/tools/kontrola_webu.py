@@ -38,7 +38,6 @@ NADPIS = re.compile(r"<h([23])\b[^>]*>(.*?)</h\1>", re.S | re.I)
 
 
 KONTEJNER = re.compile(r'<[a-z]+\b[^>]*\bclass="(?:[^"]*\s)?rod-box(?:\s[^"]*)?"[^>]*>', re.I)   # přesně třída rod-box, ne rod-box-hlava
-CAST_HLEDAME = re.compile(r'data-hledame="([a-z]+)"')
 DATA_ROD = re.compile(r'\bdata-rod(?:="([^"]*)")?(?=[\s/>])')
 
 
@@ -65,15 +64,7 @@ def kontroluj_kontejnery(html, jmeno, podle_slugu, chyby):
             chyby.append(f"{jmeno}: kontejner rodu {r['name']} je bez barvy rodu")
         elif barva.group(1).strip().lower() != r["color"].lower():
             chyby.append(f"{jmeno}: barva kontejneru rodu {r['name']} je {barva.group(1).strip()}, rod má {r['color']}")
-    casti = list(CAST_HLEDAME.finditer(html))
-    for i, c in enumerate(casti):
-        if c.group(1) not in ("rodina", "otevrene"):
-            continue
-        usek = html[c.end():casti[i + 1].start() if i + 1 < len(casti) else len(html)]
-        rody = [DATA_ROD.search(t.group(0)) for t in KONTEJNER.finditer(usek)]
-        rody = ["" if x.group(1) in (None, "obecne") else x.group(1) for x in rody if x]
-        for r in sorted({x for x in rody if rody.count(x) > 1}):
-            chyby.append(f"{jmeno}: v části {c.group(1)} má rod {r or 'Obecné'} víc kontejnerů (má být jeden)")
+    # Co hledáme: kontejner na každou otázku a pramen, pod sebou (uživatel 20. 11. 2026) – počet kontejnerů rodu se nehlídá
 
 
 def kontroluj(cesta, rody, rx, podle_slugu, chyby, upozorneni):

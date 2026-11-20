@@ -1354,8 +1354,8 @@ def main():
         return " ".join("".join(out).split())
 
     def hledame_struktura(md_rodina, md_prameny, issues):
-        """Stránka Co hledáme (rozhodnutí uživatele 16. 11. 2026): otázky pro rodinu a otevřené otázky jako kontejnery po rodech
-        (Obecné první, pak rody podle čísla, jeden kontejner na rod), prameny jako archivy s rodem u položky. Vstup je Markdown
+        """Stránka Co hledáme (uživatel 20. 11. 2026): otázky pro rodinu a otevřené otázky seskupené po rodech
+        (Obecné první, pak rody podle čísla; stránka dá každé otázce vlastní kontejner), prameny jako archivy s rodem u položky. Vstup je Markdown
         už filtrovaný podle přístupu (filtr_oddilu), takže přístup vidí jen své rody."""
         poradi = lambda r: -1 if r is None else lines[r]["k"]
         rodina = {}

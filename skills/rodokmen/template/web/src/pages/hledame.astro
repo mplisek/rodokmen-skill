@@ -1,6 +1,6 @@
 ---
-// „Co hledáme“ (rozhodnutí uživatele 16. 11. 2026): otázky pro rodinu a otevřené otázky jako kontejnery po rodech (Obecné první,
-// jeden kontejner na rod v barvě rodu), prameny v archivech podle archivů s barvou rodu u každé položky. Data připraví export
+// „Co hledáme“ (rozhodnutí uživatele 20. 11. 2026): co otázka nebo pramen, to jeden kontejner v barvě rodu, pod sebou
+// (Obecné první, pak rody podle čísla); prameny podle archivů. Data připraví export
 // (site.hledame) z potvrzených veřejných otázek (tools/otazky.py) a z ISSUES; stránka jen vykresluje.
 import Base from '../layouts/Base.astro';
 import PersonLink from '../components/PersonLink.astro';
@@ -19,16 +19,13 @@ const kontakt = config.kontakt?.email;
       <h2>Otázky pro rodinu</h2>
       <p class="small muted">Co z matrik nezjistíme a může vědět někdo z rodiny. Stačí odpovědět na to, co kdo ví; i „nevím“ pomůže. Nejcennější jsou fotky dokumentů.</p>
       <div class="kontejnery">
-        {hledame.rodina.map((c) => (
-          <RodBox rod={c.rod} nadpis="Obecné">
-            {c.skupiny.map((s) => (
-              <>
-                {s.nadpis && <h3 class="podnadpis">{s.nadpis}</h3>}
-                <ul>{s.polozky.map((p) => <li set:html={p} />)}</ul>
-              </>
-            ))}
+        {/* co otázka, to jeden kontejner pod sebou – stejně jako prameny a otevřené otázky (přání uživatele 20. 11. 2026) */}
+        {hledame.rodina.flatMap((c) => c.skupiny.flatMap((s) => s.polozky.map((p) => (
+          <RodBox rod={c.rod} nadpis={s.nadpis ?? 'Obecné'} tag="div">
+            {c.rod && s.nadpis && <h3 class="podnadpis">{s.nadpis}</h3>}
+            <p class="small" set:html={p} />
           </RodBox>
-        ))}
+        ))))}
       </div>
     </section>
   )}
@@ -73,7 +70,7 @@ const kontakt = config.kontakt?.email;
 
 <style>
   .hledame-cast { margin-top: 2rem; }
-  .kontejnery { display: grid; gap: 1rem; }
+  .kontejnery { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }   /* vždy jeden sloupec, bloky pod sebou */
   .podnadpis { font-size: 1rem; margin: 0.8rem 0 0.3rem; }
   .rod-box > .podnadpis:first-of-type { margin-top: 0; }
   .rod-box ul { margin: 0.2rem 0 0; padding-left: 1.2rem; }
