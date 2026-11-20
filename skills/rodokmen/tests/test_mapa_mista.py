@@ -47,5 +47,16 @@ class RodyOsoby(unittest.TestCase):
         self.assertEqual(rody_osoby("sourozenec", R), {8, 12})
 
 
+    def test_rody_dokumentu(self):
+        from export_web import rody_dokumentu
+        R = {"sourozenec": dict(otec=2, matka=3)}
+        vsechny = set(range(8, 16))
+        self.assertEqual(rody_dokumentu(["sourozenec"], R, vsechny), [8, 12])
+        self.assertEqual(rody_dokumentu([1], R, vsechny), [])          # všechny rody nic nerozlišují
+        self.assertEqual(rody_dokumentu([2], R, {8, 9}), [])           # web jen se dvěma rody
+        self.assertEqual(rody_dokumentu([2], R, vsechny), [8, 9, 10, 11])
+        self.assertEqual(rody_dokumentu([], R, vsechny), [])
+
+
 if __name__ == "__main__":
     unittest.main()

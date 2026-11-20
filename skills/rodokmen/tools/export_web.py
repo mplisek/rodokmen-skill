@@ -92,6 +92,13 @@ def strip_comments(md):
     return re.sub(r"<!--.*?-->\n?", "", md, flags=re.S)
 
 
+def rody_dokumentu(osoby, R, vsechny_rody):
+    """Rody dokumentu = rody jeho osob (rody_osoby). Pokrývají-li všechny rody webu (např. u přístupu s kořenem v mladší
+    generaci), nic nerozlišují: dokument je pak bez rodu – stránka Dokumenty ho vypíše bez štítků a příběhy ho ukážou všude."""
+    rody = set().union(set(), *(rody_osoby(o, R) for o in osoby))
+    return [] if vsechny_rody and rody >= set(vsechny_rody) else sorted(rody)
+
+
 def hvezdicky_narozeni(md):
     """„* 1890“ (narozen) uprostřed řádku markdown bere jako začátek kurzívy – uvnitř tučného „**Jan (* 1890):**“
     pak rozbije formát. Hvězdičku před číslem (ne na začátku řádku, ne u **) ošetří zpětným lomítkem."""
@@ -1648,7 +1655,8 @@ def main():
                 families=families, others=others, records=records, lines=lines,
                 issues=issue_rows(ISSUES, slug_otazky, rod_otazky), stats=stats, hypotheses=hypotheses,
                 docs=[dict(img=d["img"], caption=d.get("popis", ""), families=d.get("rodiny", []), people=[slugs.get(k) or rslug[k] for k in d.get("osoby", []) if k in slugs or k in rslug],
-                           rods=sorted(set().union(set(), *(rody_osoby(SAME.get(k, k) if isinstance(k, int) else k, R) for k in d.get("osoby", [])))))
+                           rods=rody_dokumentu([SAME.get(k, k) if isinstance(k, int) else k for k in d.get("osoby", [])], R,
+                                               {l["k"] for l in lines.values()}))
                       for d in docs_cfg if os.path.exists(os.path.join(VYREZY, d["img"] + ".jpg"))],
                 timeline=timeline_data(P, SAME, slugs, people, line_of, {k for k in skryti_p if k in slugs}))
 
