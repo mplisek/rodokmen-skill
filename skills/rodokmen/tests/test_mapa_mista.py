@@ -33,7 +33,8 @@ class TextProMisto(unittest.TestCase):
 class RodyOsoby(unittest.TestCase):
     def test_rody(self):
         from export_web import rody_osoby
-        R = {"dite": dict(otec=8, matka=9), "partner": dict(partner=["dite"]), "nikdo": dict()}
+        R = {"dite": dict(otec=8, matka=9), "partner": dict(partner=["dite"]), "nikdo": dict(),
+             "dite_korene": dict(otec=1, matka="snacha"), "snacha": dict(), "sourozenec": dict(otec=2, matka=3)}
         self.assertEqual(rody_osoby(10, R), {10})
         self.assertEqual(rody_osoby(21, R), {10})
         self.assertEqual(rody_osoby(4, R), {8, 9})
@@ -41,6 +42,9 @@ class RodyOsoby(unittest.TestCase):
         self.assertEqual(rody_osoby("dite", R), {8, 9})
         self.assertEqual(rody_osoby("partner", R), {8, 9})
         self.assertEqual(rody_osoby("nikdo", R), set())
+        # bližší předek jako rodič osoby z RODINA dává jen rod po meči, ne všechny rody pod sebou
+        self.assertEqual(rody_osoby("dite_korene", R), {8})
+        self.assertEqual(rody_osoby("sourozenec", R), {8, 12})
 
 
 if __name__ == "__main__":

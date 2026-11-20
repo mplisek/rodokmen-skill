@@ -101,20 +101,24 @@ def hvezdicky_narozeni(md):
 STAVY_OTAZEK = ("otevřené", "hypotéza", "vyřešeno")
 
 
-def rody_osoby(ref, R, _videno=None):
+def rody_osoby(ref, R, _videno=None, _po_meci=False):
     """Rody (8–15), ke kterým osoba patří: předek k ≥ 8 svému rodu, bližší předek (1–7) rodům, které z něj vycházejí,
-    osoba z RODINA rodům svých rodičů (bez rodičů rodům partnera). Podle toho se rodinné dokumenty ukážou u příběhu rodu."""
+    osoba z RODINA rodům svých rodičů (bez rodičů rodům partnera). Bližší předek jako rodič osoby z RODINA dává jen
+    svůj rod po meči (dítě kořene → rod 8, sourozenec kořene → 8 a 12), jinak by parte dětí a sourozenců spadlo do
+    všech rodů. Podle toho se rodinné dokumenty ukážou u příběhu rodu."""
     if isinstance(ref, bool) or ref is None:
         return set()
     if isinstance(ref, int):
         g = gen(ref)
-        return {ref >> (g - 3)} if g >= 3 else {r for r in range(8, 16) if r >> (3 - g) == ref}
+        if g >= 3:
+            return {ref >> (g - 3)}
+        return {ref << (3 - g)} if _po_meci else {r for r in range(8, 16) if r >> (3 - g) == ref}
     videno = _videno if _videno is not None else set()
     if ref in videno or ref not in R:
         return set()
     videno.add(ref)
     o = R[ref]
-    out = set().union(*(rody_osoby(o.get(x), R, videno) for x in ("otec", "matka")))
+    out = set().union(*(rody_osoby(o.get(x), R, videno, True) for x in ("otec", "matka")))
     return out or set().union(set(), *(rody_osoby(p, R, videno) for p in o.get("partner", [])))
 
 
