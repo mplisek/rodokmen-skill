@@ -1387,6 +1387,11 @@ def main():
                     m = re.match(r"\s*[-*]\s+\*\*(.+?)(?:\s+–\s+.*?)?:\*\*", b)
                     l = rod_nadpisu(m.group(1), lines) if m else None
                     rod = l["slug"] if l else None
+                if rod:   # název rodu je v záhlaví karty – v předponě „**Rod – osoba:**“ by se opakoval
+                    m = re.match(r"(\s*[-*]\s+\*\*)(.+?)(?:\s+–\s+(.*?))?:\*\*\s*", b)
+                    l = rod_nadpisu(m.group(2), lines) if m else None
+                    if l and l["slug"] == rod:
+                        b = m.group(1) + m.group(3) + ":** " + b[m.end():] if m.group(3) else "- " + b[m.end():]
                 polozky.append({"rod": rod, "html": md_radek(b), "ceka": "<!-- ceka -->" in b})
             if polozky:
                 prameny.append({"archiv": strip_comments(hlava[3:]).strip(), "polozky": polozky})

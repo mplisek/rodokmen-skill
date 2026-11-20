@@ -40,7 +40,7 @@ const kontakt = config.kontakt?.email;
       {hledame.prameny.map((a) => (
         <>
           <h3>{a.archiv}</h3>
-          <div class="grid2">
+          <div class="kontejnery">
             {a.polozky.map((p) => (
               <RodBox rod={p.rod} tag="div">
                 <p class="small" set:html={p.html} />
@@ -57,17 +57,13 @@ const kontakt = config.kontakt?.email;
     <h2>Otevřené otázky</h2>
     {hledame.otevrene.length ? (
       <div class="kontejnery">
-        {hledame.otevrene.map((c) => (
-          <RodBox rod={c.rod} nadpis="Obecné">
-            {c.polozky.map((i) => (
-              <div class="otazka">
-                <h3 class="podnadpis">{i.title}</h3>
-                <p class="small"><span class={`chip ${STAV[i.stav]?.[1] ?? 'st-unk'}`}>{STAV[i.stav]?.[0] ?? i.stav}</span> {i.text}</p>
-                {i.person && <p class="small muted">Osoba: <PersonLink slug={i.person} /></p>}
-              </div>
-            ))}
+        {hledame.otevrene.flatMap((c) => c.polozky.map((i) => (
+          <RodBox rod={c.rod} nadpis="Obecné" tag="div">
+            <h3 class="podnadpis">{i.title}</h3>
+            <p class="small"><span class={`chip ${STAV[i.stav]?.[1] ?? 'st-unk'}`}>{STAV[i.stav]?.[0] ?? i.stav}</span> {i.text}</p>
+            {i.person && <p class="small muted">Osoba: <PersonLink slug={i.person} /></p>}
           </RodBox>
-        ))}
+        )))}
       </div>
     ) : <p class="muted">Žádné otevřené otázky.</p>}
   </section>
@@ -79,8 +75,7 @@ const kontakt = config.kontakt?.email;
   .hledame-cast { margin-top: 2rem; }
   .kontejnery { display: grid; gap: 1rem; }
   .podnadpis { font-size: 1rem; margin: 0.8rem 0 0.3rem; }
-  .rod-box > .podnadpis:first-of-type, .otazka:first-of-type .podnadpis { margin-top: 0; }
-  .otazka + .otazka { border-top: 1px solid var(--line); margin-top: 0.8rem; padding-top: 0.6rem; }
+  .rod-box > .podnadpis:first-of-type { margin-top: 0; }
   .rod-box ul { margin: 0.2rem 0 0; padding-left: 1.2rem; }
   .rod-box li { margin: 0.25rem 0; }
 </style>

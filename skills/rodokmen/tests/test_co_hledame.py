@@ -93,6 +93,13 @@ class Ukazka(unittest.TestCase):
         self.assertTrue(all(a["archiv"] and a["polozky"] for a in h["prameny"]))
         self.assertTrue(any(p["rod"] in poradi for a in h["prameny"] for p in a["polozky"]))
         self.assertFalse(any("<!--" in p["html"] for a in h["prameny"] for p in a["polozky"]))
+        for a in h["prameny"]:                     # rod je v záhlaví karty – v textu položky se neopakuje (20. 11. 2026)
+            for p in a["polozky"]:
+                if p["rod"]:
+                    self.assertFalse(p["html"].startswith(f"<strong>{site['lines'][p['rod']]['name']}"), p["html"])
+        stranka = (self.p / "web" / "src" / "pages" / "hledame.astro").read_text(encoding="utf-8")
+        self.assertNotIn("grid2", stranka)         # bloky pod sebou, ne vedle sebe
+        self.assertIn("c.polozky.map((i) => (\n          <RodBox", stranka)   # otevřené otázky: kontejner na otázku
 
     def test_zajimavosti_v_kontejneru_rodu(self):
         spust(self.p, "export_web.py")
