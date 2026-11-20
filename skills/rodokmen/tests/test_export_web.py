@@ -59,6 +59,19 @@ SIDE += [
 '''
 
 
+class CislaOsobVTextech(unittest.TestCase):
+    """Poznámka z bádání 20. 11. 2026: „(33)“ z hlavního rodokmenu v textech webu nic neříká a v přístupu s jiným kořenem mate."""
+    def test_cisla_osob_ven_letopocty_a_jina_cisla_zustanou(self):
+        o = {"n": "Anna (2)", "note": "dcera Josefa (33) a Anny (34), * (1850)", "f": ["bratr Jan (13)", "čp. (7)"], "rel": "sestra Jana (13)"}
+        v = ew.bez_cisel_osob(o, {2, 33, 34, 13, 1850})
+        self.assertEqual(v["note"], "dcera Josefa a Anny, * (1850)")
+        self.assertEqual(v["f"], ["bratr Jan", "čp. (7)"])
+        self.assertEqual(v["rel"], "sestra Jana")
+        self.assertEqual(v["n"], "Anna (2)")                     # jméno se nemění
+        o = {"note": "bez čísel"}
+        self.assertIs(ew.bez_cisel_osob(o, {1}), o)                   # beze změny tentýž slovník
+
+
 class ExportUkazky(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

@@ -257,6 +257,15 @@ def main():
     from pohled import _slug as slug_pristupu   # stejné id přístupu jako export
     ids_pristupu = {"vse"} | {slug_pristupu(p.get("nazev") or "") or f"pristup-{i}"
                               for i, p in enumerate(jload("web.json", {}).get("pristupy") or [], 1) if isinstance(p, dict)}
+    try:
+        from pohled import nacti_pristupy, nesedici_rody
+        ns_p = dict(ns)
+        for k, v in (("P", {}), ("SIDE", []), ("LINES", {}), ("ISSUES", []), ("HYPOTEZY", []), ("SAME", {}), ("RODINA", {}), ("PARTNERI", [])):
+            ns_p.setdefault(k, v)
+        for p in nacti_pristupy(jload("web.json", {})) or []:
+            warn += nesedici_rody(ns_p, p)
+    except SystemExit as e:   # chybné nastavení přístupů hlásí export a brána
+        warn.append(f"přístupy: {e}")
     for d in docs_k:
         if not (d.get("popis") or "").strip():
             warn.append(f"dokument {d.get('img')} nemá popis – na webu bude bez popisku")

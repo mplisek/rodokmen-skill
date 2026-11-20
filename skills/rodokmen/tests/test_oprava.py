@@ -211,6 +211,19 @@ class OpravaOsobDokumentuMist(Oprava):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertEqual(self.osoby()["RODINA"]["marie-vzorna-1840"]["otec"], 8)
 
+    def test_popisek_vztahu_v_rodine(self):
+        """Poznámka z bádání 20. 11. 2026: po sloučení dvojníků zastaralý popisek vztahu („rel“) šel opravit jen ručně."""
+        p = self.root / "data" / "osoby.py"
+        rodina = 'RODINA = {\n "marie-vzorna-1840": dict(n="Marie Vzorná", otec=8, rel="dcera X"),\n'
+        p.write_text(OSOBY.replace("RODINA = {\n", rodina), encoding="utf-8")
+        r = self.oprav({"duvod": "sloučení dvojníků", "doklad": "schéma", "zmeny": [
+            {"soubor": "osoby", "skupina": "RODINA", "klic": "marie-vzorna-1840", "pole": {"rel": "dcera Josefa Vzorného"}}]})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertEqual(self.osoby()["RODINA"]["marie-vzorna-1840"]["rel"], "dcera Josefa Vzorného")
+        r = self.oprav({"duvod": "popisek dopočítá export", "doklad": "schéma", "zmeny": [
+            {"soubor": "osoby", "skupina": "RODINA", "klic": "marie-vzorna-1840", "pole": {"rel": ""}}]})
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
     def test_otazka_nova_a_vyresena(self):
         r = self.oprav({"duvod": "rozpor s rodinným listem", "doklad": "úmrtní list 1906", "zmeny": [
             {"soubor": "issues", "nove": True, "pole": {"k": 9, "otazka": "Kdy zemřela Anna?", "stav": "otevřené", "text": "List 1906 × rodina 1907."}},

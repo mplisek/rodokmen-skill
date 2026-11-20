@@ -104,3 +104,38 @@ class Spotreba(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Kontext(unittest.TestCase):
+    """Upozornění na dlouhé sezení: nad mezí kontextu radí předání do STAV.md a nové sezení."""
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.d = Path(self.tmp.name)
+        os.environ["RODOKMEN_PREPISY"] = str(self.d)
+
+    def tearDown(self):
+        os.environ.pop("RODOKMEN_PREPISY", None)
+        self.tmp.cleanup()
+
+    def run_(self, *a):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            kod = spotreba.main(list(a))
+        return kod, out.getvalue()
+
+    def test_pod_mezi_v_poradku(self):
+        zapis(self.d / "s1.jsonl", [tah("m1", "claude-opus-5-5", vstup=10, cteni=50000)])
+        kod, out = self.run_("kontext")
+        self.assertEqual(kod, 0)
+        self.assertIn("v pořádku", out)
+
+    def test_nad_mezi_radi_predani_a_nove_sezeni(self):
+        zapis(self.d / "s1.jsonl", [tah("m1", "claude-opus-5-5", cteni=50000),
+                                    tah("m2", "claude-opus-5-5", zapis=5000, cteni=230000)])
+        kod, out = self.run_("kontext")
+        self.assertEqual(kod, 1)
+        self.assertIn("STAV.md", out)
+        self.assertIn("/clear", out)
+        self.assertEqual(self.run_("kontext", "--mez", "300000")[0], 0)
+        self.run_("sezeni")
+        self.assertIn("přerostl", self.run_("sezeni")[1])

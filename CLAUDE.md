@@ -10,6 +10,11 @@ nepřepisuje); co se v originále změnilo a kde hrozí konflikt, ukáže přede
 `git fetch upstream`). PR originálu `git merge --no-ff -m "Merge sarsonj/rodokmen-skill#N: <název>" refs/upstream-pr/N`.
 Pravidla archivů z originálu (co skriptem nesmí, `tools/slusne.py` ZAKAZ) platí i pro úpravy forku.
 
+Sezení nad skillem je **údržba metodiky, ne bádání**: nespouštěj bádání v projektu (hledání, čtení snímků, zápisy do dat),
+nálezy z bádání přicházejí přes `data/poznamky_pro_skill.md` projektu nebo od uživatele. Opačně bádací sezení skill neupravuje.
+Po bloku práce zapiš předání (paměť, u větších prací `analyza/`) a doporuč nové sezení (`/clear`) – dlouhé sezení platí celý
+kontext v každém tahu znovu.
+
 Vydání nové verze: zvedni číslo ve třech místech najednou – `.claude-plugin/plugin.json` (`version`),
 `skills/rodokmen/VERZE` (podle něj Claude u uživatele pozná, že má aktualizovat projekt) a README na dvou místech – nahoře
 „Aktuální verze: X.Y.Z (vydána D. M. RRRR)“ a v požadavcích „Stav k D. M. RRRR (verze X.Y.Z)“, vždy s číslem verze i datem vydání.

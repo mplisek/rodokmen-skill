@@ -65,7 +65,7 @@ SOUBORY = {"zaznamy": "data/zaznamy.json", "mista": "data/mista.json", "dokument
 STAVY_OSOB = ("doc", "prob", "fam", "mh", "unk")
 STAVY_OTAZEK = ("otevřené", "hypotéza", "vyřešeno")
 POLE_OSOBY = {"P": ("n", "y", "st", "zap", "f", "note", "vyz", "r", "overeno", "sour"),
-              "RODINA": ("n", "y", "sex", "otec", "matka", "partner", "v", "st", "zap", "f", "r", "note")}
+              "RODINA": ("n", "y", "sex", "otec", "matka", "partner", "v", "rel", "st", "zap", "f", "r", "note")}
 POLE_DOKUMENTU = ("popis", "osoby", "druh", "rc", "pristupy", "soukrome", "rodiny", "autor", "datum", "soubory")
 POVINNE_NOVE = {"mista": ("re", "dotaz", "lat", "lon"), "dokumenty": ("popis", "osoby", "rc"), "osoby": ("n",), "issues": ("k", "otazka", "stav")}
 VZOR = {"duvod": "rodinné schéma potomků a úmrtní list", "doklad": "dokumenty/schema_novakovi.jpg, úmrtní list 1906 (sken od rodiny 15. 11.)",
@@ -137,7 +137,7 @@ def over_osobu(z, kde, ns, zaznamy):
     for p, v in pole.items():
         if p not in POLE_OSOBY[skupina]:
             ch.append(f"{kde}: pole osoby „{p}“ tudy měnit nejde (povolená: {', '.join(POLE_OSOBY[skupina])}; souhlas a soukromí určuje uživatel)")
-        elif p in ("n", "y", "note", "vyz", "v", "sour") and not (isinstance(v, str) and len(v) <= 3000 and (v.strip() or p in ("y", "note"))):
+        elif p in ("n", "y", "note", "vyz", "v", "rel", "sour") and not (isinstance(v, str) and len(v) <= 3000 and (v.strip() or p in ("y", "note", "rel"))):
             ch.append(f"{kde}: {p} je text")
         elif p == "st" and v not in STAVY_OSOB:
             ch.append(f"{kde}: st jen {', '.join(STAVY_OSOB)}")

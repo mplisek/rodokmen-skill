@@ -111,6 +111,44 @@ def _zastupce(o):
     return (o.get("n") or "").startswith(("otec neuveden", "matka neuvedena")) or o.get("n") in ("", "?")
 
 
+def _kmen(text):
+    return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)).lower().strip("()?,.")
+
+
+def _sedi_rod(nazev, jmeno):
+    """Název rodu („Markové z Křemenice“) odpovídá příjmení osoby („František Marek“, „Anna Nováková roz. …“)?"""
+    rod = _kmen((nazev or "").split()[0]) if (nazev or "").split() else ""
+    slova = [w for w in (jmeno or "").split() if _kmen(w)]   # bez „(?)“ u nejistého příjmení
+    kandidati = slova[-1:] + [slova[i + 1] for i, w in enumerate(slova[:-1]) if w.rstrip(".") in ("roz", "rozená")]
+    for w in map(_kmen, kandidati):
+        spolecne = next((i for i, (x, y) in enumerate(zip(rod, w)) if x != y), min(len(rod), len(w)))
+        if w and spolecne >= min(3, len(w)):
+            return True
+    return False
+
+
+def nesedici_rody(ns, p):
+    """Upozornění pro přístup p (z nacti_pristupy) s vlastními „rody“: číslo rodu se počítá od kořene přístupu; když na něm
+    sedí předek s jiným příjmením (přístup zkopírovaný z jiného kořene), poradí číslo, kde příjmení sedí."""
+    rody = p.get("rody") or {}
+    if not rody or not p.get("koren"):
+        return []
+    nove_p = pohled(ns, p["koren"], False, rody)[0]["P"]
+    out = []
+    for k, v in sorted(rody.items(), key=lambda x: (not str(x[0]).isdigit(), int(x[0]) if str(x[0]).isdigit() else 0, str(x[0]))):
+        nazev = v[0] if isinstance(v, (list, tuple)) and v else str(v)
+        n = int(k) if str(k).isdigit() else None
+        jmeno = (nove_p.get(n) or {}).get("n") if n is not None else None
+        slova = [w for w in (jmeno or "").split() if _kmen(w)]
+        if jmeno and (_sedi_rod(nazev, jmeno) or len(slova) < 2):   # bez příjmení („Anna“, „?“) se nedá posoudit
+            continue
+        jinde = [m for m in range(8, 16) if _sedi_rod(nazev, (nove_p.get(m) or {}).get("n"))]
+        out.append(f"přístup „{p.get('nazev')}“: rod {k} „{nazev}“ – " + (f"na čísle {k} je {jmeno}" if jmeno else
+                   f"číslo {k} v jeho stromu není") + (f"; příjmení sedí na čísle {', '.join(map(str, jinde))}" if jinde else "")
+                   + " (rody se číslují od kořene přístupu, 8–15 = pradědečci a prababičky)")
+    return out
+
+
 def pohled(ns, koreny, texty=False, rody=None):
     """Data rodokmenu z pohledu výchozích osob `koreny` (první určuje číslování). Vrací (nové ns, převod), kde převod
     mapuje původní odkaz osoby (číslo z P nebo zkratka z RODINA) na nový (číslo v novém P nebo zkratka v novém RODINA)."""

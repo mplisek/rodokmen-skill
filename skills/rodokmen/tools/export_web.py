@@ -381,6 +381,20 @@ def dokument_pro_pristup(d, pid, viditelne, same=None):
     return all(viditelne(kan(r)) for r in list(d.get("osoby", [])) + list(d.get("rc") or []))   # i jména z RČ
 
 
+CISLO_OSOBY = re.compile(r"\s?\((\d{1,4})\)")
+
+
+def bez_cisel_osob(o, cisla):
+    """Osoba bez interních čísel jiných osob v textech („syn Josefa Vzorného (33)“ → „syn Josefa Vzorného“): čísla jsou
+    z hlavního rodokmenu, rodině nic neříkají a v přístupu s jiným kořenem matou. Letopočty v závorkách zůstanou."""
+    def ven(t):
+        if not isinstance(t, str) or "(" not in t:
+            return t
+        return CISLO_OSOBY.sub(lambda m: "" if int(m.group(1)) in cisla and not 1500 <= int(m.group(1)) <= 2100 else m.group(0), t)
+    zmeny = {k: ([ven(x) for x in o[k]] if isinstance(o[k], list) else ven(o[k])) for k in ("note", "f", "rel", "v") if o.get(k)}
+    return dict(o, **zmeny) if any(zmeny[k] != o[k] for k in zmeny) else o
+
+
 def ocisti_osobu(o, smi):
     """Osoba bez údajů „(soukromé) …“, které daný přístup nesmí (smi = smí soukromé údaje této osoby); povolené bez značky."""
     f = o.get("f", [])
@@ -869,6 +883,9 @@ def main():
     puvodni_same = ns["SAME"]
     R_spravce = ns["RODINA"]   # původní RODINA (před pohledem přístupu): rody dokumentů mimo přímé předky
     lines_spravce = dict(ns["LINES"])   # rody v rodokmenu správce: na ně (zakladatelé, adresy /rod/…) odkazují texty
+    cisla = set(ns["P"]) | set(ns["SAME"])   # čísla osob v textech webu nepatří (data pro bádání je mají dál)
+    ns = dict(ns, P={k: bez_cisel_osob(o, cisla) for k, o in ns["P"].items()},
+              RODINA={oid: bez_cisel_osob(o, cisla) for oid, o in ns["RODINA"].items()})
     if pristup and pristup["koren"]:
         ns, prevod = pohled(ns, pristup["koren"], texty, pristup.get("rody"))
         cfg = dict(cfg, nazev=pristup.get("nazev_webu", cfg.get("nazev")))

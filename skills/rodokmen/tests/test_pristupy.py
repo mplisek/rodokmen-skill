@@ -23,6 +23,30 @@ def ukazka():
     return ns
 
 
+class RodyPristupu(unittest.TestCase):
+    """Poznámka z bádání 20. 11. 2026: přístup zkopírovaný z jiného kořene měl rody posunuté o generaci a nic to nehlásilo."""
+    def test_sedici_rody_bez_upozorneni(self):
+        p = {"nazev": "Otcova rodina", "koren": [2], "rody": {"8": ["Novákové z Holic", ""], "13": ["Markovi", ""],
+                                                              "15": ["Duškovi", ""]}}
+        self.assertEqual(ph.nesedici_rody(ukazka(), p), [])
+
+    def test_posunute_rody_poradi_spravne_cislo(self):
+        p = {"nazev": "Otcova rodina", "koren": [2], "rody": {"999": ["Králové", ""], "9": ["Pokorní", ""]}}
+        u = ph.nesedici_rody(ukazka(), p)
+        self.assertEqual(len(u), 2)
+        self.assertIn("číslo 999 v jeho stromu není; příjmení sedí na čísle 12", u[1])
+        self.assertIn("na čísle 9 je Barbora Malá; příjmení sedí na čísle 10", u[0])
+
+    def test_nejiste_prijmeni_se_porovna_bez_otazniku(self):
+        ns = ukazka()
+        n13 = next(k for k, v in ph.pohled(ns, [2])[1].items() if v == 13)
+        ns["P"][n13] = dict(ns["P"][n13], n="Johana Marková (?)")
+        self.assertEqual(ph.nesedici_rody(ns, {"nazev": "A", "koren": [2], "rody": {"13": ["Markovi", ""]}}), [])
+        self.assertEqual(len(ph.nesedici_rody(ns, {"nazev": "A", "koren": [2], "rody": {"13": ["Kolářovi", ""]}})), 1)
+        ns["P"][n13] = dict(ns["P"][n13], n="?")
+        self.assertEqual(ph.nesedici_rody(ns, {"nazev": "A", "koren": [2], "rody": {"13": ["Kolářovi", ""]}}), [])
+
+
 class Nastaveni(unittest.TestCase):
     def test_bez_pristupu(self):
         self.assertIsNone(ph.nacti_pristupy({"prihlaseni": {"odpoved": "kovář"}}))

@@ -9,6 +9,9 @@ Použití:
         pomocníci, jejichž zadání nebo popis jmenuje daný úkol (hlavní vlákno se k úkolu přiřadit nedá)
   python3 -I tools/spotreba.py seznam
         sezení projektu od nejnovějšího (ID, poslední změna, velikost)
+  python3 -I tools/spotreba.py kontext [--sezeni ID|posledni] [--mez 200000]
+        velikost kontextu hlavního vlákna v posledním tahu; nad mezí (výchozí 200 tis.) radí zapsat předání do STAV.md
+        a začít nové sezení (/clear) – každý další tah dlouhého sezení platí celý kontext znovu; kód 1 = nad mezí
 
 „ekv“ je vážené číslo pro srovnání běhů, ne účet: vstup + 1,25 × zápis cache + 0,1 × čtení cache + 5 × výstup. Sčítá modely
 s různou cenou, proto tabulka uvádí model u každé role. Záznamy se hledají v ~/.claude/projects/<složka projektu>; jinou složku
@@ -31,6 +34,8 @@ for _s in (sys.stdout, sys.stderr):
     except Exception:
         pass
 UKOL = re.compile(r"U-\d{4}")
+MEZ_KONTEXTU = 200000
+RADA = "zapiš předání do data/STAV.md („Rozpracováno“) a doporuč uživateli nové sezení (/clear)"
 
 
 def slozka_prepisu():
@@ -99,7 +104,7 @@ def cti(path, od=None, do=None, jen_hlavni=False):
     modely = collections.Counter(x[1] for x in us)
     casy = [x[2] for x in us if x[2]]
     return {"tahu": len(us), "ekv": round(sum(ekv(x[0]) for x in us)), "start": kontext(us[0][0]),
-            "kontext_max": max(kontext(x[0]) for x in us), "kontext_median": round(statistics.median(kontext(x[0]) for x in us)),
+            "kontext_max": max(kontext(x[0]) for x in us), "kontext_posledni": kontext(us[-1][0]), "kontext_median": round(statistics.median(kontext(x[0]) for x in us)),
             "vstup": sum(x[0].get("input_tokens", 0) for x in us), "zapis_cache": sum(x[0].get("cache_creation_input_tokens", 0) for x in us),
             "cteni_cache": sum(x[0].get("cache_read_input_tokens", 0) for x in us), "vystup": sum(x[0].get("output_tokens", 0) for x in us),
             "model": modely.most_common(1)[0][0].replace("claude-", ""), "modelu": len(modely), "chyb": chyby, "ukoly": sorted(ukoly),
@@ -175,6 +180,8 @@ def cmd_sezeni(a):
           + f" | {hlavni['tahu']} tahů | {tis(hlavni['ekv'])} | kontext medián {hlavni['kontext_median']}, max {hlavni['kontext_max']} | "
           f"{100 * hlavni['ekv'] / celkem if celkem else 0:.0f} %")
     print(f"celkem {tis(celkem)} tis. ekv, pomocníků {sum(r['behu'] for r in radky)}")
+    if hlavni["kontext_max"] > MEZ_KONTEXTU:
+        print(f"pozor: kontext hlavního vlákna přerostl {tis(MEZ_KONTEXTU)} tis.; příště po bloku práce {RADA}")
     if hlavni["modelu"] > 1:
         print("pozor: hlavní vlákno měnilo model; každá změna zahodí mezipaměť a celý kontext se platí znovu")
     return 0
@@ -198,6 +205,19 @@ def cmd_ukol(a):
     return 0
 
 
+def cmd_kontext(a):
+    h = cti(vyber_sezeni(slozka_prepisu(), a.sezeni), jen_hlavni=True)
+    if not h:
+        print("sezení zatím nemá žádný tah")
+        return 0
+    k = h["kontext_posledni"]
+    if k <= a.mez:
+        print(f"kontext {tis(k)} tis. z meze {tis(a.mez)} tis. – v pořádku")
+        return 0
+    print(f"kontext {tis(k)} tis., nad mezí {tis(a.mez)} tis.: {RADA}")
+    return 1
+
+
 def cmd_seznam(a):
     for p in sezeni_soubory(slozka_prepisu()):
         print(f"{os.path.basename(p)[:-len('.jsonl')]} | {datetime.datetime.fromtimestamp(os.path.getmtime(p)):%Y-%m-%d %H:%M} | "
@@ -211,8 +231,9 @@ def main(argv=None):
     s = sp.add_parser("sezeni"); s.add_argument("--sezeni"); s.add_argument("--od"); s.add_argument("--do"); s.add_argument("--json", action="store_true")
     s = sp.add_parser("ukol"); s.add_argument("id"); s.add_argument("--sezeni"); s.add_argument("--json", action="store_true")
     sp.add_parser("seznam")
+    s = sp.add_parser("kontext"); s.add_argument("--sezeni"); s.add_argument("--mez", type=int, default=MEZ_KONTEXTU)
     a = ap.parse_args(argv)
-    return {"sezeni": cmd_sezeni, "ukol": cmd_ukol, "seznam": cmd_seznam}[a.cmd](a)
+    return {"sezeni": cmd_sezeni, "ukol": cmd_ukol, "seznam": cmd_seznam, "kontext": cmd_kontext}[a.cmd](a)
 
 
 if __name__ == "__main__":

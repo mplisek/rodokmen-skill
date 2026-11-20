@@ -28,6 +28,9 @@ kontroly a rejstřík z forku zůstávají. Projekt založený dřívější ver
   uživatele, Rozpracováno a Čeká na rozhodnutí, vede se ručně.
 - `otazky.py ze-souboru`: otázky pro Co hledáme z `otazky_pro_rodinu.md` a `archivni_dotazy.md`.
 - Agenti jen pro údržbu skillu: `metodik` a `upstream-sync`.
+- **Kratší sezení, nižší spotřeba:** po bloku práce Claude zapíše předání do `STAV.md` a doporučí nové sezení (`/clear`);
+  `tools/spotreba.py kontext` upozorní, když kontext sezení přeroste 200 tisíc tokenů (dlouhé sezení platí celý kontext
+  v každém tahu znovu).
 
 ### Opravy
 
@@ -41,6 +44,10 @@ kontroly a rejstřík z forku zůstávají. Projekt založený dřívější ver
 - `otazky.py ze-souboru`: stejný text ve dvou archivech nebo rodech nejsou duplicita.
 - Brána a sestavení webu poznají neúplnou verzi (chybí úvodní nebo přihlašovací stránka, např. kvůli zámku OneDrive).
 - Aktualizace projektu upozorní na odkazy na `research_log.md` ve vlastním `CLAUDE.md` a `STAV.md`.
+- Web neukazuje interní čísla osob z rodokmenu v textech („syn Josefa (33)“ → „syn Josefa“); data pro bádání je mají dál.
+- Kontrola dat upozorní, když rody přístupu (`web.json` → `pristupy[].rody`) nesedí s příjmením předka na daném čísle
+  (např. přístup zkopírovaný z jiného kořene), a poradí správné číslo.
+- `oprava.py` mění i popisek vztahu `rel` u osoby z RODINA (prázdný popisek dopočítá export).
 
 ### Přechod projektu z 0.10.2-fork.1
 

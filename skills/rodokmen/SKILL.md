@@ -193,7 +193,8 @@ Linie končí, když matriky mlčí (nemanželské dítě bez otce, shořelé kn
 v 17. století. Zapiš to – rozpor do `ISSUES`, co ví jen archiv do `archivni_dotazy.md`, co ví rodina jako otázku pro
 rodinu (`otazky.py`, stránka Co hledáme), další nápad do `ukoly.md` (náhradní prameny: `metodika.md` → Mrtvé body) –
 a jdi na jinou větev. Průběžně aktualizuj `data/STAV.md` („Rozpracováno“: co je rozdělané, poslední krok, co dál),
-aby šlo kdykoli navázat.
+aby šlo kdykoli navázat. **Po bloku práce** zapiš předání a doporuč nové sezení (`/clear`,
+hlídá `tools/spotreba.py kontext`).
 
 ## Fáze 3 – Zajímavosti a příběhy rodů
 
@@ -237,9 +238,8 @@ mlčel nebo radil špatně, a co uživatel chtěl, ale skill to neuměl. Piš ob
 **Ve vhodnou chvíli** (po zveřejnění webu, na konci velkého kola; ne pořád) připomeň uživateli, že je může poslat správci:
 
 1. Projdi poznámky a odstraň nebo zobecni osobní údaje.
-2. Vypiš je do chatu celé, jako jeden blok k zkopírování.
+2. Vypiš je do chatu celé, jako blok ke zkopírování.
 3. Požádej uživatele, ať z nich založí issue u forku skillu na **<https://github.com/mplisek/rodokmen-skill/issues>**
-   (tento skill je fork originálu sarsonj/rodokmen-skill, poznámky patří správci forku).
 **Nic sám neposílej** (žádný e-mail, formulář ani issue). Až uživatel řekne, že poslal, zapiš do
 `data/poznamky_pro_skill.md` „odesláno <datum>“ a další poznámky piš pod tuto čáru.
 
