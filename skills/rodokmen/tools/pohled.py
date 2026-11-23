@@ -116,7 +116,7 @@ def _kmen(text):
 
 
 def _sedi_rod(nazev, jmeno):
-    """Název rodu („Markové z Křemenice“) odpovídá příjmení osoby („František Marek“, „Anna Nováková roz. …“)?"""
+    """Název rodu („Novákové z Holic“) odpovídá příjmení osoby („Jan Novák“, „Anna Malá roz. …“)?"""
     rod = _kmen((nazev or "").split()[0]) if (nazev or "").split() else ""
     slova = [w for w in (jmeno or "").split() if _kmen(w)]   # bez „(?)“ u nejistého příjmení
     kandidati = slova[-1:] + [slova[i + 1] for i, w in enumerate(slova[:-1]) if w.rstrip(".") in ("roz", "rozená")]

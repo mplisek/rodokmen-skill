@@ -10,7 +10,7 @@ Tohle je fork ([mplisek/rodokmen-skill](https://github.com/mplisek/rodokmen-skil
 na verzi X.Y.Z originálu a popisuje jen to, co fork přidává; níže jsou změny originálu. Čísla PR (`PR #19`)
 odkazují na pull requesty v originálu (sarsonj/rodokmen-skill).
 
-## 0.10.2-fork.2 – 18. 11. 2026
+## 0.10.2-fork.2 – 23. 11. 2026
 
 Fork znovu postavený na originálu 0.10.2: **bádání vede jedno sezení s uživatelem** jako v originále. Dřívější metodika
 s agenty, frontami úkolů a kontrakty mezi agenty skončila (je ve značce `fork-metodika-2026-11`). Web, přístupy, archivy,
@@ -48,6 +48,9 @@ kontroly a rejstřík z forku zůstávají. Projekt založený dřívější ver
 - Kontrola dat upozorní, když rody přístupu (`web.json` → `pristupy[].rody`) nesedí s příjmením předka na daném čísle
   (např. přístup zkopírovaný z jiného kořene), a poradí správné číslo.
 - `oprava.py` mění i popisek vztahu `rel` u osoby z RODINA (prázdný popisek dopočítá export).
+- Dokumenty dětí a sourozenců kořene už nepatří do všech rodů: blízký předek jako rodič dává jen svůj rod po meči
+  a dokument, jehož rody pokrývají celý web, je bez rodu (ukáže se u všech příběhů). Na stránce Dokumenty se dokument
+  bez rodu zařadí do oddílu rodu stejného jména, ne do druhého oddílu na konci.
 
 ### Přechod projektu z 0.10.2-fork.1
 

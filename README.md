@@ -22,7 +22,7 @@ Vznikl při skutečném hledání předků jedné rodiny.
 > skriptem a co jen v prohlížeči) fork dodržuje. Kdo přechází z originálu, najde postup v části
 > [Přechod z originálu](#přechod-z-originálu).
 
-**Aktuální verze: 0.10.2-fork.2 (vydána 18. 11. 2026).** Skill se průběžně vyvíjí – opravuji chyby a doplňuji postupy pro další archivy
+**Aktuální verze: 0.10.2-fork.2 (vydána 23. 11. 2026).** Skill se průběžně vyvíjí – opravuji chyby a doplňuji postupy pro další archivy
 podle toho, na co narazíte vy. Jak aktualizovat, najdete v části [Instalace](#instalace), přehled změn
 po verzích v [CHANGELOG.md](CHANGELOG.md).
 
@@ -80,7 +80,7 @@ s přepisem a překladem, „Co hledáme“ a deník hledání. **[Podívejte se
 AI se vyvíjí rychle a za pár měsíců může skill dávat lepší, nebo jen jiné výsledky. Proto je tu uvedeno, s čím byl
 vyzkoušený.
 
-- **Stav k 18. 11. 2026 (verze 0.10.2-fork.2):** Claude Code s hlavním modelem **Claude Opus 5.5**. Pomocníci, kteří hledají
+- **Stav k 23. 11. 2026 (verze 0.10.2-fork.2):** Claude Code s hlavním modelem **Claude Opus 5.5**. Pomocníci, kteří hledají
   a čtou matriky jako první, běží na **Claude Sonnet 5.5**. Každý zápis se čte podruhé po pevných polích; co se neshoduje,
   rozhoduje uživatel nad výřezem.
 - Vyzkoušeno na několika skutečných rodokmenech (největší má 243 předků v 11 generacích a 192 matričních zápisů).
