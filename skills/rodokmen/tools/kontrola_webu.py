@@ -27,6 +27,16 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # -I nepřidáv
 import rody_html as rh  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _rel(cesta):
+    """Cesta pro hlášení; na Windows na jiném disku než pracovní složka relpath padá, pak cesta beze změny."""
+    try:
+        return os.path.relpath(cesta)
+    except ValueError:
+        return cesta
+
+
 PROCES = [
     ("číslo úkolu", re.compile(r"\b(?:U-\d{3,}|N\d{1,2}[a-z])\b")),
     ("jméno agenta nebo modelu", re.compile(r"\b(?:pomocník\w*|subagent\w*|sonnet\w*|haiku\w*|claude)\b", re.I)),
@@ -69,7 +79,7 @@ def kontroluj_kontejnery(html, jmeno, podle_slugu, chyby):
 
 def kontroluj(cesta, rody, rx, podle_slugu, chyby, upozorneni):
     html = rh.cti(cesta)
-    jmeno = os.path.relpath(cesta)
+    jmeno = _rel(cesta)
     if rx:
         holé = []
         rh.projdi(html, lambda t: holé.extend(m.group(0) for m in rx.finditer(t)) or t)
@@ -257,7 +267,7 @@ def kontroluj_nepotvrzene(slozka, data, chyby):
         text = norm(" ".join(texty))
         for i, t in tajne:
             if t in text:
-                chyby.append(f"{os.path.relpath(cesta)}: nepotvrzená veřejná otázka {i} je na webu (otazky.py potvrd)")
+                chyby.append(f"{_rel(cesta)}: nepotvrzená veřejná otázka {i} je na webu (otazky.py potvrd)")
 
 
 def main():
