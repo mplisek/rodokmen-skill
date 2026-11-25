@@ -15,7 +15,7 @@ class SkillMd(unittest.TestCase):
     def test_delka_nejvys_o_desetinu_nad_originalem(self):
         r = subprocess.run(["git", "show", "upstream/main:skills/rodokmen/SKILL.md"], cwd=REPO, capture_output=True, text=True,
                            encoding="utf-8")
-        original = len(r.stdout.split()) if r.returncode == 0 and r.stdout.strip() else 3220   # bez remote upstream: 0.10.2
+        original = len(r.stdout.split()) if r.returncode == 0 and r.stdout.strip() else 3408   # bez remote upstream (CI): originál 0.11.1
         self.assertLessEqual(len(TEXT.split()), int(original * 1.1), "SKILL.md bobtná – podrobnosti patří do reference/")
 
     def test_bez_zrusene_vrstvy(self):
