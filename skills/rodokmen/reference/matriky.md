@@ -45,9 +45,12 @@ zhruba po roce 1910 často online nebudou (kniha pokračuje za rok 1926, lhůta 
 2. **Svazek podle roku a druhu.** Pozor na překryvy: jedna kniha pro více obcí, zvláštní knihy pro jednotlivé obce.
    **Druhopisy** (duplikáty pro děkanát nebo úřad, např. „T“ svazky v ZA Opava) mívají N, O a Z jednoho roku u sebe –
    hodí se, když originál chybí, je nečitelný nebo velký.
-3. **Index, pak kniha.** Index řazený po písmenech a letech dá stránku/folio; číslo folia nepřeváděj pevným offsetem
-   na číslo snímku. Najdi folio podle číslování přímo v knize a zkontroluj okolní strany – vložené, chybějící nebo
-   nečíslované listy mohou vztah mezi folií a snímkem změnit.
+3. **Index, pak kniha.** Index řazený po písmenech a letech dá stránku/folio; snímek odhadni (snímek ≈ folio × 1 až 2) a dolaď.
+   Když posun mezi foliem a snímkem v knize kolísá (knihy po vsích, vlepené listy), zapiš si ze 2–3 otevřených snímků
+   dvojice snímek=folio a `python3 -I tools/folio.py 14=5r 31=13v 52=24r 20r` dopočítá snímek (`--pagina` pro strany).
+   Starší rejstříky (18. stol.) občas ukazují o 1–4 strany vedle – když zápis na udané straně není, listuj kolem.
+   Číslo folia nepřeváděj pevným offsetem – najdi folio podle číslování přímo v knize a zkontroluj okolní strany
+   (vložené, chybějící nebo nečíslované listy vztah folia a snímku mění).
    Posun „snímek – strana“ se v knize mění (vložené listy, chybějící strany) – přečti číslo strany na náhledu a dopočítej.
    **Posun nikdy nedomýšlej:** přečti „Pag./fol.“ na 2–3 snímcích, spočítej ho a teprve pak skoč (bývá +1, +2, ale i −19).
    U knih **dodatečně přefoliovaných** odkazuje rejstřík na původní ruční číslo listu (vpravo nahoře), ne na archivní

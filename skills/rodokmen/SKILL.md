@@ -74,8 +74,13 @@ Cíl: znát co nejvíc o 3–4 generacích nazpět, než sáhneš do matrik.
   (formát v hlavičce souboru a v `reference/data.md`), sourozence a další příbuzné s vlastní stránkou do `RODINA`.
   Žijící lidé jen jméno a rok narození.
 - **Rodinný strom** (GEDCOM `.ged`, záloha MyHeritage `.ftb`): `tools/ged_import.py`, `tools/ftb_export.py` – postup
-  v `reference/data.md`. Strom rodiny má stav `fam`; cizí stromy z internetu (MyHeritage, Geni, FamilySearch) jsou
+  v `reference/data.md` → Import rodinného stromu. Pole `ged`/`uid` z importu u osob nech (vazba pro sloučení s MyHeritage). Strom rodiny má stav `fam`; cizí stromy z internetu (MyHeritage, Geni, FamilySearch) jsou
   **jen vodítko**, stav `mh`, nikdy `doc`. Před importem cizího stromu `tools/graf.py strom …` (dvojníci, nemožné věky).
+- **Export do GEDCOM** (do MyHeritage, Gramps…; do vlastního stromu na MyHeritage rozdílově `--rozdil`): `tools/ged_export.py`,
+  postup a soukromí v `reference/data.md` → Export do GEDCOM. **Před spuštěním se zeptej, zda exportovat i žijící osoby**
+  (výchozí ne; ano = `--zijici`, vysvětli, že údaje dostane cílová služba). Nabídni ho, když uživatel zmíní MyHeritage,
+  Ancestry, Geni nebo test DNA, jinak jednou větou na konci kola. Nevnucuj ho; sloučení (`--rozdil`) je pokročilé
+  (Family Tree Builder, kotvy spojuje uživatel ručně).
 
 ## Fáze 2 – Matriky, generace po generaci
 
@@ -93,9 +98,10 @@ Základní smyčka pro každou osobu:
    sňatky i úmrtí 75; `matriky.md` → Lhůty). Mladší údaje jsou na matričním úřadě – zápis starší lhůty tam
    dostane kdokoli, mladší jen rodina; zapiš do `data/archivni_dotazy.md`, žádost viz `reference/zadosti.md`.
 3. **Najdi svazek**: podle obce → farnost → archiv. ARON: `python3 -I tools/aron_search.py "Obec"`, SOA Plzeň:
-   `python3 -I tools/portafontium.py obec "Obec"`, Praha: `tools/ahmp_search.sh`, SOA Litoměřice `litomerice.py`,
-   židovské matriky `vademecum.py`, Vídeň `matricula.py`; další v `reference/portaly.md`. **SOA Praha, MZA Brno, SOA Třeboň
-   a ZA Opava jen v prohlížeči** – přes `tools/prohlizec.py` (vlastní prohlížeč s pauzami brzdy, `portaly.md`).
+   `python3 -I tools/portafontium.py obec "Obec"`, Praha: `tools/ahmp_search.sh` (do 30. 11. 2026, pak Claude in Chrome), SOA Litoměřice `litomerice.py`,
+   židovské matriky `vademecum.py`, Vídeň `matricula.py`; další v `reference/portaly.md`. **SOA Praha, MZA Brno a SOA Třeboň
+   jen v prohlížeči** – přes `tools/prohlizec.py` (vlastní prohlížeč s pauzami brzdy, `portaly.md`); **ZA Opava a AHMP (od 30. 11. 2026)
+   jen v Claude in Chrome** (snímek obrazovky zápisu, celý snímek `cache.py z-chromu`; Playwright je tam od listopadu blokovaný).
    Sňatek hledej nejdřív ve farnosti nevěsty. Je-li ke svazku rejstřík, začni jím.
 4. **Než stáhneš, zeptej se, co už víš:** `rejstrik.py svazek <svazek>` (co už jsme prošli), **mapa knihy**
    `mapa.py hledej aron <svazek> --pismeno F | --rok 1856` (který snímek – jen rada), `pracovni_prehled.py --hledej "…"`.
@@ -269,7 +275,7 @@ mlčel nebo radil špatně, a co uživatel chtěl, ale skill to neuměl. Piš ob
 |---|---|
 | `aron_search.py`, `aron_img.py` | ARON (SOA Zámrsk): hledání svazků; snímek (úroveň `0` = plné rozlišení), trvalý odkaz, zápis svazku |
 | `portafontium.py`, `litomerice.py`, `soal_zoomify.py` | SOA Plzeň (Porta fontium), SOA Litoměřice (hledání, snímek Zoomify) |
-| `ahmp_search.sh`, `ahmp_scan.py`, `policie_prihlasky.py` | Praha: matriky AHMP, policejní přihlášky 1850–1914 |
+| `ahmp_search.sh`, `ahmp_scan.py`, `policie_prihlasky.py` | Praha: matriky AHMP (jen do 30. 11. 2026, pak Claude in Chrome), policejní přihlášky 1850–1914 |
 | `ebadatelna.py`, `mza.py` | SOA Praha (náhled a výřez ze snímku z prohlížeče), MZA Brno (jen hledání) |
 | `prohlizec.py`, `matricula_snimek.js` | vlastní prohlížeč pro portály bez skriptů (Playwright, pauzy brzdy); snímek z Matriculy |
 | `matricula.py`, `matricula_dl.sh`, `matricula_batch.sh` | Matricula (Rakousko, Bavorsko, Polsko…) |
@@ -279,7 +285,8 @@ mlčel nebo radil špatně, a co uživatel chtěl, ale skill to neuměl. Piš ob
 | `brno_encyklopedie.py` | Encyklopedie dějin Brna: osobnosti s adresami, povoláním a hrobem |
 | `mapa.py` | **mapa knihy**: co který snímek svazku pokrývá (`hledej`, `zapis`, `stav`), sdílená pro všechny projekty |
 | `mapa_knihy.py` | **náhled knihy**: montáž záhlaví snímků (oddíly po vsích) a sloupců rejstříku (`--sloupce`) |
-| `cache.py`, `pracovni_prehled.py` | sdílená mezipaměť snímků; co už leží v `pracovni/` |
+| `cache.py`, `pracovni_prehled.py` | sdílená mezipaměť snímků (`z-chromu`: celý snímek ZA Opava a AHMP z mezipaměti Chromu); co už leží v `pracovni/` |
+| `folio.py` | folio nebo strana → číslo snímku z několika známých dvojic (`matriky.md`) |
 | `nalez.py`, `cteni.py` | zápis nálezu jedním příkazem; porovnání dvou čtení po pevných polích (spory k uživateli) |
 | `vyrez.py`, `ramecek.py`, `overit.py` | výřez (zlomky stránky; `--kontrast`, `--zacernit` u dokladů), rámeček (zlomky výřezu), ověření čtení na dvou polovinách |
 | `zapis.py`, `oprava.py`, `svazky.py` | zápis položky; změny osob, dokumentů a míst s historií; svazek z prohlížeče |
@@ -287,7 +294,8 @@ mlčel nebo radil špatně, a co uživatel chtěl, ale skill to neuměl. Piš ob
 | `rejstrik.py` | rejstřík dat v SQLite (Hledání v datech) |
 | `kontrola.py`, `audit_dat.py` | kontrola dat (citlivé údaje, časová návaznost, procesní údaje); rozpory v datech bez čtení snímků |
 | `graf.py`, `rodiny.py`, `chronologie.py`, `datumy.py` | rodina jako graf (dvojníci, `SAME`); kandidáti stejného jména; časová návaznost; čtení dat |
-| `ged_import.py`, `ftb_export.py` | rodinný strom (GEDCOM, záloha MyHeritage) – `data.md` |
+| `ged_import.py`, `ftb_export.py` | rodinný strom (GEDCOM, záloha MyHeritage); `--ged-id` vazba osob na strom (`ged`, `uid`) – `data.md` |
+| `ged_export.py` | export rodokmenu do GEDCOM (ZIP s obrázky, `--slozka`; do MyHeritage s obrázky jen přes Family Tree Builder) – `data.md` |
 | `mista.py`, `napady.py`, `osobnosti.py`, `stavby.py` | místa pro mapu; náměty na zajímavosti; osobnosti; dějiny domů |
 | `export_web.py`, `fan_chart.py`, `kontrola_webu.py`, `brana.py` | data → web; vějíř k tisku; kontrola webu; brána |
 | `pozvanky.py`, `pristupy.py` | osobní odkazy na web; přehled přístupů (kdo co vidí) |
